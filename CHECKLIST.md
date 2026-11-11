@@ -33,7 +33,7 @@
 - [ ] F-10 Danh mục (S-11)
 - [ ] F-11 Quãng đường nhập tay (S-08)
 - [ ] F-12 Chuyến GPS nền Start/Stop/Personal stop + thông báo + nhắc 12h + phát hiện ngắt (S-07a, S-07b)
-- [ ] F-13 Tab Miles (S-07)
+- [ ] F-13 Tab Miles (S-07) + mức dặm theo khoảng ngày (IRS 2026: 72.5¢ tới 30/6, 76¢ từ 1/7)
 - [ ] F-14 Báo cáo năm/quý (S-09)
 - [ ] F-15 Xuất CSV ×3 + PDF + ZIP ảnh (S-10)
 - [ ] F-16 Sao lưu & khôi phục + nhắc 30 ngày (S-12)

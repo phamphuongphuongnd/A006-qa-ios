@@ -134,7 +134,7 @@ Người dùng đổi tên / thêm / ẩn / sắp xếp được. Mỗi danh m�
 | Expense | "Other expenses" | Line 27a Other expenses |
 
 **Mức tính dặm mặc định (sửa được trong Settings):** UK 45p/dặm cho 10.000 dặm đầu, 25p sau đó (theo năm thuế).
-US: $0.70/dặm (Claude kiểm lại mức IRS năm hiện hành lúc code). Ghi chú luôn hiện: "Estimate only — not tax advice."
+US: $0.725/dặm (IRS 2026; từ 1/7/2026 IRS nâng lên $0.76 — app hỗ trợ mức theo khoảng ngày). Ghi chú luôn hiện: "Estimate only — not tax advice."
 
 ---
 
@@ -325,7 +325,7 @@ Mở từ: 2 nút lớn Home, FAB "+", widget, phím tắt icon app (long-press:
 **S-07 Miles**
 - Header: "Miles · Tax year 2026/27 ▾".
 - Thẻ tổng: "Business 8,412 mi" (lớn) · "Personal 1,032 mi" · dòng ước tính "≈ £3,785.40 at HMRC rates (45p / 25p)"
-  + "Estimate only — not tax advice." (US: "≈ $5,888.40 at $0.70/mi").
+  + "Estimate only — not tax advice." (US: "≈ $6,098.70 at $0.725/mi").
 - Thẻ chuyến đang chạy (nếu có) như Home.
 - 2 nút: "Start trip" (chính) · "Add manually" (viền).
 - Danh sách chuyến theo tháng: dòng "Tue 10 Nov · 128.4 mi · GPS · Work · Amazon route DLS4". Chạm → sửa (như S-08,
@@ -450,7 +450,7 @@ using standard rates you can edit. Check HMRC / IRS guidance or ask an accountan
 - Năm thuế 2026/27 tới nay: Income £18,240.00 · Expenses £4,812.55 · 8,412 dặm công việc · 1,032 dặm cá nhân.
 
 **US (Maria, $):** "Amazon Flex payout $186.50", "Chevron $58.20", "Toll – Harris County $3.75", "Verizon $65.00",
-"Jiffy Lube $79.99"; năm 2026: Income $41,820.00 · Expenses $9,412.30 · 8,412 mi ≈ $5,888.40.
+"Jiffy Lube $79.99"; năm 2026: Income $41,820.00 · Expenses $9,412.30 · 8,412 mi ≈ $6,098.70.
 
 ---
 
