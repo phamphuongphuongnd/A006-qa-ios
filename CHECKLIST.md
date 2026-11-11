@@ -17,10 +17,11 @@
 - [ ] Mockup đủ mọi màn trong `design/`
 
 ## Bước 3 — Làm app theo mockup
-- [ ] Phương: tạo tài khoản Expo + `eas login` trên máy
-- [ ] Khung Expo (TS, expo-router đủ route, theme từ token, i18n EN, Jest, eas.json, CI lint+test)
-- [ ] Dữ liệu & logic: schema SQLite/Drizzle, repository, năm thuế UK/US + quý, tiền số nguyên + unit test
-- [ ] F-09 Gợi ý danh mục (từ khoá sẵn + lịch sử) + unit test
+- [x] Phương: tạo tài khoản Expo + `eas login` trên máy (đã đăng nhập: phamthuphuong)
+- [x] Khung Expo (TS, expo-router đủ route, theme tạm, i18n EN, Jest, eas.json, CI lint+test)
+- [ ] Thay theme tạm (`src/theme/tokens.ts`) bằng token từ mockup
+- [x] Dữ liệu & logic: schema SQLite/Drizzle, repository, năm thuế UK/US + quý, tiền số nguyên + unit test
+- [x] F-09 Gợi ý danh mục (từ khoá sẵn + lịch sử) + unit test
 - [ ] F-01 Onboarding (S-01a–d)
 - [ ] F-02 Ghi nhanh (S-03) + phím tắt icon app
 - [ ] F-03 Home (S-02)

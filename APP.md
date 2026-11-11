@@ -38,7 +38,7 @@
   1 nhóm file riêng.
 
 ## Lệnh hay dùng
-- Test: `npx jest` · Kiểm: `npx tsc --noEmit` + `npx expo lint` · Cài máy: dev build EAS / `npx expo run:android`
+- Test: `npx jest` · Kiểm: `npx expo lint` + `npx tsc --noEmit` · Cài máy: `npx expo run:android --device` (ANDROID_HOME = C:SERSADMINAPPDATAocalandroidsdk)
 
 ## Lưu ý dễ vấp của app (mỗi ý 1 dòng)
 - Widget + GPS nền cần dev build (không chạy trong Expo Go); widget iOS build trên EAS vì không có Mac.

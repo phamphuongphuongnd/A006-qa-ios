@@ -1,0 +1,83 @@
+{
+  "expo": {
+    "name": "Sunday Sort",
+    "slug": "sundaysort",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "sundaysort",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.phiotron.sundaysort",
+      "supportsTablet": false,
+      "icon": "./assets/expo.icon",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.phiotron.sundaysort",
+      "adaptiveIcon": {
+        "backgroundColor": "#1F2A44",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-localization",
+      "expo-sharing",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FAF8F4",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 96,
+          "dark": {
+            "backgroundColor": "#12161C"
+          }
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Sunday Sort records your route only while a trip you started is running. Location stays on your phone.",
+          "locationAlwaysAndWhenInUsePermission": "Allow all the time so a trip keeps recording with the screen off. Recording stops when you end the trip.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Sunday Sort uses the camera to photograph receipts. Photos stay on your phone.",
+          "photosPermission": "Pick a receipt photo from your library. Photos stay on your phone.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Unlock Sunday Sort with Face ID."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#F5B841"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
