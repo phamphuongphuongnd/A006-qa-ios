@@ -31,14 +31,14 @@
 - **Native:** expo-location + expo-task-manager (GPS nền) · react-native-android-widget + @bacons/apple-targets
   (widget iOS) · expo-local-authentication · expo-notifications (local) · expo-image-picker · expo-print + expo-sharing ·
   expo-file-system + expo-document-picker.
-- **Build:** EAS Build (Phương tự tạo tài khoản Expo + `eas login`). Thử Android trên Galaxy A13 qua adb.
+- **Build:** EAS Build (tài khoản Expo `phamthuphuong` đã đăng nhập trên máy). Thử Android trên Galaxy A13 qua adb.
 
 ## Cách làm app này
 - 1–2 phiên chính; **Claude tự tạo phiên con khi hợp lý** (Phương cho phép 2026-11-11), mỗi phiên con 1 worktree,
   1 nhóm file riêng.
 
 ## Lệnh hay dùng
-- Test: `npx jest` · Kiểm: `npx expo lint` + `npx tsc --noEmit` · Cài máy: `npx expo run:android --device` (ANDROID_HOME = C:SERSADMINAPPDATAocalandroidsdk)
+- Test: `npx jest` · Kiểm: `npx expo lint` + `npx tsc --noEmit` · Cài máy: `npx expo run:android --device` (ANDROID_HOME = `C:\Users\Admin\AppData\Local\Android\Sdk`)
 
 ## Lưu ý dễ vấp của app (mỗi ý 1 dòng)
 - Widget + GPS nền cần dev build (không chạy trong Expo Go); widget iOS build trên EAS vì không có Mac.
