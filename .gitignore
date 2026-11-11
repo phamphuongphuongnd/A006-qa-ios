@@ -1,0 +1,15 @@
+node_modules/
+.expo/
+dist/
+web-build/
+*.jks
+*.keystore
+*.p12
+*.p8
+*.mobileprovision
+.env
+.env.*
+/android/
+/ios/
+.DS_Store
+Thumbs.db
