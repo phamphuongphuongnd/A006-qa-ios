@@ -5,6 +5,7 @@ import { t } from '@/i18n';
 export default function EntriesScreen() {
   return (
     <Placeholder
+      modal={false}
       code="S-04"
       title={t("tabs.entries")}
       links={[

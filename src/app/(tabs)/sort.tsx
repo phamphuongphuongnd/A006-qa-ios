@@ -5,6 +5,7 @@ import { t } from '@/i18n';
 export default function SortScreen() {
   return (
     <Placeholder
+      modal={false}
       code="S-06"
       title={t("sort.title")}
       links={[

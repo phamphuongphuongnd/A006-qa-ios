@@ -3,7 +3,7 @@
 > Brief tĩnh của app. **≤ 60 dòng, không ghi lịch sử** (lịch sử ở git + `memory/sessions/`).
 > Tiến độ: `CHECKLIST.md` · Tính năng: `product.md` · Test: `TESTCASES.md` · Lỗi: `BUGS.md`.
 
-**Đang ở:** Bước 2 — Phương làm mockup ở Claude Design, chờ export vào `design/` (2026-11-11)
+**Đang ở:** Bước 3 — làm từng màn theo mockup (2026-11-11)
 
 ## Brief
 - **Mã app / thư mục:** `A006-sundaysort` → `apps/A006-sundaysort/`

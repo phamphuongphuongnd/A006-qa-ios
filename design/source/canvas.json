@@ -1,0 +1,16 @@
+{"v":3,"createdOnFiles":{"v":1,"at":"2026-11-11T09:00:00Z"},"title":"Sunday Sort — Hi-Fi UI","launch":{"view":"canvas"},"pages":[],"boards":{
+"Main.dc.html":{"x":0,"y":0,"w":1876,"h":1560,"title":"00 · Cover, tokens & components"},
+"Onboarding.dc.html":{"x":0,"y":1680,"w":1876,"h":1220,"title":"01 · Onboarding S-01a–d"},
+"Home.dc.html":{"x":0,"y":3020,"w":1876,"h":1220,"title":"02 · Home S-02"},
+"Capture.dc.html":{"x":0,"y":4360,"w":1876,"h":1220,"title":"03 · Quick capture S-03"},
+"Entries.dc.html":{"x":0,"y":5700,"w":2322,"h":1220,"title":"04 · Entries & detail S-04, S-05"},
+"Sort.dc.html":{"x":0,"y":7040,"w":2322,"h":1220,"title":"05 · Weekly sort S-06"},
+"Miles.dc.html":{"x":0,"y":8380,"w":2322,"h":1220,"title":"06 · Miles S-07, S-07a, S-08"},
+"Trip.dc.html":{"x":0,"y":9720,"w":1876,"h":1220,"title":"07 · GPS trip S-07b"},
+"Reports.dc.html":{"x":0,"y":11060,"w":2322,"h":1220,"title":"08 · Reports & export S-09, S-10"},
+"Settings.dc.html":{"x":0,"y":12400,"w":1876,"h":1220,"title":"09 · Settings & categories S-15, S-11, S-16"},
+"Data.dc.html":{"x":0,"y":13740,"w":1876,"h":1220,"title":"10 · Backup, lock, data S-12, S-13"},
+"Dialogs.dc.html":{"x":0,"y":15080,"w":1876,"h":1220,"title":"11 · Dialogs & snackbars"},
+"Dark.dc.html":{"x":0,"y":16420,"w":2588,"h":1180,"title":"12 · Dark mode on Android 360×800"},
+"System.dc.html":{"x":0,"y":17720,"w":2768,"h":1220,"title":"13 · Widgets & notifications S-14"}
+},"order":["Main.dc.html","Onboarding.dc.html","Home.dc.html","Capture.dc.html","Entries.dc.html","Sort.dc.html","Miles.dc.html","Trip.dc.html","Reports.dc.html","Settings.dc.html","Data.dc.html","Dialogs.dc.html","Dark.dc.html","System.dc.html"],"notes":{},"designSystems":[]}

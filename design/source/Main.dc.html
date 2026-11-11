@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sunday Sort — cover and tokens</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./sunday.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="board" style="width:1876px;height:1560px">
+  <div class="bh">
+    <div class="flex" style="gap:28px;align-items:center">
+      <svg width="128" height="128" viewBox="0 0 120 120" role="img" aria-label="Sunday Sort app icon"><rect width="120" height="120" rx="28" fill="#1F2A44"></rect><circle cx="84" cy="38" r="17" fill="#F5B841"></circle><path d="M30 24h44v70l-7.3-5.5-7.4 5.5-7.3-5.5-7.4 5.5-7.3-5.5-7.3 5.5z" fill="#FAF8F4"></path><path d="M39 40h26M39 52h26M39 64h14" stroke="#1F2A44" stroke-width="4.5" stroke-linecap="round"></path><path d="M56 73l5 5 9-10" stroke="#C98A12" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      <div>
+        <div class="tagline">A006 · Hi-Fi UI kit · v1 · 11 Nov 2026</div>
+        <h1 style="font-size:56px;line-height:64px">Sunday Sort: Driver Expenses</h1>
+        <p>“Log it in 10 seconds. Sort it on Sunday.” Calm, tidy, trustworthy — a Sunday-morning ledger, not a cold banking app. iPhone 390×844 (light) · Android 360×800 (dark).</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:600px 520px 1fr;gap:32px;align-items:start">
+    <section style="background:#fff;border-radius:24px;padding:28px;display:flex;flex-direction:column;gap:18px">
+      <h2 style="margin:0;font-size:22px;font-weight:800">Colour tokens</h2>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px;font-size:14px;line-height:18px">
+        <div style="font-weight:800;color:#465062;letter-spacing:.06em;font-size:12px">LIGHT</div><div style="font-weight:800;color:#465062;letter-spacing:.06em;font-size:12px">DARK</div>
+        <div class="flex"><span style="width:44px;height:44px;border-radius:12px;background:#FAF8F4;box-shadow:inset 0 0 0 1px #DDD6C9"></span><div><b>bg</b> #FAF8F4<br>sf #FFFFFF · sf2 #F2EEE6</div></div>
+        <div class="flex"><span style="width:44px;height:44px;border-radius:12px;background:#12161C"></span><div><b>bg</b> #12161C<br>sf #1A2029 · sf2 #252C37</div></div>
+        <div class="flex"><span style="width:44px;height:44px;border-radius:12px;background:#161D2B"></span><div><b>ink</b> #161D2B<br>ink2 #465062 · ink3 #5F6877</div></div>
+        <div class="flex"><span style="width:44px;height:44px;border-radius:12px;background:#F3EFE7;box-shadow:inset 0 0 0 1px #DDD6C9"></span><div><b>ink</b> #F3EFE7<br>ink2 #BEC4CE · ink3 #9AA2AE</div></div>
+        <div class="flex"><span style="width:44px;height:44px;border-radius:12px;background:#1F2A44"></span><div><b>brand / primary</b> #1F2A44<br>on-brand #FFFFFF (14.6:1)</div></div>
+        <div class="flex"><span style="width:44px;height:44px;border-radius:12px;background:#F5B841"></span><div><b>primary (dark)</b> #F5B841<br>on-primary #12161C</div></div>
+        <div class="flex"><span style="width:44px;height:44px;border-radius:12px;background:#F5B841"></span><div><b>sun</b> #F5B841 · badge, progress<br>sun-soft #FDF0D3 · sun-ink #6B4A00</div></div>
+        <div class="flex"><span style="width:44px;height:44px;border-radius:12px;background:#3A3122"></span><div><b>sun-soft</b> #3A3122<br>sun-ink #F7CD71</div></div>
+        <div class="flex"><span style="width:44px;height:44px;border-radius:12px;background:#0F5C39"></span><div><b>income</b> #1E8E5A (fills)<br>text / button #0F5C39 (7.6:1)</div></div>
+        <div class="flex"><span style="width:44px;height:44px;border-radius:12px;background:#5FD39A"></span><div><b>income</b> #62D29C text<br>button #5FD39A / #06251A</div></div>
+        <div class="flex"><span style="width:44px;height:44px;border-radius:12px;background:#93371F"></span><div><b>expense</b> #C8553D (fills)<br>text / button #93371F (7.1:1)</div></div>
+        <div class="flex"><span style="width:44px;height:44px;border-radius:12px;background:#F29A84"></span><div><b>expense</b> #F49C86 text<br>button #F29A84 / #3A1209</div></div>
+        <div class="flex"><span style="width:44px;height:44px;border-radius:12px;background:#2357B8"></span><div><b>work</b> #2E6FD8 → text #2357B8<br>personal #7A6F9B → text #635888</div></div>
+        <div class="flex"><span style="width:44px;height:44px;border-radius:12px;background:#8DB3F4"></span><div><b>work</b> #8DB3F4<br>personal #C3B9E4</div></div>
+        <div class="flex"><span style="width:44px;height:44px;border-radius:12px;background:#B42318"></span><div><b>error</b> #B42318<br>destructive only, never for spending</div></div>
+        <div class="flex"><span style="width:44px;height:44px;border-radius:12px;background:#F97066"></span><div><b>error</b> #F97066<br>line #2C3441 · line2 #4A5361</div></div>
+      </div>
+      <p style="margin:0;font-size:14px;line-height:20px;color:#465062">Spec hues (#1E8E5A, #C8553D, #2E6FD8, #7A6F9B) are kept for icons, dots and chart bars. Text and primary buttons use the deeper shades so amounts and main actions reach ≥ 7:1 in sunlight.</p>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:32px">
+      <div style="background:#fff;border-radius:24px;padding:28px;display:flex;flex-direction:column;gap:14px">
+        <h2 style="margin:0;font-size:22px;font-weight:800">Type — Inter, tabular figures</h2>
+        <div class="flex sb" style="align-items:baseline"><span style="font-size:56px;line-height:64px;font-weight:800;letter-spacing:-.03em">£1,053.60</span><span style="font-size:13px;color:#465062">Amount 56/64 · 800</span></div>
+        <div class="flex sb" style="align-items:baseline"><span style="font-size:28px;line-height:34px;font-weight:800;letter-spacing:-.02em">Sort your week</span><span style="font-size:13px;color:#465062">H1 28/34 · 800</span></div>
+        <div class="flex sb" style="align-items:baseline"><span style="font-size:20px;line-height:26px;font-weight:700">14 entries to sort</span><span style="font-size:13px;color:#465062">H2 20/26 · 700</span></div>
+        <div class="flex sb" style="align-items:baseline"><span style="font-size:17px;line-height:24px;font-weight:700">Save changes</span><span style="font-size:13px;color:#465062">Button 17 · 700</span></div>
+        <div class="flex sb" style="align-items:baseline"><span style="font-size:16px;line-height:24px">Shell M62 · Fuel · Work</span><span style="font-size:13px;color:#465062">Body 16/24 · 400</span></div>
+        <div class="flex sb" style="align-items:baseline"><span style="font-size:14px;line-height:20px">Estimate only — not tax advice.</span><span style="font-size:13px;color:#465062">Small 14/20</span></div>
+        <div class="flex sb" style="align-items:baseline"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;color:#5F6877">THIS WEEK</span><span style="font-size:13px;color:#465062">Label 12 · 800 · caps</span></div>
+        <p style="margin:0;font-size:14px;line-height:20px;color:#465062">Body never below 16sp; amounts being typed ≥ 48sp. Layout grows vertically at 200% font scale — rows wrap, nothing truncates amounts.</p>
+      </div>
+      <div style="background:#fff;border-radius:24px;padding:28px;display:flex;flex-direction:column;gap:14px">
+        <h2 style="margin:0;font-size:22px;font-weight:800">Shape, space, touch</h2>
+        <div class="flex" style="gap:16px;align-items:flex-end">
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:center;font-size:13px;color:#465062"><span style="width:84px;height:64px;border-radius:16px;background:#F2EEE6;box-shadow:inset 0 0 0 1px #CBC3B4"></span>card 16</div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:center;font-size:13px;color:#465062"><span style="width:84px;height:56px;border-radius:28px;background:#1F2A44"></span>pill 28</div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:center;font-size:13px;color:#465062"><span style="width:84px;height:72px;border-radius:24px;background:#93371F"></span>big 24</div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:center;font-size:13px;color:#465062"><span style="width:84px;height:64px;border-radius:28px 28px 0 0;background:#F2EEE6;box-shadow:inset 0 0 0 1px #CBC3B4"></span>sheet 28</div>
+        </div>
+        <div style="font-size:14px;line-height:22px;color:#161D2B">Spacing scale <b>4 · 8 · 12 · 16 · 20 · 24 · 32</b> · screen gutter 20 (iOS) / 16 (Android)<br>Touch: primary <b>56dp</b>, big capture buttons <b>72dp</b>, everything else <b>≥ 48dp</b><br>Icons: outline 24dp, stroke 2 · Shadows: hairline + 3px blur only</div>
+      </div>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:20px">
+      <div class="ph" style="width:auto;height:auto;margin:0;border-radius:24px;box-shadow:none;padding:24px;gap:14px">
+        <div class="lbl">Components · light</div>
+        <div class="flex" style="gap:10px"><button class="btn">Sort now</button><button class="btn out">Start trip</button><button class="btn txt">Not now</button></div>
+        <div class="flex" style="gap:10px"><button class="btn big exp"><svg class="i l" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"></path></svg>Expense</button><button class="btn big inc"><svg class="i l" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Income</button></div>
+        <div class="chips"><button class="chip best">Fuel</button><button class="chip">Van repairs &amp; servicing</button><button class="chip on">All</button></div>
+        <div class="flex" style="gap:12px"><div class="seg grow"><button class="oe">Expense</button><button>Income</button></div><button class="tg on" aria-label="On"></button></div>
+        <div class="flex"><span class="tag w">Work</span><span class="tag p">Personal</span><span class="tag u">Unsorted</span><span class="dot"></span><span class="tx m2">unsorted marker</span></div>
+        <div class="card" style="padding:4px 14px"><div class="li"><div class="av u">?</div><div class="grow"><div class="b">Shell M62</div><div class="ts m2">Unsorted · Work · 06:12</div></div><div class="r"><div class="amt exp">−£72.40</div><svg class="i s m3" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11 12 20a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 0 1-3-3l8-8"></path></svg></div></div></div>
+        <div class="snack" style="position:static"><span>Saved · £12.50 expense</span><button class="btn">Undo</button></div>
+      </div>
+      <div class="ph dark" style="width:auto;height:auto;margin:0;border-radius:24px;box-shadow:none;padding:24px;gap:14px">
+        <div class="lbl">Components · dark</div>
+        <div class="flex" style="gap:10px"><button class="btn">Sort now</button><button class="btn out">Start trip</button><button class="btn txt">Not now</button></div>
+        <div class="flex" style="gap:10px"><button class="btn big exp">− Expense</button><button class="btn big inc">+ Income</button></div>
+        <div class="chips"><button class="chip best">Fuel</button><button class="chip">Other expenses</button><span class="tag w">Work</span><span class="tag p">Personal</span></div>
+      </div>
+    </section>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:20px">
+    <div style="background:#1F2A44;color:#fff;border-radius:20px;padding:22px"><div style="color:#F5B841;font-weight:800;font-size:28px">1</div><div style="font-weight:800;font-size:18px;margin:6px 0">10 seconds is the law</div><div style="font-size:14px;line-height:20px;color:#D5DAE4">Widget → amount → Save. Max 3 taps + typing. Only amount is required. No category at capture.</div></div>
+    <div style="background:#fff;border-radius:20px;padding:22px"><div style="color:#C98A12;font-weight:800;font-size:28px">2</div><div style="font-weight:800;font-size:18px;margin:6px 0">One thumb</div><div style="font-size:14px;line-height:20px;color:#465062">Primary actions live in the lower half. 56dp main, 48dp everything else — works with gloves.</div></div>
+    <div style="background:#fff;border-radius:20px;padding:22px"><div style="color:#C98A12;font-weight:800;font-size:28px">3</div><div style="font-weight:800;font-size:18px;margin:6px 0">Readable in sun</div><div style="font-size:14px;line-height:20px;color:#465062">≥ 7:1 for amounts and main buttons. Body 16sp, typed amount 56sp.</div></div>
+    <div style="background:#fff;border-radius:20px;padding:22px"><div style="color:#C98A12;font-weight:800;font-size:28px">4</div><div style="font-weight:800;font-size:18px;margin:6px 0">Sunday is relaxed</div><div style="font-size:14px;line-height:20px;color:#465062">Sort screen can be denser: one card per entry, one tap on a chip sorts it.</div></div>
+    <div style="background:#fff;border-radius:20px;padding:22px"><div style="color:#C98A12;font-weight:800;font-size:28px">5</div><div style="font-weight:800;font-size:18px;margin:6px 0">Never scary</div><div style="font-size:14px;line-height:20px;color:#465062">Warm terracotta for spending, red only for destructive actions. Undo after delete, merge, split.</div></div>
+    <div style="background:#fff;border-radius:20px;padding:22px"><div style="color:#C98A12;font-weight:800;font-size:28px">6</div><div style="font-weight:800;font-size:18px;margin:6px 0">Not tax advice</div><div style="font-size:14px;line-height:20px;color:#465062">Every estimate carries “Estimate only — not tax advice.” Form lines are labels only.</div></div>
+  </div>
+
+  <div style="display:flex;gap:32px;align-items:center;background:#fff;border-radius:24px;padding:24px 28px">
+    <div style="font-weight:800;font-size:18px;width:160px">App icon</div>
+    <svg width="96" height="96" viewBox="0 0 120 120" role="img" aria-label="App icon, light"><rect width="120" height="120" rx="28" fill="#1F2A44"></rect><circle cx="84" cy="38" r="17" fill="#F5B841"></circle><path d="M30 24h44v70l-7.3-5.5-7.4 5.5-7.3-5.5-7.4 5.5-7.3-5.5-7.3 5.5z" fill="#FAF8F4"></path><path d="M39 40h26M39 52h26M39 64h14" stroke="#1F2A44" stroke-width="4.5" stroke-linecap="round"></path><path d="M56 73l5 5 9-10" stroke="#C98A12" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    <svg width="96" height="96" viewBox="0 0 120 120" role="img" aria-label="Android adaptive icon"><circle cx="60" cy="60" r="60" fill="#1F2A44"></circle><circle cx="80" cy="42" r="14" fill="#F5B841"></circle><path d="M38 30h36v58l-6-4.5-6 4.5-6-4.5-6 4.5-6-4.5-6 4.5z" fill="#FAF8F4"></path><path d="M46 44h20M46 54h20M46 64h11" stroke="#1F2A44" stroke-width="4" stroke-linecap="round"></path></svg>
+    <svg width="60" height="60" viewBox="0 0 120 120" role="img" aria-label="App icon, small"><rect width="120" height="120" rx="28" fill="#1F2A44"></rect><circle cx="84" cy="38" r="17" fill="#F5B841"></circle><path d="M30 24h44v70l-7.3-5.5-7.4 5.5-7.3-5.5-7.4 5.5-7.3-5.5-7.3 5.5z" fill="#FAF8F4"></path><path d="M39 40h26M39 52h26M39 64h14" stroke="#1F2A44" stroke-width="5" stroke-linecap="round"></path></svg>
+    <div style="font-size:15px;line-height:22px;color:#465062;max-width:620px">Folded receipt + Sunday sun on deep navy. The gold tick on the last line = “sorted”. Android adaptive: circle-safe 66% zone. Name under icon: “Sunday Sort”.</div>
+    <div style="margin-left:auto;font-size:14px;line-height:22px;color:#465062;text-align:right">Hand-off: <b style="color:#161D2B">sunday.css</b> holds every token + primitive.<br>Boards 01–13 below · each phone labelled with its S-code.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1876,"height":1560}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

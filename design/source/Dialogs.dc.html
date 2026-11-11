@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dialogs and snackbars</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./sunday.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="board" style="width:1876px;height:1220px">
+  <div class="bh"><div><div class="tagline">Board 11 · Light · dialog width 342 (390 − 2×24)</div><h1>Dialogs, confirmations &amp; snackbars</h1><p>Safe action on the left as a text button, committing action on the right as a filled pill. Red only when data is destroyed. Every delete / merge / split / sort ends in a snackbar with Undo (5 s).</p></div></div>
+  <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:300px;gap:24px">
+
+    <div class="ph" style="width:auto;height:auto;margin:0;border-radius:24px;box-shadow:none;background:#4A4F58;padding:16px;justify-content:center;align-items:center;position:relative">
+      <span class="tag" style="position:absolute;top:12px;left:12px;background:#1F2A44;color:#F5B841">S-05 · Unsaved edits</span>
+      <div class="dlg" style="position:static;transform:none;width:342px;padding:22px">
+        <div class="h2">Discard changes?</div>
+        <div class="t m2">Your edits to this entry won't be saved.</div>
+        <div class="acts"><button class="btn txt sm">Keep editing</button><button class="btn sm danger">Discard</button></div>
+      </div>
+    </div>
+
+    <div class="ph" style="width:auto;height:auto;margin:0;border-radius:24px;box-shadow:none;background:#4A4F58;padding:16px;justify-content:center;align-items:center;position:relative">
+      <span class="tag" style="position:absolute;top:12px;left:12px;background:#1F2A44;color:#F5B841">S-05 · Delete</span>
+      <div class="dlg" style="position:static;transform:none;width:342px;padding:22px">
+        <div class="h2">Delete this entry?</div>
+        <div class="t m2">This also deletes its receipt photos.</div>
+        <div class="acts"><button class="btn txt sm">Cancel</button><button class="btn sm danger">Delete</button></div>
+      </div>
+    </div>
+
+    <div class="ph" style="width:auto;height:auto;margin:0;border-radius:24px;box-shadow:none;background:#4A4F58;padding:16px;justify-content:center;align-items:center;position:relative">
+      <span class="tag" style="position:absolute;top:12px;left:12px;background:#1F2A44;color:#F5B841">F-07 · Merge preview</span>
+      <div class="dlg" style="position:static;transform:none;width:342px;padding:20px;gap:8px;margin-top:18px">
+        <div class="h3" style="font-size:18px">Merge 3 entries into one £27.40 expense?</div>
+        <div class="col tx" style="gap:4px;background:var(--sf2);border-radius:12px;padding:10px 12px;font-weight:500">
+          <div class="flex sb"><span class="m2">Date</span><b>Mon 9 Nov</b></div>
+          <div class="flex sb" style="gap:12px"><span class="m2">Note</span><b class="clip">RingGo Leeds · NCP Leeds · RingGo Leeds</b></div>
+          <div class="flex sb"><span class="m2">Category</span><b>Unsorted</b></div>
+        </div>
+        <div class="acts" style="margin-top:4px"><button class="btn txt sm">Cancel</button><button class="btn sm">Merge</button></div>
+      </div>
+    </div>
+
+    <div class="ph" style="width:auto;height:auto;margin:0;border-radius:24px;box-shadow:none;background:#4A4F58;padding:16px;justify-content:center;align-items:center;position:relative">
+      <span class="tag" style="position:absolute;top:12px;left:12px;background:#1F2A44;color:#F5B841">S-06a · Accept all</span>
+      <div class="dlg" style="position:static;transform:none;width:342px;padding:22px">
+        <div class="h2">Apply suggested categories to 12 entries?</div>
+        <div class="t m2">You can still change any of them later.</div>
+        <div class="acts"><button class="btn txt sm">Cancel</button><button class="btn sm">Apply</button></div>
+      </div>
+    </div>
+
+    <div class="ph" style="width:auto;height:auto;margin:0;border-radius:24px;box-shadow:none;background:#4A4F58;padding:16px;justify-content:center;align-items:center;position:relative">
+      <span class="tag" style="position:absolute;top:12px;left:12px;background:#1F2A44;color:#F5B841">S-15 · Change region</span>
+      <div class="dlg" style="position:static;transform:none;width:342px;padding:22px">
+        <div class="h2">Change region?</div>
+        <div class="t m2">Currency, tax year and form lines will switch. Your entries stay as they are.</div>
+        <div class="acts"><button class="btn txt sm">Cancel</button><button class="btn sm">Change</button></div>
+      </div>
+    </div>
+
+    <div class="ph" style="width:auto;height:auto;margin:0;border-radius:24px;box-shadow:none;background:#4A4F58;padding:16px;justify-content:center;align-items:center;position:relative">
+      <span class="tag" style="position:absolute;top:12px;left:12px;background:#1F2A44;color:#F5B841">S-15 · Delete all data (2 of 2)</span>
+      <div class="dlg" style="position:static;transform:none;width:342px;padding:20px;gap:8px;margin-top:18px">
+        <div class="h3" style="font-size:18px">Type DELETE to confirm</div>
+        <div class="ts m2">Every entry, trip and photo on this phone will be erased.</div>
+        <div class="inp focus" style="min-height:48px;font-weight:800;letter-spacing:.1em">DELETE</div>
+        <div class="acts" style="margin-top:4px"><button class="btn txt sm">Cancel</button><button class="btn sm danger">Delete all data</button></div>
+      </div>
+    </div>
+
+    <div class="ph" style="width:auto;height:auto;margin:0;border-radius:24px;box-shadow:none;background:#4A4F58;padding:16px;justify-content:center;align-items:center;position:relative">
+      <span class="tag" style="position:absolute;top:12px;left:12px;background:#1F2A44;color:#F5B841">S-03 · Camera denied</span>
+      <div class="dlg" style="position:static;transform:none;width:342px;padding:22px">
+        <div class="flex" style="gap:10px"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"></path></svg><span class="h2">Camera access is off</span></div>
+        <div class="t m2">Sunday Sort needs the camera to photograph receipts.</div>
+        <div class="acts"><button class="btn txt sm">Not now</button><button class="btn sm">Open settings</button></div>
+      </div>
+    </div>
+
+    <div class="ph" style="width:auto;height:auto;margin:0;border-radius:24px;box-shadow:none;background:#4A4F58;padding:16px;justify-content:center;align-items:center;position:relative">
+      <span class="tag" style="position:absolute;top:12px;left:12px;background:#1F2A44;color:#F5B841">F-12 · GPS off</span>
+      <div class="dlg" style="position:static;transform:none;width:342px;padding:22px">
+        <div class="flex" style="gap:10px"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"></path></svg><span class="h2">Location is off</span></div>
+        <div class="t m2">Location is off. Turn it on to start a trip.</div>
+        <div class="acts"><button class="btn txt sm">Not now</button><button class="btn sm">Open settings</button></div>
+      </div>
+    </div>
+
+    <div class="ph" style="width:auto;height:auto;margin:0;border-radius:24px;box-shadow:none;background:#4A4F58;padding:16px;justify-content:center;align-items:center;position:relative">
+      <span class="tag" style="position:absolute;top:12px;left:12px;background:#1F2A44;color:#F5B841">S-10 · Unsorted before export</span>
+      <div class="dlg" style="position:static;transform:none;width:342px;padding:22px">
+        <div class="h2">7 entries aren't sorted</div>
+        <div class="t m2">They'll appear as ‘Unsorted’.</div>
+        <div class="acts"><button class="btn txt sm">Export anyway</button><button class="btn sm sunb">Sort first</button></div>
+      </div>
+    </div>
+
+    <div class="ph" style="width:auto;height:auto;margin:0;border-radius:24px;box-shadow:none;background:#4A4F58;padding:16px;justify-content:center;align-items:center;position:relative">
+      <span class="tag" style="position:absolute;top:12px;left:12px;background:#1F2A44;color:#F5B841">S-08 · Long trip</span>
+      <div class="dlg" style="position:static;transform:none;width:342px;padding:22px">
+        <div class="h2">That's a long trip — 1,240 mi.</div>
+        <div class="t m2">Save anyway?</div>
+        <div class="acts"><button class="btn txt sm">Cancel</button><button class="btn sm">Save anyway</button></div>
+      </div>
+    </div>
+
+    <div class="ph" style="width:auto;height:auto;margin:0;border-radius:24px;box-shadow:none;background:#E4DFD6;padding:16px;gap:10px;justify-content:center;position:relative">
+      <span class="tag" style="position:absolute;top:12px;left:12px;background:#1F2A44;color:#F5B841">Snackbars · Undo 5 s</span>
+      <div class="snack" style="position:static;margin-top:20px"><span>Entry deleted</span><button class="btn">Undo</button></div>
+      <div class="snack" style="position:static"><span>Merged 3 entries</span><button class="btn">Undo</button></div>
+      <div class="snack" style="position:static"><span>Split into 2 entries</span><button class="btn">Undo</button></div>
+      <div class="snack" style="position:static"><span>Sorted as Fuel</span><button class="btn">Undo</button></div>
+    </div>
+
+    <div class="ph" style="width:auto;height:auto;margin:0;border-radius:24px;box-shadow:none;background:#E4DFD6;padding:16px;gap:10px;justify-content:center;position:relative">
+      <span class="tag" style="position:absolute;top:12px;left:12px;background:#1F2A44;color:#F5B841">Info &amp; error snackbars</span>
+      <div class="snack" style="position:static;margin-top:20px;padding-right:18px;font-size:14px"><span>You can only merge entries of the same type.</span></div>
+      <div class="snack" style="position:static;padding-right:18px;font-size:14px"><span>Couldn't save the photo. Your entry was saved without it.</span></div>
+      <div class="snack" style="position:static;padding-right:18px;font-size:14px;background:#B42318"><span>This isn't a Sunday Sort backup file.</span></div>
+      <div class="snack" style="position:static;padding-right:18px;font-size:14px"><span>Reminders are off. You can turn them on in Settings.</span></div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1876,"height":1220}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

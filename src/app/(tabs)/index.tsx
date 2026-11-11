@@ -5,6 +5,7 @@ import { t } from '@/i18n';
 export default function IndexScreen() {
   return (
     <Placeholder
+      modal={false}
       code="S-02"
       title={t("tabs.home")}
       links={[

@@ -14,12 +14,13 @@
 - [x] Phương duyệt product.md
 
 ## Bước 2 — Mockup Hi-Fi (Phương làm ở Claude Design)
-- [ ] Mockup đủ mọi màn trong `design/`
+- [x] Mockup đủ mọi màn trong `design/` (68 màn, tokens.json, sunday.css)
 
 ## Bước 3 — Làm app theo mockup
 - [x] Phương: tạo tài khoản Expo + `eas login` trên máy (đã đăng nhập: phamthuphuong)
 - [x] Khung Expo (TS, expo-router đủ route, theme tạm, i18n EN, Jest, eas.json, CI lint+test)
-- [ ] Thay theme tạm (`src/theme/tokens.ts`) bằng token từ mockup
+- [x] Thay theme tạm (`src/theme/tokens.ts`) bằng token từ mockup + font Inter
+- [x] Bộ UI kit dùng chung `src/ui/` (từ sunday.css) + `useLive` + gallery `/dev/gallery`
 - [x] Dữ liệu & logic: schema SQLite/Drizzle, repository, năm thuế UK/US + quý, tiền số nguyên + unit test
 - [x] F-09 Gợi ý danh mục (từ khoá sẵn + lịch sử) + unit test
 - [ ] F-01 Onboarding (S-01a–d)

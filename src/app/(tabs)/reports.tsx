@@ -5,6 +5,7 @@ import { t } from '@/i18n';
 export default function ReportsScreen() {
   return (
     <Placeholder
+      modal={false}
       code="S-09"
       title={t("reports.title")}
       links={[

@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button } from '@/components/Button';
+import { Button } from '@/ui';
 import { t } from '@/i18n';
 import { spacing, type, useTheme } from '@/theme';
 
@@ -12,10 +12,10 @@ export default function Welcome() {
   return (
     <SafeAreaView style={[styles.wrap, { backgroundColor: colors.background }]}>
       <View style={styles.body}>
-        <Text style={[type.title, { color: colors.text, fontSize: 30 }]} accessibilityRole="header">
+        <Text style={[type.h1, { color: colors.text, fontSize: 30 }]} accessibilityRole="header">
           {t('onboarding.welcomeTitle')}
         </Text>
-        <Text style={[type.body, { color: colors.textMuted }]}>{t('onboarding.welcomeBody')}</Text>
+        <Text style={[type.body, { color: colors.textSecondary }]}>{t('onboarding.welcomeBody')}</Text>
       </View>
       <Button label={t('onboarding.getStarted')} onPress={() => router.push('/onboarding/region')} />
     </SafeAreaView>

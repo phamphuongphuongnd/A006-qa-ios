@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Button } from '@/components/Button';
+import { Button } from '@/ui';
 import { listCategories } from '@/db/categoriesRepo';
 import { db } from '@/db/client';
 import { t } from '@/i18n';
@@ -13,7 +13,7 @@ export default function CategoriesStep() {
   const all = listCategories(db);
   const section = (label: string, kind: 'income' | 'expense') => (
     <View style={{ gap: spacing.sm }}>
-      <Text style={[type.label, { color: colors.textMuted }]}>{label}</Text>
+      <Text style={[type.label, { color: colors.textSecondary }]}>{label}</Text>
       <View style={styles.chips}>
         {all
           .filter((c) => c.type === kind)
@@ -28,10 +28,10 @@ export default function CategoriesStep() {
   return (
     <View style={[styles.wrap, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={{ gap: spacing.lg }}>
-        <Text style={[type.title, { color: colors.text }]} accessibilityRole="header">
+        <Text style={[type.h1, { color: colors.text }]} accessibilityRole="header">
           {t('onboarding.categoriesTitle')}
         </Text>
-        <Text style={[type.body, { color: colors.textMuted }]}>{t('onboarding.categoriesBody')}</Text>
+        <Text style={[type.body, { color: colors.textSecondary }]}>{t('onboarding.categoriesBody')}</Text>
         {section(t('common.income'), 'income')}
         {section(t('common.expenses'), 'expense')}
       </ScrollView>

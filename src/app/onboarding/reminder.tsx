@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Button } from '@/components/Button';
+import { Button } from '@/ui';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { spacing, type, useTheme } from '@/theme';
@@ -15,10 +15,10 @@ export default function ReminderStep() {
   const finish = (on: boolean) => update({ onboarded: true, reminder: { ...settings.reminder, on } });
   return (
     <View style={[styles.wrap, { backgroundColor: colors.background }]}>
-      <Text style={[type.title, { color: colors.text }]} accessibilityRole="header">
+      <Text style={[type.h1, { color: colors.text }]} accessibilityRole="header">
         {t('onboarding.reminderTitle')}
       </Text>
-      <Text style={[type.heading, { color: colors.textMuted }]}>Sun · 18:00</Text>
+      <Text style={[type.h3, { color: colors.textSecondary }]}>Sun · 18:00</Text>
       <View style={{ flex: 1 }} />
       <Button label={t('onboarding.reminderOn')} onPress={() => finish(true)} />
       <Button label={t('common.notNow')} variant="text" onPress={() => finish(false)} />

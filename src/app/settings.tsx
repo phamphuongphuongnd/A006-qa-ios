@@ -13,6 +13,7 @@ export default function SettingsScreen() {
         { label: "Export", href: "/export" },
         { label: "Not tax advice", href: "/disclaimer" },
         { label: "Locked screen", href: "/locked" },
+        { label: "UI kit gallery (dev)", href: "/dev/gallery" },
       ]}
     />
   );

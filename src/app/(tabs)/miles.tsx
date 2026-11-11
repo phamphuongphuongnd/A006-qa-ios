@@ -5,6 +5,7 @@ import { t } from '@/i18n';
 export default function MilesScreen() {
   return (
     <Placeholder
+      modal={false}
       code="S-07"
       title={t("miles.title")}
       links={[

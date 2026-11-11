@@ -1,7 +1,7 @@
 import { createContext, useContext, type ReactNode } from 'react';
-import { useColorScheme } from 'react-native';
+import { Platform, useColorScheme } from 'react-native';
 
-import { palette, type Colors } from './tokens';
+import { gutter as gutters, palette, type Colors } from './tokens';
 
 export * from './tokens';
 
@@ -16,3 +16,6 @@ export function AppThemeProvider({ mode, children }: { mode: Mode; children: Rea
 }
 
 export const useTheme = () => useContext(ThemeCtx);
+
+/** Horizontal screen padding for this platform. */
+export const GUTTER = Platform.OS === 'ios' ? gutters.ios : gutters.android;

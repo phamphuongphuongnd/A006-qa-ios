@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Button } from '@/components/Button';
+import { Button } from '@/ui';
 import type { Region } from '@/domain/types';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
@@ -27,7 +27,7 @@ export default function RegionStep() {
 
   return (
     <View style={[styles.wrap, { backgroundColor: colors.background }]}>
-      <Text style={[type.title, { color: colors.text }]} accessibilityRole="header">
+      <Text style={[type.h1, { color: colors.text }]} accessibilityRole="header">
         {t('onboarding.regionTitle')}
       </Text>
       <View accessibilityRole="radiogroup" style={{ gap: spacing.md }}>
@@ -39,14 +39,14 @@ export default function RegionStep() {
               accessibilityRole="radio"
               accessibilityState={{ checked: on }}
               onPress={() => setPick(o.id)}
-              style={[styles.card, { backgroundColor: colors.surface, borderColor: on ? colors.primary : colors.border, borderWidth: on ? 2 : 1 }]}>
-              <Text style={[type.heading, { color: colors.text }]}>{o.title}</Text>
-              <Text style={[type.caption, { color: colors.textMuted }]}>{o.sub}</Text>
+              style={[styles.card, { backgroundColor: colors.surface, borderColor: on ? colors.primary : colors.line, borderWidth: on ? 2 : 1 }]}>
+              <Text style={[type.h3, { color: colors.text }]}>{o.title}</Text>
+              <Text style={[type.caption, { color: colors.textSecondary }]}>{o.sub}</Text>
             </Pressable>
           );
         })}
       </View>
-      <Text style={[type.caption, { color: colors.textMuted }]}>{t('onboarding.regionLater')}</Text>
+      <Text style={[type.caption, { color: colors.textSecondary }]}>{t('onboarding.regionLater')}</Text>
       <View style={{ flex: 1 }} />
       <Button
         label={t('common.continue')}
