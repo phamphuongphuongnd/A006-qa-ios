@@ -11,7 +11,7 @@
 - [x] Grill công nghệ: FE / BE / DB / đăng nhập → APP.md (+ ADR nếu cần)
 - [x] Viết product.md (từng màn, từng nút, trạng thái)
 - [x] Điền danh sách bước 3 từ product.md
-- [ ] Phương duyệt product.md
+- [x] Phương duyệt product.md
 
 ## Bước 2 — Mockup Hi-Fi (Phương làm ở Claude Design)
 - [ ] Mockup đủ mọi màn trong `design/`
