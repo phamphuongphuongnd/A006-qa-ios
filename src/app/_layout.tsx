@@ -16,6 +16,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { expoDb } from '@/db/client';
+import { DataServices, LockGate } from '@/services/data';
+import { TripServices } from '@/services/trips';
 import { SettingsProvider, useSettings } from '@/state/settings';
 import { AppThemeProvider, useTheme } from '@/theme';
 import { SnackbarProvider } from '@/ui';
@@ -59,7 +61,15 @@ function ThemedStack() {
   return (
     <AppThemeProvider mode={settings.theme}>
       <SnackbarProvider>
-        <Navigator onboarded={settings.onboarded} />
+        <LockGate>
+          <Navigator onboarded={settings.onboarded} />
+        </LockGate>
+        {settings.onboarded ? (
+          <>
+            <TripServices />
+            <DataServices />
+          </>
+        ) : null}
       </SnackbarProvider>
     </AppThemeProvider>
   );
