@@ -1,7 +1,7 @@
 import { router } from '@/services/router';
 import { Briefcase, List, Pencil, SkipForward, Split, User } from '@/ui/icons';
 import { useRef, useState } from 'react';
-import { Animated, Image, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { EntryListItem } from '@/db/entriesRepo';
@@ -161,9 +161,11 @@ function SortCard({
   return (
     <Animated.View style={[{ position: 'absolute', left: 0, right: 0, top: stacked ? 16 : 0, bottom: 0 }, { transform: [{ translateX: x }] }]}>
       <Card style={[styles.card, { shadowColor: '#161D2B' }]}>
+        {/* Scrolls when large text makes the card taller than the space (B-24: 200% text pushed the buttons out). */}
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.cardBody} showsVerticalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
           <View style={{ flex: 1, gap: 4 }}>
-            <View style={{ alignSelf: 'flex-start', height: 24, borderRadius: 12, paddingHorizontal: 9, justifyContent: 'center', backgroundColor: income ? colors.incomeSoft : colors.expenseSoft }}>
+            <View style={{ alignSelf: 'flex-start', minHeight: 24, borderRadius: 12, paddingHorizontal: 9, justifyContent: 'center', backgroundColor: income ? colors.incomeSoft : colors.expenseSoft }}>
               <Txt style={{ fontSize: 12, fontFamily: fonts.bold, color: income ? colors.incomeText : colors.expenseText }}>
                 {income ? t('common.income') : t('common.expense')}
               </Txt>
@@ -224,6 +226,7 @@ function SortCard({
           <Button label={t('sort.split')} icon={Split} variant="text" size="sm" onPress={() => router.push(`/split/${entry.id}`)} />
           <Button label={t('sort.skip')} icon={SkipForward} variant="text" size="sm" onPress={skip} />
         </View>
+        </ScrollView>
       </Card>
       <CategorySheet
         visible={more}
@@ -249,12 +252,12 @@ const styles = StyleSheet.create({
   ghost: { position: 'absolute', height: 60 },
   card: {
     flex: 1,
-    gap: 14,
-    padding: 20,
+    padding: 0,
     shadowOpacity: 0.28,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 18 },
     elevation: 6,
   },
+  cardBody: { flexGrow: 1, gap: 14, padding: 20 },
   more: { height: 44, borderRadius: 22, paddingHorizontal: 16, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
 });
