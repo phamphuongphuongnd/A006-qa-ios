@@ -10,9 +10,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { listCategories } from '@/db/categoriesRepo';
 import { db } from '@/db/client';
-import { entryCount } from '@/db/entriesRepo';
+import { convertAllTo, countNotIn, entryCount } from '@/db/entriesRepo';
 import type { AppSettings } from '@/db/settingsRepo';
-import type { Region, Scope } from '@/domain/types';
+import { currencySymbol, parseRate } from '@/domain/money';
+import { currencyOf, type Region, type Scope } from '@/domain/types';
 import { deleteAllReceiptFiles } from '@/features/backup/backupFile';
 import { wipeAllData } from '@/features/backup/dataStore';
 import { stopOrphanRecording } from '@/features/trips/controller';
@@ -51,6 +52,10 @@ export default function SettingsScreen() {
   const region: Region = settings.region ?? 'UK';
   const [picker, setPicker] = useState<Picker>(null);
   const [regionAsk, setRegionAsk] = useState<Region | null>(null);
+  // B-14: entries in the old currency are converted at a rate the user types (the app has no network).
+  const [convertCount, setConvertCount] = useState(0);
+  const [rateText, setRateText] = useState('');
+  const [rateError, setRateError] = useState(false);
   const [timeSheet, setTimeSheet] = useState(false);
   const [howSheet, setHowSheet] = useState(false);
   const [deleteStep, setDeleteStep] = useState<0 | 1 | 2>(0);
@@ -268,7 +273,12 @@ export default function SettingsScreen() {
         value={region}
         onPick={(v) => {
           // iOS can't present the dialog while the sheet is still sliding away.
-          if (v !== region) setTimeout(() => setRegionAsk(v), Platform.OS === 'ios' ? 400 : 0);
+          if (v !== region) {
+            setConvertCount(countNotIn(db, currencyOf(v)));
+            setRateText('');
+            setRateError(false);
+            setTimeout(() => setRegionAsk(v), Platform.OS === 'ios' ? 400 : 0);
+          }
         }}
         onClose={() => setPicker(null)}
       />
@@ -346,7 +356,15 @@ export default function SettingsScreen() {
       <Dialog
         visible={regionAsk !== null}
         title={t('settings.changeRegionTitle')}
-        body={t('settings.changeRegionBody')}
+        body={
+          convertCount > 0 && regionAsk
+            ? t(convertCount === 1 ? 'settings.changeRegionConvertOne' : 'settings.changeRegionConvert', {
+                count: String(convertCount),
+                from: currencySymbol(currencyOf(region)),
+                to: currencySymbol(currencyOf(regionAsk)),
+              })
+            : t('settings.changeRegionBody')
+        }
         onClose={() => setRegionAsk(null)}
         actions={[
           { label: t('settings.cancel'), onPress: () => setRegionAsk(null) },
@@ -354,12 +372,35 @@ export default function SettingsScreen() {
             label: t('settings.change'),
             variant: 'primary',
             onPress: () => {
-              if (regionAsk) setRegion(regionAsk);
+              if (!regionAsk) return;
+              if (convertCount > 0) {
+                const rate = parseRate(rateText);
+                if (rate === null) {
+                  setRateError(true);
+                  return;
+                }
+                convertAllTo(db, currencyOf(regionAsk), rate);
+              }
+              setRegion(regionAsk);
               setRegionAsk(null);
             },
           },
-        ]}
-      />
+        ]}>
+        {convertCount > 0 && regionAsk ? (
+          <Field
+            label={t('settings.rateLabel', { from: currencySymbol(currencyOf(region)), to: currencySymbol(currencyOf(regionAsk)) })}
+            value={rateText}
+            onChangeText={(v) => {
+              setRateText(v);
+              setRateError(false);
+            }}
+            keyboardType="decimal-pad"
+            autoFocus
+            placeholder={region === 'UK' ? 'e.g. 1.27' : 'e.g. 0.79'}
+            error={rateError ? t('settings.rateError') : null}
+          />
+        ) : null}
+      </Dialog>
 
       <Dialog
         visible={deleteStep === 1}

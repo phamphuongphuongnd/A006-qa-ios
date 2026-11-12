@@ -1,4 +1,4 @@
-import { appendDigit, backspace, formatMoney, MAX_MINOR, parseMinor, toDecimalString } from '../money';
+import { appendDigit, backspace, convertMinor, formatMoney, MAX_MINOR, parseMinor, parseRate, toDecimalString } from '../money';
 
 describe('formatMoney', () => {
   it('formats pounds and dollars with thousands', () => {
@@ -45,5 +45,24 @@ describe('parseMinor / toDecimalString', () => {
     expect(toDecimalString(125050)).toBe('1250.50');
     expect(toDecimalString(-7)).toBe('-0.07');
     expect(parseMinor(toDecimalString(9)) ).toBe(9);
+  });
+});
+
+describe('exchange rate (B-14)', () => {
+  it('parses rates the user types', () => {
+    expect(parseRate('1.27')).toBe(1_270_000);
+    expect(parseRate('0,79')).toBe(790_000);
+    expect(parseRate(' 1 ')).toBe(1_000_000);
+    expect(parseRate('1.2345678')).toBeNull();
+    expect(parseRate('0')).toBeNull();
+    expect(parseRate('-1')).toBeNull();
+    expect(parseRate('abc')).toBeNull();
+    expect(parseRate('')).toBeNull();
+  });
+  it('converts minor units and rounds to the nearest', () => {
+    expect(convertMinor(1240, 1_270_000)).toBe(1575); // 12.40 * 1.27 = 15.748
+    expect(convertMinor(100, 1_005_000)).toBe(101); // 1.005 → half up
+    expect(convertMinor(99_999_999, 1_270_000)).toBe(126_999_999);
+    expect(convertMinor(-1240, 1_270_000)).toBe(-1575);
   });
 });

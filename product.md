@@ -403,7 +403,7 @@ Mở từ: 2 nút lớn Home, FAB "+", widget, phím tắt icon app (long-press:
 ### F-20 · Cài đặt — S-15
 
 **S-15 Settings** (danh sách nhóm)
-- **Region & tax**: "Region" (United Kingdom / United States — đổi sẽ hỏi "Change region? Currency, tax year and form lines will switch. Your entries stay as they are.") · "Currency" (chỉ hiển thị) · "Tax year" (UK: 6 Apr – 5 Apr; US: Jan – Dec) · "Mileage rates" (sửa mức, nút "Reset to default").
+- **Region & tax**: "Region" (United Kingdom / United States — đổi sẽ hỏi "Change region? Currency, tax year and form lines will switch."; nếu đã có khoản tiền tệ cũ: người dùng nhập tỷ giá "1 £ = ? $", mọi khoản quy đổi sang tiền tệ mới (làm tròn tới xu), không hoàn tác được — Phương chốt 2026-11-12, B-14) · "Currency" (chỉ hiển thị) · "Tax year" (UK: 6 Apr – 5 Apr; US: Jan – Dec) · "Mileage rates" (sửa mức, nút "Reset to default").
 - **Logging**: "Default for new entries" (Work/Personal) · "Keep adding after save" · "Distance unit" (Miles/Kilometres).
 - **Sunday sort**: "Weekly reminder" (bật/tắt) · "Day" · "Time".
 - **Categories** → S-11.

@@ -1,6 +1,6 @@
 import { and, count, desc, eq, exists, gte, inArray, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
 
-import { parseMinor } from '@/domain/money';
+import { convertMinor, parseMinor } from '@/domain/money';
 import { checkSplit, planMerge } from '@/domain/splitMerge';
 import type { SortedEntry } from '@/domain/suggest';
 import type { Currency, EntryType, Minor, Period, Scope } from '@/domain/types';
@@ -358,3 +358,34 @@ export function deleteAllEntries(db: AppDb): string[] {
   return [...new Set(paths)];
 }
 
+
+/** Entries kept in a currency other than `currency` (region change, B-14). */
+export function countNotIn(db: AppDb, currency: Currency): number {
+  return db.select({ n: count() }).from(entries).where(sql`${entries.currency} <> ${currency}`).get()?.n ?? 0;
+}
+
+/**
+ * Region change (B-14): every entry not in `to` is converted at `rateMicro` (millionths of `to` per 1 unit of the
+ * old currency) and relabelled, in one transaction. Amounts stay positive integers (at least 1 minor unit).
+ */
+export function convertAllTo(db: AppDb, to: Currency, rateMicro: number, now = Date.now()): number {
+  const rows = db
+    .select({ id: entries.id, amountMinor: entries.amountMinor, splitFromMinor: entries.splitFromMinor })
+    .from(entries)
+    .where(sql`${entries.currency} <> ${to}`)
+    .all();
+  db.transaction((tx) => {
+    for (const r of rows) {
+      tx.update(entries)
+        .set({
+          currency: to,
+          amountMinor: Math.max(1, convertMinor(r.amountMinor, rateMicro)),
+          splitFromMinor: r.splitFromMinor === null ? null : Math.max(1, convertMinor(r.splitFromMinor, rateMicro)),
+          updatedAt: now,
+        })
+        .where(eq(entries.id, r.id))
+        .run();
+    }
+  });
+  return rows.length;
+}

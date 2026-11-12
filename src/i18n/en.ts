@@ -520,7 +520,13 @@ export const en = {
     taxYearUS: 'Jan – Dec',
     mileageRates: 'Mileage rates',
     changeRegionTitle: 'Change region?',
-    changeRegionBody: 'Currency, tax year and form lines will switch. Your entries stay as they are.',
+    changeRegionBody: 'Currency, tax year and form lines will switch.',
+    changeRegionConvert:
+      "Currency, tax year and form lines will switch. Your {count} entries in {from} will be converted to {to} at the rate below. This can't be undone, so back up first if you're not sure.",
+    changeRegionConvertOne:
+      "Currency, tax year and form lines will switch. Your 1 entry in {from} will be converted to {to} at the rate below. This can't be undone, so back up first if you're not sure.",
+    rateLabel: 'Exchange rate: 1 {from} = ? {to}',
+    rateError: 'Enter a rate like 1.27',
     change: 'Change',
     cancel: 'Cancel',
     logging: 'Logging',

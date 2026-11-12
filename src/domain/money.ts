@@ -49,3 +49,21 @@ export function toDecimalString(minor: Minor): string {
   const abs = Math.abs(minor);
   return `${minor < 0 ? '-' : ''}${Math.floor(abs / 100)}.${String(abs % 100).padStart(2, '0')}`;
 }
+
+/** Rates are kept as integer millionths: "1.27" -> 1_270_000. */
+export const RATE_SCALE = 1_000_000;
+
+/** Exchange rate typed by the user ("1.27", "0,79") -> millionths; null unless a positive number with ≤ 6 decimals. */
+export function parseRate(text: string): number | null {
+  const cleaned = text.trim().replace(',', '.');
+  if (!/^\d+(\.\d{1,6})?$/.test(cleaned)) return null;
+  const [whole, frac = ''] = cleaned.split('.');
+  const micro = Number(whole) * RATE_SCALE + Number(frac.padEnd(6, '0'));
+  return micro > 0 ? micro : null;
+}
+
+/** Converts an amount at a rate in millionths, rounded to the nearest minor unit (half away from zero). */
+export function convertMinor(minor: Minor, rateMicro: number): Minor {
+  const abs = Math.round((Math.abs(minor) * rateMicro) / RATE_SCALE);
+  return minor < 0 ? -abs : abs;
+}

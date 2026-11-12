@@ -1,6 +1,8 @@
 import { applyRegionToCategories, createCategory, deleteCategory, listCategories, seedCategories, updateCategory } from '../categoriesRepo';
 import {
   categorise,
+  convertAllTo,
+  countNotIn,
   createEntry,
   deleteEntries,
   getEntry,
@@ -222,5 +224,27 @@ describe('trips', () => {
     expect(m.personal).toBeCloseTo(12, 3);
     updateTrip(db, p.id, { scope: 'work' });
     expect(mileageTotals(db, taxYearFor(2026, 'UK')).work).toBeCloseTo(140, 3);
+  });
+});
+
+describe('region change conversion (B-14)', () => {
+  beforeEach(() => {
+    db = makeTestDb();
+  });
+  it('converts every entry in the old currency, keeps split totals, leaves others alone', () => {
+    const a = createEntry(db, { type: 'expense', amountMinor: 1240, currency: 'GBP', note: 'Shell' });
+    const b = createEntry(db, { type: 'income', amountMinor: 10000, currency: 'GBP', note: 'Amazon' });
+    const c = createEntry(db, { type: 'expense', amountMinor: 500, currency: 'USD', note: 'Already USD' });
+    expect(countNotIn(db, 'USD')).toBe(2);
+    expect(convertAllTo(db, 'USD', 1_270_000)).toBe(2);
+    expect(getEntry(db, a.id)).toMatchObject({ currency: 'USD', amountMinor: 1575 });
+    expect(getEntry(db, b.id)).toMatchObject({ currency: 'USD', amountMinor: 12700 });
+    expect(getEntry(db, c.id)).toMatchObject({ currency: 'USD', amountMinor: 500 });
+    expect(countNotIn(db, 'USD')).toBe(0);
+  });
+  it('never rounds an amount down to zero', () => {
+    const a = createEntry(db, { type: 'expense', amountMinor: 1, currency: 'USD' });
+    convertAllTo(db, 'GBP', 100_000);
+    expect(getEntry(db, a.id)?.amountMinor).toBe(1);
   });
 });
