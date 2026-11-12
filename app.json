@@ -15,7 +15,9 @@
         "ITSAppUsesNonExemptEncryption": false
       },
       "entitlements": {
-        "com.apple.security.application-groups": ["group.com.phiotron.sundaysort"]
+        "com.apple.security.application-groups": [
+          "group.com.phiotron.sundaysort"
+        ]
       }
     },
     "android": {
@@ -83,10 +85,6 @@
       [
         "react-native-android-widget",
         {
-          "fonts": [
-            "./node_modules/@expo-google-fonts/inter/700Bold/Inter_700Bold.ttf",
-            "./node_modules/@expo-google-fonts/inter/800ExtraBold/Inter_800ExtraBold.ttf"
-          ],
           "widgets": [
             {
               "name": "SundayQuick",

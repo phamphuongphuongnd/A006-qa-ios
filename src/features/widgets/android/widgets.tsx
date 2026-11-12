@@ -57,8 +57,6 @@ const DARK: Skin = {
   runDot: '#C2281C',
 };
 
-const FONT = 'Inter_700Bold';
-const FONT_X = 'Inter_800ExtraBold';
 
 function Btn({
   label,
@@ -100,9 +98,9 @@ function Btn({
       }}>
       <FlexWidget style={{ flexDirection: 'row', alignItems: 'center', flexGap: 4 }}>
         {dot ? <FlexWidget style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: dot as ColorProp }} /> : null}
-        <TextWidget text={label} maxLines={1} truncate="END" style={{ fontSize: size, fontFamily: FONT, color: fg as ColorProp }} />
+        <TextWidget text={label} maxLines={1} truncate="END" style={{ fontSize: size, fontWeight: '700', color: fg as ColorProp }} />
       </FlexWidget>
-      {sub ? <TextWidget text={sub} maxLines={1} style={{ fontSize: size, fontFamily: FONT_X, color: fg as ColorProp }} /> : null}
+      {sub ? <TextWidget text={sub} maxLines={1} style={{ fontSize: size, fontWeight: '800', color: fg as ColorProp }} /> : null}
     </FlexWidget>
   );
 }
@@ -113,7 +111,7 @@ function SetupWidget({ k }: { k: Skin }) {
       clickAction="OPEN_URI"
       clickActionData={{ uri: WIDGET_LINKS.open }}
       style={{ height: 'match_parent', width: 'match_parent', backgroundColor: k.bg as ColorProp, borderRadius: 24, padding: 12, justifyContent: 'center', alignItems: 'center' }}>
-      <TextWidget text={t('widget.setup')} style={{ fontSize: 14, fontFamily: FONT, color: k.muted as ColorProp, textAlign: 'center' }} />
+      <TextWidget text={t('widget.setup')} style={{ fontSize: 14, fontWeight: '700', color: k.muted as ColorProp, textAlign: 'center' }} />
     </FlexWidget>
   );
 }
@@ -129,7 +127,7 @@ function Quick({ s, k }: { s: WidgetSnapshot; k: Skin }) {
         <Btn label={t('widget.incomeShort')} uri={WIDGET_LINKS.income} bg={k.incBg} fg={k.incFg} size={24} radius={16} a11y={t('widget.newIncome')} />
       </FlexWidget>
       <FlexWidget clickAction="OPEN_URI" clickActionData={{ uri: 'sundaysort://sort' }} style={{ width: 'match_parent', alignItems: 'center' }}>
-        <TextWidget text={s.toSortText} maxLines={1} style={{ fontSize: 13, fontFamily: FONT, color: k.toSort as ColorProp, textAlign: 'center' }} />
+        <TextWidget text={s.toSortText} maxLines={1} style={{ fontSize: 13, fontWeight: '700', color: k.toSort as ColorProp, textAlign: 'center' }} />
       </FlexWidget>
     </FlexWidget>
   );
@@ -143,7 +141,7 @@ function Week({ s, k }: { s: WidgetSnapshot; k: Skin }) {
     <FlexWidget
       style={{ height: 'match_parent', width: 'match_parent', backgroundColor: k.bg as ColorProp, borderRadius: 28, padding: 16, flexDirection: 'column', flexGap: 10 }}>
       <FlexWidget clickAction="OPEN_URI" clickActionData={{ uri: WIDGET_LINKS.open }} style={{ width: 'match_parent', flexDirection: 'row', alignItems: 'center' }}>
-        <TextWidget text={s.weekLine} maxLines={1} truncate="END" style={{ fontSize: 13, fontFamily: FONT, color: k.muted as ColorProp }} />
+        <TextWidget text={s.weekLine} maxLines={1} truncate="END" style={{ fontSize: 13, fontWeight: '700', color: k.muted as ColorProp }} />
       </FlexWidget>
       <FlexWidget style={{ flex: 1, width: 'match_parent', flexDirection: 'row', flexGap: 8 }}>
         <Btn label={t('widget.expense')} uri={WIDGET_LINKS.expense} bg={k.expBg} fg={k.expFg} size={15} radius={20} a11y={t('widget.newExpense')} />
