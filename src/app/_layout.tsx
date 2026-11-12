@@ -7,6 +7,7 @@ import {
   useFonts,
 } from '@expo-google-fonts/inter';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
+import { NavigationBar } from 'expo-navigation-bar';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -86,6 +87,8 @@ function Navigator({ onboarded }: { onboarded: boolean }) {
   return (
     <>
       <StatusBar style={dark ? 'light' : 'dark'} />
+      {/* Follows the in-app theme, not the phone's: dark app on a light phone kept a white nav bar (B-12). */}
+      <NavigationBar style={dark ? 'light' : 'dark'} />
       <RouterBridge />
       <Stack
         screenOptions={{
