@@ -4,6 +4,7 @@ import { db } from '@/db/client';
 import {
   addReceipt,
   categorise,
+  categoriseMany,
   deleteEntries,
   getEntry,
   mergeEntries,
@@ -110,7 +111,24 @@ export function useEntryActions({ above, bottomOffset }: Lift = {}) {
     [snack, lift],
   );
 
-  return { remove, merge, split, sortOne, patchMany };
+  /** Accept-all: each entry gets its own category; one Undo puts them all back to unsorted. */
+  const sortMany = useCallback(
+    (items: { id: string; categoryId: string }[]) => {
+      const before = items.map((it) => getEntry(db, it.id)).filter((e) => !!e);
+      categoriseMany(db, items);
+      snack({
+        ...lift,
+        message: t('sort.sortedMany', { count: items.length }),
+        actionLabel: t('common.undo'),
+        onAction: () => {
+          for (const e of before) updateEntry(db, e.id, { categoryId: e.categoryId, scope: e.scope });
+        },
+      });
+    },
+    [snack, lift],
+  );
+
+  return { remove, merge, split, sortOne, sortMany, patchMany };
 }
 
 /** Undo-able receipt removal from an entry (S-05 "Delete photo"). */
