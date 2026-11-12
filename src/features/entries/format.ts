@@ -28,6 +28,15 @@ export const dayMonth = (at: number) => {
   return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
 };
 
+/** Period [start, end) as a chip label: "6 Apr – 5 May 2026", or "6 Apr 2026 – 5 Apr 2027" across years (B-07). */
+export function periodLabel(p: { start: number; end: number }): string {
+  const a = new Date(p.start);
+  const b = new Date(p.end - 1);
+  if (startOfDay(p.start) === startOfDay(p.end - 1)) return `${a.getDate()} ${MONTHS[a.getMonth()]} ${a.getFullYear()}`;
+  if (a.getFullYear() === b.getFullYear()) return `${dayMonth(p.start)} – ${dayMonth(p.end - 1)} ${b.getFullYear()}`;
+  return `${dayMonth(p.start)} ${a.getFullYear()} – ${dayMonth(p.end - 1)} ${b.getFullYear()}`;
+}
+
 /** "Tue 10 Nov, 13:05" — the changed-date chip in Quick capture and the Date & time row. */
 export const dateTimeLabel = (at: number) => `${dateLabel(at)}, ${timeLabel(at)}`;
 

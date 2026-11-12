@@ -5,6 +5,7 @@ import {
   dateTimeLabel,
   dayHeader,
   dayTotalLabel,
+  periodLabel,
   durationLabel,
   greetingKey,
   groupByDay,
@@ -180,5 +181,13 @@ describe('sort card scope (B-01)', () => {
   it('lets history move a Work entry', () => {
     expect(sortCardScope('work', 'personal')).toBe('personal');
     expect(sortCardScope('work', null)).toBe('work');
+  });
+});
+
+describe('periodLabel (B-07)', () => {
+  it('names the period the filter is on', () => {
+    expect(periodLabel({ start: at(2026, 4, 6, 0), end: at(2027, 4, 6, 0) })).toBe('6 Apr 2026 – 5 Apr 2027');
+    expect(periodLabel({ start: at(2026, 7, 1, 0), end: at(2026, 10, 1, 0) })).toBe('1 Jul – 30 Sep 2026');
+    expect(periodLabel({ start: at(2026, 11, 12, 0), end: at(2026, 11, 13, 0) })).toBe('12 Nov 2026');
   });
 });

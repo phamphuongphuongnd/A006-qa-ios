@@ -2,7 +2,7 @@ import { FlashList } from '@shopify/flash-list';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { router } from '@/services/router';
 import { ArrowDownUp, Briefcase, ChevronDown, Combine, Plus, Search, SearchX, Tags, Trash2, X } from '@/ui/icons';
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BackHandler, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -16,7 +16,7 @@ import { taxYearOf } from '@/domain/taxYear';
 import { currencyOf, type Currency } from '@/domain/types';
 import { CategorySheet } from '@/features/entries/CategorySheet';
 import { EntryRow } from '@/features/entries/EntryRow';
-import { dateLabel, dayHeader, dayTotalLabel, groupByDay } from '@/features/entries/format';
+import { dateLabel, dayHeader, dayTotalLabel, groupByDay, periodLabel } from '@/features/entries/format';
 import { commonType, EMPTY_FILTER, hasActiveFilter, toggledScope, toRepoFilter, type DateRange, type EntriesFilterState } from '@/features/entries/logic';
 import { SwipeRow } from '@/features/entries/SwipeRow';
 import { useEntryActions } from '@/features/entries/useEntryActions';
@@ -121,6 +121,10 @@ export default function EntriesScreen() {
     setSeenKey(paramKey);
     setFilter(filterFromParams(params));
   }
+  const chipScroll = useRef<React.ComponentRef<typeof ScrollView>>(null);
+  useEffect(() => {
+    chipScroll.current?.scrollTo({ x: 0, animated: false });
+  }, [paramKey]);
   const [oldestFirst, setOldestFirst] = useState(false);
   const [picked, setSelected] = useState<string[] | null>(null);
   const [sheet, setSheet] = useState<'date' | 'category' | 'setCategory' | null>(null);
@@ -199,7 +203,7 @@ export default function EntriesScreen() {
   const chipsActive = hasActiveFilter({ ...filter, search: '' });
   const category = filter.categoryId ? catById.get(filter.categoryId) : undefined;
   const dateLabelText =
-    filter.period ? t('entries.dateCustom') : filter.date !== 'any' ? t(DATE_OPTIONS.find((d) => d.value === filter.date)!.key) : t('entries.date');
+    filter.period ? periodLabel(filter.period) : filter.date !== 'any' ? t(DATE_OPTIONS.find((d) => d.value === filter.date)!.key) : t('entries.date');
 
   const doMerge = () => {
     const ids = selected ?? [];
@@ -281,16 +285,21 @@ export default function EntriesScreen() {
             />
             {filter.search ? <IconButton icon={X} size={40} label={t('common.close')} onPress={() => set({ search: '' })} /> : null}
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: GUTTER }} keyboardShouldPersistTaps="handled">
+          <ScrollView ref={chipScroll} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: GUTTER }} keyboardShouldPersistTaps="handled">
             <Chip label={t('entries.all')} size="s" state={chipsActive ? 'default' : 'on'} onPress={() => setFilter({ ...EMPTY_FILTER, search: filter.search })} />
-            <FilterChip label={t('entries.unsorted')} on={filter.unsorted} dot onPress={() => set({ unsorted: !filter.unsorted })} />
-            <Chip label={t('entries.income')} size="s" state={filter.type === 'income' ? 'on' : 'default'} onPress={() => set({ type: filter.type === 'income' ? null : 'income' })} />
-            <Chip label={t('entries.expenses')} size="s" state={filter.type === 'expense' ? 'on' : 'default'} onPress={() => set({ type: filter.type === 'expense' ? null : 'expense' })} />
-            <Chip label={t('entries.work')} size="s" state={filter.scope === 'work' ? 'on' : 'default'} onPress={() => set({ scope: filter.scope === 'work' ? null : 'work' })} />
-            <Chip label={t('entries.personal')} size="s" state={filter.scope === 'personal' ? 'on' : 'default'} onPress={() => set({ scope: filter.scope === 'personal' ? null : 'personal' })} />
-            <Chip label={t('entries.withReceipt')} size="s" state={filter.withReceipt ? 'on' : 'default'} onPress={() => set({ withReceipt: !filter.withReceipt })} />
-            <FilterChip label={dateLabelText} on={filter.date !== 'any' || !!filter.period} drop onPress={() => setSheet('date')} />
-            <FilterChip label={category?.name ?? t('entries.category')} on={!!category} drop onPress={() => setSheet('category')} />
+            {/* Filters that are on come first, so a list opened from Reports shows what it is filtered by (B-07). */}
+            {[
+              { on: filter.unsorted, el: <FilterChip key="unsorted" label={t('entries.unsorted')} on={filter.unsorted} dot onPress={() => set({ unsorted: !filter.unsorted })} /> },
+              { on: filter.type === 'income', el: <Chip key="income" label={t('entries.income')} size="s" state={filter.type === 'income' ? 'on' : 'default'} onPress={() => set({ type: filter.type === 'income' ? null : 'income' })} /> },
+              { on: filter.type === 'expense', el: <Chip key="expense" label={t('entries.expenses')} size="s" state={filter.type === 'expense' ? 'on' : 'default'} onPress={() => set({ type: filter.type === 'expense' ? null : 'expense' })} /> },
+              { on: filter.scope === 'work', el: <Chip key="work" label={t('entries.work')} size="s" state={filter.scope === 'work' ? 'on' : 'default'} onPress={() => set({ scope: filter.scope === 'work' ? null : 'work' })} /> },
+              { on: filter.scope === 'personal', el: <Chip key="personal" label={t('entries.personal')} size="s" state={filter.scope === 'personal' ? 'on' : 'default'} onPress={() => set({ scope: filter.scope === 'personal' ? null : 'personal' })} /> },
+              { on: filter.withReceipt, el: <Chip key="receipt" label={t('entries.withReceipt')} size="s" state={filter.withReceipt ? 'on' : 'default'} onPress={() => set({ withReceipt: !filter.withReceipt })} /> },
+              { on: filter.date !== 'any' || !!filter.period, el: <FilterChip key="date" label={dateLabelText} on={filter.date !== 'any' || !!filter.period} drop onPress={() => setSheet('date')} /> },
+              { on: !!category, el: <FilterChip key="category" label={category?.name ?? t('entries.category')} on={!!category} drop onPress={() => setSheet('category')} /> },
+            ]
+              .sort((a, b) => Number(b.on) - Number(a.on))
+              .map((c) => c.el)}
           </ScrollView>
         </View>
       ) : null}

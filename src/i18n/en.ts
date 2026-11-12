@@ -193,7 +193,6 @@ export const en = {
     dateThisMonth: 'This month',
     dateLastMonth: 'Last month',
     dateTaxYear: 'This tax year',
-    dateCustom: 'Selected period',
     anyCategory: 'Any category',
     empty: 'No entries yet',
     addFirst: 'Add your first entry',
