@@ -3,7 +3,7 @@
 > Brief tĩnh của app. **≤ 60 dòng, không ghi lịch sử** (lịch sử ở git + `memory/sessions/`).
 > Tiến độ: `CHECKLIST.md` · Tính năng: `product.md` · Test: `TESTCASES.md` · Lỗi: `BUGS.md`.
 
-**Đang ở:** Bước 5 — sửa BUGS.md (24 lỗi: 2 🔴, 10 🟠, 12 🟡) (Bước 3 còn treo: GPS chạy xe thật, widget iOS, gộp main) (2026-11-12)
+**Đang ở:** Bước 5 — BUGS.md tick 12/24; còn B-12 (chưa đạt), 11 lỗi đã sửa chờ thử máy, B-20 (Bước 3 còn treo: GPS chạy xe thật, widget iOS, gộp main) (2026-11-12)
 
 ## Brief
 - **Mã app / thư mục:** `A006-sundaysort` → `apps/A006-sundaysort/`
@@ -51,6 +51,7 @@
 - Icon: import từ `@/ui/icons` (thêm 1 dòng/icon), không import thẳng `lucide-react-native` (kéo ~2.000 icon lúc mở app).
 - Font Inter Android nhúng bằng plugin `expo-font` (app.json): đổi font → `npx expo prebuild` lại.
 - Thử máy qua adb: chờ chữ trên màn (`uiautomator dump`) rồi mới bấm, không bấm theo giờ chờ cố định.
+- Điều hướng: import `router` từ `@/services/router` (không từ `expo-router`) — tránh crash khi Activity dựng lại (B-23).
 
 ## Retro (điền khi nộp store, 3 dòng)
 - Chậm nhất ở đâu, vì sao:
