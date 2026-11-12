@@ -29,11 +29,15 @@ export default function SortDoneScreen() {
   const currency = currencyOf(settings.region ?? 'UK');
   const week = weekOf(params.week ? Number(params.week) : now);
 
-  const data = useLive(() => ({
-    totals: totalsFor(db, week, 'work'),
-    miles: mileageTotals(db, week).work,
-    count: entryCount(db),
-  }));
+  const data = useLive(
+    () => ({
+      totals: totalsFor(db, week, 'work'),
+      miles: mileageTotals(db, week).work,
+      count: entryCount(db),
+    }),
+    [week.start],
+    ['entries', 'trips'],
+  );
   const showBackup = backupDue(settings, data.count, now);
 
   const done = () => (router.canGoBack() ? router.back() : router.replace('/sort'));

@@ -16,7 +16,7 @@ import { Button, Txt } from '@/ui';
 export default function CategoriesStep() {
   const { colors } = useTheme();
   const { settings } = useSettings();
-  const all = useLive(() => listCategories(db));
+  const all = useLive(() => listCategories(db), [], ['categories']);
   const form = settings.region === 'US' ? 'Schedule C' : 'SA103';
 
   const section = (label: string, kind: EntryType) => (

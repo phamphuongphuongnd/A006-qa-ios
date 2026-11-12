@@ -39,7 +39,7 @@ const draftOf = (e: EntryRowT): Draft => ({
 /** S-05 Entry detail — edit in place; ⋯ = Split / Duplicate / Delete; receipts open full screen. */
 export default function EntryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const entry = useLive(() => getEntry(db, id));
+  const entry = useLive(() => getEntry(db, id), [id], ['entries']);
   if (!entry) return <Gone />;
   return <Editor key={entry.id} entry={entry} />;
 }
@@ -80,11 +80,15 @@ function Editor({ entry }: { entry: EntryRowT }) {
   const [leaving, setLeaving] = useState(false);
   const amountRef = useRef<ComponentRef<typeof TextInput>>(null);
 
-  const data = useLive(() => ({
-    receipts: listReceipts(db, entry.id),
-    cats: listCategories(db, { includeHidden: true }),
-    siblings: entry.splitGroupId ? splitSiblings(db, entry.splitGroupId) : [],
-  }));
+  const data = useLive(
+    () => ({
+      receipts: listReceipts(db, entry.id),
+      cats: listCategories(db, { includeHidden: true }),
+      siblings: entry.splitGroupId ? splitSiblings(db, entry.splitGroupId) : [],
+    }),
+    [entry.id, entry.splitGroupId],
+    ['receipts', 'categories', 'entries'],
+  );
   const category = draft.categoryId ? data.cats.find((c) => c.id === draft.categoryId) : undefined;
 
   const saved = draftOf(entry);

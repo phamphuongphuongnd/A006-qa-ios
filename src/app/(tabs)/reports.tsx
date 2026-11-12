@@ -71,7 +71,7 @@ export default function ReportsScreen() {
   const period = periodFor(region, startYear, mode, custom);
 
   const { colors } = useTheme();
-  const firstAt = useLive(() => oldestRecordAt(db));
+  const firstAt = useLive(() => oldestRecordAt(db), [], ['entries', 'trips']);
   const years = availableTaxYears(region, firstAt);
 
   const pickMode = (m: PeriodMode) => {
@@ -160,7 +160,7 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
   const { settings } = useSettings();
   const { colors } = useTheme();
   const { report, months, currency, miles, mileageEstimateMinor, ratesText, entries } = useReport(period, settings, region);
-  const anyData = useLive(() => entryCount(db) > 0);
+  const anyData = useLive(() => entryCount(db) > 0, [], ['entries']);
   const range = { from: String(period.start), to: String(period.end) };
 
   if (entries.length === 0 && miles === 0) {

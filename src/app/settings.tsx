@@ -55,8 +55,8 @@ export default function SettingsScreen() {
   const [deleteText, setDeleteText] = useState('');
   const [canLock, setCanLock] = useState<boolean | null>(null);
 
-  const categoryCount = useLive(() => listCategories(db).length);
-  const hasData = useLive(() => entryCount(db) > 0);
+  const categoryCount = useLive(() => listCategories(db).length, [], ['categories']);
+  const hasData = useLive(() => entryCount(db) > 0, [], ['entries']);
 
   useEffect(() => {
     let live = true;

@@ -132,7 +132,7 @@ function SortCard({
   const [viewer, setViewer] = useState(false);
   const [x] = useState(() => new Animated.Value(0));
   const busy = useRef(false);
-  const receipts = useLive(() => (entry.receiptCount > 0 ? listReceipts(db, entry.id) : []));
+  const receipts = useLive(() => (entry.receiptCount > 0 ? listReceipts(db, entry.id) : []), [entry.id, entry.receiptCount], ['receipts']);
   const currency = entry.currency as Currency;
   const income = entry.type === 'income';
 

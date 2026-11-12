@@ -32,13 +32,13 @@ export default function MilesScreen() {
   const [perm, requestPerm] = Location.useForegroundPermissions();
   const { colors } = useTheme();
 
-  const allTrips = useLive(() => listTrips(db));
+  const allTrips = useLive(() => listTrips(db), [], ['trips']);
   const trips = useMemo(
     () => allTrips.filter((x) => x.startedAt >= year.start && x.startedAt < year.end && x.status !== 'running' && x.status !== 'paused'),
     [allTrips, year.start, year.end],
   );
-  const totals = useLive(() => mileageTotals(db, year));
-  const business = useLive(() => businessTripMiles(db, year));
+  const totals = useLive(() => mileageTotals(db, year), [year.start, year.end], ['trips']);
+  const business = useLive(() => businessTripMiles(db, year), [year.start, year.end], ['trips']);
   const years = useMemo(() => {
     const set = new Set<number>([currentYear, startYear]);
     for (const x of allTrips) set.add(taxYearOf(x.startedAt, region).startYear);

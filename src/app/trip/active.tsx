@@ -114,8 +114,8 @@ export default function ActiveTripScreen() {
   }, [params.start, params.action]);
 
   // Only the fixes that count toward the miles, so standing-still jitter doesn't draw a zigzag.
-  const points = useLive(() => (trip ? countedPath(tripPointsOf(db, trip.id)) : []));
-  const ended = useLive(() => (endedId ? getTrip(db, endedId) : undefined));
+  const points = useLive(() => (trip ? countedPath(tripPointsOf(db, trip.id)) : []), [trip?.id], ['trip_points']);
+  const ended = useLive(() => (endedId ? getTrip(db, endedId) : undefined), [endedId], ['trips']);
   const paused = trip?.status === 'paused';
 
   const gpsDialog = (

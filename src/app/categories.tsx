@@ -24,7 +24,7 @@ export default function CategoriesScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { settings } = useSettings();
-  const all = useLive(() => listCategories(db, { includeHidden: true }));
+  const all = useLive(() => listCategories(db, { includeHidden: true }), [], ['categories']);
   const [editing, setEditing] = useState<Editing>(null);
   const [dragging, setDragging] = useState(false);
   const [showHidden, setShowHidden] = useState(false);

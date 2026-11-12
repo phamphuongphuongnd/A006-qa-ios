@@ -18,10 +18,10 @@ export function useNow(ms = 15_000): number {
 
 /** The running / paused trip (live), with GPS quality from its last fix. */
 export function useActiveTrip() {
-  const trip = useLive(() => getActiveTrip(db));
-  const last = useLive(() => (trip ? lastPoint(db, trip.id) : undefined));
+  const trip = useLive(() => getActiveTrip(db), [], ['trips']);
+  const last = useLive(() => (trip ? lastPoint(db, trip.id) : undefined), [trip?.id], ['trip_points']);
   const now = useNow(trip ? 10_000 : 60_000);
   return { trip, now, gps: gpsQuality(last, now) };
 }
 
-export const useInterruptedTrip = () => useLive(() => latestInterrupted(db));
+export const useInterruptedTrip = () => useLive(() => latestInterrupted(db), [], ['trips']);

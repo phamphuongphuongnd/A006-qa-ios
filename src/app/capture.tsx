@@ -52,7 +52,7 @@ export default function CaptureScreen() {
   /** Blocks a second Save tap while the receipt photo is still being copied. */
   const savingRef = useRef(false);
 
-  const notes = useLive(() => topNotes(db, type));
+  const notes = useLive(() => topNotes(db, type), [type], ['entries']);
   const dirty = amount > 0 || note.trim() !== '' || photo !== null;
 
   const focusAmount = () => {

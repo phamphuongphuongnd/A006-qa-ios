@@ -12,9 +12,13 @@ import { monthlySeries, periodMileageEstimate, ratesLabel } from './series';
 
 /** Everything S-09 shows for one period. Re-runs after any DB write. */
 export function useReport(period: ReportPeriod, settings: AppSettings, region: Region) {
-  const entries = useLive(() => listEntries(db, { period }));
-  const categories = useLive(() => listCategories(db, { includeHidden: true }));
-  const miles = useLive(() => ({ inPeriod: mileageTotals(db, period).work, yearTrips: businessTripMiles(db, period.year) }));
+  const entries = useLive(() => listEntries(db, { period }), [period.start, period.end], ['entries', 'receipts']);
+  const categories = useLive(() => listCategories(db, { includeHidden: true }), [], ['categories']);
+  const miles = useLive(
+    () => ({ inPeriod: mileageTotals(db, period).work, yearTrips: businessTripMiles(db, period.year) }),
+    [period.start, period.end, period.year.start, period.year.end],
+    ['trips'],
+  );
   const report = buildReport(entries, categories, period);
   const months = monthlySeries(entries, period);
   const rates = settings.mileageRates[region];

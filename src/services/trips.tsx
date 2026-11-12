@@ -7,7 +7,7 @@ import { ACTION_END, ACTION_KEEP, ACTION_PAUSE, ACTION_RESUME, NOTIF_LONG_TRIP }
 import { detectInterruptedTrip, stopOrphanRecording } from '@/features/trips/controller';
 import { setupTripNotifications } from '@/features/trips/notify';
 import { refreshWidgets } from '@/features/widgets/refresh';
-import { useDbVersion } from '@/state/useLive';
+import { useTablesVersion } from '@/state/useLive';
 
 /**
  * Trip & widget background services (owner: miles/GPS/widget work). Mounted once in the root layout after
@@ -72,7 +72,8 @@ function useTripNotificationResponses() {
 }
 
 function useWidgetRefresh() {
-  const v = useDbVersion();
+  // Widgets show entries + trip state; GPS fixes (trip_points) alone don't change them.
+  const v = useTablesVersion(['entries', 'trips', 'categories', 'settings']);
   useEffect(() => {
     const id = setTimeout(() => {
       refreshWidgets().catch((e: unknown) => console.warn('[widget] refresh failed', e));

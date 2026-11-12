@@ -25,7 +25,7 @@ Notifications.setNotificationHandler({
  */
 export function DataServices() {
   const { settings } = useSettings();
-  const unsorted = useLive(() => unsortedCount(db));
+  const unsorted = useLive(() => unsortedCount(db), [], ['entries']);
   const { on, weekday, hour, minute } = settings.reminder;
 
   useEffect(() => {

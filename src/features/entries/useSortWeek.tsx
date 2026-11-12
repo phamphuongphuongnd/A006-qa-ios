@@ -25,26 +25,30 @@ export interface SortSuggestion {
  * progress, card queue and a `suggestFor(entry)` backed by `suggest()` + the user's sort history.
  */
 export function useSortWeek(chosen: number | null, skipped: string[] = []) {
-  const data = useLive(() => {
-    const weeks = unsortedWeeks(db);
-    const week = pickSortWeek(chosen, weeks);
-    return {
-      weeks,
-      week,
-      entries: week ? listEntries(db, { period: week }) : ([] as EntryListItem[]),
-      cats: listCategories(db),
-      history: sortHistory(db),
-    };
-  });
-  const sugCats: SuggestCategory[] = data.cats.map((c) => ({ id: c.id, type: c.type, key: c.key, hidden: c.hidden, order: c.sortOrder }));
-  const byId = new Map(data.cats.map((c) => [c.id, c]));
+  const data = useLive(
+    () => {
+      const weeks = unsortedWeeks(db);
+      const week = pickSortWeek(chosen, weeks);
+      return {
+        weeks,
+        week,
+        entries: week ? listEntries(db, { period: week }) : ([] as EntryListItem[]),
+        history: sortHistory(db),
+      };
+    },
+    [chosen],
+    ['entries', 'receipts'],
+  );
+  const cats = useLive(() => listCategories(db), [], ['categories']);
+  const sugCats: SuggestCategory[] = cats.map((c) => ({ id: c.id, type: c.type, key: c.key, hidden: c.hidden, order: c.sortOrder }));
+  const byId = new Map(cats.map((c) => [c.id, c]));
   const suggestFor = (e: EntryListItem): SortSuggestion => {
     const s = suggest({ type: e.type, note: e.note, amountMinor: e.amountMinor }, sugCats, data.history);
     return { categories: s.categoryIds.map((id) => byId.get(id)).filter((c): c is CategoryRow => !!c), scope: s.scope };
   };
   const total = data.entries.length;
   const done = data.entries.filter((e) => e.categoryId !== null).length;
-  return { ...data, queue: sortQueue(data.entries, skipped), total, done, suggestFor };
+  return { ...data, cats, queue: sortQueue(data.entries, skipped), total, done, suggestFor };
 }
 
 export const weekChipLabel = (week: Period, now = Date.now()) =>

@@ -30,7 +30,7 @@ export function CategorySheet({
   allowUnsorted?: boolean;
   title?: string;
 }) {
-  const cats = useLive(() => listCategories(db));
+  const cats = useLive(() => listCategories(db), [], ['categories']);
   const sections: { kind: EntryType; label: string }[] = [
     { kind: 'income', label: t('common.income') },
     { kind: 'expense', label: t('common.expenses') },

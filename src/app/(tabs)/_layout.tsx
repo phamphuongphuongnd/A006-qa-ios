@@ -7,7 +7,7 @@ import { useLive } from '@/state/useLive';
 import { TabBar } from '@/ui/TabBar';
 
 export default function TabsLayout() {
-  const unsorted = useLive(() => unsortedCount(db));
+  const unsorted = useLive(() => unsortedCount(db), [], ['entries']);
   return (
     <Tabs tabBar={(props) => <TabBar {...props} />} screenOptions={{ headerShown: false }}>
       <Tabs.Screen name="index" options={{ title: t('tabs.home') }} />

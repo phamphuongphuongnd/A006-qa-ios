@@ -1,5 +1,5 @@
 import { Briefcase, Trash2, User } from 'lucide-react-native';
-import { useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import ReanimatedSwipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 
@@ -15,17 +15,23 @@ export function SwipeRow({
   children,
   scope,
   enabled = true,
+  resetKey,
   onDelete,
   onToggleScope,
 }: {
   children: ReactNode;
   scope: Scope;
   enabled?: boolean;
+  /** Recycled list cells: a new key snaps the row shut so another entry never shows up half-swiped. */
+  resetKey?: string;
   onDelete: () => void;
   onToggleScope: () => void;
 }) {
   const { colors } = useTheme();
   const ref = useRef<SwipeableMethods>(null);
+  useEffect(() => {
+    ref.current?.reset();
+  }, [resetKey]);
   const to: Scope = scope === 'work' ? 'personal' : 'work';
   const run = (fn: () => void) => {
     ref.current?.close();

@@ -34,16 +34,19 @@ export default function HomeScreen() {
   const currency = currencyOf(region);
   const week = weekOf(now);
 
-  const data = useLive(() => ({
-    count: entryCount(db),
-    unsorted: unsortedCount(db),
-    totals: totalsFor(db, week, 'work'),
-    miles: mileageTotals(db, week).work,
-    trip: getActiveTrip(db),
-    recent: listEntries(db, { limit: 5 }),
-    cats: listCategories(db, { includeHidden: true }),
-  }));
-  const catById = new Map(data.cats.map((c) => [c.id, c]));
+  const data = useLive(
+    () => ({
+      count: entryCount(db),
+      unsorted: unsortedCount(db),
+      totals: totalsFor(db, week, 'work'),
+      recent: listEntries(db, { limit: 5 }),
+    }),
+    [week.start],
+    ['entries', 'receipts'],
+  );
+  const tripData = useLive(() => ({ miles: mileageTotals(db, week).work, trip: getActiveTrip(db) }), [week.start], ['trips']);
+  const cats = useLive(() => listCategories(db, { includeHidden: true }), [], ['categories']);
+  const catById = new Map(cats.map((c) => [c.id, c]));
   const empty = data.count === 0;
   const banner = showBackupBanner(settings, data.count, now);
 
@@ -70,7 +73,7 @@ export default function HomeScreen() {
         />
       ) : null}
 
-      {data.trip ? <TripCard trip={data.trip} now={now} unit={settings.distanceUnit} /> : null}
+      {tripData.trip ? <TripCard trip={tripData.trip} now={now} unit={settings.distanceUnit} /> : null}
 
       <Card onPress={() => router.push({ pathname: '/reports', params: { from: String(week.start), to: String(week.end) } })} accessibilityLabel={t('home.thisWeek')} style={{ gap: 10 }}>
         <Txt v="label" c="textTertiary">
@@ -88,7 +91,7 @@ export default function HomeScreen() {
           items={[
             { label: t('home.in'), value: formatMoney(data.totals.incomeMinor, currency), c: empty ? 'textSecondary' : 'incomeText' },
             { label: t('home.out'), value: formatMoney(data.totals.expenseMinor, currency), c: empty ? 'textSecondary' : 'expenseText' },
-            { label: t('home.businessMilesLabel'), value: milesLabel(data.miles), c: empty ? 'textSecondary' : 'text' },
+            { label: t('home.businessMilesLabel'), value: milesLabel(tripData.miles), c: empty ? 'textSecondary' : 'text' },
           ]}
         />
       </Card>
@@ -117,7 +120,7 @@ export default function HomeScreen() {
         )
       ) : null}
 
-      {!data.trip ? (
+      {!tripData.trip ? (
         <Card style={styles.rowCard}>
           <Avatar kind="work" icon={Flag} />
           <Txt v="small" c="textSecondary" style={{ flex: 1 }}>

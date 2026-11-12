@@ -1,12 +1,14 @@
+import { FlashList } from '@shopify/flash-list';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { ArrowDownUp, Briefcase, ChevronDown, Combine, Plus, Search, SearchX, Tags, Trash2, X } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
-import { BackHandler, Pressable, ScrollView, SectionList, StyleSheet, TextInput, View } from 'react-native';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { BackHandler, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { listCategories } from '@/db/categoriesRepo';
 import { db } from '@/db/client';
 import { entryCount, listEntries, type EntryListItem } from '@/db/entriesRepo';
+import type { CategoryRow } from '@/db/schema';
 import { formatMoney } from '@/domain/money';
 import { planMerge } from '@/domain/splitMerge';
 import { taxYearOf } from '@/domain/taxYear';
@@ -20,9 +22,66 @@ import { useEntryActions } from '@/features/entries/useEntryActions';
 import { useNow } from '@/features/entries/useNow';
 import { t, type TKey } from '@/i18n';
 import { useSettings } from '@/state/settings';
+import { useDebounced } from '@/state/useDebounced';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, radius, useTheme } from '@/theme';
 import { Avatar, Button, Chip, Dialog, Dot, EmptyState, Fab, IconButton, Sheet, Txt, useSnackbar } from '@/ui';
+
+/** Flat list: a day header followed by that day's entries (drawn as one card made of slices). */
+type ListItem =
+  | { kind: 'day'; key: string; title: string; total: string }
+  | { kind: 'row'; key: string; item: EntryListItem; first: boolean; last: boolean };
+
+/** One entry slice of a day card; memoised so scrolling / selecting re-renders only rows whose props changed. */
+const EntryCardRow = memo(function EntryCardRow({
+  item,
+  first,
+  last,
+  category,
+  selecting,
+  selected,
+  onOpen,
+  onToggle,
+  onDelete,
+  onToggleScope,
+}: {
+  item: EntryListItem;
+  first: boolean;
+  last: boolean;
+  category: CategoryRow | undefined;
+  selecting: boolean;
+  selected: boolean;
+  onOpen: (id: string) => void;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
+  onToggleScope: (item: EntryListItem) => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <View
+      style={[
+        styles.cardSlice,
+        { backgroundColor: colors.surface, borderColor: colors.line },
+        first && styles.sliceFirst,
+        last && styles.sliceLast,
+      ]}>
+      <SwipeRow resetKey={item.id} scope={item.scope} enabled={!selecting} onDelete={() => onDelete(item.id)} onToggleScope={() => onToggleScope(item)}>
+        <View style={[styles.rowPad, { backgroundColor: colors.surface }]}>
+          <EntryRow
+            entry={item}
+            category={category}
+            currency={item.currency as Currency}
+            divider={!first}
+            selecting={selecting}
+            selected={selected}
+            onPress={() => (selecting ? onToggle(item.id) : onOpen(item.id))}
+            onLongPress={() => onToggle(item.id)}
+          />
+        </View>
+      </SwipeRow>
+    </View>
+  );
+});
 
 const DATE_OPTIONS: { value: DateRange; key: TKey }[] = [
   { value: 'any', key: 'entries.dateAny' },
@@ -63,20 +122,32 @@ export default function EntriesScreen() {
   const [dialog, setDialog] = useState<'merge' | 'delete' | null>(null);
 
   const taxYear = taxYearOf(now, region);
-  const data = useLive(() => ({
-    total: entryCount(db),
-    rows: listEntries(db, toRepoFilter(filter, now, taxYear)),
-    cats: listCategories(db, { includeHidden: true }),
-  }));
-  const catById = new Map(data.cats.map((c) => [c.id, c]));
-  const rows = oldestFirst ? [...data.rows].reverse() : data.rows;
-  const groups = groupByDay(rows);
-  const sections = groups.map((g) => ({ key: String(g.key), title: dayHeader(g.at, now), total: dayTotalLabel(g, currency), data: g.items }));
+  // Typing in search re-queries once the user pauses, not on every key.
+  const search = useDebounced(filter.search, 150);
+  const repoFilter = toRepoFilter({ ...filter, search }, now, taxYear);
+  const repoKey = JSON.stringify(repoFilter);
+  const total = useLive(() => entryCount(db), [], ['entries']);
+  const cats = useLive(() => listCategories(db, { includeHidden: true }), [], ['categories']);
+  // repoKey is repoFilter by value.
+  const rowsLive = useLive(() => listEntries(db, repoFilter), [repoKey], ['entries', 'receipts']);
+  const data = { total, rows: rowsLive };
+  const catById = useMemo(() => new Map(cats.map((c) => [c.id, c])), [cats]);
+  const items = useMemo(() => {
+    const rows = oldestFirst ? [...rowsLive].reverse() : rowsLive;
+    const out: ListItem[] = [];
+    for (const g of groupByDay(rows)) {
+      out.push({ kind: 'day', key: `d${g.key}`, title: dayHeader(g.at, now), total: dayTotalLabel(g, currency) });
+      g.items.forEach((it, i) => out.push({ kind: 'row', key: it.id, item: it, first: i === 0, last: i === g.items.length - 1 }));
+    }
+    return out;
+  }, [rowsLive, oldestFirst, now, currency]);
 
   // Ids that vanished (deleted / merged meanwhile) drop out of the selection.
-  const selected = picked ? picked.filter((id) => data.rows.some((r) => r.id === id)) : null;
+  const rowIds = useMemo(() => new Set(rowsLive.map((r) => r.id)), [rowsLive]);
+  const selected = picked ? picked.filter((id) => rowIds.has(id)) : null;
   const selecting = selected !== null;
-  const selRows = selecting ? data.rows.filter((r) => selected.includes(r.id)) : [];
+  const selectedSet = new Set(selected ?? []);
+  const selRows = selecting ? rowsLive.filter((r) => selectedSet.has(r.id)) : [];
   const selType = commonType(selRows.map((r) => r.type));
 
   // Multi-select replaces the tab bar with its action bar; Android back leaves selection first.
@@ -90,12 +161,24 @@ export default function EntriesScreen() {
     return () => sub.remove();
   }, [selecting, navigation]);
 
-  const toggle = (id: string) =>
-    setSelected(() => {
-      const cur = selected ?? [];
-      const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
-      return next.length ? next : null;
-    });
+  const toggle = useCallback(
+    (id: string) =>
+      setSelected((cur0) => {
+        const cur = cur0 ?? [];
+        const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+        return next.length ? next : null;
+      }),
+    [],
+  );
+  const openEntry = useCallback((id: string) => router.push(`/entry/${id}`), []);
+  const removeOne = useCallback((id: string) => actions.remove([id]), [actions]);
+  const toggleScopeOne = useCallback(
+    (item: EntryListItem) => {
+      const to = item.scope === 'work' ? 'personal' : 'work';
+      actions.patchMany([item.id], { scope: to }, t('entries.movedTo', { scope: to === 'work' ? t('common.work') : t('common.personal') }));
+    },
+    [actions],
+  );
 
   const set = (patch: Partial<EntriesFilterState>) => setFilter((f) => ({ ...f, ...patch }));
   const chipsActive = hasActiveFilter({ ...filter, search: '' });
@@ -110,49 +193,30 @@ export default function EntriesScreen() {
   };
   const mergePlan = dialog === 'merge' ? planMerge(selRows) : null;
 
-  const renderRow = ({ item, index, section }: { item: EntryListItem; index: number; section: { data: EntryListItem[] } }) => {
-    const first = index === 0;
-    const last = index === section.data.length - 1;
-    return (
-      <View
-        style={[
-          styles.cardSlice,
-          {
-            backgroundColor: colors.surface,
-            borderColor: colors.line,
-            borderTopWidth: first ? 1 : 0,
-            borderBottomWidth: last ? 1 : 0,
-            borderTopLeftRadius: first ? radius.card : 0,
-            borderTopRightRadius: first ? radius.card : 0,
-            borderBottomLeftRadius: last ? radius.card : 0,
-            borderBottomRightRadius: last ? radius.card : 0,
-            marginBottom: last ? 4 : 0,
-          },
-        ]}>
-        <SwipeRow
-          scope={item.scope}
-          enabled={!selecting}
-          onDelete={() => actions.remove([item.id])}
-          onToggleScope={() => {
-            const to = item.scope === 'work' ? 'personal' : 'work';
-            actions.patchMany([item.id], { scope: to }, t('entries.movedTo', { scope: to === 'work' ? t('common.work') : t('common.personal') }));
-          }}>
-          <View style={{ paddingHorizontal: 14, backgroundColor: colors.surface }}>
-            <EntryRow
-              entry={item}
-              category={item.categoryId ? catById.get(item.categoryId) : undefined}
-              currency={item.currency as Currency}
-              divider={!first}
-              selecting={selecting}
-              selected={selected?.includes(item.id)}
-              onPress={() => (selecting ? toggle(item.id) : router.push(`/entry/${item.id}`))}
-              onLongPress={() => toggle(item.id)}
-            />
-          </View>
-        </SwipeRow>
+  const renderItem = ({ item }: { item: ListItem }) =>
+    item.kind === 'day' ? (
+      <View style={styles.gh}>
+        <Txt v="label" c="textTertiary">
+          {item.title}
+        </Txt>
+        <Txt v="small" style={{ fontFamily: fonts.bold }} c={item.total.startsWith('+') ? 'incomeText' : 'expenseText'}>
+          {item.total}
+        </Txt>
       </View>
+    ) : (
+      <EntryCardRow
+        item={item.item}
+        first={item.first}
+        last={item.last}
+        category={item.item.categoryId ? catById.get(item.item.categoryId) : undefined}
+        selecting={selecting}
+        selected={selectedSet.has(item.item.id)}
+        onOpen={openEntry}
+        onToggle={toggle}
+        onDelete={removeOne}
+        onToggleScope={toggleScopeOne}
+      />
     );
-  };
 
   const header = selecting ? (
     <View style={[styles.selTop, { backgroundColor: colors.primary, paddingTop: insets.top + 10, paddingHorizontal: GUTTER }]}>
@@ -221,7 +285,7 @@ export default function EntriesScreen() {
           title={t('entries.empty')}
           action={<Button label={t('entries.addFirst')} icon={Plus} full onPress={() => router.push('/capture?type=expense')} />}
         />
-      ) : sections.length === 0 ? (
+      ) : items.length === 0 ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14, paddingBottom: 60, paddingHorizontal: GUTTER }}>
           <Avatar kind="neutral" icon={SearchX} size={80} />
           <Txt v="h2" center>
@@ -230,23 +294,14 @@ export default function EntriesScreen() {
           <Button label={t('entries.clearFilters')} variant="outline" size="sm" onPress={() => setFilter(EMPTY_FILTER)} />
         </View>
       ) : (
-        <SectionList
-          sections={sections}
-          keyExtractor={(it) => it.id}
-          renderItem={renderRow}
-          stickySectionHeadersEnabled={false}
+        <FlashList
+          data={items}
+          keyExtractor={(it) => it.key}
+          getItemType={(it) => it.kind}
+          renderItem={renderItem}
+          extraData={selectedSet}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingHorizontal: GUTTER, paddingBottom: selecting ? 24 : 110, paddingTop: selecting ? 14 : 0 }}
-          renderSectionHeader={({ section }) => (
-            <View style={styles.gh}>
-              <Txt v="label" c="textTertiary">
-                {section.title}
-              </Txt>
-              <Txt v="small" style={{ fontFamily: fonts.bold }} c={section.total.startsWith('+') ? 'incomeText' : 'expenseText'}>
-                {section.total}
-              </Txt>
-            </View>
-          )}
         />
       )}
 
@@ -444,6 +499,9 @@ const styles = StyleSheet.create({
   search: { minHeight: 48, borderRadius: 24, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10 },
   gh: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: 12, paddingBottom: 8 },
   cardSlice: { overflow: 'hidden', borderLeftWidth: 1, borderRightWidth: 1 },
+  sliceFirst: { borderTopWidth: 1, borderTopLeftRadius: radius.card, borderTopRightRadius: radius.card },
+  sliceLast: { borderBottomWidth: 1, borderBottomLeftRadius: radius.card, borderBottomRightRadius: radius.card, marginBottom: 4 },
+  rowPad: { paddingHorizontal: 14 },
   drop: { height: 36, borderRadius: 18, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 6 },
   actionBar: { flexDirection: 'row', paddingTop: 6, paddingHorizontal: 8, borderTopWidth: 1 },
   barBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, minHeight: 56 },

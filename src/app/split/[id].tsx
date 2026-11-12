@@ -55,7 +55,11 @@ function SplitEditor({ entry }: { entry: EntryRow }) {
     defaultSplit(total, 2).map((m, i) => ({ key: i, text: toDecimalString(m), categoryId: null, scope: entry.scope, note: entry.note })),
   );
   const [picking, setPicking] = useState<number | null>(null);
-  const data = useLive(() => ({ receipts: listReceipts(db, entry.id), cats: listCategories(db, { includeHidden: true }) }));
+  const data = useLive(
+    () => ({ receipts: listReceipts(db, entry.id), cats: listCategories(db, { includeHidden: true }) }),
+    [entry.id],
+    ['receipts', 'categories'],
+  );
 
   const minors = parts.map((p) => partMinor(p.text));
   const check = checkSplit(total, minors);
