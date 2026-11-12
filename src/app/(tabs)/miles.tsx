@@ -1,4 +1,3 @@
-import * as Location from 'expo-location';
 import { router } from '@/services/router';
 import { ChevronDown, Flag, Gauge, LocateFixed, MapPin, Plus } from '@/ui/icons';
 import { useMemo, useState } from 'react';
@@ -13,6 +12,7 @@ import { formatMoney } from '@/domain/money';
 import { taxYearFor, taxYearOf } from '@/domain/taxYear';
 import { currencyOf, type Region } from '@/domain/types';
 import { formatDay, formatDistance, groupByMonth, type DistanceUnit } from '@/features/trips/format';
+import { useLocationPermission } from '@/features/trips/hooks';
 import { ActiveTripCard, InterruptedTripCard } from '@/features/trips/TripCards';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
@@ -45,7 +45,7 @@ export default function MilesScreen() {
   const [startYear, setStartYear] = useState(currentYear);
   const [pickYear, setPickYear] = useState(false);
   const year = taxYearFor(startYear, region);
-  const [perm, requestPerm] = Location.useForegroundPermissions();
+  const [perm, requestPerm] = useLocationPermission();
   const { colors } = useTheme();
 
   const allTrips = useLive(() => listTrips(db), [], ['trips']);
