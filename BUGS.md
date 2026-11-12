@@ -25,7 +25,7 @@
   màn đầu chỉ thấy "All" không sáng → không biết danh sách đang bị lọc; "Selected period" không nói kỳ nào — case TC-147 —
   tái hiện: Reports → chạm cột "Fuel" → Entries. — commit: `c1dcf10` — thử A13: chip bật lên đầu, kỳ "6 Apr 2026 – 5 Apr 2027"
 - [x] **B-08** 🟡 Widget Android 2×1: nút "−" / "+" không có nhãn trợ năng (TalkBack không đọc gì; widget 4×2 thì có) — case TC-180 —
-  tái hiện: `uiautomator dump` trên màn hình chính: 2 nút của widget 2×1 không có `content-desc`. — commit: `829d58a` — thử A13: nút widget 2×1 có content-desc "New expense"/"New income"; thêm nhãn cho viên "x to sort" (bản build sau)
+  tái hiện: `uiautomator dump` trên màn hình chính: 2 nút của widget 2×1 không có `content-desc`. — commit: `829d58a` — thử A13: nút widget 2×1 có content-desc "New expense"/"New income"; viên "x to sort" có nhãn "12 to sort" (đã thử bản `4a66c4e`)
 - [x] **B-09** 🟠 Tab Miles không cập nhật trạng thái quyền vị trí: từ chối quyền ở S-07a thì thẻ "GPS trips need location access"
   không hiện (kể cả chuyển tab); cấp lại quyền trong Cài đặt rồi quay lại app thì thẻ vẫn còn — chỉ đúng sau khi mở lại app —
   case TC-121 — tái hiện: Start trip → Allow location → "Không cho phép" → tab Miles không có thẻ; buộc dừng + mở lại thì có. — commit: `e6e7288` — thử A13: thu hồi quyền → thẻ "GPS trips need location access" hiện ngay; cấp lại + quay lại app → thẻ mất, không cần mở lại app
@@ -58,9 +58,9 @@
   (mượt cần ≤ 16 ms) — case TC-175 — tái hiện: khôi phục file 1.500 khoản → Entries → vuốt nhanh; `dumpsys gfxinfo`. — commit: `be72dc6` (nhánh perf/speed) — **cải thiện, chưa đạt ≤ 16 ms**:
   đo lại cùng cách (1.515 khoản, 20 lần vuốt): khung hình vẽ được 98 → 413, giật 20% → 11%, p90 89 → 44 ms, p99 200 → 61 ms.
   Đo lại 2026-11-12 tối (bản `9a50703`, cùng cách): 1.052 khung hình, giật 7,9%, p50 36 ms, p90 48 ms, p95 57 ms — máy đang bật chữ tương phản cao (vẽ chữ chậm hơn). Chờ Phương: chấp nhận hay làm đợt tối ưu riêng.
-- [ ] **B-21** 🟡 Mở Ghi nhanh qua màn khoá (widget / thông báo khi App lock bật): sau khi mở khoá, bàn phím số không tự bật
+- [x] **B-21** 🟡 Mở Ghi nhanh qua màn khoá (widget / thông báo khi App lock bật): sau khi mở khoá, bàn phím số không tự bật
   (product.md: "bàn phím số tự bật"), dòng "No category needed…" nằm dưới thanh điều hướng — case TC-178 — tái hiện: App lock +
-  Immediately → ra màn hình chính → widget 2×1 "−" → mở khoá vân tay. — commit:
+  Immediately → ra màn hình chính → widget 2×1 "−" → mở khoá vân tay. — commit: `41195ac` — thử A13: App lock + Immediately → widget "−" → Phương mở khoá vân tay → bàn phím số tự bật (mInputShown=true), dòng "No category needed…" hiện đủ; App lock đã tắt lại
 - [x] **B-22** 🟡 Màn 320dp: nút "Add manually" ở tab Miles bị cắt thành "Add manua…" — case TC-194 — tái hiện: Thu phóng màn hình
   lớn nhất (density 540 = 320dp) → Miles. — commit: `38ac936` — thử A13 mật độ 540 (320dp): "Start trip" / "Add manually" xếp 2 hàng, đủ chữ
 - [x] **B-23** 🔴 App tắt đột ngột ở lần bấm đầu sau khi đổi cỡ chữ hệ thống: "JavascriptException: The imperative router is
