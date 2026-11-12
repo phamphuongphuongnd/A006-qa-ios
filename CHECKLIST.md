@@ -39,7 +39,7 @@
 - [x] F-15 Xuất CSV ×3 + PDF + ZIP ảnh (S-10)
 - [x] F-16 Sao lưu & khôi phục + nhắc 30 ngày (S-12)
 - [x] F-17 Nhắc phân loại hằng tuần (thông báo local)
-- [ ] F-18 Khoá app sinh trắc (S-13) — code xong, chờ Phương thử vân tay
+- [x] F-18 Khoá app sinh trắc (S-13) — Phương thử vân tay OK 2026-11-12
 - [x] F-19 Widget Android (2×1, 4×2)
 - [ ] F-19 Widget iOS (nhỏ, vừa) — build EAS
 - [x] F-20 Settings (S-15) + xoá toàn bộ dữ liệu
