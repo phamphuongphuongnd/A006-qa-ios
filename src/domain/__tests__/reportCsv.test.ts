@@ -1,4 +1,4 @@
-import { csvField, entriesCsv, mileageCsv } from '../csv';
+import { csvField, entriesCsv, mileageCsv, totalsCsv } from '../csv';
 import { buildReport, type ReportEntry } from '../report';
 import { taxYearFor } from '../taxYear';
 
@@ -58,5 +58,21 @@ describe('csv', () => {
   it('builds the mileage log', () => {
     const doc = mileageCsv([{ startedAt: at(2026, 11, 10), miles: 128.44, scope: 'work', purpose: 'Route DLS4', source: 'gps', odoStart: null, odoEnd: null }]);
     expect(doc.trim().split('\r\n')[1]).toBe('2026-11-10,128.4,work,Route DLS4,gps,,');
+  });
+  // Step 4 · TC-154
+  it('builds the totals-by-category file, one row per category with its tax line', () => {
+    const doc = totalsCsv(
+      [
+        { type: 'income', name: 'Delivery income', taxLine: 'SA103: Turnover', totalMinor: 62000 },
+        { type: 'expense', name: 'Parking, tolls & congestion', taxLine: 'SA103: Car, van and travel expenses', totalMinor: 350 },
+      ],
+      'GBP',
+      'Tax year 2026/27',
+    );
+    const lines = doc.replace(/^﻿/, '').trim().split('\r\n');
+    expect(lines[0]).toBe('period,type,category,tax_line,total,currency');
+    expect(lines).toHaveLength(3);
+    expect(lines[1]).toBe('Tax year 2026/27,income,Delivery income,SA103: Turnover,620.00,GBP');
+    expect(lines[2]).toBe('Tax year 2026/27,expense,"Parking, tolls & congestion","SA103: Car, van and travel expenses",3.50,GBP');
   });
 });

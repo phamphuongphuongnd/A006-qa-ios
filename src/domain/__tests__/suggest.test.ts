@@ -52,6 +52,32 @@ describe('suggest', () => {
     expect(s.scope).toBeNull();
   });
 
+  // Step 4 · TC-100
+  it('ignores case and punctuation in the note', () => {
+    expect(suggest({ type: 'expense', note: 'SHELL, M62!', amountMinor: 7240 }, cats, []).categoryIds[0]).toBe('fuel');
+  });
+
+  // Step 4 · TC-104: a matching amount (±10%) tips the balance between two categories with the same note.
+  it('a matching amount (within 10%) beats an equally recent different amount', () => {
+    const history: SortedEntry[] = [
+      { type: 'expense', note: 'Tesco', amountMinor: 1500, categoryId: 'equipment', scope: 'work' },
+      { type: 'expense', note: 'Tesco', amountMinor: 6000, categoryId: 'fuel', scope: 'work' },
+    ];
+    // 5,800 is within 10% of 6,000 → fuel; 1,450 is within 10% of 1,500 → equipment.
+    expect(suggest({ type: 'expense', note: 'Tesco', amountMinor: 5800 }, cats, history).categoryIds[0]).toBe('fuel');
+    expect(suggest({ type: 'expense', note: 'Tesco', amountMinor: 1450 }, cats, history).categoryIds[0]).toBe('equipment');
+  });
+
+  // Step 4 · TC-105
+  it('suggests work/personal from history, and nothing on a tie', () => {
+    const work: SortedEntry = { type: 'expense', note: 'Greggs', amountMinor: 420, categoryId: 'other_expense', scope: 'work' };
+    const personal: SortedEntry = { ...work, scope: 'personal' };
+    expect(suggest({ type: 'expense', note: 'Greggs', amountMinor: 420 }, cats, [personal, personal]).scope).toBe('personal');
+    expect(suggest({ type: 'expense', note: 'Greggs', amountMinor: 420 }, cats, [work]).scope).toBe('work');
+    // Same note, same amount, one each: the newer one weighs a bit more, so a pure tie only happens with no signal.
+    expect(suggest({ type: 'expense', note: 'Unrelated', amountMinor: 420 }, cats, [work, personal]).scope).toBeNull();
+  });
+
   it('matches multi-word keywords as phrases only', () => {
     expect(suggest({ type: 'expense', note: 'Kwik Fit tyres', amountMinor: 18999 }, cats, []).categoryIds[0]).toBe('repairs');
     expect(suggest({ type: 'income', note: 'flexible hours', amountMinor: 100 }, cats, []).categoryIds[0]).not.toBe('tips');

@@ -47,7 +47,7 @@
 - [ ] Toàn bộ test xanh + dev build chạy trên Galaxy A13 → gộp `dev` → `main`
 
 ## Bước 4 — Test toàn bộ (chỉ ghi lỗi)
-- [ ] Viết TESTCASES.md (100–200 case)
+- [x] Viết TESTCASES.md (100–200 case) — 200 case
 - [ ] Chạy hết case (test tự động + thử máy) → BUGS.md
 
 ## Bước 5 — Sửa lỗi
