@@ -48,7 +48,7 @@
 
 ## Bước 4 — Test toàn bộ (chỉ ghi lỗi)
 - [x] Viết TESTCASES.md (100–200 case) — 200 case
-- [ ] Chạy hết case (test tự động + thử máy) → BUGS.md
+- [x] Chạy hết case (test tự động + thử máy) → BUGS.md — 180 ✅ · 16 ❌ · 4 ⏭ (chạy xe thật, TalkBack nghe thật, mở PDF, widget iOS); 24 lỗi
 
 ## Bước 5 — Sửa lỗi
 - [ ] Sửa hết BUGS.md (tick trong BUGS.md)

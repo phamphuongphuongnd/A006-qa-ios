@@ -131,7 +131,7 @@
 | TC-120 | F-12 | Start trip lần đầu | S-07a "Track business miles with GPS" + chữ đúng; "Not now" không bắt đầu chuyến | M | ✅ |
 | TC-121 | F-12 | Từ chối quyền vị trí | Tab Miles thẻ "GPS trips need location access" + "Allow" + "Or add trips manually" | M | ❌ B-09 |
 | TC-122 | F-12 | Bước 2 "Allow all the time" | Giải thích + "Open settings" mở trang quyền của app | M | ✅ |
-| TC-123 | F-12 | Vị trí máy tắt → Start trip | "Location is off. Turn it on to start a trip." + "Open settings" | M·P | |
+| TC-123 | F-12 | Vị trí máy tắt → Start trip | "Location is off. Turn it on to start a trip." + "Open settings" | M·P | ✅ |
 | TC-124 | F-12 | Đang chạy | Thông báo cố định "Trip running · x mi" + "Personal stop" + "End trip" | M | ✅ B-10 hai thông báo cùng lúc |
 | TC-125 | F-12 | Personal stop → Resume | Home "Paused for personal stop"; Resume ghi tiếp | M | ✅ |
 | TC-126 | F-12 | Điểm trong lúc tạm dừng | Không tính; đoạn nối sau Resume không tính | T repos, splitM | ✅ |
@@ -141,7 +141,7 @@
 | TC-130 | F-12 | "End trip" từ thông báo | Kết thúc chuyến, mở sheet lưu | M | ✅ |
 | TC-131 | F-12 | Chuyến > 12 giờ | Thông báo "Still driving? …" + "End trip" / "Keep going" (lịch đặt đúng 12h) | T longTripReminder (mới) | ✅ |
 | TC-132 | F-12 | Chuyến bị ngắt (force-stop app khi đang chạy) | Lần mở sau: thẻ cam "Your trip stopped recording at …" + "Add missing miles" / "OK" | M + T tripsX | ❌ B-11 thẻ chỉ ở Miles, không ở Home |
-| TC-133 | F-12 | Chạy xe thật 10–20 dặm | Sai lệch ≤ 3% so đồng hồ xe | M·P | |
+| TC-133 | F-12 | Chạy xe thật 10–20 dặm | Sai lệch ≤ 3% so đồng hồ xe | M·P | ⏭ chờ Phương chạy xe thật (mục treo Bước 3) |
 | TC-134 | F-13 | Tổng Business / Personal theo năm thuế | Đúng | T repos | ✅ |
 | TC-135 | F-13 | UK ước tính | 45p 10.000 dặm đầu, 25p sau; vượt ngưỡng trong 1 chuyến | T rates, splitM | ✅ |
 | TC-136 | F-13 | US ước tính | 72.5¢ tới 30/6, 76¢ từ 1/7/2026 | T rates | ✅ |
@@ -184,9 +184,9 @@
 | TC-173 | F-17 | Nội dung / không có gì để phân loại | "N entries to sort · About N minutes…"; 0 khoản → không nhắc | T reminder | ✅ |
 | TC-174 | F-17 | Đặt giờ nhắc 2 phút tới, có khoản chưa phân loại | Thông báo hiện; chạm mở tab Sort | M | ✅ đến 14:13 (đặt 14:10, Android cho trễ), chạm mở Sort |
 | TC-175 | Dữ liệu lớn | Khôi phục file 1.500 khoản + 200 chuyến | Entries cuộn mượt, tìm < 1 giây, badge "99+", Reports / Export chạy | M | ❌ B-20 cuộn Entries giật (p50 61–101 ms/khung); khôi phục 7s, tìm kiếm, Reports, badge 99+ ổn |
-| TC-176 | F-18 | Lock after mặc định + "Immediately" | Mặc định "After 1 minute"; Immediately → ra nền vào lại thấy S-13 | M | |
-| TC-177 | F-18 | S-13 | "Sunday Sort is locked" + "Unlock", tự bật hộp thoại sinh trắc | M·P | |
-| TC-178 | F-18 | Widget khi đang khoá | Mở khoá trước rồi mới vào Ghi nhanh | M·P | |
+| TC-176 | F-18 | Lock after mặc định + "Immediately" | Mặc định "After 1 minute"; Immediately → ra nền vào lại thấy S-13 | M | ✅ mặc định After 1 minute; Immediately khoá ngay khi ra nền |
+| TC-177 | F-18 | S-13 | "Sunday Sort is locked" + "Unlock", tự bật hộp thoại sinh trắc | M·P | ✅ |
+| TC-178 | F-18 | Widget khi đang khoá | Mở khoá trước rồi mới vào Ghi nhanh | M·P | ✅ B-21 sau mở khoá bàn phím số không tự bật |
 | TC-179 | F-19 | Dữ liệu widget | Net tuần, số chưa phân loại, chuyến đang chạy, "All sorted" | T widget | ✅ |
 | TC-180 | F-19 | Widget 2×1 "−" / "+" | Mở thẳng Ghi nhanh đúng loại | M | ✅ nút 2×1 không có nhãn TalkBack → B-08 |
 | TC-181 | F-19 | Widget 4×2 Start trip → End trip · x mi | Bắt đầu chuyến, widget đổi chữ; vào app hiện S-07b | M | ✅ |
@@ -200,11 +200,11 @@
 | TC-189 | F-20 | About | "How Sunday Sort works" xem lại onboarding không mất dữ liệu; Privacy (web), Contact (email), "Version 1.0.0" | M | ❌ B-03; About thiếu Privacy policy + Contact |
 | TC-190 | F-21 | S-16 + icon + splash | Đúng chữ miễn trừ; icon và splash như mockup | M | ✅ |
 | TC-191 | Deep link | `sundaysort://capture?type=income`, `trip/start`, `sort`, `trip/active` | Mở đúng màn | M | ✅ capture, sort, trip/active chạy; trip/start (product.md) không có — widget dùng trip/active?start=1 → B-17 |
-| TC-192 | Offline | Chế độ máy bay, dùng mọi luồng chính | Chạy bình thường; Privacy policy báo không mạng mà không treo | M·P | |
-| TC-193 | Tối | Giao diện tối hệ thống, xem mọi màn chính | Đủ tương phản, không chữ đen trên nền tối | M·P | |
-| TC-194 | 320dp | Màn hẹp 320dp | Không tràn chữ / nút bị cắt ở Home, Capture, Sort, Reports | M·P | |
-| TC-195 | Chữ 200% | Cỡ chữ lớn nhất | Không cắt số tiền, nút vẫn bấm được | M·P | |
-| TC-196 | TalkBack | Đọc Home, Capture, Sort | Mọi nút có nhãn, đọc đúng số tiền | M·P | |
+| TC-192 | Offline | Chế độ máy bay, dùng mọi luồng chính | Chạy bình thường; Privacy policy báo không mạng mà không treo | M·P | ✅ privacy link chưa có (B-03) |
+| TC-193 | Tối | Giao diện tối hệ thống, xem mọi màn chính | Đủ tương phản, không chữ đen trên nền tối | M·P | ✅ app theo hệ thống; thanh điều hướng vẫn sáng (B-12) |
+| TC-194 | 320dp | Màn hẹp 320dp | Không tràn chữ / nút bị cắt ở Home, Capture, Sort, Reports | M·P | ❌ B-22 nút 'Add manually' ở Miles bị cắt thành 'Add manua…'; các màn khác vừa |
+| TC-195 | Chữ 200% | Cỡ chữ lớn nhất | Không cắt số tiền, nút vẫn bấm được | M·P | ❌ B-24 nhãn bị cắt / vỡ chữ; số tiền không bị cắt |
+| TC-196 | TalkBack | Đọc Home, Capture, Sort | Mọi nút có nhãn, đọc đúng số tiền | M·P | ⏭ mọi nút trên 5 tab có nhãn trợ năng (dòng khoản đọc kiểu "Kwik Fit tyres, −£189.99, Unsorted, Work"); không điều khiển được TalkBack qua adb để nghe thật — cần người nghe |
 | TC-197 | Cài đè | Cài APK mới đè bản cũ có dữ liệu | Dữ liệu, cài đặt, nhắc còn nguyên | M | ✅ |
 | TC-198 | Mặc định | Quyền trong APK, không mạng, không quảng cáo, không đăng nhập | Không có quyền thừa; không gọi mạng ngoài link Privacy | M | ❌ B-19 quyền thừa trong APK |
 | TC-199 | Tiền | Số thực / làm tròn | formatMoney từ chối số thực; mọi tổng là số nguyên | T money | ✅ |

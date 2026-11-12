@@ -56,3 +56,15 @@
   câu "dữ liệu không rời máy" — case TC-198 — tái hiện: `aapt2 dump permissions app-release.apk`. — commit:
 - [ ] **B-20** 🟠 Cuộn Entries giật với dữ liệu lớn (1.515 khoản): 50% khung hình 61–101 ms, 90% 150–250 ms trên Galaxy A13
   (mượt cần ≤ 16 ms) — case TC-175 — tái hiện: khôi phục file 1.500 khoản → Entries → vuốt nhanh; `dumpsys gfxinfo`. — commit:
+- [ ] **B-21** 🟡 Mở Ghi nhanh qua màn khoá (widget / thông báo khi App lock bật): sau khi mở khoá, bàn phím số không tự bật
+  (product.md: "bàn phím số tự bật"), dòng "No category needed…" nằm dưới thanh điều hướng — case TC-178 — tái hiện: App lock +
+  Immediately → ra màn hình chính → widget 2×1 "−" → mở khoá vân tay. — commit:
+- [ ] **B-22** 🟡 Màn 320dp: nút "Add manually" ở tab Miles bị cắt thành "Add manua…" — case TC-194 — tái hiện: Thu phóng màn hình
+  lớn nhất (density 540 = 320dp) → Miles. — commit:
+- [ ] **B-23** 🔴 App tắt đột ngột ở lần bấm đầu sau khi đổi cỡ chữ hệ thống: "JavascriptException: The imperative router is
+  unavailable before the first render has finished" (router.push trong onPress) — case TC-195 — tái hiện: app đang chạy nền →
+  đổi Cỡ chữ trong Cài đặt máy → mở lại app → bấm "− Expense" ngay → app tắt. Mở lại lần sau thì không lỗi. Có thể cũng xảy ra với
+  đổi chế độ tối / ngôn ngữ máy (đều dựng lại Activity). — commit:
+- [ ] **B-24** 🟡 Cỡ chữ 200%: số tiền vẫn hiện đủ nhưng nhiều nhãn bị cắt / vỡ: Ghi nhanh "Expens/e" xuống dòng, 3 nhãn
+  "Photo · Tap for Personal · Note" dính thành một dòng; "This week ·..", "Kwik Fi..", "Unsorte..", "Add ma..", "Busine.."; badge số
+  đè icon tab Sort — case TC-195 — tái hiện: Cỡ chữ lớn nhất (font_scale 2.0) → các tab. — commit:
