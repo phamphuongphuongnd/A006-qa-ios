@@ -75,7 +75,7 @@ function useWidgetRefresh() {
   const v = useDbVersion();
   useEffect(() => {
     const id = setTimeout(() => {
-      refreshWidgets().catch(() => {});
+      refreshWidgets().catch((e: unknown) => console.warn('[widget] refresh failed', e));
       stopOrphanRecording().catch(() => {});
     }, 1_500);
     return () => clearTimeout(id);

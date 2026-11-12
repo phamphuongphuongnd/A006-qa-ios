@@ -34,6 +34,8 @@ describe('widgetSnapshot', () => {
     expect(s.netText).toBe('£1,053.60');
     expect(s.toSort).toBe(1);
     expect(s.weekLine).toBe('This week: Net £1,053.60 · 1 to sort');
+    expect(s.rangeText).toBe('9–15 Nov');
+    expect(s.detailText).toBe('In £1,240.00 · Out £186.40 · 0 mi');
     expect(s.trip).toBe('none');
 
     const trip = startTrip(db, 'work', NOW);

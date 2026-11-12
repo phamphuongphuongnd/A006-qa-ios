@@ -395,6 +395,9 @@ export const en = {
     toSort: '{count} to sort',
     allSorted: 'All sorted',
     weekNet: 'This week: Net {amount}',
+    thisWeek: 'THIS WEEK · {range}',
+    net: 'Net',
+    detail: 'In {income} · Out {expense} · {distance}',
     setup: 'Open Sunday Sort to set up',
   },
   reports: {

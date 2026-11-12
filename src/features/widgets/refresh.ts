@@ -40,7 +40,9 @@ export async function refreshWidgets(force = false): Promise<void> {
   if (Platform.OS === 'android') {
     await Promise.all(
       Object.values(ANDROID_WIDGETS).map((widgetName) =>
-        requestWidgetUpdate({ widgetName, renderWidget: () => renderAndroidWidget(widgetName, s) }).catch(() => {}),
+        requestWidgetUpdate({ widgetName, renderWidget: () => renderAndroidWidget(widgetName, s) }).catch((e: unknown) =>
+          console.warn(`[widget] update ${widgetName} failed`, e),
+        ),
       ),
     );
   } else {

@@ -1,4 +1,4 @@
-import { DEFAULT_RATES, isStationaryFix, mileageEstimate, odometerMiles, trackDistance, type GpsPoint } from '../mileage';
+import { countedPath, DEFAULT_RATES, isStationaryFix, mileageEstimate, odometerMiles, trackDistance, type GpsPoint } from '../mileage';
 import { checkSplit, defaultSplit, planMerge, type MergeSource } from '../splitMerge';
 
 describe('split', () => {
@@ -94,6 +94,7 @@ describe('trackDistance', () => {
       accuracy: 20,
     }));
     expect(trackDistance(pts)).toBe(0);
+    expect(countedPath(pts)).toHaveLength(1); // the sketch draws one dot, not a zigzag
   });
   it('flags slow fixes near the last point as stationary noise', () => {
     const at = { lat: 53.8, lng: -1.55 };

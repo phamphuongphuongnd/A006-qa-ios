@@ -24,7 +24,7 @@ import { useActiveTrip } from '@/features/trips/hooks';
 import { ModalHeader } from '@/features/trips/ModalHeader';
 import { wasBackgroundStepShown } from '@/features/trips/permissionState';
 import { RouteSketch } from '@/features/trips/RouteSketch';
-import { formatDistanceNumber } from '@/domain/mileage';
+import { countedPath, formatDistanceNumber } from '@/domain/mileage';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
@@ -113,7 +113,8 @@ export default function ActiveTripScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.start, params.action]);
 
-  const points = useLive(() => (trip ? tripPointsOf(db, trip.id) : []));
+  // Only the fixes that count toward the miles, so standing-still jitter doesn't draw a zigzag.
+  const points = useLive(() => (trip ? countedPath(tripPointsOf(db, trip.id)) : []));
   const ended = useLive(() => (endedId ? getTrip(db, endedId) : undefined));
   const paused = trip?.status === 'paused';
 

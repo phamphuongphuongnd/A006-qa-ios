@@ -101,12 +101,23 @@ export const MAX_MOVE_THRESHOLD_M = 80;
  * anchor as soon as it clears the threshold.
  */
 export function trackDistance(points: GpsPoint[]): number {
+  return walkTrack(points).distance;
+}
+
+/** The fixes that count (start of each segment + every anchor) — what the route sketch should draw. */
+export function countedPath<T extends GpsPoint>(points: T[]): T[] {
+  return walkTrack(points).path;
+}
+
+function walkTrack<T extends GpsPoint>(points: T[]): { distance: number; path: T[] } {
   let total = 0;
-  let anchor: GpsPoint | null = null;
+  let anchor: T | null = null;
+  const path: T[] = [];
   for (const p of points) {
     if (p.accuracy > MAX_ACCURACY_M) continue;
     if (!anchor || p.segmentStart) {
       anchor = p;
+      path.push(p);
       continue;
     }
     const d = haversine(anchor, p);
@@ -116,8 +127,9 @@ export function trackDistance(points: GpsPoint[]): number {
     if (d < threshold) continue; // still within the noise around the anchor
     total += d;
     anchor = p;
+    path.push(p);
   }
-  return total;
+  return { distance: total, path };
 }
 
 /** Below this reported speed (≈ 2 mph) the phone is treated as standing still. */

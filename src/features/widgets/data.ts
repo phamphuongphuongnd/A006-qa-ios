@@ -1,10 +1,11 @@
 import { totalsFor, unsortedCount } from '@/db/entriesRepo';
 import { getSettings } from '@/db/settingsRepo';
-import { getActiveTrip } from '@/db/tripsRepo';
+import { getActiveTrip, mileageTotals } from '@/db/tripsRepo';
 import type { AppDb } from '@/db/types';
+import { milesToMeters } from '@/domain/mileage';
 import { formatMoney } from '@/domain/money';
 import { currencyOf } from '@/domain/types';
-import { weekOf } from '@/domain/week';
+import { weekLabel, weekOf } from '@/domain/week';
 import { formatDistance } from '@/features/trips/format';
 import { t } from '@/i18n';
 
@@ -15,6 +16,10 @@ export interface WidgetSnapshot {
   toSort: number;
   toSortText: string;
   netText: string;
+  /** "9–15 Nov" */
+  rangeText: string;
+  /** "In £85.00 · Out £12.50 · 128 mi" */
+  detailText: string;
   weekLine: string;
   trip: 'none' | 'running' | 'paused';
   tripDistance: string;
@@ -25,6 +30,8 @@ export const EMPTY_SNAPSHOT: WidgetSnapshot = {
   toSort: 0,
   toSortText: '',
   netText: '',
+  rangeText: '',
+  detailText: '',
   weekLine: t('widget.setup'),
   trip: 'none',
   tripDistance: '',
@@ -37,8 +44,16 @@ export function widgetSnapshot(db: AppDb, now = Date.now()): WidgetSnapshot {
     if (!s.onboarded || !s.region) return EMPTY_SNAPSHOT;
     const week = weekOf(now);
     const toSort = unsortedCount(db, week);
-    const net = totalsFor(db, week, 'work').netMinor;
-    const netText = formatMoney(net, currencyOf(s.region));
+    const currency = currencyOf(s.region);
+    const totals = totalsFor(db, week, 'work');
+    const netText = formatMoney(totals.netMinor, currency);
+    const miles = mileageTotals(db, week).work;
+    const distance = formatDistance(milesToMeters(miles), s.distanceUnit, 0);
+    const detailText = t('widget.detail', {
+      income: formatMoney(totals.incomeMinor, currency),
+      expense: formatMoney(totals.expenseMinor, currency),
+      distance,
+    });
     const trip = getActiveTrip(db);
     const toSortText = toSort > 0 ? t('widget.toSort', { count: toSort > 99 ? '99+' : toSort }) : t('widget.allSorted');
     return {
@@ -46,6 +61,8 @@ export function widgetSnapshot(db: AppDb, now = Date.now()): WidgetSnapshot {
       toSort,
       toSortText,
       netText,
+      rangeText: weekLabel(week),
+      detailText,
       weekLine: `${t('widget.weekNet', { amount: netText })} · ${toSortText}`,
       trip: trip ? (trip.status === 'paused' ? 'paused' : 'running') : 'none',
       tripDistance: trip ? formatDistance(trip.distanceM, s.distanceUnit) : '',
