@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Briefcase, Check, ChevronDown, Flag, LocateFixed, MapPin, Pause, Play, Square, User } from 'lucide-react-native';
+import { Briefcase, Check, ChevronDown, Flag, LocateFixed, MapPin, Pause, Play, Square, User } from '@/ui/icons';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

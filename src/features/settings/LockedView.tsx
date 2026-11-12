@@ -1,5 +1,5 @@
 import * as LocalAuthentication from 'expo-local-authentication';
-import { Lock, ScanFace } from 'lucide-react-native';
+import { Lock, ScanFace } from '@/ui/icons';
 import { useCallback, useEffect, useRef } from 'react';
 import { AppState, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

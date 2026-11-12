@@ -1,5 +1,5 @@
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import { Briefcase, Calendar, ChevronDown } from 'lucide-react-native';
+import { Briefcase, Calendar, ChevronDown } from '@/ui/icons';
 import { useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 

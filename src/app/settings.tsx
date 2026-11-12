@@ -2,7 +2,7 @@ import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/d
 import Constants from 'expo-constants';
 import { router, type Href } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { ArrowUpRight, CloudUpload, Download, Lock, Tag as TagIcon, Trash2 } from 'lucide-react-native';
+import { ArrowUpRight, CloudUpload, Download, Lock, Tag as TagIcon, Trash2 } from '@/ui/icons';
 import { useEffect, useState } from 'react';
 import { Linking, Platform, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

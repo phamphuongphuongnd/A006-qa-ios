@@ -1,5 +1,5 @@
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
-import { Trash2, X } from 'lucide-react-native';
+import { Trash2, X } from '@/ui/icons';
 import { useState } from 'react';
 
 import { db } from '@/db/client';

@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import { Check, ChevronDown, ChevronUp, Download, Info, X } from 'lucide-react-native';
+import { Check, ChevronDown, ChevronUp, Download, Info, X } from '@/ui/icons';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';

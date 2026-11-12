@@ -1,4 +1,4 @@
-import { Info, ShieldAlert } from 'lucide-react-native';
+import { Info, ShieldAlert } from '@/ui/icons';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 

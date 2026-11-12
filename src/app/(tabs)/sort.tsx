@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Briefcase, List, Pencil, SkipForward, Split, User } from 'lucide-react-native';
+import { Briefcase, List, Pencil, SkipForward, Split, User } from '@/ui/icons';
 import { useRef, useState } from 'react';
 import { Animated, Image, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

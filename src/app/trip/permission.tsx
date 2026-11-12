@@ -1,6 +1,6 @@
 import * as Location from 'expo-location';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, Lock, X } from 'lucide-react-native';
+import { ChevronLeft, Lock, X } from '@/ui/icons';
 import { useEffect, useState } from 'react';
 import { Linking, Platform, View } from 'react-native';
 import Svg, { Circle, Path, Rect, Text as SvgText } from 'react-native-svg';

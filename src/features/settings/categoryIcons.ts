@@ -24,7 +24,7 @@ import {
   Utensils,
   Wrench,
   type LucideIcon,
-} from 'lucide-react-native';
+} from '@/ui/icons';
 
 /**
  * Category icon names stored in the DB (`categories.icon`) → lucide icon. The first names are the ones the default

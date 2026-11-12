@@ -11,7 +11,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { Text, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -26,10 +26,15 @@ import migrations from '../../drizzle/migrations';
 
 SplashScreen.preventAutoHideAsync();
 
+const RUNTIME_FONTS =
+  Platform.OS === 'android' ? {} : { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold };
+
 export default function RootLayout() {
   const { success, error } = useMigrations(expoDb, migrations);
-  const [fontsLoaded, fontError] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold });
-  const fontsReady = fontsLoaded || !!fontError; // fall back to system font rather than block the app
+  const [fontsLoaded, fontError] = useFonts(RUNTIME_FONTS);
+  // Android has Inter linked into the APK at build time (expo-font plugin, app.json), so it never waits here.
+  // Elsewhere: fall back to the system font rather than block the app.
+  const fontsReady = Platform.OS === 'android' || fontsLoaded || !!fontError;
 
   useEffect(() => {
     if ((success && fontsReady) || error) SplashScreen.hideAsync();

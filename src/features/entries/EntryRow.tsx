@@ -1,4 +1,4 @@
-import { Paperclip } from 'lucide-react-native';
+import { Paperclip } from '@/ui/icons';
 import { View } from 'react-native';
 
 import type { EntryListItem } from '@/db/entriesRepo';

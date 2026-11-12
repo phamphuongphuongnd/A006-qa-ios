@@ -1,4 +1,4 @@
-import { Briefcase, Trash2, User } from 'lucide-react-native';
+import { Briefcase, Trash2, User } from '@/ui/icons';
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import ReanimatedSwipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';

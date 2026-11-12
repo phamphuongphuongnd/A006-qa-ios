@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, Clock } from 'lucide-react-native';
+import { Bell, ChevronDown, Clock } from '@/ui/icons';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 

@@ -1,6 +1,6 @@
 import { getLocales } from 'expo-localization';
 import { router } from 'expo-router';
-import { Info } from 'lucide-react-native';
+import { Info } from '@/ui/icons';
 import { useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 

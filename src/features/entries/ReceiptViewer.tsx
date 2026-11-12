@@ -1,4 +1,4 @@
-import { Trash2, X } from 'lucide-react-native';
+import { Trash2, X } from '@/ui/icons';
 import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { GestureDetector, GestureHandlerRootView, usePanGesture, usePinchGesture, useSimultaneousGestures, useTapGesture } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';

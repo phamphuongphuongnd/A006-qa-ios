@@ -13,7 +13,7 @@ import {
   Truck,
   Wrench,
   type LucideIcon,
-} from 'lucide-react-native';
+} from '@/ui/icons';
 
 /** Category `icon` names stored in the DB (domain/categories.ts) → lucide icons. Unknown names get a tag. */
 const MAP: Record<string, LucideIcon> = {

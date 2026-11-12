@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Tag } from 'lucide-react-native';
+import { Tag } from '@/ui/icons';
 import { ScrollView, View } from 'react-native';
 
 import { listCategories } from '@/db/categoriesRepo';

@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { CloudUpload, Flag, Minus, Pause, Play, Plus, Settings, Square, Check, X } from 'lucide-react-native';
+import { CloudUpload, Flag, Minus, Pause, Play, Plus, Settings, Square, Check, X } from '@/ui/icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { listCategories } from '@/db/categoriesRepo';

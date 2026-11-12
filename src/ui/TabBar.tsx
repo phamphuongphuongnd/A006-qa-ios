@@ -1,5 +1,5 @@
 import type { BottomTabBarProps } from 'expo-router/tabs';
-import { BarChart3, Gauge, Home, Layers, List, type LucideIcon } from 'lucide-react-native';
+import { BarChart3, Gauge, Home, Layers, List, type LucideIcon } from '@/ui/icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 

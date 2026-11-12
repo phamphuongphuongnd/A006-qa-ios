@@ -1,6 +1,6 @@
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
-import { ChevronDown, Flag, Gauge, LocateFixed, MapPin, Plus } from 'lucide-react-native';
+import { ChevronDown, Flag, Gauge, LocateFixed, MapPin, Plus } from '@/ui/icons';
 import { useMemo, useState } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';

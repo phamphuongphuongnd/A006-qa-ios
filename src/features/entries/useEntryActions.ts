@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 
-import { db } from '@/db/client';
+import { db, sqlite } from '@/db/client';
 import {
   addReceipt,
   categorise,
@@ -21,6 +21,12 @@ import { t } from '@/i18n';
 import { useSnackbar, type SnackOptions } from '@/ui';
 
 type Lift = Pick<SnackOptions, 'above' | 'bottomOffset'>;
+
+/** Many single-row writes as one SQLite transaction: one disk sync instead of one per row. */
+function inOneTransaction(fn: () => void) {
+  if (sqlite.isInTransactionSync()) return fn();
+  sqlite.withTransactionSync(fn);
+}
 
 /**
  * Entry changes that always come with an Undo snackbar (product rule: Undo after delete / merge / split / sort).
@@ -98,13 +104,13 @@ export function useEntryActions({ above, bottomOffset }: Lift = {}) {
   const patchMany = useCallback(
     (ids: string[], patch: { categoryId?: string; scope?: Scope }, message: string) => {
       const before = ids.map((id) => getEntry(db, id)).filter((e) => !!e);
-      for (const e of before) updateEntry(db, e.id, patch);
+      inOneTransaction(() => before.forEach((e) => updateEntry(db, e.id, patch)));
       snack({
         ...lift,
         message,
         actionLabel: t('common.undo'),
         onAction: () => {
-          for (const e of before) updateEntry(db, e.id, { categoryId: e.categoryId, scope: e.scope });
+          inOneTransaction(() => before.forEach((e) => updateEntry(db, e.id, { categoryId: e.categoryId, scope: e.scope })));
         },
       });
     },
@@ -121,7 +127,7 @@ export function useEntryActions({ above, bottomOffset }: Lift = {}) {
         message: t('sort.sortedMany', { count: items.length }),
         actionLabel: t('common.undo'),
         onAction: () => {
-          for (const e of before) updateEntry(db, e.id, { categoryId: e.categoryId, scope: e.scope });
+          inOneTransaction(() => before.forEach((e) => updateEntry(db, e.id, { categoryId: e.categoryId, scope: e.scope })));
         },
       });
     },

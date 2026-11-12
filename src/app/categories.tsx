@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Plus } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, Plus } from '@/ui/icons';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

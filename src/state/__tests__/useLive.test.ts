@@ -1,6 +1,6 @@
-jest.mock('expo-sqlite', () => ({ addDatabaseChangeListener: jest.fn() }));
-
 import { markTablesChanged, stampOf, subscribe } from '../useLive';
+
+jest.mock('expo-sqlite', () => ({ addDatabaseChangeListener: jest.fn() }));
 
 describe('live query store', () => {
   beforeEach(() => jest.useFakeTimers());

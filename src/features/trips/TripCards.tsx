@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { LocateFixed, Pause, Play, Square, TriangleAlert } from 'lucide-react-native';
+import { LocateFixed, Pause, Play, Square, TriangleAlert } from '@/ui/icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { db } from '@/db/client';

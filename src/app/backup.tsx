@@ -2,7 +2,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
 import { router } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import { Check, CloudUpload, FileText, RotateCcw, TriangleAlert } from 'lucide-react-native';
+import { Check, CloudUpload, FileText, RotateCcw, TriangleAlert } from '@/ui/icons';
 import { useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

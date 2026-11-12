@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { CheckCircle2, ChevronDown, Plus, Trash2, X } from 'lucide-react-native';
+import { CheckCircle2, ChevronDown, Plus, Trash2, X } from '@/ui/icons';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

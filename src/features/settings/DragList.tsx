@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { GripVertical } from 'lucide-react-native';
+import { GripVertical } from '@/ui/icons';
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Animated, PanResponder, View } from 'react-native';
 

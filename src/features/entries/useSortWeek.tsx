@@ -1,4 +1,4 @@
-import { Check, ChevronDown } from 'lucide-react-native';
+import { Check, ChevronDown } from '@/ui/icons';
 import { Pressable, View } from 'react-native';
 
 import { listCategories } from '@/db/categoriesRepo';

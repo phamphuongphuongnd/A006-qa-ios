@@ -1,4 +1,4 @@
-import { Check, ChevronDown, ChevronUp, Ellipsis, X } from 'lucide-react-native';
+import { Check, ChevronDown, ChevronUp, Ellipsis, X } from '@/ui/icons';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 

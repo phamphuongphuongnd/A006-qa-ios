@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { BarChart3, ChevronDown, Download } from 'lucide-react-native';
+import { BarChart3, ChevronDown, Download } from '@/ui/icons';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
