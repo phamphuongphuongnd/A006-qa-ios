@@ -191,7 +191,7 @@
 | TC-180 | F-19 | Widget 2×1 "−" / "+" | Mở thẳng Ghi nhanh đúng loại | M | ✅ nút 2×1 không có nhãn TalkBack → B-08 |
 | TC-181 | F-19 | Widget 4×2 Start trip → End trip · x mi | Bắt đầu chuyến, widget đổi chữ; vào app hiện S-07b | M | |
 | TC-182 | F-19 | Ghi khoản / phân loại xong | Widget cập nhật số | M | |
-| TC-183 | F-19 | Widget iOS nhỏ + vừa | Như Android | ⏭ | |
+| TC-183 | F-19 | Widget iOS nhỏ + vừa | Như Android | ⏭ | ⏭ chưa có bản iOS (EAS, mục treo Bước 3) |
 | TC-184 | F-20 | Đổi vùng UK → US | Hỏi "Change region? …"; $ , năm dương lịch, tên Schedule C; tên tự đổi của người dùng giữ | T repos + M | |
 | TC-185 | F-20 | Mileage rates sửa / sai / "Reset to default" | Lưu; số sai bị chặn; trả về mặc định | T rates + M | |
 | TC-186 | F-20 | Distance unit = Kilometres | Miles / Home / S-08 hiện km | M | |
