@@ -16,6 +16,7 @@ import { DownArrowArt, ReceiptCheckArt } from '@/features/entries/art';
 import { EntryRow } from '@/features/entries/EntryRow';
 import { durationLabel, greetingKey, milesLabel, sortMinutes } from '@/features/entries/format';
 import { BACKUP_SNOOZE_MS, daysSince, showBackupBanner } from '@/features/entries/logic';
+import { InterruptedTripCard } from '@/features/trips/TripCards';
 import { useAppShortcuts } from '@/features/entries/quickActions';
 import { useNow } from '@/features/entries/useNow';
 import { t } from '@/i18n';
@@ -73,6 +74,7 @@ export default function HomeScreen() {
         />
       ) : null}
 
+      <InterruptedTripCard />
       {tripData.trip ? <TripCard trip={tripData.trip} now={now} unit={settings.distanceUnit} /> : null}
 
       <Card onPress={() => router.push({ pathname: '/reports', params: { from: String(week.start), to: String(week.end) } })} accessibilityLabel={t('home.thisWeek')} style={{ gap: 10 }}>
