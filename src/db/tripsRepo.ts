@@ -161,3 +161,56 @@ export function mileageTotals(db: AppDb, period: Period): { work: number; person
 export function deleteAllTrips(db: AppDb) {
   db.delete(trips).run();
 }
+
+// ---------------- Added for F-11 / F-12 / F-13 ----------------
+
+/** Most recent trip that stopped recording on its own and hasn't been acknowledged yet. */
+export const latestInterrupted = (db: AppDb) =>
+  db.select().from(trips).where(eq(trips.status, 'interrupted')).orderBy(desc(trips.startedAt)).get();
+
+/** User saw the "trip stopped recording" card: keep the miles saved so far as a normal finished trip. */
+export function acknowledgeInterrupted(db: AppDb, tripId: string) {
+  db.update(trips).set({ status: 'done' }).where(and(eq(trips.id, tripId), eq(trips.status, 'interrupted'))).run();
+}
+
+/** Distinct non-empty purposes, most recent first (chips in the End trip sheet). */
+export function recentPurposes(db: AppDb, limit = 3): string[] {
+  const rows = db
+    .select({ purpose: trips.purpose, last: sql<number>`MAX(${trips.startedAt})` })
+    .from(trips)
+    .where(sql`${trips.purpose} <> ''`)
+    .groupBy(trips.purpose)
+    .orderBy(desc(sql`MAX(${trips.startedAt})`))
+    .limit(limit)
+    .all();
+  return rows.map((r) => r.purpose);
+}
+
+/** Replace a manual trip's distance / odometer / date / scope / purpose. */
+export function updateManualTrip(db: AppDb, id: string, t: ManualTrip) {
+  const miles = t.odoStart !== undefined && t.odoEnd !== undefined ? t.odoEnd - t.odoStart : (t.miles ?? 0);
+  if (!(miles > 0)) throw new Error('trip distance must be positive');
+  db.update(trips)
+    .set({
+      startedAt: t.date,
+      endedAt: t.date,
+      distanceM: milesToMeters(miles),
+      odoStart: t.odoStart ?? null,
+      odoEnd: t.odoEnd ?? null,
+      scope: t.scope,
+      purpose: t.purpose.trim(),
+    })
+    .where(and(eq(trips.id, id), eq(trips.source, 'manual')))
+    .run();
+}
+
+/** Work trips in a period as {at, miles} for `mileageEstimateByDate`. */
+export function businessTripMiles(db: AppDb, period: Period): { at: number; miles: number }[] {
+  return listTrips(db, period)
+    .filter((t) => t.scope === 'work')
+    .map((t) => ({ at: t.startedAt, miles: metersToMiles(t.distanceM) }));
+}
+
+/** Last stored point of a trip (GPS status on the active trip screen). */
+export const lastPoint = (db: AppDb, tripId: string) =>
+  db.select().from(tripPoints).where(eq(tripPoints.tripId, tripId)).orderBy(desc(tripPoints.ts)).get();
