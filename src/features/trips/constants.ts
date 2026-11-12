@@ -1,5 +1,7 @@
 /** expo-task-manager task that receives background location batches while a trip is running. */
-export const TRIP_TASK = 'sundaysort.trip-location';
+export const TRIP_TASK = 'sundaysort.trip-gps';
+/** Task name before B-10; its LOW channel can't be lowered once created, so it is deleted at startup. */
+export const OLD_TRIP_TASK = 'sundaysort.trip-location';
 
 /** Android notification channels (owned by trip work; DataServices owns the weekly-reminder channel). */
 export const CHANNEL_TRIP = 'trip-recording';
@@ -9,6 +11,7 @@ export const CHANNEL_TRIP_REMINDER = 'trip-reminder';
  * We create it first at MIN importance so it folds away and the "Trip running" one (with buttons) is the one people see (B-10).
  */
 export const CHANNEL_LOCATION_SERVICE = `com.phiotron.sundaysort:${TRIP_TASK}`;
+export const OLD_CHANNEL_LOCATION_SERVICE = `com.phiotron.sundaysort:${OLD_TRIP_TASK}`;
 
 /** Notification identifiers / categories. */
 export const NOTIF_TRIP = 'trip-ongoing';

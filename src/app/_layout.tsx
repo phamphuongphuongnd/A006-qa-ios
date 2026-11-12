@@ -7,7 +7,6 @@ import {
   useFonts,
 } from '@expo-google-fonts/inter';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
-import { NavigationBar } from 'expo-navigation-bar';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -18,6 +17,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { expoDb } from '@/db/client';
 import { DataServices, LockGate } from '@/services/data';
+import { useNavigationBarStyle } from '@/services/navigationBar';
 import { RouterBridge } from '@/services/router';
 import { TripServices } from '@/services/trips';
 import { SettingsProvider, useSettings } from '@/state/settings';
@@ -84,11 +84,10 @@ function ThemedStack() {
 
 function Navigator({ onboarded }: { onboarded: boolean }) {
   const { colors, dark } = useTheme();
+  useNavigationBarStyle(dark);
   return (
     <>
       <StatusBar style={dark ? 'light' : 'dark'} />
-      {/* Follows the in-app theme, not the phone's: dark app on a light phone kept a white nav bar (B-12). */}
-      <NavigationBar style={dark ? 'light' : 'dark'} />
       <RouterBridge />
       <Stack
         screenOptions={{

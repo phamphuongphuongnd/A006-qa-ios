@@ -15,6 +15,7 @@ import {
   CATEGORY_PAUSED,
   CATEGORY_RUNNING,
   CHANNEL_LOCATION_SERVICE,
+  OLD_CHANNEL_LOCATION_SERVICE,
   CHANNEL_TRIP,
   CHANNEL_TRIP_REMINDER,
   NOTIF_COLOR,
@@ -38,7 +39,9 @@ export function setupTripNotifications(): Promise<void> {
           showBadge: false,
           lockscreenVisibility: AndroidNotificationVisibility.PUBLIC,
         });
-        // Lowering importance is allowed while the user hasn't changed the channel themselves.
+        // Android won't lower an existing channel's importance, so the service uses a new channel id (new task name)
+        // that is created here at MIN before the first trip; the old LOW one goes.
+        await Notifications.deleteNotificationChannelAsync(OLD_CHANNEL_LOCATION_SERVICE).catch(() => {});
         await Notifications.setNotificationChannelAsync(CHANNEL_LOCATION_SERVICE, {
           name: t('trip.channelServiceName'),
           importance: AndroidImportance.MIN,
