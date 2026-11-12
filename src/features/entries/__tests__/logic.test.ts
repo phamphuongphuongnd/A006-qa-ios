@@ -25,6 +25,7 @@ import {
   partMinor,
   pickSortWeek,
   showBackupBanner,
+  sortCardScope,
   sortQueue,
   toggledScope,
   toRepoFilter,
@@ -168,5 +169,16 @@ describe('split + selection helpers', () => {
     expect(commonType(['expense', 'expense'])).toBe('expense');
     expect(commonType(['expense', 'income'])).toBeNull();
     expect(commonType([])).toBeNull();
+  });
+});
+
+describe('sort card scope (B-01)', () => {
+  it('keeps Personal even when history says Work', () => {
+    expect(sortCardScope('personal', 'work')).toBe('personal');
+    expect(sortCardScope('personal', null)).toBe('personal');
+  });
+  it('lets history move a Work entry', () => {
+    expect(sortCardScope('work', 'personal')).toBe('personal');
+    expect(sortCardScope('work', null)).toBe('work');
   });
 });

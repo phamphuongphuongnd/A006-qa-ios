@@ -12,6 +12,7 @@ import type { Currency, Scope } from '@/domain/types';
 import { SunIcon } from '@/features/entries/art';
 import { CategorySheet } from '@/features/entries/CategorySheet';
 import { dateDotTime, dayMonth } from '@/features/entries/format';
+import { sortCardScope } from '@/features/entries/logic';
 import { categoryIcon } from '@/features/entries/icons';
 import { ReceiptViewer } from '@/features/entries/ReceiptViewer';
 import { useEntryActions } from '@/features/entries/useEntryActions';
@@ -127,7 +128,7 @@ function SortCard({
   onSkip: () => void;
 }) {
   const { colors } = useTheme();
-  const [scope, setScope] = useState<Scope>(suggestion.scope ?? entry.scope);
+  const [scope, setScope] = useState<Scope>(() => sortCardScope(entry.scope, suggestion.scope));
   const [more, setMore] = useState(false);
   const [viewer, setViewer] = useState(false);
   const [x] = useState(() => new Animated.Value(0));

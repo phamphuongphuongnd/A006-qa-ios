@@ -140,6 +140,15 @@ export function partMinor(text: string): Minor {
 /** Amount for a newly added part: whatever is still unassigned, else empty. */
 export const newPartMinor = (total: Minor, parts: Minor[]) => Math.max(0, total - parts.reduce((a, b) => a + b, 0));
 
+// ---------- Sort card ----------
+
+/**
+ * Work/Personal switch on a sort card. An entry already marked Personal stays Personal (the user said so at capture
+ * or split); history only nudges entries that are still Work.
+ */
+export const sortCardScope = (entryScope: Scope, suggested: Scope | null): Scope =>
+  entryScope === 'personal' ? 'personal' : (suggested ?? entryScope);
+
 // ---------- Multi-select ----------
 
 /** Work/Personal action on a selection: all work → personal, otherwise everything becomes work. */
