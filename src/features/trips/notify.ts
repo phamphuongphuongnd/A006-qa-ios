@@ -14,6 +14,7 @@ import {
   CATEGORY_LONG,
   CATEGORY_PAUSED,
   CATEGORY_RUNNING,
+  CHANNEL_LOCATION_SERVICE,
   CHANNEL_TRIP,
   CHANNEL_TRIP_REMINDER,
   NOTIF_COLOR,
@@ -36,6 +37,15 @@ export function setupTripNotifications(): Promise<void> {
           enableVibrate: false,
           showBadge: false,
           lockscreenVisibility: AndroidNotificationVisibility.PUBLIC,
+        });
+        // Lowering importance is allowed while the user hasn't changed the channel themselves.
+        await Notifications.setNotificationChannelAsync(CHANNEL_LOCATION_SERVICE, {
+          name: t('trip.channelServiceName'),
+          importance: AndroidImportance.MIN,
+          sound: null,
+          vibrationPattern: null,
+          enableVibrate: false,
+          showBadge: false,
         });
         await Notifications.setNotificationChannelAsync(CHANNEL_TRIP_REMINDER, {
           name: t('trip.channelReminderName'),

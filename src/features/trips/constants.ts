@@ -4,6 +4,11 @@ export const TRIP_TASK = 'sundaysort.trip-location';
 /** Android notification channels (owned by trip work; DataServices owns the weekly-reminder channel). */
 export const CHANNEL_TRIP = 'trip-recording';
 export const CHANNEL_TRIP_REMINDER = 'trip-reminder';
+/**
+ * Channel expo-location uses for its required foreground-service notification: "<package>:<task name>".
+ * We create it first at MIN importance so it folds away and the "Trip running" one (with buttons) is the one people see (B-10).
+ */
+export const CHANNEL_LOCATION_SERVICE = `com.phiotron.sundaysort:${TRIP_TASK}`;
 
 /** Notification identifiers / categories. */
 export const NOTIF_TRIP = 'trip-ongoing';

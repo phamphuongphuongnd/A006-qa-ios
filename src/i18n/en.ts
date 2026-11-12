@@ -377,6 +377,7 @@ export const en = {
     actionKeepGoing: 'Keep going',
     channelName: 'Trip recording',
     channelReminderName: 'Trip reminders',
+    channelServiceName: 'GPS service (required by Android)',
   },
   widget: {
     smallLabel: 'Quick add',
