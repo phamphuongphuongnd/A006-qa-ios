@@ -46,6 +46,10 @@
 - Tiền lưu số nguyên (pence/cent), không dùng float.
 - React Compiler bật: `useLive` và file widget Android phải có `'use no memo'` (không thì màn không tự cập nhật / widget trắng).
 - PDF (expo-print Android): không dùng `position: fixed` — WebView vẽ đè giữa trang.
+- `useLive(query, deps, tables)`: khai đủ bảng mà truy vấn đọc + deps — thiếu bảng thì màn không tự cập nhật sau khi ghi.
+- Danh sách dài: SQL thô `db.all(sql`…`)` (query builder Drizzle map từng dòng, chậm ~3× trên A13) + tải/vẽ theo trang.
+- Icon: import từ `@/ui/icons` (thêm 1 dòng/icon), không import thẳng `lucide-react-native` (kéo ~2.000 icon lúc mở app).
+- Font Inter Android nhúng bằng plugin `expo-font` (app.json): đổi font → `npx expo prebuild` lại.
 - Thử máy qua adb: chờ chữ trên màn (`uiautomator dump`) rồi mới bấm, không bấm theo giờ chờ cố định.
 
 ## Retro (điền khi nộp store, 3 dòng)

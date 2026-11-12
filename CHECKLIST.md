@@ -51,6 +51,7 @@
 - [x] Chạy hết case (test tự động + thử máy) → BUGS.md — 180 ✅ · 16 ❌ · 4 ⏭ (chạy xe thật, TalkBack nghe thật, mở PDF, widget iOS); 24 lỗi
 
 ## Bước 5 — Sửa lỗi
+- [x] Tăng tốc app (Phương báo chậm): truy vấn chỉ chạy lại theo bảng, Entries FlashList + tải theo trang, SQL thô, vuốt dòng nhẹ, Miles vẽ dần, icon/font khởi động — `073f86a`..`be72dc6`
 - [ ] Sửa hết BUGS.md (tick trong BUGS.md)
 - [ ] Chạy lại toàn bộ test + case từng lỗi → gộp `dev` → `main`
 

@@ -55,7 +55,8 @@
   `com.google.android.c2dm.permission.RECEIVE`, `INTERNET` (+ quyền badge của nhiều hãng launcher) — ảnh hưởng Data safety và
   câu "dữ liệu không rời máy" — case TC-198 — tái hiện: `aapt2 dump permissions app-release.apk`. — commit:
 - [ ] **B-20** 🟠 Cuộn Entries giật với dữ liệu lớn (1.515 khoản): 50% khung hình 61–101 ms, 90% 150–250 ms trên Galaxy A13
-  (mượt cần ≤ 16 ms) — case TC-175 — tái hiện: khôi phục file 1.500 khoản → Entries → vuốt nhanh; `dumpsys gfxinfo`. — commit:
+  (mượt cần ≤ 16 ms) — case TC-175 — tái hiện: khôi phục file 1.500 khoản → Entries → vuốt nhanh; `dumpsys gfxinfo`. — commit: `be72dc6` (nhánh perf/speed) — **cải thiện, chưa đạt ≤ 16 ms**:
+  đo lại cùng cách (1.515 khoản, 20 lần vuốt): khung hình vẽ được 98 → 413, giật 20% → 11%, p90 89 → 44 ms, p99 200 → 61 ms.
 - [ ] **B-21** 🟡 Mở Ghi nhanh qua màn khoá (widget / thông báo khi App lock bật): sau khi mở khoá, bàn phím số không tự bật
   (product.md: "bàn phím số tự bật"), dòng "No category needed…" nằm dưới thanh điều hướng — case TC-178 — tái hiện: App lock +
   Immediately → ra màn hình chính → widget 2×1 "−" → mở khoá vân tay. — commit:
