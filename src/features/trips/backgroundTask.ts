@@ -36,6 +36,7 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
       lat: l.coords.latitude,
       lng: l.coords.longitude,
       accuracy: l.coords.accuracy ?? 999,
+      speed: l.coords.speed,
     })),
   );
   const trip = getTrip(db, active.id);

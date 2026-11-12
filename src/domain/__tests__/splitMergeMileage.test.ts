@@ -1,4 +1,4 @@
-import { DEFAULT_RATES, mileageEstimate, odometerMiles, trackDistance, type GpsPoint } from '../mileage';
+import { DEFAULT_RATES, isStationaryFix, mileageEstimate, odometerMiles, trackDistance, type GpsPoint } from '../mileage';
 import { checkSplit, defaultSplit, planMerge, type MergeSource } from '../splitMerge';
 
 describe('split', () => {
@@ -79,5 +79,43 @@ describe('trackDistance', () => {
     const d = trackDistance([p(0), p(1), p(5, { segmentStart: true }), p(6)]);
     expect(d).toBeGreaterThan(220);
     expect(d).toBeLessThan(224);
+  });
+
+  // Deterministic "random" in [-1, 1).
+  const noise = (i: number) => ((((Math.sin(i * 12.9898) * 43758.5453) % 1) + 1) % 1) * 2 - 1;
+  const M_PER_DEG_LAT = 111_320;
+  const M_PER_DEG_LNG = 111_320 * Math.cos((53.8 * Math.PI) / 180);
+
+  it('adds nothing for fixes wandering within their accuracy around one spot', () => {
+    const pts: GpsPoint[] = Array.from({ length: 40 }, (_, i) => ({
+      ts: i * 5_000,
+      lat: 53.8 + (noise(i) * 12) / M_PER_DEG_LAT,
+      lng: -1.55 + (noise(i + 100) * 12) / M_PER_DEG_LNG,
+      accuracy: 20,
+    }));
+    expect(trackDistance(pts)).toBe(0);
+  });
+  it('flags slow fixes near the last point as stationary noise', () => {
+    const at = { lat: 53.8, lng: -1.55 };
+    const near = { lat: 53.8 + 40 / M_PER_DEG_LAT, lng: -1.55 };
+    const far = { lat: 53.8 + 200 / M_PER_DEG_LAT, lng: -1.55 };
+    expect(isStationaryFix(at, { ...near, speed: 0.3 })).toBe(true);
+    expect(isStationaryFix(at, { ...near, speed: 5 })).toBe(false); // moving
+    expect(isStationaryFix(at, { ...near, speed: null })).toBe(false); // unknown speed
+    expect(isStationaryFix(at, { ...near, speed: -1 })).toBe(false);
+    expect(isStationaryFix(at, { ...far, speed: 0 })).toBe(false); // phone that always reports 0
+    expect(isStationaryFix(null, { ...near, speed: 0 })).toBe(false); // first fix of the trip
+  });
+  it('keeps the distance of a slow drive (≈ 4.5 m/s, a fix every 5 s, 20 m accuracy)', () => {
+    const pts: GpsPoint[] = Array.from({ length: 121 }, (_, i) => ({
+      ts: i * 5_000,
+      lat: 53.8 + (i * 22.5 + noise(i) * 8) / M_PER_DEG_LAT,
+      lng: -1.55 + (noise(i + 50) * 8) / M_PER_DEG_LNG,
+      accuracy: 20,
+    }));
+    const truth = 120 * 22.5; // 2,700 m
+    const d = trackDistance(pts);
+    expect(d).toBeGreaterThan(truth * 0.95);
+    expect(d).toBeLessThan(truth * 1.05);
   });
 });

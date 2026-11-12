@@ -86,24 +86,53 @@ export const MAX_ACCURACY_M = 50;
 /** ≈ 125 mph: faster jumps between fixes are GPS glitches. */
 export const MAX_SPEED_MPS = 56;
 
+/** Smallest move counted, even with perfect fixes. */
+export const MIN_MOVE_M = 25;
+/** Upper bound for the jitter threshold so long, poor-signal stretches still count. */
+export const MAX_MOVE_THRESHOLD_M = 80;
+
 /**
  * Distance in metres along recorded points. Skips poor fixes (accuracy > 50 m), teleport jumps, and gaps
  * across personal stops (points flagged `segmentStart`).
+ *
+ * Jitter filter: distance is measured from an anchor (the last counted point) and only counted once a fix is
+ * farther from it than both fixes' accuracy combined (at least 25 m). A phone lying still — fixes wandering
+ * 20–40 m around one spot — then adds nothing, while real driving loses nothing: the move is counted from the
+ * anchor as soon as it clears the threshold.
  */
 export function trackDistance(points: GpsPoint[]): number {
   let total = 0;
-  let prev: GpsPoint | null = null;
+  let anchor: GpsPoint | null = null;
   for (const p of points) {
     if (p.accuracy > MAX_ACCURACY_M) continue;
-    if (prev && !p.segmentStart) {
-      const d = haversine(prev, p);
-      const dt = (p.ts - prev.ts) / 1000;
-      if (dt > 0 && d / dt <= MAX_SPEED_MPS) total += d;
-      else if (dt > 0) continue; // drop the glitch point, keep prev
+    if (!anchor || p.segmentStart) {
+      anchor = p;
+      continue;
     }
-    prev = p;
+    const d = haversine(anchor, p);
+    const dt = (p.ts - anchor.ts) / 1000;
+    if (dt <= 0 || d / dt > MAX_SPEED_MPS) continue; // glitch: drop the point, keep the anchor
+    const threshold = Math.min(MAX_MOVE_THRESHOLD_M, Math.max(MIN_MOVE_M, anchor.accuracy + p.accuracy));
+    if (d < threshold) continue; // still within the noise around the anchor
+    total += d;
+    anchor = p;
   }
   return total;
+}
+
+/** Below this reported speed (≈ 2 mph) the phone is treated as standing still. */
+export const STATIONARY_SPEED_MPS = 1;
+/** A fix this far from the last stored one is kept whatever the speed says (guards phones that report 0). */
+export const STATIONARY_MAX_RADIUS_M = 150;
+
+/**
+ * True when a new fix is just noise around a phone that isn't moving: the OS reports a speed below ~2 mph and the
+ * fix is still within 150 m of the last stored point. Such fixes are not stored, so a trip left running indoors or
+ * at a long red light adds no miles. Unknown speed (null / negative) keeps the fix.
+ */
+export function isStationaryFix(prev: { lat: number; lng: number } | null, fix: { lat: number; lng: number; speed?: number | null }): boolean {
+  if (!prev || fix.speed == null || fix.speed < 0) return false;
+  return fix.speed < STATIONARY_SPEED_MPS && haversine(prev, fix) < STATIONARY_MAX_RADIUS_M;
 }
 
 /** A trip running longer than this triggers "Still driving?". */

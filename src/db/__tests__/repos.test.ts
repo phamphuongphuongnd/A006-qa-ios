@@ -192,6 +192,26 @@ describe('trips', () => {
     expect(getActiveTrip(db)).toBeUndefined();
   });
 
+  it('drops fixes taken while the phone stands still (indoors / red light)', () => {
+    const t = startTrip(db, 'work', 1000);
+    appendPoints(db, t.id, [pt(0)]);
+    // 2 minutes of jitter up to ~40 m around pt(0), OS speed ≈ 0.
+    const jitter = Array.from({ length: 24 }, (_, i) => ({
+      ts: 6000 + i * 5000,
+      lat: 53.8 + ((i % 2 ? 1 : -1) * 0.00035),
+      lng: -1.55 + ((i % 3) - 1) * 0.0005,
+      accuracy: 25,
+      speed: 0.4,
+    }));
+    appendPoints(db, t.id, jitter);
+    expect(getActiveTrip(db)!.distanceM).toBe(0);
+    // Driving away again (speed reported) counts from the last stored fix.
+    appendPoints(db, t.id, [{ ...pt(1), ts: 200_000, speed: 9 }, { ...pt(2), ts: 210_000, speed: 9 }]);
+    const d = endTrip(db, t.id, 300_000)!.distanceM;
+    expect(d).toBeGreaterThan(220);
+    expect(d).toBeLessThan(224);
+  });
+
   it('adds manual trips and totals miles per scope in the tax year', () => {
     addManualTrip(db, { date: at(2026, 11, 10), scope: 'work', purpose: 'DLS4', odoStart: 41200, odoEnd: 41328 });
     const p = addManualTrip(db, { date: at(2026, 11, 11), scope: 'personal', purpose: '', miles: 12 });

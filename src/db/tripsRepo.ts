@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 
-import { metersToMiles, milesToMeters, trackDistance, TRIP_REMINDER_MS } from '@/domain/mileage';
+import { isStationaryFix, metersToMiles, milesToMeters, trackDistance, TRIP_REMINDER_MS } from '@/domain/mileage';
 import type { Period, Scope } from '@/domain/types';
 
 import { tripPoints, trips, type TripRow } from './schema';
@@ -38,11 +38,14 @@ export interface PointInput {
   lat: number;
   lng: number;
   accuracy: number;
+  /** Speed reported by the OS in m/s (null / negative = unknown). Used for filtering only, not stored. */
+  speed?: number | null;
 }
 
 /**
  * Called from the background location task. Ignored unless the trip is running.
- * Distance is recomputed from all points so filtering stays consistent with `trackDistance`.
+ * Fixes taken while the phone stands still (`isStationaryFix`) are dropped. Distance is recomputed from all points
+ * so filtering stays consistent with `trackDistance`.
  */
 export function appendPoints(db: AppDb, tripId: string, points: PointInput[]): void {
   const trip = getTrip(db, tripId);
@@ -51,14 +54,23 @@ export function appendPoints(db: AppDb, tripId: string, points: PointInput[]): v
     const lastStored = tx.select().from(tripPoints).where(eq(tripPoints.tripId, tripId)).orderBy(desc(tripPoints.ts)).get();
     // First point after a resume starts a new segment (resume sets lastPointAt but writes no point).
     const resumed = lastStored !== undefined && (trip.lastPointAt ?? 0) > lastStored.ts;
-    points.forEach((p, i) => {
+    let ref: { lat: number; lng: number } | null = resumed ? null : (lastStored ?? null);
+    const kept: PointInput[] = [];
+    for (const p of points) {
+      if (isStationaryFix(ref, p)) continue;
+      kept.push(p);
+      ref = p;
+    }
+    // Nothing new: leave lastPointAt alone, or the next fix would be taken for the first one after a resume.
+    if (kept.length === 0) return;
+    kept.forEach(({ speed: _speed, ...p }, i) => {
       tx.insert(tripPoints)
         .values({ tripId, ...p, segmentStart: i === 0 && resumed })
         .run();
     });
     const all = tx.select().from(tripPoints).where(eq(tripPoints.tripId, tripId)).orderBy(asc(tripPoints.ts)).all();
     tx.update(trips)
-      .set({ distanceM: trackDistance(all), lastPointAt: points[points.length - 1].ts })
+      .set({ distanceM: trackDistance(all), lastPointAt: kept[kept.length - 1].ts })
       .where(eq(trips.id, tripId))
       .run();
   });
