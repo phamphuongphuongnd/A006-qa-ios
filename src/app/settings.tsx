@@ -1,20 +1,402 @@
-import { Placeholder } from '@/components/Placeholder';
-import { t } from '@/i18n';
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import Constants from 'expo-constants';
+import { router, type Href } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
+import { ArrowUpRight, CloudUpload, Download, Lock, Tag as TagIcon, Trash2 } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
+import { Linking, Platform, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-/** S-15 — see product.md. Placeholder until the Hi-Fi mockup arrives. */
+import { listCategories } from '@/db/categoriesRepo';
+import { db } from '@/db/client';
+import { entryCount } from '@/db/entriesRepo';
+import type { AppSettings } from '@/db/settingsRepo';
+import type { Region, Scope } from '@/domain/types';
+import { deleteAllReceiptFiles } from '@/features/backup/backupFile';
+import { wipeAllData } from '@/features/backup/dataStore';
+import { ratesLabel } from '@/features/reports/series';
+import { ABOUT_LINKS, openRate, rateUrl } from '@/features/settings/about';
+import { authenticate, deviceCanLock } from '@/features/settings/LockedView';
+import { cancelSortReminders, requestNotifications } from '@/features/settings/notifications';
+import { backupDue, daysSince, timeLabel, WEEKDAYS } from '@/features/settings/reminder';
+import { GroupLabel, NavHeader, NavRow, OptionSheet, Pill, type Option } from '@/features/settings/ui';
+import { t } from '@/i18n';
+import { useSettings } from '@/state/settings';
+import { useLive } from '@/state/useLive';
+import { fonts, GUTTER, useTheme } from '@/theme';
+import { Button, Dialog, Field, Group, Segmented, Sheet, Toggle, Txt, useSnackbar } from '@/ui';
+
+type Picker = 'region' | 'scope' | 'unit' | 'day' | 'lockAfter' | null;
+
+const LOCK_AFTER: Option<AppSettings['lockAfterMs']>[] = [
+  { value: 0, label: 'Immediately' },
+  { value: 60_000, label: 'After 1 minute' },
+  { value: 300_000, label: 'After 5 minutes' },
+];
+
+/** S-15 Settings. */
 export default function SettingsScreen() {
+  const { colors, dark } = useTheme();
+  const insets = useSafeAreaInsets();
+  const snack = useSnackbar();
+  const { settings, update, setRegion } = useSettings();
+  const region: Region = settings.region ?? 'UK';
+  const [picker, setPicker] = useState<Picker>(null);
+  const [regionAsk, setRegionAsk] = useState<Region | null>(null);
+  const [timeSheet, setTimeSheet] = useState(false);
+  const [howSheet, setHowSheet] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<0 | 1 | 2>(0);
+  const [deleteText, setDeleteText] = useState('');
+  const [canLock, setCanLock] = useState<boolean | null>(null);
+
+  const categoryCount = useLive(() => listCategories(db).length);
+  const hasData = useLive(() => entryCount(db) > 0);
+
+  useEffect(() => {
+    let live = true;
+    deviceCanLock().then((ok) => live && setCanLock(ok));
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  const lockLabels = [t('settings.lockImmediately'), t('settings.lock1'), t('settings.lock5')];
+  const lockOptions = LOCK_AFTER.map((o, i) => ({ ...o, label: lockLabels[i] }));
+  const r = settings.reminder;
+
+  const setReminderOn = async (on: boolean) => {
+    if (!on) {
+      update({ reminder: { ...r, on: false } });
+      return;
+    }
+    if (await requestNotifications()) update({ reminder: { ...r, on: true } });
+    else snack({ message: t('settings.remindersOff'), above: 'none' });
+  };
+
+  const setAppLock = async (on: boolean) => {
+    if (!on) {
+      update({ appLock: false });
+      return;
+    }
+    if (!(await deviceCanLock())) {
+      setCanLock(false);
+      return;
+    }
+    if (await authenticate(t('lock.enablePrompt'))) update({ appLock: true });
+  };
+
+  const openTime = () => {
+    const value = new Date(2026, 0, 4, r.hour, r.minute);
+    if (Platform.OS === 'android') {
+      DateTimePickerAndroid.open({
+        value,
+        mode: 'time',
+        is24Hour: true,
+        onValueChange: (_, d) => update({ reminder: { ...r, hour: d.getHours(), minute: d.getMinutes() } }),
+      });
+    } else {
+      setTimeSheet(true);
+    }
+  };
+
+  const deleteAll = async () => {
+    setDeleteStep(0);
+    setDeleteText('');
+    wipeAllData(db);
+    try {
+      deleteAllReceiptFiles();
+    } catch {
+      // Files are unreachable without DB rows anyway; ignore.
+    }
+    await cancelSortReminders().catch(() => {});
+    // Settings table is empty now → onboarded false → the navigator shows onboarding.
+    update({});
+  };
+
+  const days = daysSince(settings.lastBackupAt);
+  const due = backupDue(settings, hasData);
+  const backupPill =
+    days === null ? (
+      <Pill label={t('settings.backupNever')} bg={due ? 'expenseSoft' : 'surfaceAlt'} fg={due ? 'expenseText' : 'textSecondary'} />
+    ) : (
+      <Pill label={t('settings.backupDays', { days })} bg={due ? 'expenseSoft' : 'surfaceAlt'} fg={due ? 'expenseText' : 'textSecondary'} />
+    );
+
+  const version = Constants.expoConfig?.version ?? '1.0.0';
+
   return (
-    <Placeholder
-      code="S-15"
-      title={t("screens.settings")}
-      links={[
-        { label: "Categories", href: "/categories" },
-        { label: "Backup & restore", href: "/backup" },
-        { label: "Export", href: "/export" },
-        { label: "Not tax advice", href: "/disclaimer" },
-        { label: "Locked screen", href: "/locked" },
-        { label: "UI kit gallery (dev)", href: "/dev/gallery" },
-      ]}
-    />
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
+      <NavHeader title={t('screens.settings')} />
+      <ScrollView contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: insets.bottom + 32, gap: 8 }}>
+        <GroupLabel first>{t('settings.regionTax')}</GroupLabel>
+        <Group>
+          <NavRow title={t('settings.region')} value={t(`settings.${region}`)} onPress={() => setPicker('region')} />
+          <NavRow title={t('settings.currency')} value={region === 'UK' ? t('settings.currencyGBP') : t('settings.currencyUSD')} />
+          <NavRow title={t('settings.taxYear')} value={region === 'UK' ? t('settings.taxYearUK') : t('settings.taxYearUS')} />
+          <NavRow
+            title={t('settings.mileageRates')}
+            value={ratesLabel(settings.mileageRates[region], region === 'UK' ? 'GBP' : 'USD')}
+            onPress={() => router.push('/mileage-rates' as Href)}
+          />
+        </Group>
+
+        <GroupLabel>{t('settings.logging')}</GroupLabel>
+        <Group>
+          <NavRow
+            title={t('settings.defaultScope')}
+            value={settings.defaultScope === 'work' ? t('common.work') : t('common.personal')}
+            onPress={() => setPicker('scope')}
+          />
+          <NavRow
+            title={t('settings.keepAdding')}
+            right={<Toggle value={settings.keepAdding} onChange={(v) => update({ keepAdding: v })} label={t('settings.keepAdding')} />}
+          />
+          <NavRow
+            title={t('settings.distanceUnit')}
+            value={settings.distanceUnit === 'mi' ? t('settings.miles') : t('settings.kilometres')}
+            onPress={() => setPicker('unit')}
+          />
+        </Group>
+
+        <GroupLabel>{t('settings.sundaySort')}</GroupLabel>
+        <Group>
+          <NavRow title={t('settings.weeklyReminder')} right={<Toggle value={r.on} onChange={setReminderOn} label={t('settings.weeklyReminder')} />} />
+          {r.on ? <NavRow title={t('settings.day')} value={WEEKDAYS[r.weekday]} onPress={() => setPicker('day')} /> : null}
+          {r.on ? <NavRow title={t('settings.time')} value={timeLabel(r.hour, r.minute)} onPress={openTime} /> : null}
+        </Group>
+
+        <Group style={{ marginTop: 10 }}>
+          <NavRow icon={TagIcon} title={t('settings.categories')} value={String(categoryCount)} onPress={() => router.push('/categories')} />
+        </Group>
+
+        <GroupLabel>{t('settings.security')}</GroupLabel>
+        <Group>
+          <View>
+            <NavRow
+              icon={Lock}
+              title={t('settings.appLock')}
+              right={
+                <Toggle
+                  value={settings.appLock}
+                  onChange={setAppLock}
+                  disabled={canLock === false && !settings.appLock}
+                  label={t('settings.appLock')}
+                />
+              }
+            />
+            {canLock === false && !settings.appLock ? (
+              <Txt v="small" c="textSecondary" style={{ paddingHorizontal: 16, paddingBottom: 12, marginTop: -4 }}>
+                {t('lock.noLock')}
+              </Txt>
+            ) : null}
+          </View>
+          {settings.appLock ? (
+            <NavRow
+              title={t('settings.lockAfter')}
+              value={lockOptions.find((o) => o.value === settings.lockAfterMs)?.label}
+              onPress={() => setPicker('lockAfter')}
+            />
+          ) : null}
+        </Group>
+
+        <GroupLabel>{t('settings.yourData')}</GroupLabel>
+        <Group>
+          <NavRow icon={CloudUpload} title={t('settings.backup')} right={backupPill} onPress={() => router.push('/backup')} />
+          <NavRow icon={Download} title={t('settings.export')} onPress={() => router.push('/export')} />
+          <NavRow icon={Trash2} title={t('settings.deleteAll')} danger onPress={() => setDeleteStep(1)} />
+        </Group>
+
+        <GroupLabel>{t('settings.appearance')}</GroupLabel>
+        <Group>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 12, paddingVertical: 10 }}>
+            <Txt>{t('settings.theme')}</Txt>
+            <View style={{ width: 228 }}>
+              <Segmented<AppSettings['theme']>
+                accessibilityLabel={t('settings.theme')}
+                options={[
+                  { value: 'system', label: t('settings.themeSystem') },
+                  { value: 'light', label: t('settings.themeLight') },
+                  { value: 'dark', label: t('settings.themeDark') },
+                ]}
+                value={settings.theme}
+                onChange={(v) => update({ theme: v })}
+              />
+            </View>
+          </View>
+        </Group>
+
+        <GroupLabel>{t('settings.about')}</GroupLabel>
+        <Group>
+          {[
+            <NavRow key="how" title={t('settings.howItWorks')} onPress={() => setHowSheet(true)} />,
+            ABOUT_LINKS.privacyUrl ? (
+              <NavRow
+                key="privacy"
+                title={t('settings.privacy')}
+                right={<ArrowUpRight size={18} color={colors.textTertiary} />}
+                onPress={() => WebBrowser.openBrowserAsync(ABOUT_LINKS.privacyUrl!)}
+              />
+            ) : null,
+            <NavRow key="tax" title={t('settings.notTaxAdvice')} onPress={() => router.push('/disclaimer')} />,
+            rateUrl() ? <NavRow key="rate" title={t('settings.rate')} onPress={() => openRate()} /> : null,
+            ABOUT_LINKS.contactEmail ? (
+              <NavRow key="contact" title={t('settings.contact')} onPress={() => Linking.openURL(`mailto:${ABOUT_LINKS.contactEmail}`)} />
+            ) : null,
+            <View key="version" style={{ minHeight: 56, justifyContent: 'center', paddingHorizontal: 16 }}>
+              <Txt c="textSecondary">{t('settings.version', { version })}</Txt>
+            </View>,
+          ]}
+        </Group>
+      </ScrollView>
+
+      <OptionSheet<Region>
+        visible={picker === 'region'}
+        title={t('settings.region')}
+        options={[
+          { value: 'UK', label: t('settings.UK'), sub: t('onboarding.regionUKSub') },
+          { value: 'US', label: t('settings.US'), sub: t('onboarding.regionUSSub') },
+        ]}
+        value={region}
+        onPick={(v) => {
+          // iOS can't present the dialog while the sheet is still sliding away.
+          if (v !== region) setTimeout(() => setRegionAsk(v), Platform.OS === 'ios' ? 400 : 0);
+        }}
+        onClose={() => setPicker(null)}
+      />
+      <OptionSheet<Scope>
+        visible={picker === 'scope'}
+        title={t('settings.defaultScope')}
+        options={[
+          { value: 'work', label: t('common.work') },
+          { value: 'personal', label: t('common.personal') },
+        ]}
+        value={settings.defaultScope}
+        onPick={(v) => update({ defaultScope: v })}
+        onClose={() => setPicker(null)}
+      />
+      <OptionSheet<AppSettings['distanceUnit']>
+        visible={picker === 'unit'}
+        title={t('settings.distanceUnit')}
+        options={[
+          { value: 'mi', label: t('settings.miles') },
+          { value: 'km', label: t('settings.kilometres') },
+        ]}
+        value={settings.distanceUnit}
+        onPick={(v) => update({ distanceUnit: v })}
+        onClose={() => setPicker(null)}
+      />
+      <OptionSheet<number>
+        visible={picker === 'day'}
+        title={t('settings.day')}
+        options={WEEKDAYS.map((d, i) => ({ value: i, label: d }))}
+        value={r.weekday}
+        onPick={(v) => update({ reminder: { ...r, weekday: v } })}
+        onClose={() => setPicker(null)}
+      />
+      <OptionSheet<AppSettings['lockAfterMs']>
+        visible={picker === 'lockAfter'}
+        title={t('settings.lockAfter')}
+        options={lockOptions}
+        value={settings.lockAfterMs}
+        onPick={(v) => update({ lockAfterMs: v })}
+        onClose={() => setPicker(null)}
+      />
+
+      {Platform.OS === 'ios' ? (
+        <Sheet
+          visible={timeSheet}
+          onClose={() => setTimeSheet(false)}
+          title={t('settings.time')}
+          footer={<Button label={t('common.done')} full onPress={() => setTimeSheet(false)} />}>
+          <DateTimePicker
+            value={new Date(2026, 0, 4, r.hour, r.minute)}
+            mode="time"
+            display="spinner"
+            themeVariant={dark ? 'dark' : 'light'}
+            onValueChange={(_, d) => update({ reminder: { ...r, hour: d.getHours(), minute: d.getMinutes() } })}
+          />
+        </Sheet>
+      ) : null}
+
+      <Sheet visible={howSheet} onClose={() => setHowSheet(false)} title={t('settings.howItWorks')}>
+        {[t('settings.how1'), t('settings.how2'), t('settings.how3'), t('settings.how4')].map((line, i) => (
+          <View key={i} style={{ flexDirection: 'row', gap: 12 }}>
+            <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: colors.sunSoft, alignItems: 'center', justifyContent: 'center' }}>
+              <Txt v="caption" c="sunText">
+                {i + 1}
+              </Txt>
+            </View>
+            <Txt style={{ flex: 1 }}>{line}</Txt>
+          </View>
+        ))}
+        <Txt v="small" c="textSecondary">
+          {t('common.estimateOnly')}
+        </Txt>
+      </Sheet>
+
+      <Dialog
+        visible={regionAsk !== null}
+        title={t('settings.changeRegionTitle')}
+        body={t('settings.changeRegionBody')}
+        onClose={() => setRegionAsk(null)}
+        actions={[
+          { label: t('settings.cancel'), onPress: () => setRegionAsk(null) },
+          {
+            label: t('settings.change'),
+            variant: 'primary',
+            onPress: () => {
+              if (regionAsk) setRegion(regionAsk);
+              setRegionAsk(null);
+            },
+          },
+        ]}
+      />
+
+      <Dialog
+        visible={deleteStep === 1}
+        title={t('settings.deleteAllTitle')}
+        body={t('settings.deleteAllBody')}
+        onClose={() => setDeleteStep(0)}
+        actions={[
+          { label: t('settings.cancel'), onPress: () => setDeleteStep(0) },
+          { label: t('settings.deleteContinue'), variant: 'danger', onPress: () => setDeleteStep(2) },
+        ]}
+      />
+      <Dialog
+        visible={deleteStep === 2}
+        title={t('settings.deleteTypeTitle')}
+        body={t('settings.deleteTypeBody')}
+        onClose={() => {
+          setDeleteStep(0);
+          setDeleteText('');
+        }}
+        actions={[
+          {
+            label: t('settings.cancel'),
+            onPress: () => {
+              setDeleteStep(0);
+              setDeleteText('');
+            },
+          },
+          {
+            label: t('settings.deleteAll'),
+            variant: 'danger',
+            onPress: () => {
+              if (deleteText.trim() === t('settings.deleteWord')) deleteAll();
+            },
+          },
+        ]}>
+        <Field
+          value={deleteText}
+          onChangeText={setDeleteText}
+          autoCapitalize="characters"
+          autoCorrect={false}
+          autoFocus
+          placeholder={t('settings.deleteWord')}
+          accessibilityLabel={t('settings.deleteTypeTitle')}
+          style={{ fontFamily: fonts.extrabold, letterSpacing: 1.6 }}
+        />
+      </Dialog>
+    </View>
   );
 }
