@@ -22,6 +22,7 @@ export function Screen({
   scroll = true,
   contentStyle,
   topInset = true,
+  bottomInset = false,
   onEndReached,
 }: {
   title?: string;
@@ -34,6 +35,8 @@ export function Screen({
   scroll?: boolean;
   contentStyle?: StyleProp<ViewStyle>;
   topInset?: boolean;
+  /** Pad the bottom bar above the system navigation bar (screens outside the tab bar, B-15). */
+  bottomInset?: boolean;
   /** Scrolled to within one screen of the bottom (grow a long list in steps). */
   onEndReached?: () => void;
 }) {
@@ -80,7 +83,12 @@ export function Screen({
         <View style={[{ flex: 1 }, body]}>{children}</View>
       )}
       {bottom ? (
-        <View style={[styles.bottom, { paddingHorizontal: GUTTER, borderTopColor: colors.line, backgroundColor: colors.background }]}>
+        <View
+          style={[
+            styles.bottom,
+            { paddingHorizontal: GUTTER, borderTopColor: colors.line, backgroundColor: colors.background },
+            bottomInset ? { paddingBottom: 12 + insets.bottom } : null,
+          ]}>
           {bottom}
         </View>
       ) : null}

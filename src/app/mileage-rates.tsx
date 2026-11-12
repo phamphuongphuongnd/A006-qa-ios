@@ -71,6 +71,7 @@ export default function MileageRatesScreen() {
     <Screen
       title={t('miles.ratesTitle')}
       headerLeft={<IconButton icon={ChevronLeft} label={t('trip.back')} onPress={close} />}
+      bottomInset
       bottom={<Button label={t('common.save')} full style={{ flex: 1 }} onPress={save} />}>
       <Txt v="body" c="textSecondary">
         {t('miles.ratesIntro')}
