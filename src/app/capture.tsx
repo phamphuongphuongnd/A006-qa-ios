@@ -49,6 +49,8 @@ export default function CaptureScreen() {
   const [leaving, setLeaving] = useState(false);
   const amountRef = useRef<ComponentRef<typeof TextInput>>(null);
   const noteRef = useRef<ComponentRef<typeof TextInput>>(null);
+  /** Blocks a second Save tap while the receipt photo is still being copied. */
+  const savingRef = useRef(false);
 
   const notes = useLive(() => topNotes(db, type));
   const dirty = amount > 0 || note.trim() !== '' || photo !== null;
@@ -99,13 +101,14 @@ export default function CaptureScreen() {
     amountRef.current?.focus();
   };
 
-  const save = () => {
-    if (amount <= 0) return;
+  const save = async () => {
+    if (amount <= 0 || savingRef.current) return;
+    savingRef.current = true;
     let receiptPaths: string[] = [];
     let photoFailed = false;
     if (photo) {
       try {
-        receiptPaths = [saveReceipt(photo)];
+        receiptPaths = [await saveReceipt(photo)];
       } catch {
         photoFailed = true;
       }
@@ -128,6 +131,7 @@ export default function CaptureScreen() {
       above: keep ? 'none' : 'tabs',
       bottomOffset: !keep && params.from === 'home' ? HOME_BAR : 0,
     });
+    savingRef.current = false;
     if (keep) reset();
     else close();
   };

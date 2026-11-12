@@ -125,7 +125,7 @@ function Editor({ entry }: { entry: EntryRowT }) {
       return;
     }
     try {
-      addReceipt(db, entry.id, saveReceipt(res.uri));
+      addReceipt(db, entry.id, await saveReceipt(res.uri));
     } catch {
       snack({ message: t('capture.photoFailed'), above: 'none', tone: 'error' });
     }

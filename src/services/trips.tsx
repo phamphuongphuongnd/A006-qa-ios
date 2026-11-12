@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 
 import { ACTION_END, ACTION_KEEP, ACTION_PAUSE, ACTION_RESUME, NOTIF_LONG_TRIP } from '@/features/trips/constants';
-import { detectInterruptedTrip } from '@/features/trips/controller';
+import { detectInterruptedTrip, stopOrphanRecording } from '@/features/trips/controller';
 import { setupTripNotifications } from '@/features/trips/notify';
 import { refreshWidgets } from '@/features/widgets/refresh';
 import { useDbVersion } from '@/state/useLive';
@@ -14,7 +14,7 @@ import { useDbVersion } from '@/state/useLive';
  * onboarding. The background location task itself is registered at bundle load (see `index.ts`).
  * - On launch / return to foreground: detect a trip whose recording stopped silently → "interrupted".
  * - Notification buttons (Personal stop / Resume / End trip / Keep going) → Active trip screen.
- * - Any data change → refresh home-screen widgets (debounced).
+ * - Any data change → refresh home-screen widgets (debounced); stop GPS if its trip was wiped (Delete all / Restore).
  */
 export function TripServices() {
   useTripLifecycle();
@@ -76,6 +76,7 @@ function useWidgetRefresh() {
   useEffect(() => {
     const id = setTimeout(() => {
       refreshWidgets().catch(() => {});
+      stopOrphanRecording().catch(() => {});
     }, 1_500);
     return () => clearTimeout(id);
   }, [v]);

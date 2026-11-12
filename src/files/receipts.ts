@@ -13,12 +13,12 @@ function ensureDir(): Directory {
   return dir;
 }
 
-/** Copies a picked/captured image into the receipts dir; returns the relative name to store in the DB. */
-export function saveReceipt(sourceUri: string): string {
+/** Copies a picked/captured image into the receipts dir; resolves (after the copy finished) to the relative name to store in the DB. */
+export async function saveReceipt(sourceUri: string): Promise<string> {
   const dir = ensureDir();
   const ext = (sourceUri.split('?')[0].match(/\.(jpe?g|png|heic|webp)$/i)?.[1] ?? 'jpg').toLowerCase();
   const name = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  new File(sourceUri).copy(new File(dir, name));
+  await new File(sourceUri).copy(new File(dir, name));
   return name;
 }
 

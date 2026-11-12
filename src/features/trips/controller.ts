@@ -147,6 +147,18 @@ export async function discardTrip(id: string) {
 }
 
 /**
+ * GPS still recording but no running/paused trip left in the DB (Delete all data, Restore backup) → stop recording
+ * and clear the trip notifications. Called after DB changes.
+ */
+export async function stopOrphanRecording() {
+  if (getActiveTrip(db)) return;
+  if (!(await Location.hasStartedLocationUpdatesAsync(TRIP_TASK).catch(() => false))) return;
+  await stopRecording();
+  await clearTripNotification();
+  await cancelLongTripReminder();
+}
+
+/**
  * App start / return to foreground: a running trip whose recording silently stopped (OS killed the service,
  * permission revoked, location turned off for good) becomes "interrupted" so Home / Miles can say so.
  * Returns true when it marked a trip.

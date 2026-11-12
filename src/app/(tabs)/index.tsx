@@ -72,7 +72,7 @@ export default function HomeScreen() {
 
       {data.trip ? <TripCard trip={data.trip} now={now} unit={settings.distanceUnit} /> : null}
 
-      <Card onPress={() => router.push('/reports?period=week')} accessibilityLabel={t('home.thisWeek')} style={{ gap: 10 }}>
+      <Card onPress={() => router.push({ pathname: '/reports', params: { from: String(week.start), to: String(week.end) } })} accessibilityLabel={t('home.thisWeek')} style={{ gap: 10 }}>
         <Txt v="label" c="textTertiary">
           {t('home.thisWeekLabel', { range: weekLabel(week) })}
         </Txt>

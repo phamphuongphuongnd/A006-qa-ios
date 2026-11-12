@@ -1,4 +1,3 @@
-import * as Notifications from 'expo-notifications';
 import { Bell, ChevronDown, Clock } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
@@ -6,6 +5,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { AppIconMini } from '@/features/entries/art';
 import { useDateTimePicker } from '@/features/entries/DateTimePick';
 import { OnboardingPage } from '@/features/entries/OnboardingTop';
+import { requestNotifications } from '@/features/settings/notifications';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { fonts, GUTTER, radius, useTheme } from '@/theme';
@@ -46,7 +46,8 @@ export default function ReminderStep() {
     setBusy(true);
     let granted = false;
     try {
-      granted = (await Notifications.requestPermissionsAsync()).granted;
+      // Creates the Android channel first: Android 13+ only shows the prompt once a channel exists.
+      granted = await requestNotifications();
     } catch {
       granted = false;
     }

@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { BarChart3, ChevronDown, Download } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
@@ -37,13 +37,32 @@ const KM_PER_MILE = 1.609344;
 const nowMs = () => Date.now();
 const grouped = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
+function linkedPeriod(p: { from?: string; to?: string }): Period | null {
+  const start = Number(p.from);
+  const end = Number(p.to);
+  return p.from && p.to && Number.isFinite(start) && Number.isFinite(end) && end > start ? { start, end } : null;
+}
+
 /** S-09 Reports: tax year + Year/Q1–Q4/Custom, totals (work only), by category, by tax line, mileage, by month. */
 export default function ReportsScreen() {
   const { settings } = useSettings();
   const region: Region = settings.region ?? 'UK';
-  const [startYear, setStartYear] = useState(() => taxYearOf(nowMs(), region).startYear);
-  const [mode, setMode] = useState<PeriodMode>('year');
-  const [custom, setCustom] = useState<Period | undefined>(undefined);
+  // `?from=&to=` (ms, end exclusive — e.g. Home's "This week" card) opens a custom period; new params reset it.
+  const params = useLocalSearchParams<{ from?: string; to?: string }>();
+  const linked = linkedPeriod(params);
+  const paramKey = `${params.from ?? ''}|${params.to ?? ''}`;
+  const [startYear, setStartYear] = useState(() => taxYearOf(linked?.start ?? nowMs(), region).startYear);
+  const [mode, setMode] = useState<PeriodMode>(linked ? 'custom' : 'year');
+  const [custom, setCustom] = useState<Period | undefined>(linked ?? undefined);
+  const [seenKey, setSeenKey] = useState(paramKey);
+  if (seenKey !== paramKey) {
+    setSeenKey(paramKey);
+    if (linked) {
+      setStartYear(taxYearOf(linked.start, region).startYear);
+      setCustom(linked);
+      setMode('custom');
+    }
+  }
   const [yearSheet, setYearSheet] = useState(false);
   const [customSheet, setCustomSheet] = useState<Period | null>(null);
   /** >0 = export sheet open; the number remounts the panel each time. */
@@ -142,7 +161,7 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
   const { colors } = useTheme();
   const { report, months, currency, miles, mileageEstimateMinor, ratesText, entries } = useReport(period, settings, region);
   const anyData = useLive(() => entryCount(db) > 0);
-  const range = { start: String(period.start), end: String(period.end) };
+  const range = { from: String(period.start), to: String(period.end) };
 
   if (entries.length === 0 && miles === 0) {
     return (
