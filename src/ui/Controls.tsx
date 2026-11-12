@@ -48,7 +48,12 @@ export function Segmented<T extends string>({
             onPress={() => onChange(o.value)}
             style={[styles.segBtn, { backgroundColor: bg }, on && o.tone !== 'expense' && o.tone !== 'income' && styles.segShadow]}>
             {Icon && <Icon size={18} color={fg} strokeWidth={2.2} />}
-            <Text maxFontSizeMultiplier={1.6} style={{ color: fg, fontSize: 15, fontFamily: fonts.bold }}>
+            <Text
+              maxFontSizeMultiplier={1.6}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.6}
+              style={{ flexShrink: 1, color: fg, fontSize: 15, fontFamily: fonts.bold }}>
               {o.label}
             </Text>
           </Pressable>

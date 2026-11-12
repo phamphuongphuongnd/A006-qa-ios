@@ -161,7 +161,9 @@ export function RoundButton({
             ]}>
             <Icon size={24} color={active ? colors.onPrimary : colors.text} strokeWidth={2} />
           </View>
-          <Text style={{ fontSize: 13, fontFamily: fonts.semibold, color: colors.textSecondary }}>{label}</Text>
+          <Text maxFontSizeMultiplier={1.4} numberOfLines={2} style={{ maxWidth: 96, textAlign: 'center', fontSize: 13, fontFamily: fonts.semibold, color: colors.textSecondary }}>
+            {label}
+          </Text>
         </>
       )}
     </Pressable>

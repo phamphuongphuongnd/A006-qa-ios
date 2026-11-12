@@ -77,7 +77,7 @@ export function WeekProgress({ week, done, total, onPick }: { week: Period; done
             backgroundColor: colors.surface,
             flexShrink: 1,
           }}>
-          <Txt numberOfLines={1} maxFontSizeMultiplier={1.6} style={{ fontSize: 14, fontFamily: fonts.semibold, flexShrink: 1 }}>
+          <Txt numberOfLines={2} maxFontSizeMultiplier={1.6} style={{ fontSize: 14, fontFamily: fonts.semibold, flexShrink: 1 }}>
             {weekChipLabel(week)}
           </Txt>
           <ChevronDown size={16} color={colors.text} />

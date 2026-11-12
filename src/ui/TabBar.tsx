@@ -44,7 +44,9 @@ export function TabBar({ state, descriptors, navigateToTab }: BottomTabBarProps)
             </Text>
             {badge !== undefined ? (
               <View style={[styles.badge, { backgroundColor: colors.sun, borderColor: colors.surface }]}>
-                <Text style={{ fontSize: 12, color: '#1F2A44', fontFamily: fonts.extrabold }}>{String(badge)}</Text>
+                <Text maxFontSizeMultiplier={1.2} style={{ fontSize: 12, color: '#1F2A44', fontFamily: fonts.extrabold }}>
+                  {String(badge)}
+                </Text>
               </View>
             ) : null}
           </Pressable>

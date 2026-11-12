@@ -296,7 +296,7 @@ export default function CaptureScreen() {
                   {scopeOn ? t('common.work') : t('common.personal')}
                 </Txt>
               </Pressable>
-              <Txt style={{ fontSize: 13, fontFamily: fonts.semibold }} c="textSecondary">
+              <Txt maxFontSizeMultiplier={1.4} numberOfLines={2} center style={{ maxWidth: 150, fontSize: 13, fontFamily: fonts.semibold }} c="textSecondary">
                 {scopeOn ? t('capture.tapForPersonal') : t('capture.tapForWork')}
               </Txt>
             </View>
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
   amountRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   hiddenInput: { position: 'absolute', width: 1, height: 1, opacity: 0, bottom: 0, left: 0 },
   noteField: { minHeight: 52, borderRadius: 14, borderWidth: 2, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center' },
-  row3: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-start' },
+  row3: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-start', gap: 8 },
   scopeChip: { height: 56, borderRadius: 28, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', gap: 6 },
   removePhoto: {
     position: 'absolute',

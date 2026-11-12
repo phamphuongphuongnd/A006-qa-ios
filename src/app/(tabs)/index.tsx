@@ -170,7 +170,7 @@ function StatRow({ items }: { items: { label: string; value: string; c: 'text' |
     <View style={{ flexDirection: 'row', gap: 8 }}>
       {items.map((it) => (
         <View key={it.label} style={{ flex: 1, minWidth: 0 }}>
-          <Txt v="caption" c="textSecondary" style={{ fontFamily: fonts.bold }} numberOfLines={1}>
+          <Txt v="caption" c="textSecondary" style={{ fontFamily: fonts.bold }} numberOfLines={2} maxFontSizeMultiplier={1.6}>
             {it.label}
           </Txt>
           <Txt v="amount" c={it.c} size={17} numberOfLines={1} adjustsFontSizeToFit>
