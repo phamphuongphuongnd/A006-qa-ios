@@ -126,7 +126,8 @@
           ]
         }
       ],
-      "@bacons/apple-targets"
+      "@bacons/apple-targets",
+      "./plugins/withReleasePermissions"
     ],
     "experiments": {
       "typedRoutes": true,
