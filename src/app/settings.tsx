@@ -14,7 +14,7 @@ import type { AppSettings } from '@/db/settingsRepo';
 import type { Region, Scope } from '@/domain/types';
 import { deleteAllReceiptFiles } from '@/features/backup/backupFile';
 import { wipeAllData } from '@/features/backup/dataStore';
-import { ratesLabel } from '@/features/reports/series';
+import { formatRate, ratesOn, type RateTier } from '@/domain/mileage';
 import { ABOUT_LINKS, openRate, rateUrl } from '@/features/settings/about';
 import { authenticate, deviceCanLock } from '@/features/settings/LockedView';
 import { cancelSortReminders, requestNotifications } from '@/features/settings/notifications';
@@ -35,6 +35,12 @@ const LOCK_AFTER: Option<AppSettings['lockAfterMs']>[] = [
 ];
 
 /** S-15 Settings. */
+/** Rates in force today, e.g. "45p / 25p" or "$0.76". */
+const currentRatesText = (rates: RateTier[], currency: 'GBP' | 'USD') =>
+  ratesOn(rates, Date.now())
+    .map((x) => formatRate(x.minorPerMile, currency))
+    .join(' / ');
+
 export default function SettingsScreen() {
   const { colors, dark } = useTheme();
   const insets = useSafeAreaInsets();
@@ -135,7 +141,7 @@ export default function SettingsScreen() {
           <NavRow title={t('settings.taxYear')} value={region === 'UK' ? t('settings.taxYearUK') : t('settings.taxYearUS')} />
           <NavRow
             title={t('settings.mileageRates')}
-            value={ratesLabel(settings.mileageRates[region], region === 'UK' ? 'GBP' : 'USD')}
+            value={currentRatesText(settings.mileageRates[region], region === 'UK' ? 'GBP' : 'USD')}
             onPress={() => router.push('/mileage-rates' as Href)}
           />
         </Group>

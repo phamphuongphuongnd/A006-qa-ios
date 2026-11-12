@@ -6,7 +6,7 @@ import { listCategories } from '@/db/categoriesRepo';
 import { db } from '@/db/client';
 import { listEntries, listReceipts } from '@/db/entriesRepo';
 import type { AppSettings } from '@/db/settingsRepo';
-import { listTrips, mileageTotals } from '@/db/tripsRepo';
+import { businessTripMiles, listTrips, mileageTotals } from '@/db/tripsRepo';
 import { entriesCsv, mileageCsv, totalsCsv } from '@/domain/csv';
 import { metersToMiles } from '@/domain/mileage';
 import { buildReport } from '@/domain/report';
@@ -132,8 +132,7 @@ export async function buildExport(opts: {
 
   if (kinds.includes('pdf')) {
     const workMiles = mileageTotals(db, period).work;
-    const before = period.start > period.year.start ? mileageTotals(db, { start: period.year.start, end: period.start }).work : 0;
-    const tiers = settings.mileageRates[region];
+    const rates = settings.mileageRates[region];
     const html = reportHtml({
       periodLabel: period.label,
       currency,
@@ -144,8 +143,8 @@ export async function buildExport(opts: {
         workMiles > 0
           ? {
               workMiles,
-              estimateMinor: periodMileageEstimate(before, workMiles, tiers),
-              ratesNote: `at ${region === 'UK' ? 'HMRC rates' : 'IRS rate'} (${ratesLabel(tiers, currency)}${region === 'US' ? '/mi' : ''})`,
+              estimateMinor: periodMileageEstimate(businessTripMiles(db, period.year), period.start, period.end, rates),
+              ratesNote: `at ${region === 'UK' ? 'HMRC rates' : 'IRS rate'} (${ratesLabel(rates, currency, period.start, period.end)}${region === 'US' ? '/mi' : ''})`,
             }
           : null,
       trips: trips.map((t) => ({ startedAt: t.startedAt, miles: metersToMiles(t.distanceM), scope: t.scope, purpose: t.purpose, source: t.source })),

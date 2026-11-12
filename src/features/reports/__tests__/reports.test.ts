@@ -73,13 +73,27 @@ describe('monthly series', () => {
 
 describe('mileage', () => {
   it('prices a quarter after the first 10,000 miles at 25p', () => {
-    expect(periodMileageEstimate(0, 8412, DEFAULT_RATES.UK)).toBe(378540);
-    expect(periodMileageEstimate(9_000, 2_000, DEFAULT_RATES.UK)).toBe(1000 * 45 + 1000 * 25);
-    expect(periodMileageEstimate(12_000, 100, DEFAULT_RATES.UK)).toBe(2500);
+    const q1 = { start: at(2026, 4, 6, 0), end: at(2026, 7, 6, 0) };
+    const q2 = { start: at(2026, 7, 6, 0), end: at(2026, 10, 6, 0) };
+    expect(periodMileageEstimate([{ at: at(2026, 5, 1), miles: 8412 }], q1.start, q1.end, DEFAULT_RATES.UK)).toBe(378540);
+    const year = [
+      { at: at(2026, 5, 1), miles: 9_000 },
+      { at: at(2026, 8, 1), miles: 2_000 },
+    ];
+    expect(periodMileageEstimate(year, q2.start, q2.end, DEFAULT_RATES.UK)).toBe(1000 * 45 + 1000 * 25);
   });
-  it('labels rates', () => {
-    expect(ratesLabel(DEFAULT_RATES.UK, 'GBP')).toBe('45p / 25p');
-    expect(ratesLabel(DEFAULT_RATES.US, 'USD')).toBe('72.5¢');
+  it('prices US trips at the rate in force on their day', () => {
+    const y = { start: at(2026, 1, 1, 0), end: at(2027, 1, 1, 0) };
+    const trips = [
+      { at: at(2026, 3, 1), miles: 100 },
+      { at: at(2026, 8, 1), miles: 100 },
+    ];
+    expect(periodMileageEstimate(trips, y.start, y.end, DEFAULT_RATES.US)).toBe(7250 + 7600);
+  });
+  it('labels rates for the period', () => {
+    expect(ratesLabel(DEFAULT_RATES.UK, 'GBP', at(2026, 4, 6, 0), at(2027, 4, 6, 0))).toBe('45p / 25p');
+    expect(ratesLabel(DEFAULT_RATES.US, 'USD', at(2026, 1, 1, 0), at(2027, 1, 1, 0))).toBe('$0.725 → $0.76');
+    expect(ratesLabel(DEFAULT_RATES.US, 'USD', at(2026, 1, 1, 0), at(2026, 4, 1, 0))).toBe('$0.725');
   });
 });
 

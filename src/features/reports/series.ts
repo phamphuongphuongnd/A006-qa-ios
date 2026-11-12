@@ -1,4 +1,4 @@
-import { mileageEstimate, type RateTier } from '@/domain/mileage';
+import { formatRate, mileageEstimateByDate, periodsIn, type RateTier } from '@/domain/mileage';
 import type { EntryType, Minor, Period, Scope } from '@/domain/types';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -42,17 +42,20 @@ export function monthlySeries(
 }
 
 /**
- * Mileage estimate for part of a tax year. Tiers (UK 45p for the first 10,000) count from the start of the tax year,
- * so a quarter is priced as (year-to-end) − (year-to-start).
+ * Mileage estimate for part of a tax year with date-ranged rates. Tiers (UK 45p for the first 10,000) count from the
+ * start of the tax year, so a quarter is priced as (year-to-end) − (year-to-start). `yearTrips` = the tax year's work
+ * trips. Estimate only — not tax advice.
  */
-export function periodMileageEstimate(milesBeforePeriod: number, milesInPeriod: number, tiers: RateTier[]): Minor {
-  return mileageEstimate(milesBeforePeriod + milesInPeriod, tiers) - mileageEstimate(milesBeforePeriod, tiers);
+export function periodMileageEstimate(yearTrips: { at: number; miles: number }[], start: number, end: number, rates: RateTier[]): Minor {
+  const upTo = (t: number) => mileageEstimateByDate(yearTrips.filter((x) => x.at < t), rates);
+  return upTo(end) - upTo(start);
 }
 
-/** "45p / 25p" (UK tiers) · "72.5¢" (US). */
-export function ratesLabel(tiers: RateTier[], currency: 'GBP' | 'USD'): string {
-  const one = (m: number) => (currency === 'GBP' ? `${m}p` : `${m}¢`);
-  return tiers.map((t) => one(t.minorPerMile)).join(' / ');
+/** Rates in force during [start, end): "45p / 25p" (UK) · "$0.725 → $0.76" (US, rate changed mid-period). */
+export function ratesLabel(rates: RateTier[], currency: 'GBP' | 'USD', start: number, end: number): string {
+  return periodsIn(rates, start, end)
+    .map((p) => p.tiers.map((t) => formatRate(t.minorPerMile, currency)).join(' / '))
+    .join(' → ');
 }
 
 /** Y positions for a line chart (0 = top). Returns SVG polyline points. */

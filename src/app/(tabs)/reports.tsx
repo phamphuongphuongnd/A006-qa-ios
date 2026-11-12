@@ -13,7 +13,6 @@ import { CategoryBars, MonthlyLines, type Bar } from '@/features/reports/charts'
 import { ExportPanel } from '@/features/reports/ExportPanel';
 import { availableTaxYears, endOfDay, PERIOD_MODES, periodFor, startOfDay, type PeriodMode, type ReportPeriod } from '@/features/reports/period';
 import { oldestRecordAt } from '@/features/reports/queries';
-import { ratesLabel } from '@/features/reports/series';
 import { useReport } from '@/features/reports/useReport';
 import { DateField } from '@/features/settings/DateField';
 import { formatDate, OptionSheet } from '@/features/settings/ui';
@@ -141,7 +140,7 @@ export default function ReportsScreen() {
 function ReportBody({ period, region }: { period: ReportPeriod; region: Region }) {
   const { settings } = useSettings();
   const { colors } = useTheme();
-  const { report, months, currency, miles, mileageEstimateMinor, tiers, entries } = useReport(period, settings, region);
+  const { report, months, currency, miles, mileageEstimateMinor, ratesText, entries } = useReport(period, settings, region);
   const anyData = useLive(() => entryCount(db) > 0);
   const range = { start: String(period.start), end: String(period.end) };
 
@@ -175,7 +174,7 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
       ? t('reports.kmValue', { km: grouped(miles * KM_PER_MILE) })
       : t('reports.milesValue', { miles: grouped(miles) });
   const estimate = formatMoney(mileageEstimateMinor, currency);
-  const rates = ratesLabel(tiers, currency);
+  const rates = ratesText;
 
   return (
     <>
