@@ -22,6 +22,7 @@ export function Screen({
   scroll = true,
   contentStyle,
   topInset = true,
+  onEndReached,
 }: {
   title?: string;
   subtitle?: string;
@@ -33,6 +34,8 @@ export function Screen({
   scroll?: boolean;
   contentStyle?: StyleProp<ViewStyle>;
   topInset?: boolean;
+  /** Scrolled to within one screen of the bottom (grow a long list in steps). */
+  onEndReached?: () => void;
 }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -59,7 +62,18 @@ export function Screen({
           </View>
         ) : null)}
       {scroll ? (
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={body} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={body}
+          keyboardShouldPersistTaps="handled"
+          scrollEventThrottle={onEndReached ? 200 : undefined}
+          onScroll={
+            onEndReached
+              ? ({ nativeEvent: e }) => {
+                  if (e.contentOffset.y + 2 * e.layoutMeasurement.height >= e.contentSize.height) onEndReached();
+                }
+              : undefined
+          }>
           {children}
         </ScrollView>
       ) : (

@@ -21,6 +21,22 @@ import { fonts, GUTTER, useTheme } from '@/theme';
 import { Button, Card, Chip, ChipRow, Divider, Screen, Sheet, Tag, Txt } from '@/ui';
 
 /** S-07 Miles: tax-year totals + estimate, running trip, trips by month. */
+/** Trip rows drawn per step while scrolling Miles. */
+const ROWS_STEP = 30;
+
+/** Months with only the first `limit` trip rows across them (`items` stays whole for the month total). */
+function visibleMonths<M extends { items: TripRow[] }>(months: M[], limit: number): (M & { rows: TripRow[] })[] {
+  const out: (M & { rows: TripRow[] })[] = [];
+  let left = limit;
+  for (const m of months) {
+    if (left <= 0) break;
+    const rows = m.items.slice(0, left);
+    left -= rows.length;
+    out.push({ ...m, rows });
+  }
+  return out;
+}
+
 export default function MilesScreen() {
   const { settings } = useSettings();
   const region: Region = settings.region ?? 'UK';
@@ -58,6 +74,13 @@ export default function MilesScreen() {
   const shownRates = [...new Set(periodsIn(rates, year.start, year.end).flatMap((p) => p.tiers.map((x) => formatRate(x.minorPerMile, currencyOf(region)))))];
   const rateText = region === 'UK' ? t('miles.hmrcRates', { rates: shownRates.join(' / ') }) : t('miles.irsRate', { rate: shownRates.join(' / ') });
   const empty = trips.length === 0;
+  // Trip rows are drawn in steps of ROWS_STEP as the list scrolls (a year can hold hundreds); month totals use all trips.
+  const [shown, setShown] = useState({ year: startYear, n: ROWS_STEP });
+  const shownN = shown.year === startYear ? shown.n : ROWS_STEP;
+  const months = useMemo(() => visibleMonths(groupByMonth(trips, (x) => x.startedAt), shownN), [trips, shownN]);
+  const showMore = () => {
+    if (shownN < trips.length) setShown({ year: startYear, n: shownN + ROWS_STEP });
+  };
 
   return (
     <Screen
@@ -78,7 +101,8 @@ export default function MilesScreen() {
           </Pressable>
         </View>
       }
-      contentStyle={empty ? { flexGrow: 1 } : undefined}>
+      contentStyle={empty ? { flexGrow: 1 } : undefined}
+      onEndReached={showMore}>
       <InterruptedTripCard />
       {denied ? <DeniedCard onAllow={onAllow} /> : null}
       <ActiveTripCard />
@@ -87,7 +111,7 @@ export default function MilesScreen() {
         <>
           <TotalsCard work={totals.work} personal={totals.personal} unit={unit} estimate={estimate} region={region} rateText={rateText} />
           <ActionButtons />
-          {groupByMonth(trips, (x) => x.startedAt).map((m) => (
+          {months.map((m) => (
             <View key={m.key} style={{ gap: 10 }}>
               <View style={styles.gh}>
                 <Txt v="label" c="textSecondary">
@@ -102,7 +126,7 @@ export default function MilesScreen() {
                 </Txt>
               </View>
               <Card style={{ paddingVertical: 0, paddingHorizontal: 14 }}>
-                {m.items.map((trip, i) => (
+                {m.rows.map((trip, i) => (
                   <TripRowView key={trip.id} trip={trip} unit={unit} divider={i > 0} />
                 ))}
               </Card>
