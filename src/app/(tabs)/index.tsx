@@ -99,7 +99,7 @@ export default function HomeScreen() {
             <View style={{ flex: 1, gap: 2 }}>
               <Txt v="h2">{data.unsorted === 1 ? t('home.toSortOne') : t('home.toSort', { count: data.unsorted })}</Txt>
               <Txt v="small" c="sunText">
-                {t('home.toSortSub', { minutes: sortMinutes(data.unsorted) })}
+                {sortMinutes(data.unsorted) === 1 ? t('home.toSortSubOne') : t('home.toSortSub', { minutes: sortMinutes(data.unsorted) })}
               </Txt>
             </View>
             <Button label={t('home.sortNow')} size="sm" onPress={() => router.navigate('/sort')} />

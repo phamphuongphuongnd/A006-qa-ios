@@ -40,6 +40,8 @@ export function useDbVersion(): number {
  * so no memo or loading state is needed.
  */
 export function useLive<T>(query: () => T): T {
+  // Opt out of React Compiler: it would memoize `query()` on the (stable) closure and never re-run it after a write.
+  'use no memo';
   useDbVersion();
   return query();
 }

@@ -101,6 +101,7 @@ export const en = {
     toSort: '{count} entries to sort',
     toSortOne: '1 entry to sort',
     toSortSub: "Sunday's job — about {minutes} minutes",
+    toSortSubOne: "Sunday's job — about a minute",
     sortNow: 'Sort now',
     allSorted: 'All sorted ✓',
     allSortedSub: 'Nice. Nothing waiting for Sunday.',
