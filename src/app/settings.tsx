@@ -1,6 +1,7 @@
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import Constants from 'expo-constants';
-import { router, type Href } from 'expo-router';
+import { type Href } from 'expo-router';
+import { router } from '@/services/router';
 import * as WebBrowser from 'expo-web-browser';
 import { ArrowUpRight, CloudUpload, Download, Lock, Tag as TagIcon, Trash2 } from '@/ui/icons';
 import { useEffect, useState } from 'react';

@@ -1,5 +1,6 @@
 import * as Location from 'expo-location';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { router } from '@/services/router';
 import { ChevronLeft, Lock, X } from '@/ui/icons';
 import { useEffect, useState } from 'react';
 import { Linking, Platform, View } from 'react-native';

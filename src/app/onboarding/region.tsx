@@ -1,5 +1,5 @@
 import { getLocales } from 'expo-localization';
-import { router } from 'expo-router';
+import { router } from '@/services/router';
 import { Info } from '@/ui/icons';
 import { useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';

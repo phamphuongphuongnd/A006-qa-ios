@@ -1,4 +1,5 @@
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
+import { router } from '@/services/router';
 import { Trash2, X } from '@/ui/icons';
 import { useState } from 'react';
 

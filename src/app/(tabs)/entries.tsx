@@ -1,5 +1,6 @@
 import { FlashList } from '@shopify/flash-list';
-import { router, useLocalSearchParams, useNavigation } from 'expo-router';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { router } from '@/services/router';
 import { ArrowDownUp, Briefcase, ChevronDown, Combine, Plus, Search, SearchX, Tags, Trash2, X } from '@/ui/icons';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { BackHandler, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';

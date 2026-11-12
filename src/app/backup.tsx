@@ -1,6 +1,6 @@
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
-import { router } from 'expo-router';
+import { router } from '@/services/router';
 import * as Sharing from 'expo-sharing';
 import { Check, CloudUpload, FileText, RotateCcw, TriangleAlert } from '@/ui/icons';
 import { useRef, useState } from 'react';

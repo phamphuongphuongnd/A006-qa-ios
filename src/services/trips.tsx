@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import { router } from 'expo-router';
+import { router } from '@/services/router';
 import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 

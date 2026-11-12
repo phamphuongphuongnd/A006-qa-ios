@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router } from '@/services/router';
 import { Camera, Flag, FileText, Fuel, Minus, Plus, Settings, X } from '@/ui/icons';
 import { useState } from 'react';
 import { View } from 'react-native';

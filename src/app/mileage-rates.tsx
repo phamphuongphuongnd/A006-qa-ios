@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router } from '@/services/router';
 import { ChevronLeft, Plus, Trash2 } from '@/ui/icons';
 import { useState } from 'react';
 import { View } from 'react-native';

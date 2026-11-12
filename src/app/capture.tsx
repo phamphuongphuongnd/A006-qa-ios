@@ -1,5 +1,6 @@
 import * as Haptics from 'expo-haptics';
-import { router, useLocalSearchParams, useNavigation, usePreventRemove } from 'expo-router';
+import { useLocalSearchParams, useNavigation, usePreventRemove } from 'expo-router';
+import { router } from '@/services/router';
 import { Briefcase, Camera, FileText, User, X } from '@/ui/icons';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';

@@ -1,4 +1,5 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { router } from '@/services/router';
 import { Check, LayoutGrid, ListChecks } from '@/ui/icons';
 import { useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';

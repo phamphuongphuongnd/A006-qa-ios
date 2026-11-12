@@ -1,4 +1,5 @@
-import { router, useFocusEffect, useLocalSearchParams, useNavigation, usePreventRemove } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useNavigation, usePreventRemove } from 'expo-router';
+import { router } from '@/services/router';
 import { CalendarClock, ChevronDown, Copy, ImagePlus, MoreHorizontal, Split, Trash2, X } from '@/ui/icons';
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';

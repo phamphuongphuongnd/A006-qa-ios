@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router } from '@/services/router';
 import { LocateFixed, Pause, Play, Square, TriangleAlert } from '@/ui/icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 

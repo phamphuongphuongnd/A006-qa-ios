@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router } from '@/services/router';
 import { Tag } from '@/ui/icons';
 import { ScrollView, View } from 'react-native';
 

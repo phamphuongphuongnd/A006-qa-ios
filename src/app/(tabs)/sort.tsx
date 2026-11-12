@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router } from '@/services/router';
 import { Briefcase, List, Pencil, SkipForward, Split, User } from '@/ui/icons';
 import { useRef, useState } from 'react';
 import { Animated, Image, Pressable, StyleSheet, View } from 'react-native';

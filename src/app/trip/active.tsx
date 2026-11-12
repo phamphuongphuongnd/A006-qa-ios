@@ -1,4 +1,5 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { router } from '@/services/router';
 import { Briefcase, Check, ChevronDown, Flag, LocateFixed, MapPin, Pause, Play, Square, User } from '@/ui/icons';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';

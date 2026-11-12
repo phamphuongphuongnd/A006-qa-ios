@@ -1,4 +1,5 @@
-import { router, type Href } from 'expo-router';
+import { type Href } from 'expo-router';
+import { router } from '@/services/router';
 import { X } from '@/ui/icons';
 
 import { t } from '@/i18n';

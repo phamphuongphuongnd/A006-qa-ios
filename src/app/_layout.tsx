@@ -17,6 +17,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { expoDb } from '@/db/client';
 import { DataServices, LockGate } from '@/services/data';
+import { RouterBridge } from '@/services/router';
 import { TripServices } from '@/services/trips';
 import { SettingsProvider, useSettings } from '@/state/settings';
 import { AppThemeProvider, useTheme } from '@/theme';
@@ -85,6 +86,7 @@ function Navigator({ onboarded }: { onboarded: boolean }) {
   return (
     <>
       <StatusBar style={dark ? 'light' : 'dark'} />
+      <RouterBridge />
       <Stack
         screenOptions={{
           // Every screen draws its own mockup header (big title / close button) via <Screen>.

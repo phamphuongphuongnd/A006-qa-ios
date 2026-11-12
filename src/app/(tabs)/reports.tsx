@@ -1,4 +1,5 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { router } from '@/services/router';
 import { BarChart3, ChevronDown, Download } from '@/ui/icons';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';

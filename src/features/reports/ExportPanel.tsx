@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router } from '@/services/router';
 import * as Sharing from 'expo-sharing';
 import { Check, ChevronDown, ChevronUp, Download, Info, X } from '@/ui/icons';
 import { useEffect, useRef, useState } from 'react';

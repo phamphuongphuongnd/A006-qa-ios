@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router } from '@/services/router';
 import { CloudUpload, Flag, Minus, Pause, Play, Plus, Settings, Square, Check, X } from '@/ui/icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
