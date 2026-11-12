@@ -33,14 +33,14 @@
 - [x] F-08 Phân loại tuần: thẻ, List view, Done (S-06, S-06a, S-06c)
 - [x] F-10 Danh mục (S-11)
 - [x] F-11 Quãng đường nhập tay (S-08)
-- [ ] F-12 Chuyến GPS nền Start/Stop/Personal stop + thông báo + nhắc 12h + phát hiện ngắt (S-07a, S-07b) — code xong, chờ chạy xe thật
+- [ ] F-12 Chuyến GPS nền Start/Stop/Personal stop + thông báo + nhắc 12h + phát hiện ngắt (S-07a, S-07b) — lọc nhiễu đứng yên đã thử trên máy (0.0 mi / 4 phút); còn chạy xe thật
 - [x] F-13 Tab Miles (S-07) + mức dặm theo khoảng ngày (IRS 2026: 72.5¢ tới 30/6, 76¢ từ 1/7)
 - [x] F-14 Báo cáo năm/quý (S-09)
 - [x] F-15 Xuất CSV ×3 + PDF + ZIP ảnh (S-10)
 - [x] F-16 Sao lưu & khôi phục + nhắc 30 ngày (S-12)
 - [x] F-17 Nhắc phân loại hằng tuần (thông báo local)
 - [ ] F-18 Khoá app sinh trắc (S-13) — code xong, chờ Phương thử vân tay
-- [ ] F-19 Widget Android (2×1, 4×2) — code xong, chờ Phương thêm widget ra màn hình chính
+- [x] F-19 Widget Android (2×1, 4×2)
 - [ ] F-19 Widget iOS (nhỏ, vừa) — build EAS
 - [x] F-20 Settings (S-15) + xoá toàn bộ dữ liệu
 - [x] F-21 Not tax advice (S-16) + icon app + splash

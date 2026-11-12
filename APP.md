@@ -44,7 +44,7 @@
 - Widget + GPS nền cần dev build (không chạy trong Expo Go); widget iOS build trên EAS vì không có Mac.
 - Năm thuế UK 6/4–5/4: khoản ngày 5/4 thuộc năm cũ, 6/4 thuộc năm mới.
 - Tiền lưu số nguyên (pence/cent), không dùng float.
-- React Compiler bật: hook gọi closure truy vấn DB (`useLive`) phải có `'use no memo'`, nếu không màn không tự cập nhật.
+- React Compiler bật: `useLive` và file widget Android phải có `'use no memo'` (không thì màn không tự cập nhật / widget trắng).
 - PDF (expo-print Android): không dùng `position: fixed` — WebView vẽ đè giữa trang.
 - Thử máy qua adb: chờ chữ trên màn (`uiautomator dump`) rồi mới bấm, không bấm theo giờ chờ cố định.
 
