@@ -124,6 +124,7 @@ export const en = {
     settings: 'Settings',
     thisWeekLabel: 'This week · {range}',
     businessMilesLabel: 'Business miles',
+    businessKmLabel: 'Business km',
     tripRunningLabel: 'TRIP RUNNING',
     hideBanner: 'Hide for 7 days',
     newExpense: 'Expense',

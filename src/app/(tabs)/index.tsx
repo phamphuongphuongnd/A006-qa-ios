@@ -7,7 +7,7 @@ import { db } from '@/db/client';
 import { entryCount, listEntries, totalsFor, unsortedCount } from '@/db/entriesRepo';
 import type { TripRow } from '@/db/schema';
 import { getActiveTrip, mileageTotals } from '@/db/tripsRepo';
-import { metersToMiles } from '@/domain/mileage';
+import { KM_PER_MILE, metersToMiles } from '@/domain/mileage';
 import { formatMoney } from '@/domain/money';
 import { taxYearOf } from '@/domain/taxYear';
 import { currencyOf, type Currency } from '@/domain/types';
@@ -93,7 +93,10 @@ export default function HomeScreen() {
           items={[
             { label: t('home.in'), value: formatMoney(data.totals.incomeMinor, currency), c: empty ? 'textSecondary' : 'incomeText' },
             { label: t('home.out'), value: formatMoney(data.totals.expenseMinor, currency), c: empty ? 'textSecondary' : 'expenseText' },
-            { label: t('home.businessMilesLabel'), value: milesLabel(tripData.miles), c: empty ? 'textSecondary' : 'text' },
+            // Follows Settings → Distance unit like Miles / Reports (B-13).
+            settings.distanceUnit === 'km'
+              ? { label: t('home.businessKmLabel'), value: milesLabel(tripData.miles * KM_PER_MILE), c: empty ? 'textSecondary' : 'text' }
+              : { label: t('home.businessMilesLabel'), value: milesLabel(tripData.miles), c: empty ? 'textSecondary' : 'text' },
           ]}
         />
       </Card>
