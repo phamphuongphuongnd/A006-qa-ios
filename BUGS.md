@@ -67,6 +67,6 @@
   unavailable before the first render has finished" (router.push trong onPress) — case TC-195 — tái hiện: app đang chạy nền →
   đổi Cỡ chữ trong Cài đặt máy → mở lại app → bấm "− Expense" ngay → app tắt. Mở lại lần sau thì không lỗi. Có thể cũng xảy ra với
   đổi chế độ tối / ngôn ngữ máy (đều dựng lại Activity). — commit: `3304de9` — thử A13: app ở nền → đổi cỡ chữ 0.8→1.3 và 1.3→1.0 → mở lại, bấm "− Expense" liên tục ngay khi mở: Ghi nhanh mở, không crash, logcat không có JavascriptException
-- [ ] **B-24** 🟡 Cỡ chữ 200%: số tiền vẫn hiện đủ nhưng nhiều nhãn bị cắt / vỡ: Ghi nhanh "Expens/e" xuống dòng, 3 nhãn
+- [x] **B-24** 🟡 Cỡ chữ 200%: số tiền vẫn hiện đủ nhưng nhiều nhãn bị cắt / vỡ: Ghi nhanh "Expens/e" xuống dòng, 3 nhãn
   "Photo · Tap for Personal · Note" dính thành một dòng; "This week ·..", "Kwik Fi..", "Unsorte..", "Add ma..", "Busine.."; badge số
-  đè icon tab Sort — case TC-195 — tái hiện: Cỡ chữ lớn nhất (font_scale 2.0) → các tab. — commit:
+  đè icon tab Sort — case TC-195 — tái hiện: Cỡ chữ lớn nhất (font_scale 2.0) → các tab. — commit: `41b6c0e`, thẻ Sort cuộn `4a66c4e` — thử A13 font_scale 2.0: Home nhãn xuống dòng gọn, badge không đè icon, Ghi nhanh không vỡ chữ, Miles nút xếp 2 hàng, thẻ Sort cuộn được tới Edit/Split/Skip
