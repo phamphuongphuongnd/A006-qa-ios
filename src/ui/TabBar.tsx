@@ -14,6 +14,9 @@ const ICONS: Record<string, LucideIcon> = { index: Home, entries: List, sort: La
 export function TabBar({ state, descriptors, navigateToTab }: BottomTabBarProps) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  // A screen can hide the bar (Entries multi-select shows its own action bar there).
+  const focusedStyle = StyleSheet.flatten(descriptors[state.routes[state.index].key]?.options.tabBarStyle);
+  if (focusedStyle?.display === 'none') return null;
   return (
     <View style={[styles.bar, { backgroundColor: colors.surface, borderTopColor: colors.line, paddingBottom: Math.max(insets.bottom, 12) }]}>
       {state.routes.map((route, i) => {

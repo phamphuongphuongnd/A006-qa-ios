@@ -2,18 +2,8 @@ import { Stack } from 'expo-router';
 
 import { useTheme } from '@/theme';
 
+/** S-01a–d. Every step draws its own top bar (back + progress dots) from the mockup. */
 export default function OnboardingLayout() {
   const { colors } = useTheme();
-  return (
-    <Stack
-      screenOptions={{
-        headerShadowVisible: false,
-        headerTitle: '',
-        headerStyle: { backgroundColor: colors.background },
-        headerTintColor: colors.text,
-        contentStyle: { backgroundColor: colors.background },
-      }}>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-    </Stack>
-  );
+  return <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />;
 }

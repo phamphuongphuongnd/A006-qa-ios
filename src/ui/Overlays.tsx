@@ -19,6 +19,8 @@ export interface SnackOptions {
   duration?: number;
   /** Lift above a bottom bar: 'tabs' (default), 'none' for full-screen modals. */
   above?: 'tabs' | 'none';
+  /** Extra lift on top of `above`, e.g. Home's fixed Expense/Income bar. */
+  bottomOffset?: number;
   tone?: 'default' | 'error';
 }
 
@@ -62,7 +64,7 @@ export function SnackbarProvider({ children }: { children: ReactNode }) {
 function SnackView({ s, onAction }: { s: SnackOptions; onAction: () => void }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const bottom = insets.bottom + ((s.above ?? 'tabs') === 'tabs' ? 90 : 16);
+  const bottom = insets.bottom + ((s.above ?? 'tabs') === 'tabs' ? 90 : 16) + (s.bottomOffset ?? 0);
   return (
     <View
       pointerEvents="box-none"

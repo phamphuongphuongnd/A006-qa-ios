@@ -1,15 +1,464 @@
-import { Placeholder } from '@/components/Placeholder';
-import { t } from '@/i18n';
+import { router, useFocusEffect, useLocalSearchParams, useNavigation, usePreventRemove } from 'expo-router';
+import { CalendarClock, ChevronDown, Copy, ImagePlus, MoreHorizontal, Split, Trash2, X } from 'lucide-react-native';
+import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-/** S-05 — see product.md. Placeholder until the Hi-Fi mockup arrives. */
-export default function IdScreen() {
+import { listCategories } from '@/db/categoriesRepo';
+import { db } from '@/db/client';
+import { addReceipt, createEntry, getEntry, listReceipts, splitSiblings, updateEntry, type EntryPatch } from '@/db/entriesRepo';
+import type { EntryRow as EntryRowT } from '@/db/schema';
+import { formatMoney } from '@/domain/money';
+import type { Currency, EntryType, Scope } from '@/domain/types';
+import { CategorySheet } from '@/features/entries/CategorySheet';
+import { useDateTimePicker } from '@/features/entries/DateTimePick';
+import { EntryRow } from '@/features/entries/EntryRow';
+import { dateTimeLabel, dayMonth } from '@/features/entries/format';
+import { categoryIcon } from '@/features/entries/icons';
+import { keypadText, keypadValue } from '@/features/entries/logic';
+import { CameraDeniedDialog, takePhoto } from '@/features/entries/photo';
+import { ReceiptViewer } from '@/features/entries/ReceiptViewer';
+import { useEntryActions, useReceiptRemoval } from '@/features/entries/useEntryActions';
+import { receiptUri, saveReceipt } from '@/files/receipts';
+import { t } from '@/i18n';
+import { useLive } from '@/state/useLive';
+import { fonts, GUTTER, radius, useTheme } from '@/theme';
+import { Button, Dialog, EmptyState, Group, IconButton, ReceiptThumb, Segmented, Sheet, Txt, useSnackbar } from '@/ui';
+
+type Draft = Pick<EntryRowT, 'type' | 'amountMinor' | 'occurredAt' | 'note' | 'categoryId' | 'scope'>;
+
+const draftOf = (e: EntryRowT): Draft => ({
+  type: e.type,
+  amountMinor: e.amountMinor,
+  occurredAt: e.occurredAt,
+  note: e.note,
+  categoryId: e.categoryId,
+  scope: e.scope,
+});
+
+/** S-05 Entry detail — edit in place; ⋯ = Split / Duplicate / Delete; receipts open full screen. */
+export default function EntryDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const entry = useLive(() => getEntry(db, id));
+  if (!entry) return <Gone />;
+  return <Editor key={entry.id} entry={entry} />;
+}
+
+function Gone() {
+  // Deleted, merged or split away: once this screen is (again) on top, go back to where we came from.
+  // Only while focused, so a screen already leaving never pops a second one.
+  useFocusEffect(
+    useCallback(() => {
+      const tm = setTimeout(() => (router.canGoBack() ? router.back() : router.replace('/entries')), 50);
+      return () => clearTimeout(tm);
+    }, []),
+  );
   return (
-    <Placeholder
-      code="S-05"
-      title={t("screens.entry")}
-      links={[
-        { label: "Split", href: "/split/demo" },
-      ]}
-    />
+    <View style={{ flex: 1, justifyContent: 'center' }}>
+      <EmptyState title={t('common.entryGone')} />
+    </View>
   );
 }
+
+function Editor({ entry }: { entry: EntryRowT }) {
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
+  const snack = useSnackbar();
+  const actions = useEntryActions();
+  const removeReceipt = useReceiptRemoval();
+  const picker = useDateTimePicker();
+  const currency = entry.currency as Currency;
+
+  const [draft, setDraft] = useState<Draft>(() => draftOf(entry));
+  const [editingAmount, setEditingAmount] = useState(false);
+  const [menu, setMenu] = useState(false);
+  const [sheet, setSheet] = useState<'category' | 'siblings' | null>(null);
+  const [dialog, setDialog] = useState<'delete' | 'discard' | null>(null);
+  const [viewer, setViewer] = useState<{ id: string; entryId: string; filePath: string } | null>(null);
+  const [cameraDenied, setCameraDenied] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const amountRef = useRef<ComponentRef<typeof TextInput>>(null);
+
+  const data = useLive(() => ({
+    receipts: listReceipts(db, entry.id),
+    cats: listCategories(db, { includeHidden: true }),
+    siblings: entry.splitGroupId ? splitSiblings(db, entry.splitGroupId) : [],
+  }));
+  const category = draft.categoryId ? data.cats.find((c) => c.id === draft.categoryId) : undefined;
+
+  const saved = draftOf(entry);
+  const patch: EntryPatch = {};
+  (Object.keys(draft) as (keyof Draft)[]).forEach((k) => {
+    if (draft[k] !== saved[k]) (patch as Record<string, unknown>)[k] = draft[k];
+  });
+  const dirty = Object.keys(patch).length > 0;
+  const valid = draft.amountMinor > 0;
+
+  usePreventRemove(dirty && !leaving, () => setDialog('discard'));
+  useEffect(() => {
+    if (!leaving) return;
+    if (navigation.canGoBack()) navigation.goBack();
+    else router.replace('/entries');
+  }, [leaving, navigation]);
+
+  const set = (p: Partial<Draft>) => setDraft((d) => ({ ...d, ...p }));
+
+  const setType = (type: EntryType) => {
+    // A category belongs to one side; switching side leaves the entry unsorted.
+    const keep = category && category.type === type;
+    set({ type, categoryId: keep ? draft.categoryId : null });
+  };
+
+  const save = () => {
+    if (!dirty || !valid) return;
+    updateEntry(db, entry.id, patch);
+    snack({ message: t('entries.changesSaved') });
+    setLeaving(true);
+  };
+
+  const addPhoto = async (source: 'camera' | 'library') => {
+    const res = await takePhoto(source);
+    if (!res.ok) {
+      if (res.reason === 'denied') setCameraDenied(true);
+      else if (res.reason === 'failed') snack({ message: t('capture.photoFailed'), above: 'none' });
+      return;
+    }
+    try {
+      addReceipt(db, entry.id, saveReceipt(res.uri));
+    } catch {
+      snack({ message: t('capture.photoFailed'), above: 'none', tone: 'error' });
+    }
+  };
+
+  const duplicate = () => {
+    setMenu(false);
+    createEntry(db, {
+      type: entry.type,
+      amountMinor: entry.amountMinor,
+      currency,
+      occurredAt: entry.occurredAt,
+      note: entry.note,
+      scope: entry.scope,
+      categoryId: entry.categoryId,
+      receiptPaths: data.receipts.map((r) => r.filePath),
+    });
+    snack({ message: t('entries.duplicated'), above: 'none' });
+  };
+
+  const amountColor = draft.type === 'income' ? 'incomeText' : 'expenseText';
+  const splitFrom = entry.splitGroupId && entry.splitFromMinor ? entry.splitFromMinor : null;
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: Platform.OS === 'ios' ? 8 : insets.top }}>
+      <View style={[styles.top, { paddingHorizontal: GUTTER }]}>
+        <IconButton icon={X} label={t('common.close')} onPress={() => (dirty ? setDialog('discard') : setLeaving(true))} />
+        <Txt v="h3" accessibilityRole="header">
+          {draft.type === 'income' ? t('common.income') : t('common.expense')}
+        </Txt>
+        <IconButton icon={MoreHorizontal} label={t('entries.detailMore')} filled onPress={() => setMenu(true)} />
+      </View>
+
+      <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 20 }}>
+        <View>
+          <View style={{ paddingHorizontal: GUTTER, gap: 14, paddingTop: 6 }}>
+            <View style={{ alignItems: 'center', gap: 10, paddingTop: 4, paddingBottom: 6 }}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${t('entries.editAmount')}, ${formatMoney(draft.amountMinor, currency)}`}
+                onPress={() => {
+                  setEditingAmount(true);
+                  amountRef.current?.focus();
+                }}
+                style={[styles.amountBox, editingAmount && { borderColor: colors.primary }]}>
+                <Txt v="amount" c={draft.amountMinor > 0 ? amountColor : 'textTertiary'} style={{ fontSize: 52, lineHeight: 60 }} adjustsFontSizeToFit numberOfLines={1}>
+                  {formatMoney(draft.amountMinor, currency)}
+                </Txt>
+              </Pressable>
+              <TextInput
+                ref={amountRef}
+                value={keypadText(draft.amountMinor)}
+                onChangeText={(v) => set({ amountMinor: keypadValue(v) })}
+                onBlur={() => setEditingAmount(false)}
+                keyboardType="number-pad"
+                caretHidden
+                contextMenuHidden
+                style={styles.hidden}
+              />
+              <View style={{ width: 220 }}>
+                <Segmented
+                  value={draft.type}
+                  onChange={setType}
+                  options={[
+                    { value: 'expense', label: t('common.expense'), tone: 'expense' },
+                    { value: 'income', label: t('common.income'), tone: 'income' },
+                  ]}
+                />
+              </View>
+              {splitFrom ? (
+                <Pressable accessibilityRole="button" onPress={() => setSheet('siblings')} style={styles.splitLink}>
+                  <Split size={16} color={colors.textSecondary} />
+                  <Txt v="caption" c="textSecondary" style={{ fontFamily: fonts.medium, textDecorationLine: 'underline' }}>
+                    {t('entries.splitFrom', { amount: formatMoney(splitFrom, currency), date: dayMonth(entry.occurredAt) })}
+                  </Txt>
+                </Pressable>
+              ) : null}
+            </View>
+
+            <Group>
+              <Row label={t('entries.dateTime')}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t('entries.dateTime')}, ${dateTimeLabel(draft.occurredAt)}`}
+                  onPress={() =>
+                    picker.open({
+                      value: new Date(draft.occurredAt),
+                      mode: 'datetime',
+                      title: t('entries.dateTime'),
+                      onPick: (d) => set({ occurredAt: d.getTime() }),
+                    })
+                  }
+                  style={styles.rowPress}>
+                  <Txt style={{ flex: 1 }}>{dateTimeLabel(draft.occurredAt)}</Txt>
+                  <CalendarClock size={20} color={colors.textTertiary} />
+                </Pressable>
+              </Row>
+              <Row label={t('entries.note')}>
+                <TextInput
+                  value={draft.note}
+                  onChangeText={(v) => set({ note: v })}
+                  maxLength={120}
+                  placeholder={t('entries.notePlaceholder')}
+                  placeholderTextColor={colors.textTertiary}
+                  accessibilityLabel={t('entries.note')}
+                  maxFontSizeMultiplier={1.6}
+                  style={{ flex: 1, minHeight: 44, fontSize: 16, fontFamily: fonts.regular, color: colors.text }}
+                />
+              </Row>
+              <Row label={t('entries.mergeCategory')}>
+                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${t('entries.mergeCategory')}, ${category?.name ?? t('common.unsorted')}`}
+                    onPress={() => setSheet('category')}
+                    style={[styles.catChip, { borderColor: patch.categoryId !== undefined ? colors.primary : colors.lineStrong, borderWidth: patch.categoryId !== undefined ? 2 : 1.5 }]}>
+                    {category ? (() => {
+                      const Icon = categoryIcon(category.icon);
+                      return <Icon size={16} color={category.color} />;
+                    })() : null}
+                    <Txt maxFontSizeMultiplier={1.6} numberOfLines={1} style={{ fontSize: 14, fontFamily: fonts.semibold, flexShrink: 1 }}>
+                      {category?.name ?? t('common.unsorted')}
+                    </Txt>
+                    <ChevronDown size={16} color={colors.text} />
+                  </Pressable>
+                </View>
+                {patch.categoryId !== undefined ? (
+                  <View accessibilityLabel={t('entries.changed')} style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary }} />
+                ) : null}
+              </Row>
+              <Row label={t('entries.use')}>
+                <View style={{ flex: 1 }}>
+                  <Segmented<Scope>
+                    value={draft.scope}
+                    onChange={(scope) => set({ scope })}
+                    options={[
+                      { value: 'work', label: t('common.work') },
+                      { value: 'personal', label: t('common.personal') },
+                    ]}
+                  />
+                </View>
+              </Row>
+            </Group>
+
+            <View style={{ gap: 6 }}>
+              <Txt v="caption" c="textSecondary" style={{ fontFamily: fonts.bold }}>
+                {t('entries.receipts')}
+              </Txt>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                {data.receipts.map((r) => (
+                  <ReceiptThumb key={r.id} uri={receiptUri(r.filePath)} size={72} onPress={() => setViewer(r)} />
+                ))}
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('common.addPhoto')}
+                  accessibilityHint={t('capture.photoHint')}
+                  onPress={() => addPhoto('camera')}
+                  onLongPress={() => addPhoto('library')}
+                  style={[styles.addPhoto, { borderColor: colors.lineStrong }]}>
+                  <ImagePlus size={22} color={colors.textSecondary} />
+                  <Txt style={{ fontSize: 12, fontFamily: fonts.bold }} c="textSecondary">
+                    {t('common.addPhoto')}
+                  </Txt>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+
+      <View style={{ paddingHorizontal: GUTTER, paddingTop: 8, paddingBottom: Math.max(insets.bottom, 16) + 12 }}>
+        <Button label={t('entries.saveChanges')} full disabled={!dirty || !valid} onPress={save} />
+      </View>
+
+      {/* ⋯ menu */}
+      <Modal visible={menu} transparent animationType="fade" onRequestClose={() => setMenu(false)} statusBarTranslucent>
+        <Pressable style={StyleSheet.absoluteFill} onPress={() => setMenu(false)} accessibilityLabel={t('common.close')} />
+        <View style={[styles.menu, { top: (Platform.OS === 'ios' ? 8 : insets.top) + 68, right: 16, backgroundColor: colors.surface, borderColor: colors.line }]}>
+          <MenuItem
+            icon={Split}
+            label={t('entries.split')}
+            onPress={() => {
+              setMenu(false);
+              router.push(`/split/${entry.id}`);
+            }}
+          />
+          <MenuItem icon={Copy} label={t('entries.duplicate')} onPress={duplicate} />
+          <MenuItem
+            icon={Trash2}
+            label={t('common.delete')}
+            danger
+            onPress={() => {
+              setMenu(false);
+              setDialog('delete');
+            }}
+          />
+        </View>
+      </Modal>
+
+      <CategorySheet
+        visible={sheet === 'category'}
+        onClose={() => setSheet(null)}
+        type={draft.type}
+        allowUnsorted
+        selectedId={draft.categoryId}
+        title={t('entries.mergeCategory')}
+        onPick={(cid) => {
+          set({ categoryId: cid });
+          setSheet(null);
+        }}
+      />
+      <Sheet visible={sheet === 'siblings'} onClose={() => setSheet(null)} title={t('entries.splitParts')}>
+        <View>
+          {data.siblings.map((s, i) => (
+            <EntryRow
+              key={s.id}
+              entry={{ ...s, receiptCount: 0 }}
+              category={s.categoryId ? data.cats.find((c) => c.id === s.categoryId) : undefined}
+              currency={currency}
+              divider={i > 0}
+              onPress={() => {
+                setSheet(null);
+                if (s.id !== entry.id) router.replace(`/entry/${s.id}`);
+              }}
+            />
+          ))}
+        </View>
+      </Sheet>
+
+      <Dialog
+        visible={dialog === 'discard'}
+        onClose={() => setDialog(null)}
+        title={t('entries.discardChangesTitle')}
+        body={t('entries.discardChangesBody')}
+        actions={[
+          { label: t('common.keepEditing'), onPress: () => setDialog(null) },
+          {
+            label: t('common.discard'),
+            variant: 'danger',
+            onPress: () => {
+              setDialog(null);
+              setLeaving(true);
+            },
+          },
+        ]}
+      />
+      <Dialog
+        visible={dialog === 'delete'}
+        onClose={() => setDialog(null)}
+        title={t('entries.deleteTitle')}
+        body={t('entries.deleteBody')}
+        actions={[
+          { label: t('common.cancel'), onPress: () => setDialog(null) },
+          {
+            label: t('common.delete'),
+            variant: 'danger',
+            onPress: () => {
+              setDialog(null);
+              setLeaving(true);
+              actions.remove([entry.id]);
+            },
+          },
+        ]}
+      />
+      <CameraDeniedDialog visible={cameraDenied} onClose={() => setCameraDenied(false)} />
+      <ReceiptViewer
+        uri={viewer ? receiptUri(viewer.filePath) : null}
+        caption={`${entry.note || t('common.noNote')} · ${formatMoney(entry.amountMinor, currency)} · ${dayMonth(entry.occurredAt)}`}
+        onClose={() => setViewer(null)}
+        onDelete={() => {
+          if (viewer) removeReceipt(viewer);
+          setViewer(null);
+        }}
+      />
+      {picker.element}
+    </View>
+  );
+}
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <View style={styles.row}>
+      <Txt v="caption" c="textSecondary" style={{ width: 96, fontFamily: fonts.bold }}>
+        {label}
+      </Txt>
+      {children}
+    </View>
+  );
+}
+
+function MenuItem({ icon: Icon, label, onPress, danger }: { icon: typeof Copy; label: string; onPress: () => void; danger?: boolean }) {
+  const { colors } = useTheme();
+  const c = danger ? colors.error : colors.text;
+  return (
+    <Pressable
+      accessibilityRole="menuitem"
+      onPress={onPress}
+      style={({ pressed }) => [styles.menuItem, pressed && { backgroundColor: colors.surfaceAlt }]}>
+      <Icon size={22} color={c} />
+      <Txt style={{ color: c }}>{label}</Txt>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 14, paddingBottom: 6 },
+  amountBox: { borderRadius: 16, borderWidth: 2, borderColor: 'transparent', paddingHorizontal: 12, maxWidth: '100%' },
+  hidden: { position: 'absolute', width: 1, height: 1, opacity: 0 },
+  splitLink: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 32 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 56, paddingVertical: 6, paddingHorizontal: 16 },
+  rowPress: { flex: 1, flexDirection: 'row', alignItems: 'center', minHeight: 44, gap: 8 },
+  catChip: { minHeight: 36, borderRadius: 18, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 6, maxWidth: '100%' },
+  addPhoto: {
+    width: 72,
+    height: 72,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+  },
+  menu: {
+    position: 'absolute',
+    width: 200,
+    padding: 6,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 16 },
+    elevation: 10,
+  },
+  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 48, paddingHorizontal: 12, borderRadius: 10 },
+});
