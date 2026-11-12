@@ -122,7 +122,11 @@ export async function resumeActiveTrip() {
 /** Ends the active trip; it is saved immediately (the sheet then edits scope / purpose). */
 export async function endActiveTrip(): Promise<TripRow | undefined> {
   const trip = getActiveTrip(db);
-  if (!trip) return undefined;
+  if (!trip) {
+    // "End trip" on a notification whose trip is gone (restore / delete all): still clear GPS + notifications (B-18).
+    await stopOrphanRecording();
+    return undefined;
+  }
   const done = endTrip(db, trip.id);
   await stopRecording();
   await clearTripNotification();
@@ -152,7 +156,7 @@ export async function discardTrip(id: string) {
  */
 export async function stopOrphanRecording() {
   if (getActiveTrip(db)) return;
-  if (!(await Location.hasStartedLocationUpdatesAsync(TRIP_TASK).catch(() => false))) return;
+  // The background task may already have stopped the updates itself, so clear the notifications either way (B-18).
   await stopRecording();
   await clearTripNotification();
   await cancelLongTripReminder();

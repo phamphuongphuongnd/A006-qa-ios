@@ -15,6 +15,7 @@ import type { AppSettings } from '@/db/settingsRepo';
 import type { Region, Scope } from '@/domain/types';
 import { deleteAllReceiptFiles } from '@/features/backup/backupFile';
 import { wipeAllData } from '@/features/backup/dataStore';
+import { stopOrphanRecording } from '@/features/trips/controller';
 import { formatRate, ratesOn, type RateTier } from '@/domain/mileage';
 import { ABOUT_LINKS, openRate, rateUrl } from '@/features/settings/about';
 import { authenticate, deviceCanLock } from '@/features/settings/LockedView';
@@ -116,6 +117,7 @@ export default function SettingsScreen() {
       // Files are unreachable without DB rows anyway; ignore.
     }
     await cancelSortReminders().catch(() => {});
+    await stopOrphanRecording().catch(() => {});
     // Settings table is empty now → onboarded false → the navigator shows onboarding.
     update({});
   };

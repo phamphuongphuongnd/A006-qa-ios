@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { backupPlan, createBackupFile, restoreFromBackup } from '@/features/backup/backupFile';
 import { inspectBackup, unpackBackup, type BackupError, type BackupManifest } from '@/features/backup/pack';
 import { withLockSuspended } from '@/features/settings/lockState';
+import { stopOrphanRecording } from '@/features/trips/controller';
 import { formatCount, formatDate, formatDateTime, NavHeader } from '@/features/settings/ui';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
@@ -104,6 +105,8 @@ export default function BackupScreen() {
         return;
       }
       restoreFromBackup(r.manifest, r.photos);
+      // A trip that was recording is gone now: stop GPS + its notifications (B-18).
+      await stopOrphanRecording().catch(() => {});
       update({}); // reload settings from the restored table
       setPreview(null);
       snack({ message: t('backup.restored'), above: 'none' });

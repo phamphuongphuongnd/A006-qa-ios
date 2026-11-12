@@ -13,7 +13,7 @@ import { refreshWidgets } from '@/features/widgets/refresh';
 
 import { TRIP_TASK } from './constants';
 import { formatDistance } from './format';
-import { showTripNotification } from './notify';
+import { cancelLongTripReminder, clearTripNotification, showTripNotification } from './notify';
 
 let lastWidgetAt = 0;
 
@@ -23,6 +23,8 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
   if (!active) {
     // Trip ended or was discarded while updates were still registered.
     await Location.stopLocationUpdatesAsync(TRIP_TASK).catch(() => {});
+    await clearTripNotification();
+    await cancelLongTripReminder();
     return;
   }
   if (active.status !== 'running') return;
