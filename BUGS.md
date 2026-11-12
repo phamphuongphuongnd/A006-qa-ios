@@ -29,9 +29,9 @@
 - [ ] **B-09** 🟠 Tab Miles không cập nhật trạng thái quyền vị trí: từ chối quyền ở S-07a thì thẻ "GPS trips need location access"
   không hiện (kể cả chuyển tab); cấp lại quyền trong Cài đặt rồi quay lại app thì thẻ vẫn còn — chỉ đúng sau khi mở lại app —
   case TC-121 — tái hiện: Start trip → Allow location → "Không cho phép" → tab Miles không có thẻ; buộc dừng + mở lại thì có. — commit:
-- [ ] **B-10** 🟡 Khi chạy chuyến có 2 thông báo cùng lúc: "Sunday Sort · trip recording / Recording your route until you end the trip."
+- [x] **B-10** 🟡 Khi chạy chuyến có 2 thông báo cùng lúc: "Sunday Sort · trip recording / Recording your route until you end the trip."
   (dịch vụ nền) và "Trip running · x mi" (có nút) — product.md chỉ 1 thông báo cố định — case TC-124 — tái hiện: Start trip → kéo
-  thanh thông báo. — commit: `3a93276`, `9a50703` — **chưa đạt**: kênh GPS mới ở mức MIN (1) nhưng Samsung vẫn hiện thông báo dịch vụ nền → vẫn 2 thông báo. Hướng tiếp (Phương chọn): (a) chấp nhận 2 thông báo, (b) bỏ thông báo "Trip running" riêng, chỉ giữ thông báo dịch vụ (mất nút Personal stop / End trip), (c) patch expo-location để thêm nút vào thông báo dịch vụ
+  thanh thông báo. — commit: `3a93276`, `9a50703` — không sửa thêm: Samsung luôn hiện thông báo dịch vụ GPS (kênh MIN vẫn hiện); Phương chấp nhận 2 thông báo 2026-11-12, product.md đã ghi
 - [ ] **B-11** 🟠 Thẻ "Your trip stopped recording at …" chỉ hiện ở tab Miles; mockup đặt ở Home khi mở app lần sau (Home không gắn
   `InterruptedTripCard`) → người không mở Miles sẽ không biết chuyến bị ngắt — case TC-132 — tái hiện: Start trip → thu hồi quyền vị
   trí → mở app: Home không có thẻ cam, Miles có. — commit:

@@ -309,7 +309,7 @@ Mở từ: 2 nút lớn Home, FAB "+", widget, phím tắt icon app (long-press:
   trip is running. You start and stop every trip — nothing runs in the background otherwise." · "Location stays on your phone." ·
   nút "Allow location" / "Not now". Android cần thêm "Allow all the time" để ghi khi tắt màn hình → bước 2 giải thích riêng:
   "To keep recording with the screen off, choose 'Allow all the time'." + "Open settings".
-- Đang ghi: **thông báo cố định** "Trip running · 42.3 mi" với nút "Personal stop" và "End trip".
+- Đang ghi: **thông báo cố định** "Trip running · 42.3 mi" với nút "Personal stop" và "End trip". Android còn hiện thêm thông báo bắt buộc của dịch vụ GPS nền ("Sunday Sort · trip recording", kênh "GPS service (required by Android)") — Phương chấp nhận 2 thông báo (2026-11-12, B-10).
 - **S-07b Active trip** (chạm thẻ trên Home hoặc thông báo): số dặm rất lớn "42.3 mi" · thời gian "2h 14m" ·
   phác hoạ đường đi dạng đường kẻ đơn giản (không bản đồ nền) · trạng thái GPS "GPS good" / "Weak GPS signal" ·
   nút "Personal stop" (tạm dừng, các đoạn trong lúc dừng không tính) · nút "End trip" (đỏ viền).
