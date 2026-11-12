@@ -5,7 +5,8 @@ import { Linking, Platform } from 'react-native';
  * (privacy policy page and support email are written at store-listing time, App Store id after the first upload).
  */
 export const ABOUT_LINKS: { privacyUrl: string | null; contactEmail: string | null; appStoreId: string | null } = {
-  privacyUrl: null,
+  // Public repo phamphuongphuongnd/sundaysort-privacy (the app repo is private), GitHub Pages.
+  privacyUrl: 'https://phamphuongphuongnd.github.io/sundaysort-privacy/',
   contactEmail: null,
   appStoreId: null,
 };
