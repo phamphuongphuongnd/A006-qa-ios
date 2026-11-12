@@ -104,6 +104,7 @@ function Navigator({ onboarded }: { onboarded: boolean }) {
           <Stack.Screen name="sort-list" />
           <Stack.Screen name="sort-done" />
           <Stack.Screen name="trip/active" />
+          <Stack.Screen name="trip/start" />
           <Stack.Screen name="trip/new" options={{ presentation: 'modal' }} />
           <Stack.Screen name="trip/[id]" options={{ presentation: 'modal' }} />
           <Stack.Screen name="trip/permission" options={{ presentation: 'modal' }} />
