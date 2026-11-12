@@ -35,6 +35,9 @@ export interface Report {
 
 export const UNSORTED_NAME = 'Unsorted';
 
+/** Tax-form line label for entries not sorted yet: "Unsorted income" / "Unsorted expenses". */
+export const unsortedLine = (type: EntryType) => (type === 'income' ? 'Unsorted income' : 'Unsorted expenses');
+
 /** Totals for a period. Only work entries count unless includePersonal is set. */
 export function buildReport(
   entries: ReportEntry[],
@@ -66,7 +69,8 @@ export function buildReport(
     ct.totalMinor += e.amountMinor;
     byCat.set(key, ct);
 
-    const line = cat?.taxLine ?? UNSORTED_NAME;
+    // Unsorted income and unsorted expenses are separate lines, so name them apart (B-06).
+    const line = cat?.taxLine ?? unsortedLine(e.type);
     const lk = `${e.type}:${line}`;
     const lt = byLine.get(lk) ?? { taxLine: line, type: e.type, totalMinor: 0 };
     lt.totalMinor += e.amountMinor;

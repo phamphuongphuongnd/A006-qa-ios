@@ -29,6 +29,8 @@ describe('buildReport', () => {
     expect(r.byCategory[0]).toMatchObject({ categoryId: 'inc', totalMinor: 62000 });
     expect(r.byCategory.find((c) => c.categoryId === null)).toMatchObject({ name: 'Unsorted', totalMinor: 1500 });
     expect(r.byTaxLine.find((l) => l.taxLine === 'SA103: Car, van and travel expenses')?.totalMinor).toBe(7590);
+    // B-06: unsorted expenses get their own named line.
+    expect(r.byTaxLine.find((l) => l.taxLine === 'Unsorted expenses')?.totalMinor).toBe(1500);
   });
   it('can include personal entries', () => {
     const r = buildReport(entries, cats, year, { includePersonal: true });
