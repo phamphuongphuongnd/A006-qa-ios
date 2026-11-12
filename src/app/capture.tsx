@@ -3,7 +3,7 @@ import { useLocalSearchParams, useNavigation, usePreventRemove } from 'expo-rout
 import { router } from '@/services/router';
 import { Briefcase, Camera, FileText, User, X } from '@/ui/icons';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { db } from '@/db/client';
@@ -15,6 +15,7 @@ import { useDateTimePicker } from '@/features/entries/DateTimePick';
 import { dateTimeLabel } from '@/features/entries/format';
 import { keypadText, keypadValue } from '@/features/entries/logic';
 import { deleteReceiptFiles, saveReceipt } from '@/files/receipts';
+import { useAppLocked } from '@/services/data';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
@@ -74,6 +75,28 @@ export default function CaptureScreen() {
   useEffect(() => {
     if (noteOpen) setTimeout(() => noteRef.current?.focus(), 50);
   }, [noteOpen]);
+
+  // Opened from the widget / a notification with App lock on: autoFocus fired under the lock screen, so bring the
+  // number pad up once it lifts (B-21).
+  const locked = useAppLocked();
+  useEffect(() => {
+    if (!locked && !noteOpen) {
+      const id = setTimeout(() => amountRef.current?.focus(), 150);
+      return () => clearTimeout(id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the lock lifts
+  }, [locked]);
+
+  // With the keyboard down the bottom row must clear the system nav bar (B-21); with it up the keyboard covers it.
+  const [keyboardUp, setKeyboardUp] = useState(false);
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardUp(true));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardUp(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   const close = () => setLeaving(true);
 
@@ -216,7 +239,7 @@ export default function CaptureScreen() {
           />
         </Pressable>
 
-        <View style={{ paddingHorizontal: GUTTER, paddingBottom: 12, gap: 14 }}>
+        <View style={{ paddingHorizontal: GUTTER, paddingBottom: keyboardUp ? 12 : 12 + insets.bottom, gap: 14 }}>
           {noteOpen ? (
             <View style={[styles.noteField, { borderColor: colors.primary, backgroundColor: colors.surface }]}>
               <TextInput

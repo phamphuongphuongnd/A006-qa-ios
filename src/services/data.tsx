@@ -1,6 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { router } from '@/services/router';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AppState, StyleSheet, View } from 'react-native';
 
 import { db } from '@/db/client';
@@ -56,6 +56,11 @@ export function DataServices() {
  * in the background for `lockAfterMs`. Navigation underneath keeps its state, so a notification or widget tap
  * lands on its screen once unlocked.
  */
+const LockedCtx = createContext(false);
+
+/** True while the App lock screen covers the app (screens re-focus inputs once it lifts, B-21). */
+export const useAppLocked = () => useContext(LockedCtx);
+
 export function LockGate({ children }: { children: ReactNode }) {
   const { settings } = useSettings();
   const enabled = settings.onboarded && settings.appLock;
@@ -85,7 +90,7 @@ export function LockGate({ children }: { children: ReactNode }) {
   return (
     <View style={{ flex: 1 }}>
       <View style={{ flex: 1 }} importantForAccessibility={showLock ? 'no-hide-descendants' : 'auto'} accessibilityElementsHidden={showLock}>
-        {children}
+        <LockedCtx.Provider value={showLock}>{children}</LockedCtx.Provider>
       </View>
       {showLock ? (
         <View style={StyleSheet.absoluteFill}>
