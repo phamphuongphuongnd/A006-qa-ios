@@ -10,9 +10,9 @@
   sáng "Work" → chạm "Fuel" → Entries hiện "Shell M62, −£12.40, Fuel, **Work**". (List view "Accept all" giữ đúng Personal.) — commit: `4e1e67d` — thử A13: thẻ Personal giữ Personal, Entries "Fuel, Personal"
 - [x] **B-02** 🟠 Sao lưu: huỷ bảng chia sẻ vẫn ghi "Last backup …" → banner Home và nhắc 30 ngày tắt dù chưa có file nào được lưu —
   case TC-168 — tái hiện: Settings → Backup & restore → "Back up now" → bấm Back đóng bảng chia sẻ → "Last backup 12 Nov 2026, 11:58". — commit: `c286d92` — thử A13: đóng share sheet → hỏi "Did the backup file get saved?" → Not saved → vẫn "Never backed up"
-- [ ] **B-03** 🟠 Settings › About thiếu "Privacy policy" (mở web) và "Contact" (mở email) theo product.md F-20 — case TC-189 —
+- [x] **B-03** 🟠 Settings › About thiếu "Privacy policy" (mở web) và "Contact" (mở email) theo product.md F-20 — case TC-189 —
   tái hiện: Settings → cuộn xuống ABOUT: chỉ có How Sunday Sort works, Not tax advice, Rate the app, Version. Cần Phương cho link
-  privacy policy + email liên hệ. — commit:
+  privacy policy + email liên hệ. — commit: `16c8f35` — Privacy policy mở https://phamphuongphuongnd.github.io/sundaysort-privacy/ (repo public riêng, Phương duyệt 2026-11-12); Contact ẩn tới Bước 6 khi chốt email — thử A13: hàng "Privacy policy" có trong About
 - [x] **B-04** 🟠 FAB "+" chỉ có ở tab Entries; Sort / Miles / Reports không có (product.md §4 + F-02: "trên các tab khác có FAB") —
   case TC-019 — tái hiện: mở tab Sort / Miles / Reports, không có nút "+". Mockup cũng chỉ vẽ FAB ở Entries → Phương chọn theo
   product.md hay theo mockup. — commit: `ee5e150` — thử A13: FAB ở Sort/Miles/Reports, không đè thẻ Sort
@@ -31,11 +31,11 @@
   case TC-121 — tái hiện: Start trip → Allow location → "Không cho phép" → tab Miles không có thẻ; buộc dừng + mở lại thì có. — commit:
 - [ ] **B-10** 🟡 Khi chạy chuyến có 2 thông báo cùng lúc: "Sunday Sort · trip recording / Recording your route until you end the trip."
   (dịch vụ nền) và "Trip running · x mi" (có nút) — product.md chỉ 1 thông báo cố định — case TC-124 — tái hiện: Start trip → kéo
-  thanh thông báo. — commit:
+  thanh thông báo. — commit: `3a93276`, `9a50703` — **chưa đạt**: kênh GPS mới ở mức MIN (1) nhưng Samsung vẫn hiện thông báo dịch vụ nền → vẫn 2 thông báo. Hướng tiếp (Phương chọn): (a) chấp nhận 2 thông báo, (b) bỏ thông báo "Trip running" riêng, chỉ giữ thông báo dịch vụ (mất nút Personal stop / End trip), (c) patch expo-location để thêm nút vào thông báo dịch vụ
 - [ ] **B-11** 🟠 Thẻ "Your trip stopped recording at …" chỉ hiện ở tab Miles; mockup đặt ở Home khi mở app lần sau (Home không gắn
   `InterruptedTripCard`) → người không mở Miles sẽ không biết chuyến bị ngắt — case TC-132 — tái hiện: Start trip → thu hồi quyền vị
   trí → mở app: Home không có thẻ cam, Miles có. — commit:
-- [ ] **B-12** 🟡 Giao diện tối: thanh điều hướng hệ thống Android vẫn trắng — case TC-187 — tái hiện: Settings → Theme Dark. — commit:
+- [ ] **B-12** 🟡 Giao diện tối: thanh điều hướng hệ thống Android vẫn trắng — case TC-187 — tái hiện: Settings → Theme Dark. — commit: `ca62a5e`, `9a50703` — **chưa đạt**: gọi native setStyle không lỗi nhưng cửa sổ vẫn giữ cờ LIGHT_NAVIGATION_BARS (`dumpsys window` mLastAppearance) khi app tối / máy sáng. Nghi: theme Activity (windowLightNavigationBar) hoặc cờ systemUiVisibility cũ đè lại — phiên sau kiểm styles.xml + thử tắt enforceNavigationBarContrast (plugin expo-navigation-bar)
 - [x] **B-13** 🟡 Distance unit = Kilometres: Miles / Reports đổi sang km nhưng thẻ "This week" ở Home vẫn "Business miles 179" (đúng
   phải ~288 km) — case TC-186 — tái hiện: Settings → Distance unit → Kilometres → Home. — commit: `d5fb2ca` — thử A13: Home "Business km 246" (= 153 mi)
 - [ ] **B-14** 🟠 Đổi vùng UK → US: các khoản giữ £ (đúng như hộp thoại) nhưng tổng ở Home/Reports gắn ký hiệu $ cho số tiền bảng
