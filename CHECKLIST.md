@@ -23,27 +23,27 @@
 - [x] Bộ UI kit dùng chung `src/ui/` (từ sunday.css) + `useLive` + gallery `/dev/gallery`
 - [x] Dữ liệu & logic: schema SQLite/Drizzle, repository, năm thuế UK/US + quý, tiền số nguyên + unit test
 - [x] F-09 Gợi ý danh mục (từ khoá sẵn + lịch sử) + unit test
-- [ ] F-01 Onboarding (S-01a–d)
-- [ ] F-02 Ghi nhanh (S-03) + phím tắt icon app
-- [ ] F-03 Home (S-02)
-- [ ] F-04 Entries + chọn nhiều + lọc/tìm (S-04)
-- [ ] F-05 Chi tiết & sửa khoản + ảnh hoá đơn (S-05)
-- [ ] F-06 Tách khoản (S-06b)
-- [ ] F-07 Gộp khoản
-- [ ] F-08 Phân loại tuần: thẻ, List view, Done (S-06, S-06a, S-06c)
-- [ ] F-10 Danh mục (S-11)
-- [ ] F-11 Quãng đường nhập tay (S-08)
-- [ ] F-12 Chuyến GPS nền Start/Stop/Personal stop + thông báo + nhắc 12h + phát hiện ngắt (S-07a, S-07b)
-- [ ] F-13 Tab Miles (S-07) + mức dặm theo khoảng ngày (IRS 2026: 72.5¢ tới 30/6, 76¢ từ 1/7)
-- [ ] F-14 Báo cáo năm/quý (S-09)
-- [ ] F-15 Xuất CSV ×3 + PDF + ZIP ảnh (S-10)
-- [ ] F-16 Sao lưu & khôi phục + nhắc 30 ngày (S-12)
-- [ ] F-17 Nhắc phân loại hằng tuần (thông báo local)
-- [ ] F-18 Khoá app sinh trắc (S-13)
-- [ ] F-19 Widget Android (2×1, 4×2)
+- [x] F-01 Onboarding (S-01a–d)
+- [x] F-02 Ghi nhanh (S-03) + phím tắt icon app
+- [x] F-03 Home (S-02)
+- [x] F-04 Entries + chọn nhiều + lọc/tìm (S-04)
+- [x] F-05 Chi tiết & sửa khoản + ảnh hoá đơn (S-05)
+- [x] F-06 Tách khoản (S-06b)
+- [x] F-07 Gộp khoản
+- [x] F-08 Phân loại tuần: thẻ, List view, Done (S-06, S-06a, S-06c)
+- [x] F-10 Danh mục (S-11)
+- [x] F-11 Quãng đường nhập tay (S-08)
+- [ ] F-12 Chuyến GPS nền Start/Stop/Personal stop + thông báo + nhắc 12h + phát hiện ngắt (S-07a, S-07b) — code xong, chờ chạy xe thật
+- [x] F-13 Tab Miles (S-07) + mức dặm theo khoảng ngày (IRS 2026: 72.5¢ tới 30/6, 76¢ từ 1/7)
+- [x] F-14 Báo cáo năm/quý (S-09)
+- [x] F-15 Xuất CSV ×3 + PDF + ZIP ảnh (S-10)
+- [x] F-16 Sao lưu & khôi phục + nhắc 30 ngày (S-12)
+- [x] F-17 Nhắc phân loại hằng tuần (thông báo local)
+- [ ] F-18 Khoá app sinh trắc (S-13) — code xong, chờ Phương thử vân tay
+- [ ] F-19 Widget Android (2×1, 4×2) — code xong, chờ Phương thêm widget ra màn hình chính
 - [ ] F-19 Widget iOS (nhỏ, vừa) — build EAS
-- [ ] F-20 Settings (S-15) + xoá toàn bộ dữ liệu
-- [ ] F-21 Not tax advice (S-16) + icon app + splash
+- [x] F-20 Settings (S-15) + xoá toàn bộ dữ liệu
+- [x] F-21 Not tax advice (S-16) + icon app + splash
 - [ ] Toàn bộ test xanh + dev build chạy trên Galaxy A13 → gộp `dev` → `main`
 
 ## Bước 4 — Test toàn bộ (chỉ ghi lỗi)

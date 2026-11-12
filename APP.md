@@ -3,7 +3,7 @@
 > Brief tĩnh của app. **≤ 60 dòng, không ghi lịch sử** (lịch sử ở git + `memory/sessions/`).
 > Tiến độ: `CHECKLIST.md` · Tính năng: `product.md` · Test: `TESTCASES.md` · Lỗi: `BUGS.md`.
 
-**Đang ở:** Bước 3 — làm từng màn theo mockup (2026-11-11)
+**Đang ở:** Bước 3 — đã gộp 3 nhánh, chờ thử GPS / khoá app / widget trên máy (2026-11-12)
 
 ## Brief
 - **Mã app / thư mục:** `A006-sundaysort` → `apps/A006-sundaysort/`
@@ -44,6 +44,9 @@
 - Widget + GPS nền cần dev build (không chạy trong Expo Go); widget iOS build trên EAS vì không có Mac.
 - Năm thuế UK 6/4–5/4: khoản ngày 5/4 thuộc năm cũ, 6/4 thuộc năm mới.
 - Tiền lưu số nguyên (pence/cent), không dùng float.
+- React Compiler bật: hook gọi closure truy vấn DB (`useLive`) phải có `'use no memo'`, nếu không màn không tự cập nhật.
+- PDF (expo-print Android): không dùng `position: fixed` — WebView vẽ đè giữa trang.
+- Thử máy qua adb: chờ chữ trên màn (`uiautomator dump`) rồi mới bấm, không bấm theo giờ chờ cố định.
 
 ## Retro (điền khi nộp store, 3 dòng)
 - Chậm nhất ở đâu, vì sao:
