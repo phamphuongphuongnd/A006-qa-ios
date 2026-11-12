@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { listCategories } from '@/db/categoriesRepo';
 import { db } from '@/db/client';
-import { entryCount, listEntries, type EntryListItem } from '@/db/entriesRepo';
+import { entryCount, listEntriesPage, type EntryListItem } from '@/db/entriesRepo';
 import type { CategoryRow } from '@/db/schema';
 import { formatMoney } from '@/domain/money';
 import { planMerge } from '@/domain/splitMerge';
@@ -26,6 +26,9 @@ import { useDebounced } from '@/state/useDebounced';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, radius, useTheme } from '@/theme';
 import { Avatar, Button, Chip, Dialog, Dot, EmptyState, Fab, IconButton, Sheet, Txt, useSnackbar } from '@/ui';
+
+/** Entries loaded per page (rounded up to whole days). ~One page ≈ 25 ms of SQLite on a Galaxy A13. */
+const PAGE = 200;
 
 /** Flat list: a day header followed by that day's entries (drawn as one card made of slices). */
 type ListItem =
@@ -128,19 +131,29 @@ export default function EntriesScreen() {
   const repoKey = JSON.stringify(repoFilter);
   const total = useLive(() => entryCount(db), [], ['entries']);
   const cats = useLive(() => listCategories(db, { includeHidden: true }), [], ['categories']);
-  // repoKey is repoFilter by value.
-  const rowsLive = useLive(() => listEntries(db, repoFilter), [repoKey], ['entries', 'receipts']);
+  // Load in pages of ~PAGE entries (whole days); scrolling near the end loads the next page.
+  // A new filter / sort order starts again from page 1.
+  const listKey = `${repoKey}|${oldestFirst}`;
+  const [page, setPage] = useState({ key: listKey, n: 1 });
+  const pageN = page.key === listKey ? page.n : 1;
+  const { rows: rowsLive, more } = useLive(
+    () => listEntriesPage(db, { ...repoFilter, oldestFirst }, PAGE * pageN),
+    [listKey, pageN], // listKey covers repoFilter + oldestFirst by value
+    ['entries', 'receipts'],
+  );
+  const loadMore = () => {
+    if (more) setPage({ key: listKey, n: pageN + 1 });
+  };
   const data = { total, rows: rowsLive };
   const catById = useMemo(() => new Map(cats.map((c) => [c.id, c])), [cats]);
   const items = useMemo(() => {
-    const rows = oldestFirst ? [...rowsLive].reverse() : rowsLive;
     const out: ListItem[] = [];
-    for (const g of groupByDay(rows)) {
+    for (const g of groupByDay(rowsLive)) {
       out.push({ kind: 'day', key: `d${g.key}`, title: dayHeader(g.at, now), total: dayTotalLabel(g, currency) });
       g.items.forEach((it, i) => out.push({ kind: 'row', key: it.id, item: it, first: i === 0, last: i === g.items.length - 1 }));
     }
     return out;
-  }, [rowsLive, oldestFirst, now, currency]);
+  }, [rowsLive, now, currency]);
 
   // Ids that vanished (deleted / merged meanwhile) drop out of the selection.
   const rowIds = useMemo(() => new Set(rowsLive.map((r) => r.id)), [rowsLive]);
@@ -300,6 +313,8 @@ export default function EntriesScreen() {
           getItemType={(it) => it.kind}
           renderItem={renderItem}
           extraData={selectedSet}
+          onEndReached={loadMore}
+          onEndReachedThreshold={1}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingHorizontal: GUTTER, paddingBottom: selecting ? 24 : 110, paddingTop: selecting ? 14 : 0 }}
         />

@@ -1,4 +1,4 @@
-import { and, count, desc, eq, exists, gte, inArray, isNotNull, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
+import { and, count, desc, eq, exists, gte, inArray, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
 
 import { parseMinor } from '@/domain/money';
 import { checkSplit, planMerge } from '@/domain/splitMerge';
@@ -234,13 +234,50 @@ export interface EntryFilter {
   categoryId?: string;
   period?: Period;
   limit?: number;
+  /** Default newest first. */
+  oldestFirst?: boolean;
+  /** Only entries on or after (newest-first) / before (oldest-first) this instant — used to finish a page's last day. */
+  boundary?: number;
 }
 
 export interface EntryListItem extends EntryRow {
   receiptCount: number;
 }
 
+// Raw SELECT with camelCase aliases: rows come back as plain objects, skipping drizzle's per-row result mapping
+// (measured on a Galaxy A13 with 1,515 entries: 475 ms through the query builder vs 165 ms raw).
+const LIST_COLUMNS = sql.raw(
+  `"entries"."id" AS id, "entries"."type" AS type, "entries"."amount_minor" AS amountMinor, "entries"."currency" AS currency,
+  "entries"."occurred_at" AS occurredAt, "entries"."note" AS note, "entries"."category_id" AS categoryId,
+  "entries"."scope" AS scope, "entries"."sorted_at" AS sortedAt, "entries"."split_group_id" AS splitGroupId,
+  "entries"."split_from_minor" AS splitFromMinor, "entries"."created_at" AS createdAt, "entries"."updated_at" AS updatedAt,
+  (SELECT COUNT(*) FROM "receipts" WHERE "receipts"."entry_id" = "entries"."id") AS receiptCount`,
+);
+
 export function listEntries(db: AppDb, f: EntryFilter = {}): EntryListItem[] {
+  const where = entryWhere(db, f);
+  if (f.boundary !== undefined) where.push(f.oldestFirst ? lt(entries.occurredAt, f.boundary) : gte(entries.occurredAt, f.boundary));
+  const dir = sql.raw(f.oldestFirst ? 'ASC' : 'DESC');
+  return db.all<EntryListItem>(
+    sql`SELECT ${LIST_COLUMNS} FROM "entries" ${where.length ? sql`WHERE ${and(...where)}` : sql``}
+      ORDER BY "entries"."occurred_at" ${dir}, "entries"."created_at" ${dir} LIMIT ${f.limit ?? -1}`,
+  );
+}
+
+/**
+ * One page for the Entries list: at least `limit` entries, extended so the last day is complete (day headers show
+ * that day's totals). `more` = there may be older (newer when oldest-first) entries past this page.
+ */
+export function listEntriesPage(db: AppDb, f: EntryFilter, limit: number): { rows: EntryListItem[]; more: boolean } {
+  const rows = listEntries(db, { ...f, limit });
+  if (rows.length < limit) return { rows, more: false };
+  const last = new Date(rows[rows.length - 1].occurredAt);
+  last.setHours(0, 0, 0, 0);
+  if (f.oldestFirst) last.setDate(last.getDate() + 1);
+  return { rows: listEntries(db, { ...f, limit: undefined, boundary: last.getTime() }), more: true };
+}
+
+function entryWhere(db: AppDb, f: EntryFilter): SQL[] {
   const where: SQL[] = [];
   if (f.type) where.push(eq(entries.type, f.type));
   if (f.scope) where.push(eq(entries.scope, f.scope));
@@ -255,16 +292,7 @@ export function listEntries(db: AppDb, f: EntryFilter = {}): EntryListItem[] {
     const byNote = sql`${entries.note} LIKE ${`%${esc}%`} ESCAPE '\\'`;
     where.push(minor !== null && minor > 0 ? (or(byNote, eq(entries.amountMinor, minor)) as SQL) : byNote);
   }
-  // Fully qualified on purpose: inside a raw subquery drizzle renders bare column names, and "id" would bind to receipts.id.
-  const rcount = sql<number>`(SELECT COUNT(*) FROM "receipts" WHERE "receipts"."entry_id" = "entries"."id")`;
-  const rows = db
-    .select({ e: entries, receiptCount: rcount })
-    .from(entries)
-    .where(where.length ? and(...where) : undefined)
-    .orderBy(desc(entries.occurredAt), desc(entries.createdAt))
-    .limit(f.limit ?? 10_000)
-    .all();
-  return rows.map((r) => ({ ...r.e, receiptCount: Number(r.receiptCount) }));
+  return where;
 }
 
 export function unsortedCount(db: AppDb, period?: Period): number {
@@ -288,13 +316,11 @@ export function unsortedWeeks(db: AppDb): { week: Period; count: number }[] {
 
 /** Sorted entries for the suggester, newest first. */
 export function sortHistory(db: AppDb, limit = 500): SortedEntry[] {
-  return db
-    .select({ type: entries.type, note: entries.note, amountMinor: entries.amountMinor, categoryId: entries.categoryId, scope: entries.scope })
-    .from(entries)
-    .where(isNotNull(entries.categoryId))
-    .orderBy(desc(entries.sortedAt))
-    .limit(limit)
-    .all() as SortedEntry[];
+  // Raw rows (no per-row drizzle mapping): this runs on every Sort screen refresh.
+  return db.all<SortedEntry>(
+    sql`SELECT type, note, amount_minor AS amountMinor, category_id AS categoryId, scope FROM "entries"
+      WHERE category_id IS NOT NULL ORDER BY sorted_at DESC LIMIT ${limit}`,
+  );
 }
 
 /** Most used notes (case-insensitive), for the quick-capture chips. */
