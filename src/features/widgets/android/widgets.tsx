@@ -135,6 +135,7 @@ function SortPill({ s, k, size = 12 }: { s: WidgetSnapshot; k: Skin; size?: numb
     <FlexWidget
       clickAction="OPEN_URI"
       clickActionData={{ uri: pending ? 'sundaysort://sort' : WIDGET_LINKS.open }}
+      accessibilityLabel={s.toSortText}
       style={{
         backgroundColor: (pending ? k.pendBg : k.okBg) as ColorProp,
         borderRadius: 12,

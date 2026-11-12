@@ -28,7 +28,9 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
     return;
   }
   if (active.status !== 'running') return;
-  const locations = data?.locations ?? [];
+  // The first batch can carry the OS's cached fix from before this trip started (seen on A13: a trip started 18:06
+  // showed "stopped recording at 17:57"); drop anything older than the trip.
+  const locations = (data?.locations ?? []).filter((l) => l.timestamp >= active.startedAt);
   if (locations.length === 0) return;
   appendPoints(
     db,
