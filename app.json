@@ -10,7 +10,7 @@
     "ios": {
       "bundleIdentifier": "com.phiotron.sundaysort",
       "supportsTablet": false,
-      "icon": "./assets/expo.icon",
+      "icon": "./assets/images/icon.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
@@ -43,7 +43,7 @@
         {
           "backgroundColor": "#FAF8F4",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 96,
+          "imageWidth": 120,
           "dark": {
             "backgroundColor": "#12161C"
           }
