@@ -1,7 +1,7 @@
 import { router } from '@/services/router';
 import { ChevronDown, Flag, Gauge, LocateFixed, MapPin, Plus } from '@/ui/icons';
 import { useMemo, useState } from 'react';
-import { Linking, Pressable, StyleSheet, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { db } from '@/db/client';
@@ -163,10 +163,13 @@ export default function MilesScreen() {
 }
 
 function ActionButtons() {
+  // Side by side when both labels fit, otherwise stacked full width (320dp screens, large text: B-22 / B-24).
+  const { fontScale } = useWindowDimensions();
+  const btn = { flexGrow: 1, flexBasis: 0, minWidth: 180 * Math.min(fontScale, 1.6) };
   return (
-    <View style={[styles.flex, { gap: 10 }]}>
-      <Button label={t('miles.startTrip')} icon={Flag} style={{ flex: 1 }} onPress={() => router.push('/trip/active?start=1')} />
-      <Button label={t('miles.addManually')} icon={Plus} variant="outline" style={{ flex: 1 }} onPress={() => router.push('/trip/new')} />
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+      <Button label={t('miles.startTrip')} icon={Flag} style={btn} onPress={() => router.push('/trip/active?start=1')} />
+      <Button label={t('miles.addManually')} icon={Plus} variant="outline" style={btn} onPress={() => router.push('/trip/new')} />
     </View>
   );
 }
