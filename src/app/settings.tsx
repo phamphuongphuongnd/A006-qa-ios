@@ -431,6 +431,7 @@ export default function SettingsScreen() {
           {
             label: t('settings.deleteAll'),
             variant: 'danger',
+            disabled: deleteText.trim() !== t('settings.deleteWord'),
             onPress: () => {
               if (deleteText.trim() === t('settings.deleteWord')) deleteAll();
             },

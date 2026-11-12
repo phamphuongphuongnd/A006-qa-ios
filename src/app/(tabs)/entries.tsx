@@ -273,7 +273,7 @@ export default function EntriesScreen() {
               value={filter.search}
               onChangeText={(v) => set({ search: v })}
               placeholder={t('entries.search')}
-              placeholderTextColor={colors.textTertiary}
+              placeholderTextColor={colors.placeholder}
               returnKeyType="search"
               accessibilityLabel={t('entries.search')}
               maxFontSizeMultiplier={1.6}

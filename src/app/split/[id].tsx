@@ -131,7 +131,7 @@ function SplitEditor({ entry }: { entry: EntryRow }) {
                     onChangeText={(v) => update(p.key, { text: v.replace(/[^\d.]/g, '') })}
                     keyboardType="decimal-pad"
                     placeholder="0.00"
-                    placeholderTextColor={colors.textTertiary}
+                    placeholderTextColor={colors.placeholder}
                     accessibilityLabel={`${t('sort.part', { n: i + 1 })} ${t('capture.amountLabel')}`}
                     maxFontSizeMultiplier={1.4}
                     style={{ flex: 1, minHeight: 52, fontSize: 22, fontFamily: fonts.extrabold, color: colors.text, fontVariant: ['tabular-nums'] }}
@@ -168,7 +168,7 @@ function SplitEditor({ entry }: { entry: EntryRow }) {
                     onChangeText={(v) => update(p.key, { note: v })}
                     maxLength={120}
                     placeholder={t('entries.notePlaceholder')}
-                    placeholderTextColor={colors.textTertiary}
+                    placeholderTextColor={colors.placeholder}
                     accessibilityLabel={`${t('sort.part', { n: i + 1 })} ${t('sort.partNote')}`}
                     maxFontSizeMultiplier={1.6}
                     style={{ flex: 1, minHeight: 40, fontSize: 14, fontFamily: fonts.regular, color: colors.textSecondary }}

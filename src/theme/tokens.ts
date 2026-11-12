@@ -15,6 +15,8 @@ export const palette = {
     text: '#161D2B',
     textSecondary: '#465062',
     textTertiary: '#5F6877',
+    /** Input hints: clearly lighter than typed values (B-05). */
+    placeholder: '#959CA8',
     primary: '#1F2A44',
     onPrimary: '#FFFFFF',
     primaryText: '#1F2A44',
@@ -54,6 +56,7 @@ export const palette = {
     text: '#F3EFE7',
     textSecondary: '#BEC4CE',
     textTertiary: '#9AA2AE',
+    placeholder: '#68717F',
     primary: '#F5B841',
     onPrimary: '#12161C',
     primaryText: '#F5C866',

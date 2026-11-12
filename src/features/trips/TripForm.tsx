@@ -96,7 +96,7 @@ export function TripForm({
                 onChangeText={(start) => set({ start })}
                 keyboardType="decimal-pad"
                 style={{ fontFamily: fonts.bold }}
-                placeholder="48,210"
+                placeholder="e.g. 48,210"
               />
             </View>
             <View style={{ flex: 1 }}>
@@ -106,7 +106,7 @@ export function TripForm({
                 onChangeText={(end) => set({ end })}
                 keyboardType="decimal-pad"
                 style={{ fontFamily: fonts.bold }}
-                placeholder="48,338"
+                placeholder="e.g. 48,338"
                 error={error}
               />
             </View>

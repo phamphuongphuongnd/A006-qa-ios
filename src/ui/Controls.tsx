@@ -96,9 +96,14 @@ export const Field = forwardRef<
         {left}
         <TextInput
           ref={ref}
-          placeholderTextColor={colors.textTertiary}
+          placeholderTextColor={colors.placeholder}
           maxFontSizeMultiplier={1.6}
-          style={[{ flex: 1, minHeight: 52, fontSize: 17, fontFamily: fonts.regular, color: colors.text }, style]}
+          style={[
+            { flex: 1, minHeight: 52, fontSize: 17, fontFamily: fonts.regular, color: colors.text },
+            style,
+            // An empty field shows its hint in the plain face, so it never reads as a typed value (B-05).
+            !rest.value ? { fontFamily: fonts.regular, letterSpacing: 0 } : null,
+          ]}
           onFocus={onFocus}
           onBlur={onBlur}
           {...rest}

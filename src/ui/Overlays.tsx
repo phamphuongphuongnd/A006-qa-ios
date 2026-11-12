@@ -140,6 +140,7 @@ export interface DialogAction {
   label: string;
   onPress: () => void;
   variant?: ButtonVariant;
+  disabled?: boolean;
 }
 
 /** `.dlg` — centred alert with title, body and right-aligned actions (last = primary). */
@@ -174,7 +175,7 @@ export function Dialog({
           {children}
           <View style={styles.acts}>
             {actions.map((a) => (
-              <Button key={a.label} label={a.label} onPress={a.onPress} variant={a.variant ?? 'text'} size="sm" />
+              <Button key={a.label} label={a.label} onPress={a.onPress} variant={a.variant ?? 'text'} size="sm" disabled={a.disabled} />
             ))}
           </View>
         </View>

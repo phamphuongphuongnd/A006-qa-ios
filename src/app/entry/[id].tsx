@@ -234,7 +234,7 @@ function Editor({ entry }: { entry: EntryRowT }) {
                   onChangeText={(v) => set({ note: v })}
                   maxLength={120}
                   placeholder={t('entries.notePlaceholder')}
-                  placeholderTextColor={colors.textTertiary}
+                  placeholderTextColor={colors.placeholder}
                   accessibilityLabel={t('entries.note')}
                   maxFontSizeMultiplier={1.6}
                   style={{ flex: 1, minHeight: 44, fontSize: 16, fontFamily: fonts.regular, color: colors.text }}

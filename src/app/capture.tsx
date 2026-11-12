@@ -225,7 +225,7 @@ export default function CaptureScreen() {
                 onChangeText={setNote}
                 maxLength={120}
                 placeholder={t('capture.notePlaceholder')}
-                placeholderTextColor={colors.textTertiary}
+                placeholderTextColor={colors.placeholder}
                 returnKeyType="done"
                 onSubmitEditing={focusAmount}
                 maxFontSizeMultiplier={1.6}
