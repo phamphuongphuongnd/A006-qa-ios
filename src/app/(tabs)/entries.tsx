@@ -21,12 +21,13 @@ import { commonType, EMPTY_FILTER, hasActiveFilter, toggledScope, toRepoFilter, 
 import { SwipeRow } from '@/features/entries/SwipeRow';
 import { useEntryActions } from '@/features/entries/useEntryActions';
 import { useNow } from '@/features/entries/useNow';
+import { CaptureFab } from '@/features/entries/CaptureFab';
 import { t, type TKey } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { useDebounced } from '@/state/useDebounced';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, radius, useTheme } from '@/theme';
-import { Avatar, Button, Chip, Dialog, Dot, EmptyState, Fab, IconButton, Sheet, Txt, useSnackbar } from '@/ui';
+import { Avatar, Button, Chip, Dialog, Dot, EmptyState, IconButton, Sheet, Txt, useSnackbar } from '@/ui';
 
 /** Entries loaded per page (rounded up to whole days). ~One page ≈ 25 ms of SQLite on a Galaxy A13. */
 const PAGE = 200;
@@ -321,7 +322,7 @@ export default function EntriesScreen() {
         />
       )}
 
-      {!selecting && data.total > 0 ? <Fab icon={Plus} label={t('entries.newEntry')} onPress={() => router.push('/capture?type=expense')} /> : null}
+      {!selecting && data.total > 0 ? <CaptureFab /> : null}
 
       {selecting ? (
         <View style={[styles.actionBar, { backgroundColor: colors.surface, borderTopColor: colors.line, paddingBottom: Math.max(insets.bottom, 12) }]}>

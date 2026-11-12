@@ -14,6 +14,7 @@ import { currencyOf, type Region } from '@/domain/types';
 import { formatDay, formatDistance, groupByMonth, type DistanceUnit } from '@/features/trips/format';
 import { useLocationPermission } from '@/features/trips/hooks';
 import { ActiveTripCard, InterruptedTripCard } from '@/features/trips/TripCards';
+import { CaptureFab } from '@/features/entries/CaptureFab';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
@@ -102,6 +103,7 @@ export default function MilesScreen() {
         </View>
       }
       contentStyle={empty ? { flexGrow: 1 } : undefined}
+      fab={<CaptureFab />}
       onEndReached={showMore}>
       <InterruptedTripCard />
       {denied ? <DeniedCard onAllow={onAllow} /> : null}

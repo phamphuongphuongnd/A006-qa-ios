@@ -17,6 +17,7 @@ import { categoryIcon } from '@/features/entries/icons';
 import { ReceiptViewer } from '@/features/entries/ReceiptViewer';
 import { useEntryActions } from '@/features/entries/useEntryActions';
 import { useSortWeek, WeekPickerSheet, WeekProgress, type SortSuggestion } from '@/features/entries/useSortWeek';
+import { CaptureFab } from '@/features/entries/CaptureFab';
 import { receiptUri } from '@/files/receipts';
 import { t } from '@/i18n';
 import { useLive } from '@/state/useLive';
@@ -66,6 +67,7 @@ export default function SortScreen() {
             {t('sort.nothingSub')}
           </Txt>
         </View>
+        <CaptureFab />
       </View>
     );
   }
@@ -81,7 +83,8 @@ export default function SortScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {header}
-      <View style={{ flex: 1, paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: 16, gap: 12 }}>
+      {/* Bottom padding keeps the card clear of the FAB. */}
+      <View style={{ flex: 1, paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: 96, gap: 12 }}>
         <WeekProgress week={week} done={s.done} total={s.total} onPick={() => setWeekSheet(true)} />
         <View style={{ flex: 1, marginTop: 6 }}>
           {s.queue.length > 2 ? <Card style={[styles.ghost, { left: 24, right: 24, top: 0, opacity: 0.5 }]}>{null}</Card> : null}
@@ -97,6 +100,7 @@ export default function SortScreen() {
           />
         </View>
       </View>
+      <CaptureFab />
       <WeekPickerSheet
         visible={weekSheet}
         onClose={() => setWeekSheet(false)}

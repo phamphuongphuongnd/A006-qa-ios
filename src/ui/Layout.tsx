@@ -23,6 +23,7 @@ export function Screen({
   contentStyle,
   topInset = true,
   bottomInset = false,
+  fab,
   onEndReached,
 }: {
   title?: string;
@@ -37,12 +38,15 @@ export function Screen({
   topInset?: boolean;
   /** Pad the bottom bar above the system navigation bar (screens outside the tab bar, B-15). */
   bottomInset?: boolean;
+  /** Floating button over the content, bottom-right (above `bottom` when both are set). */
+  fab?: ReactNode;
   /** Scrolled to within one screen of the bottom (grow a long list in steps). */
   onEndReached?: () => void;
 }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const body = [{ paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: 20, gap: 14 }, contentStyle];
+  // With a FAB the last rows scroll clear of it (64dp button + 16dp margin + gap).
+  const body = [{ paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: fab ? 100 : 20, gap: 14 }, contentStyle];
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: topInset ? insets.top : 0 }}>
       {header ??
@@ -64,24 +68,27 @@ export function Screen({
             {headerRight}
           </View>
         ) : null)}
-      {scroll ? (
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={body}
-          keyboardShouldPersistTaps="handled"
-          scrollEventThrottle={onEndReached ? 200 : undefined}
-          onScroll={
-            onEndReached
-              ? ({ nativeEvent: e }) => {
-                  if (e.contentOffset.y + 2 * e.layoutMeasurement.height >= e.contentSize.height) onEndReached();
-                }
-              : undefined
-          }>
-          {children}
-        </ScrollView>
-      ) : (
-        <View style={[{ flex: 1 }, body]}>{children}</View>
-      )}
+      <View style={{ flex: 1 }}>
+        {scroll ? (
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={body}
+            keyboardShouldPersistTaps="handled"
+            scrollEventThrottle={onEndReached ? 200 : undefined}
+            onScroll={
+              onEndReached
+                ? ({ nativeEvent: e }) => {
+                    if (e.contentOffset.y + 2 * e.layoutMeasurement.height >= e.contentSize.height) onEndReached();
+                  }
+                : undefined
+            }>
+            {children}
+          </ScrollView>
+        ) : (
+          <View style={[{ flex: 1 }, body]}>{children}</View>
+        )}
+        {fab}
+      </View>
       {bottom ? (
         <View
           style={[

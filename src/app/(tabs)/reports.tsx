@@ -18,6 +18,7 @@ import { useReport } from '@/features/reports/useReport';
 import { DateField } from '@/features/settings/DateField';
 import { formatDate, OptionSheet } from '@/features/settings/ui';
 import { shortTaxLine } from '@/features/settings/categoryIcons';
+import { CaptureFab } from '@/features/entries/CaptureFab';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
@@ -96,6 +97,7 @@ export default function ReportsScreen() {
           </Pressable>
         </View>
       }
+      fab={<CaptureFab />}
       bottom={
         <Button
           label={t('reports.export')}
