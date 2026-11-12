@@ -174,6 +174,7 @@ export const en = {
     exportAnyway: 'Export anyway',
     sortFirst: 'Sort first',
     failed: "Couldn't create the file. Free up some storage and try again.",
+    noReceipts: 'No receipt photos in this period.',
     shareUnavailable: "Sharing isn't available on this device.",
   },
   backup: {

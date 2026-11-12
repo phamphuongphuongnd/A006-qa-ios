@@ -10,6 +10,7 @@ import { UNSORTED_NAME } from '@/domain/report';
 import { taxYearOf } from '@/domain/taxYear';
 import type { Period, Region } from '@/domain/types';
 import { CategoryBars, MonthlyLines, type Bar } from '@/features/reports/charts';
+import { ExportPanel } from '@/features/reports/ExportPanel';
 import { availableTaxYears, endOfDay, PERIOD_MODES, periodFor, startOfDay, type PeriodMode, type ReportPeriod } from '@/features/reports/period';
 import { oldestRecordAt } from '@/features/reports/queries';
 import { ratesLabel } from '@/features/reports/series';
@@ -21,7 +22,7 @@ import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { fonts, useTheme } from '@/theme';
-import { Avatar, Button, Card, Chip, ChipRow, Divider, EmptyState, Screen, Sheet, Tag, Txt } from '@/ui';
+import { Avatar, Button, Card, Chip, ChipRow, Divider, EmptyState, Screen, Sheet, Tag, Txt, useSnackbar } from '@/ui';
 
 const MODE_LABEL: Record<PeriodMode, () => string> = {
   year: () => t('reports.year'),
@@ -46,6 +47,9 @@ export default function ReportsScreen() {
   const [custom, setCustom] = useState<Period | undefined>(undefined);
   const [yearSheet, setYearSheet] = useState(false);
   const [customSheet, setCustomSheet] = useState<Period | null>(null);
+  /** >0 = export sheet open; the number remounts the panel each time. */
+  const [exportOpen, setExportOpen] = useState(0);
+  const snack = useSnackbar();
   const period = periodFor(region, startYear, mode, custom);
 
   const { colors } = useTheme();
@@ -79,12 +83,7 @@ export default function ReportsScreen() {
           icon={Download}
           full
           style={{ flex: 1 }}
-          onPress={() =>
-            router.push({
-              pathname: '/export',
-              params: { start: String(period.start), end: String(period.end), mode, year: String(period.year.startYear) },
-            })
-          }
+          onPress={() => setExportOpen((n) => n + 1)}
         />
       }>
       <ChipRow wrap={false}>
@@ -111,6 +110,19 @@ export default function ReportsScreen() {
         }}
         onClose={() => setYearSheet(false)}
       />
+      <Sheet visible={exportOpen > 0} onClose={() => setExportOpen(0)}>
+        {exportOpen > 0 ? (
+          <ExportPanel
+            key={exportOpen}
+            initial={period}
+            region={region}
+            onClose={(s) => {
+              setExportOpen(0);
+              if (s) snack({ message: s.message, tone: s.error ? 'error' : 'default' });
+            }}
+          />
+        ) : null}
+      </Sheet>
       {customSheet ? (
         <CustomPeriodSheet
           initial={customSheet}
