@@ -38,6 +38,8 @@ export default function BackupScreen() {
   const [preview, setPreview] = useState<Preview | null>(null);
   const [confirm, setConfirm] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  // B-02: the share sheet can't tell us whether the file was saved or the sheet was dismissed, so we ask.
+  const [savedAsk, setSavedAsk] = useState<number | null>(null);
   const cancelled = useRef(false);
 
   const error = (message: string) => snack({ message, tone: 'error', above: 'none' });
@@ -62,7 +64,7 @@ export default function BackupScreen() {
       await withLockSuspended(() =>
         Sharing.shareAsync(res.file.uri, { mimeType: 'application/octet-stream', UTI: 'public.data', dialogTitle: t('backup.backUp') }),
       );
-      update({ lastBackupAt: now, backupBannerSnoozedUntil: null });
+      setSavedAsk(now);
     } catch {
       // Out of space (NoSpaceError) and write errors get the same storage message.
       error(t('backup.failed'));
@@ -225,6 +227,22 @@ export default function BackupScreen() {
           />
         </Group>
       </ScrollView>
+      <Dialog
+        visible={savedAsk !== null}
+        title={t('backup.savedTitle')}
+        body={t('backup.savedBody')}
+        onClose={() => setSavedAsk(null)}
+        actions={[
+          { label: t('backup.notSaved'), onPress: () => setSavedAsk(null) },
+          {
+            label: t('backup.yesSaved'),
+            onPress: () => {
+              if (savedAsk !== null) update({ lastBackupAt: savedAsk, backupBannerSnoozedUntil: null });
+              setSavedAsk(null);
+            },
+          },
+        ]}
+      />
     </View>
   );
 }

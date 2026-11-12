@@ -485,6 +485,10 @@ export const en = {
     newer: 'This backup is from a newer version. Update Sunday Sort first.',
     failed: "Couldn't create the file. Free up some storage and try again.",
     restoreFailed: "Couldn't restore this backup. Nothing was changed.",
+    savedTitle: 'Did the backup file get saved?',
+    savedBody: "Tap Yes only if you saved it to Drive, iCloud, email or Files. If you closed the share sheet, it wasn't saved.",
+    yesSaved: 'Yes, saved',
+    notSaved: 'Not saved',
   },
   lock: {
     locked: 'Sunday Sort is locked',
