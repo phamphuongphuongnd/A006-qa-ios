@@ -37,13 +37,14 @@ export const EMPTY_SNAPSHOT: WidgetSnapshot = {
   tripDistance: '',
 };
 
-/** This week (Mon–Sun): unsorted count, net (work entries, like Home), running trip. */
+/** This week (Mon–Sun) net (work entries, like Home), unsorted count over all weeks (same as the Sort badge), running trip. */
 export function widgetSnapshot(db: AppDb, now = Date.now()): WidgetSnapshot {
   try {
     const s = getSettings(db);
     if (!s.onboarded || !s.region) return EMPTY_SNAPSHOT;
     const week = weekOf(now);
-    const toSort = unsortedCount(db, week);
+    // Every unsorted entry, not just this week's, so the widget and the Sort tab badge agree (B-16).
+    const toSort = unsortedCount(db);
     const currency = currencyOf(s.region);
     const totals = totalsFor(db, week, 'work');
     const netText = formatMoney(totals.netMinor, currency);
