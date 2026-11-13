@@ -321,7 +321,9 @@ export default function EntriesScreen() {
         <FlashList
           data={items}
           keyExtractor={(it) => it.key}
-          getItemType={(it) => it.kind}
+          // B-20: recycle a row only into a row with the same category icon, so scrolling swaps text/colours
+          // instead of tearing down and rebuilding the icon's SVG tree (~half the scroll jank on a Galaxy A13).
+          getItemType={(it) => (it.kind === 'row' ? `row:${it.item.categoryId ? (catById.get(it.item.categoryId)?.icon ?? '') : '?'}` : it.kind)}
           renderItem={renderItem}
           extraData={selectedSet}
           onEndReached={loadMore}

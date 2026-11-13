@@ -106,7 +106,9 @@ export function SwipeRow({
           <Text style={[styles.label, { color: colors.onError }]}>{t('entries.swipeDelete')}</Text>
         </Pressable>
       ) : null}
-      <Animated.View style={{ transform: [{ translateX: x }] }} {...pan.handlers}>
+      {/* B-20: the animated transform is attached only while the row is swiped / open, so a resting row in a
+          scrolling list carries no animated style (less work each time a recycled cell is reused). */}
+      <Animated.View style={side === null ? undefined : { transform: [{ translateX: x }] }} {...pan.handlers}>
         {children}
       </Animated.View>
     </View>
