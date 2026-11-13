@@ -109,6 +109,12 @@ async function endAutoTrip(at: number, state: EngineState) {
     return;
   }
   const s = getSettings(db);
+  if (done.classifiedBy === 'user') {
+    // The driver already chose ("Mark as personal" while it ran): keep it.
+    finishAutoTrip(db, done.id, done.scope, 'user');
+    refreshWidgets().catch(() => {});
+    return;
+  }
   const ends = tripEnds(db, done.id);
   const c = classifyTrip({
     startedAt: done.startedAt,

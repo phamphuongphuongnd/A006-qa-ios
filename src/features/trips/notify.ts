@@ -95,7 +95,7 @@ let lastShown = '';
  * Ongoing "Trip running · 42.3 mi" with Personal stop / End trip (or Resume / End trip while paused).
  * Re-posting with the same identifier updates it in place; identical text is skipped.
  */
-export async function showTripNotification(trip: Pick<TripRow, 'status'>, distanceText: string, force = false) {
+export async function showTripNotification(trip: Pick<TripRow, 'status'> & Partial<Pick<TripRow, 'startedBy'>>, distanceText: string, force = false) {
   const paused = trip.status === 'paused';
   const title = paused ? t('trip.notifPaused', { distance: distanceText }) : t('trip.notifRunning', { distance: distanceText });
   if (!force && title === lastShown) return;
@@ -106,7 +106,7 @@ export async function showTripNotification(trip: Pick<TripRow, 'status'>, distan
       identifier: NOTIF_TRIP,
       content: {
         title,
-        body: t('trip.notifRecording'),
+        body: trip.startedBy === 'auto' && !paused ? t('autoTrip.notif.autoBody') : t('trip.notifRecording'),
         sticky: true,
         autoDismiss: false,
         sound: false,

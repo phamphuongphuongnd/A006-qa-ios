@@ -4,6 +4,7 @@ import { PermissionsAndroid, Platform, Pressable, ScrollView, View } from 'react
 
 import { db } from '@/db/client';
 import { updateSettings, type MergeStopMinutes } from '@/db/settingsRepo';
+import { useNow } from '@/features/entries/useNow';
 import { openPro } from '@/features/pro/openPro';
 import { autoTripsSupported, bondedDevices, isSamsung, nativeHealth, simulateSignal, type TripDetectHealth } from '@/features/trips/auto/native';
 import { getAutoFlags, processAutoSignals, syncAutoDetection } from '@/features/trips/auto/runner';
@@ -57,7 +58,8 @@ export default function AutoTripsScreen() {
 
   const supported = autoTripsSupported();
   const on = settings.autoTrips && pro;
-  const st = autoStatus(on, health, flags.lastRunAt, Date.now());
+  const now = useNow(60_000);
+  const st = autoStatus(on, health, flags.lastRunAt, now);
   const android = Platform.OS === 'android';
   const samsung = isSamsung();
 

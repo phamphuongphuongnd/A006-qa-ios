@@ -1,5 +1,5 @@
 import { router } from '@/services/router';
-import { ChevronDown, Flag, Gauge, LocateFixed, MapPin, Plus } from '@/ui/icons';
+import { ChevronDown, ChevronRight, Flag, Gauge, LocateFixed, MapPin, MoreHorizontal, Plus, Smartphone, Truck } from '@/ui/icons';
 import { useMemo, useState } from 'react';
 import { Linking, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
@@ -10,8 +10,13 @@ import { businessTripMiles, listTrips, mileageTotals } from '@/db/tripsRepo';
 import { formatRate, mileageEstimateByDate, periodsIn } from '@/domain/mileage';
 import { formatMoney } from '@/domain/money';
 import { taxYearFor, taxYearOf } from '@/domain/taxYear';
-import { currencyOf, type Region } from '@/domain/types';
-import { formatDay, formatDistance, groupByMonth, type DistanceUnit } from '@/features/trips/format';
+import { currencyOf, type Region, type Scope } from '@/domain/types';
+import { setTripScope, restoreTripScope } from '@/features/trips/auto/repo';
+import { autoTripState } from '@/features/trips/autoState';
+import { formatClock, formatDay, formatDistance, groupByMonth, type DistanceUnit } from '@/features/trips/format';
+import { TripSwipeRow } from '@/features/trips/TripSwipeRow';
+import { refreshWidgets } from '@/features/widgets/refresh';
+import { usePro } from '@/state/pro';
 import { useLocationPermission } from '@/features/trips/hooks';
 import { ActiveTripCard, InterruptedTripCard } from '@/features/trips/TripCards';
 import { CaptureFab } from '@/features/entries/CaptureFab';
@@ -19,7 +24,7 @@ import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, useTheme } from '@/theme';
-import { Button, Card, Chip, ChipRow, Divider, Screen, Sheet, Tag, Txt } from '@/ui';
+import { Badge, Button, Card, Chip, ChipRow, Divider, IconButton, Screen, Sheet, StatusDot, Tag, Txt, useSnackbar } from '@/ui';
 
 /** S-07 Miles: tax-year totals + estimate, running trip, trips by month. */
 /** Trip rows drawn per step while scrolling Miles. */
@@ -48,6 +53,22 @@ export default function MilesScreen() {
   const year = taxYearFor(startYear, region);
   const [perm, requestPerm] = useLocationPermission();
   const { colors } = useTheme();
+  const { pro } = usePro();
+  const auto = autoTripState(settings, pro);
+  const [menu, setMenu] = useState(false);
+  const snack = useSnackbar();
+  // Swipe right = Work, left = Personal, with Undo (F-13).
+  const onScope = (trip: TripRow, scope: Scope) => {
+    if (trip.scope === scope) return;
+    const prev = setTripScope(db, trip.id, scope);
+    refreshWidgets().catch(() => {});
+    if (!prev) return;
+    snack({
+      message: scope === 'work' ? t('autoTrip.markedWork') : t('autoTrip.markedPersonal'),
+      actionLabel: t('autoTrip.undo'),
+      onAction: () => restoreTripScope(db, trip.id, prev),
+    });
+  };
 
   const allTrips = useLive(() => listTrips(db), [], ['trips']);
   const trips = useMemo(
@@ -100,6 +121,7 @@ export default function MilesScreen() {
             </Txt>
             <ChevronDown size={20} color={colors.textSecondary} strokeWidth={2} />
           </Pressable>
+          <IconButton icon={MoreHorizontal} label={t('autoTrip.menu')} onPress={() => setMenu(true)} />
         </View>
       }
       contentStyle={empty ? { flexGrow: 1 } : undefined}
@@ -108,6 +130,19 @@ export default function MilesScreen() {
       <InterruptedTripCard />
       {denied ? <DeniedCard onAllow={onAllow} /> : null}
       <ActiveTripCard />
+      {auto !== 'off' ? (
+        <Card style={[styles.flex, { gap: 12 }]} onPress={() => router.push('/trip/auto')}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <StatusDot kind={auto === 'on' ? 'ok' : 'warn'} label={auto === 'on' ? t('homeV2.autoOn') : t('homeV2.autoPaused')} />
+            {auto === 'on' ? (
+              <Txt v="small" c="textSecondary">
+                {t('homeV2.autoOnSub')}
+              </Txt>
+            ) : null}
+          </View>
+          {auto === 'paused' ? <Button label={t('homeV2.fix')} variant="outline" size="sm" onPress={() => router.push('/trip/battery')} /> : null}
+        </Card>
+      ) : null}
 
       {!empty ? (
         <>
@@ -129,7 +164,9 @@ export default function MilesScreen() {
               </View>
               <Card style={{ paddingVertical: 0, paddingHorizontal: 14 }}>
                 {m.rows.map((trip, i) => (
-                  <TripRowView key={trip.id} trip={trip} unit={unit} divider={i > 0} />
+                  <TripSwipeRow key={trip.id} onScope={(sc) => onScope(trip, sc)}>
+                    <TripRowView trip={trip} unit={unit} divider={i > 0} />
+                  </TripSwipeRow>
                 ))}
               </Card>
             </View>
@@ -142,6 +179,27 @@ export default function MilesScreen() {
           {denied ? <Button label={t('miles.addManually')} variant="outline" icon={Plus} full onPress={() => router.push('/trip/new')} /> : null}
         </>
       )}
+
+      <Sheet visible={menu} onClose={() => setMenu(false)}>
+        <MenuRow
+          icon={Truck}
+          label={t('autoTrip.title')}
+          right={!pro ? <Badge kind="pro" label={t('pro.badge')} /> : null}
+          onPress={() => {
+            setMenu(false);
+            router.push('/trip/auto');
+          }}
+        />
+        <Divider />
+        <MenuRow
+          icon={Smartphone}
+          label={t('autoTrip.nfcTitle')}
+          onPress={() => {
+            setMenu(false);
+            router.push('/trip/nfc');
+          }}
+        />
+      </Sheet>
 
       <Sheet visible={pickYear} onClose={() => setPickYear(false)} title={t('miles.pickYear')}>
         <ChipRow>
@@ -222,32 +280,48 @@ function TripRowView({ trip, unit, divider }: { trip: TripRow; unit: DistanceUni
   const { colors } = useTheme();
   const gps = trip.source === 'gps';
   const Icon = gps ? LocateFixed : Gauge;
-  const tint = trip.scope === 'personal' ? colors.personal : gps ? colors.work : colors.textSecondary;
-  const bg = trip.scope === 'personal' ? colors.personalSoft : gps ? colors.workSoft : colors.surfaceAlt;
+  const personal = trip.scope === 'personal';
+  const tint = personal ? colors.personal : gps ? colors.work : colors.textSecondary;
+  const bg = trip.scope === 'unsorted' ? colors.sunSoft : personal ? colors.personalSoft : gps ? colors.workSoft : colors.surfaceAlt;
   const title = t('miles.rowLabel', { date: formatDay(trip.startedAt), distance: formatDistance(trip.distanceM, unit) });
-  const sub = [gps ? t('miles.rowGps') : t('miles.rowManual'), trip.scope === 'work' ? t('common.work') : t('common.personal'), trip.purpose]
-    .filter(Boolean)
-    .join(' · ');
+  const how = !gps ? t('autoTrip.manual') : trip.startedBy === 'auto' ? t('autoTrip.auto') : trip.startedBy === 'nfc' ? t('autoTrip.nfc') : t('autoTrip.gps');
+  const times = gps && trip.endedAt ? `${formatClock(trip.startedAt)}–${formatClock(trip.endedAt)}` : '';
+  const sub = [times, how, trip.purpose].filter(Boolean).join(' · ');
+  const scopeLabel = trip.scope === 'unsorted' ? t('autoTrip.unsorted') : personal ? t('common.personal') : t('common.work');
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${title}. ${sub}${trip.edited ? `. ${t('miles.edited')}` : ''}`}
+      accessibilityLabel={`${title}. ${sub}. ${scopeLabel}${trip.edited ? `. ${t('miles.edited')}` : ''}. ${t('autoTrip.swipeHint')}`}
       onPress={() => router.push(`/trip/${trip.id}`)}
       style={({ pressed }) => [styles.li, divider && { borderTopWidth: 1, borderTopColor: colors.line }, pressed && { opacity: 0.7 }]}>
       <View style={[styles.av, { backgroundColor: bg }]}>
         <Icon size={22} color={tint} strokeWidth={2} />
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
-        <View style={[styles.flex, { gap: 6 }]}>
-          <Txt v="h3" numberOfLines={1} style={{ flexShrink: 1 }}>
-            {title}
-          </Txt>
-          {trip.edited ? <Tag kind="neutral" label={t('miles.edited')} /> : null}
-        </View>
-        <Txt v="small" c="textSecondary" numberOfLines={1}>
-          {sub}
+        <Txt v="h3" numberOfLines={1}>
+          {title}
         </Txt>
+        <View style={[styles.flex, { gap: 6 }]}>
+          <Txt v="small" c="textSecondary" numberOfLines={1} style={{ flexShrink: 1 }}>
+            {sub}
+          </Txt>
+          {trip.edited ? <Badge kind="neutral" label={t('miles.edited')} /> : null}
+        </View>
       </View>
+      {trip.scope === 'unsorted' ? <Badge kind="unsorted" label={scopeLabel} /> : <Tag kind={personal ? 'personal' : 'work'} label={scopeLabel} />}
+    </Pressable>
+  );
+}
+
+function MenuRow({ icon: Icon, label, right, onPress }: { icon: typeof Truck; label: string; right?: React.ReactNode; onPress: () => void }) {
+  const { colors } = useTheme();
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => [styles.li, pressed && { opacity: 0.7 }]}>
+      <Icon size={22} color={colors.textSecondary} strokeWidth={2} />
+      <Txt v="body" style={{ flex: 1 }}>
+        {label}
+      </Txt>
+      {right ?? <ChevronRight size={20} color={colors.textTertiary} />}
     </Pressable>
   );
 }
