@@ -87,6 +87,37 @@ Start/Stop + báo cáo) → không quảng bá Start/Stop và xuất file miễn
 | X5 | Bật chuyến không chạm máy: thêm thẻ NFC, Android Auto / CarPlay | người dùng Driversnote; luật UK cấm cầm máy khi lái | 🟡 hỏi ở P1 |
 | X6 | Nói rõ giới hạn bản miễn phí ngay lúc cài | 149 lời chê Driversnote | 🟠 P1 (onboarding + màn Pro) |
 
+## 8. P0 phần còn lại (2026-11-13, phiên điều phối bản 2)
+| # | Việc | Kết quả |
+|---|---|---|
+| P0-1 | Reddit 5 luồng | **Bỏ** (Phương chốt) — không có nội dung dán |
+| P0-2 | Dùng thử 6 app đối thủ | **Bỏ** (Phương chốt): tạo tài khoản Google cần mật khẩu / số điện thoại / CAPTCHA (Claude không được làm), APK ngoài bị cấm, 4/6 app còn bắt đăng ký email. Thay bằng mục 2–3 + K5 |
+| P0-3 | Mẫu CSV/Excel MTD | Xem dưới |
+| P0-4 | Nhóm Facebook | Khách **không xem được** (tìm nhóm cần đăng nhập, nhóm không được index). Thay: UK Business Forums "Becoming a Delivery Driver / Courier" — tài xế nói **20k dặm/năm (Amazon) tới 100k (courier tự do)** → hầu hết vượt bậc 10.000 dặm sớm: báo cáo phải hiện rõ lúc sang 25p; X2 (theo dặm vs chi phí thật) đáng kể với người chạy nhiều |
+| P0-5 | Giá Pro (Q16) | **Chỉ thuê bao năm** (Phương chốt). Giá đặt tạm **£24.99/năm**, Phương chỉnh sau; **US = quy đúng tỷ giá thực** lúc chốt (≈ $32 → bậc gần nhất). Không gói tháng, không trọn đời |
+
+**Mẫu nhập MTD / FreeAgent (P0-3, tải công khai, lưu ngoài repo):**
+- **MTDsorted** (bridging, miễn phí 1 nguồn): Excel mẫu Standard + Calendar. Sheet `Income`: Date received · Description ·
+  Merchant / customer name · Amount received (without VAT) · Income tax category · CIS deducted. Sheet `Expenses`: Date ·
+  Description · Merchant / customer name · Total amount · **Disallowable amount** · Income tax category. Sheet `Summary`
+  tự cộng theo danh mục, **cả Standard lẫn Calendar đều cộng dồn từ đầu năm** (Q2 = 6/4→5/10; Calendar 1/4→30/9).
+  Người dùng **gõ tổng từ Summary vào MTDsorted** (không upload file).
+- **15 danh mục chi HMRC** (trùng trường API quarterly update): Administrative costs · Advertising and marketing · Business
+  entertainment · Car, van and travel expenses · Cost of goods · Depreciation · Finance charges · Interest on loans · Bad debts
+  · Repairs and maintenance · Other expenses · Payments to subcontractors · Premises running costs · Professional fees · Wages
+  and staff costs; thu: Turnover · Other business income. Mỗi danh mục có phần **Disallowable** riêng.
+- **BrightBooks** (bridging): template Excel tải sau đăng nhập; nhận **tổng theo danh mục + ngày đầu/cuối kỳ**, cấm đổi cột.
+  TaxCalc / Tax Optimiser: nhận .xlsx/.csv theo mẫu riêng. → **Chưa có mẫu CSV chung**; điểm chung = tổng theo 15 danh mục.
+- **FreeAgent** — Expenses CSV (tối đa 1.000 dòng, ngày `DD/MM/YYYY`): `claimant_name` (khớp đúng tên user) · `category`
+  (tên danh mục FreeAgent hoặc mã kế toán) · `DD/MM/YYYY` · `currency` · `type` (Payment/Refund) · `gross_value` ·
+  `description` · `receipt_reference` · `sales_tax_rate`… Mileage CSV: `claimant_name` · `DD/MM/YYYY` · `description` ·
+  `mileage` · `vehicle_type` (**chỉ Car / Motorcycle / Bicycle — không có Van**) · `engine_type` · `engine_size` ·
+  `reclaim_mileage` (1/0). Không nhập được nếu tài khoản "universal".
+
+→ **Gợi ý S5 (grill ở P1):** (1) map danh mục A006 → 15 danh mục HMRC + cột Disallowable; (2) xuất "MTD summary" cộng dồn
+theo kỳ Standard / Calendar (đúng bố cục Summary MTDsorted); (3) xuất sổ chi tiết theo cột MTDsorted (CSV, cân nhắc .xlsx đúng
+mẫu → cần thư viện ở P3); (4) FreeAgent: Expenses CSV + Mileage CSV (người dùng nhập tên claimant 1 lần; van → "Car").
+
 ## Nguồn
 - gov.uk: [Tăng mức dặm 17/6/2026](https://www.gov.uk/government/publications/increase-to-approved-mileage-allowance-payments-amaps-and-self-employed-simplified-mileage-rates) ·
   [Simplified expenses: Vehicles](https://www.gov.uk/simpler-income-tax-simplified-expenses/vehicles-) · [BIM75005](https://www.gov.uk/hmrc-internal-manuals/business-income-manual/bim75005) ·
@@ -98,3 +129,6 @@ Start/Stop + báo cáo) → không quảng bá Start/Stop và xuất file miễn
   [MTDsorted](https://www.mtdsorted.co.uk/downloads) · [GoFile – bridging](https://gofile.co.uk/knowledgebase/making-tax-digital/income-tax-bridging-software/)
 - Google Play: [MileIQ](https://play.google.com/store/apps/details?id=com.mobiledatalabs.mileiq) · [Everlance](https://play.google.com/store/apps/details?id=com.everlance) ·
   [Hurdlr](https://play.google.com/store/apps/details?id=app.hurdlr.com) · [Cash Book](https://play.google.com/store/apps/details?id=cashbook.cashbook)
+- P0: [MTDsorted – mẫu sole trader](https://www.mtdsorted.co.uk/downloads/mtd-income-tax-sole-trader-spreadsheet) · [FreeAgent – import expenses](https://support.freeagent.com/hc/en-gb/articles/360007142140) ·
+  [FreeAgent – import mileage](https://support.freeagent.com/hc/en-gb/articles/360007144540) · [BrightBooks – template SE](https://brightbookssupport.brightsg.com/hc/en-gb/articles/44698120102929-Importing-MTD-Self-Employed-Quarterly-Returns-Using-Excel-Template) ·
+  [UK Business Forums – courier](https://www.ukbusinessforums.co.uk/threads/becoming-a-delivery-driver-courier.415571/) · [TaxMiles lifetime](https://frontdeskreview.com/software/mileage-tracking/taxmiles/) · [Hurdlr giá](https://fitsmallbusiness.com/hurdlr-review/)

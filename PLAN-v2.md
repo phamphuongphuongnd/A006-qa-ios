@@ -17,7 +17,7 @@
 | Q10 | Sao lưu tự động | Người dùng **chọn thư mục 1 lần** (Google Drive / iCloud Drive), app tự ghi file định kỳ — không khoá; phải thử Drive ghi ngầm trên A13 |
 | Q11 | Mockup | **Claude Design vẽ lại toàn bộ app** từ product.md v2 |
 | Q15 | Thu phí | **Theo mục 7 file ý tưởng**: miễn phí phần ghi nhanh; trả phí xuất file năm thuế, ảnh hoá đơn không giới hạn, gợi ý danh mục |
-| Q16 | Giá | P0 nghiên cứu (đối thủ UK/US + app mua 1 lần cùng loại) → **đề xuất kiểu thu (mua 1 lần / thuê bao) + giá bằng popup** |
+| Q16 | Giá | **Chỉ thuê bao năm** (chốt P0 2026-11-13); giá tạm **£24.99/năm**, Phương chỉnh sau; US quy đúng tỷ giá thực; không gói tháng / trọn đời |
 | Q17 | Dùng thử | **7 ngày, không cần thẻ**; hết hạn chỉ tắt phần Pro |
 | Q13 | Bước 6 cũ | Phiên Bước 6 sửa xong lỗi rồi dừng (B-27…B-36 đã sửa); **lên store sau P5** |
 | Q18 | Bật chuyến không chạm máy (X5) | **Thêm thẻ NFC** (Android: chạm thẻ mở deep link bật/tắt chuyến; iOS: qua Phím tắt). **Bỏ Android Auto / CarPlay** (dễ bị store từ chối) — miễn phí |
@@ -39,7 +39,7 @@
 ## Các phase
 | Phase | Ai | Việc | Ra gì | Xong khi |
 |---|---|---|---|---|
-| **P0 Nghiên cứu nốt** | Điều phối | Đã làm 2026-11-13: giá UK, Driversnote, MTD cộng dồn, từ khoá UK → `research.md` §6–7. **Còn:** (1) Reddit: **Phương dán nội dung** 5 link (bị chặn với mọi trình duyệt của Claude). (2) Trình giả lập `Medium_Phone_API_37.0`: Phương đăng nhập Google Play + tự đăng ký app → cài MileIQ, Everlance, Hurdlr, Cash Book, **Driversnote, TripLog** → thử ghi khoản, phân loại, chuyến (`adb emu geo fix` / GPX), xuất file; đếm số chạm so với A006; xong gỡ app. (3) Tải mẫu CSV của 1–2 bridging + FreeAgent (Phương cho tải). (4) Nhóm Facebook tài xế van (Phương đăng nhập). (5) Đề xuất kiểu thu + giá Pro → popup Q16 | Bổ sung `research.md` | Phương đọc, chốt giá |
+| **P0 Nghiên cứu nốt** | Điều phối | ✅ **Xong 2026-11-13** → `research.md` §6–8. Reddit + dùng thử app + Facebook: bỏ / không xem được (Phương chốt); mẫu MTDsorted + FreeAgent đã đọc; giá Q16 đã chốt | `research.md` | ✅ |
 | **P1 product.md v2** | Điều phối | Grill chi tiết bằng popup (ngưỡng tự dừng, thời gian gộp điểm dừng, giới hạn ảnh miễn phí, màn Pro, **X2 cách tính xe, X5 NFC / Android Auto, X6 giới hạn bản miễn phí**…) → **viết lại toàn bộ `product.md`**: mọi màn, nút, trạng thái, lỗi, chữ hiện trên app (tiếng Anh trong ngoặc kép), luồng tự động, màn Pro / dùng thử, dữ liệu mới, danh sách màn cho Claude Design. Sửa §1 bảng đối thủ, §10 (bỏ "không tự dò chuyến", "không mua trong app") | `product.md` v2 | Phương duyệt |
 | **P2 Mockup Hi-Fi** | **Phương** | Gửi product.md v2 cho Claude Design → vẽ Hi-Fi toàn bộ app → export HTML + tokens vào `design/` | `design/` v2 | Phương báo xong |
 | **P3 Nền chung** | Điều phối (tuần tự) | Cài **mọi** thư viện native mới, kể cả mua trong app (phiên con không cài); schema + migration (luật phân loại, khoản lặp lại, đoạn chuyến, cấu hình sao lưu, kết quả OCR, quyền Pro); **hàm chung kiểm Pro + dùng thử 7 ngày**; kiểu dữ liệu chung; khoá i18n; **UI kit + token + các màn không thuộc S1–S5 theo mockup v2**; **ô cài đặt "Vehicle costs" (Q24)**; **trang onboarding nói rõ giới hạn bản miễn phí (X6, nội dung do S5)**; **nội dung widget bản 2**; dev build chạy A13 | Commit `dev` | Test + lint + tsc xanh, A13 mở được |
