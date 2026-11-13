@@ -209,4 +209,4 @@
 | TC-198 | Mặc định | Quyền trong APK, không mạng, không quảng cáo, không đăng nhập | Không có quyền thừa; không gọi mạng ngoài link Privacy | M | ❌ B-19 quyền thừa trong APK |
 | TC-199 | Tiền | Số thực / làm tròn | formatMoney từ chối số thực; mọi tổng là số nguyên | T money | ✅ |
 | TC-200 | Ngôn ngữ | Chỉ tiếng Anh, mọi chuỗi qua i18n | Không lộ key i18n trên màn | M | ✅ không thấy key i18n lộ trên mọi màn đã đi qua |
-| TC-201 | F-13 | Mức UK đổi 6/4/2026 (X1) | Chuyến 5/4/2026 tính 45p, 6/4/2026 tính 55p; mức mặc định cũ đã lưu (45p/25p) tự đọc thành mặc định mới, mức tự sửa giữ nguyên; Settings → Mileage rates có kỳ "From 6 Apr 2026" | T rates, repos + M | ⏳ |
+| TC-201 | F-13 | Mức UK đổi 6/4/2026 (X1) | Chuyến 5/4/2026 tính 45p, 6/4/2026 tính 55p; mức mặc định cũ đã lưu (45p/25p) tự đọc thành mặc định mới, mức tự sửa giữ nguyên; Settings → Mileage rates có kỳ "From 6 Apr 2026" | T rates, repos + M | ✅ A13 (2026-11-13): Miles + Reports 2026/27 "≈ £4,662.64 … (55p / 25p)", 2025/26 "≈ £5,504.25 … (45p / 25p)"; Settings có kỳ "From 6 Apr 2026" 55/25; PDF "(55p / 25p)" |
