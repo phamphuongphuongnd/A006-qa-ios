@@ -16,7 +16,7 @@ import { usePro } from '@/state/pro';
 import { useSettings } from '@/state/settings';
 import { useTheme } from '@/theme';
 import { Badge, Button, Card, Divider, Group, Segmented, Sheet, StatusDot, Toggle, Txt } from '@/ui';
-import { ChevronLeft, ChevronRight, Clock, Gauge, Truck } from '@/ui/icons';
+import { Bluetooth, ChevronLeft, ChevronRight, Clock, Zap } from '@/ui/icons';
 
 const MERGE: MergeStopMinutes[] = [10, 20, 45];
 
@@ -140,7 +140,7 @@ export default function AutoTripsScreen() {
         {android ? (
           <Group>
             <Row
-              icon={<Truck size={20} color={colors.textSecondary} />}
+              icon={<Bluetooth size={20} color={colors.textSecondary} />}
               title={t('autoTrip.vanBt')}
               sub={settings.vanBtDevice?.name ?? settings.vanBtDevice?.address ?? t('autoTrip.vanBtNone')}
               right={<ChevronRight size={20} color={colors.textTertiary} />}
@@ -148,7 +148,7 @@ export default function AutoTripsScreen() {
             />
             <Divider />
             <Row
-              icon={<Gauge size={20} color={colors.textSecondary} />}
+              icon={<Zap size={20} color={colors.textSecondary} />}
               title={t('autoTrip.startCharging')}
               right={<Toggle value={settings.startOnCharge} onChange={(v) => apply({ startOnCharge: v })} label={t('autoTrip.startCharging')} />}
             />

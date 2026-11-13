@@ -1,6 +1,6 @@
 import { getSettings } from '@/db/settingsRepo';
 import { makeTestDb } from '@/db/testing/testDb';
-import { appendPoints, endTrip, getTrip, startTrip } from '@/db/tripsRepo';
+import { appendPoints, deleteTrip, endTrip, getTrip, startTrip, tripPointsOf } from '@/db/tripsRepo';
 import type { AppDb } from '@/db/types';
 import { metersToMiles } from '@/domain/mileage';
 
@@ -10,11 +10,15 @@ import {
   getKV,
   listSegments,
   listStops,
+  restoreTrip,
   restoreTripScope,
+  revertTripRow,
   setKV,
   setTripScope,
+  snapshotTrip,
   splitTripAt,
   toggleSegment,
+  unsplitTrip,
 } from '../auto/repo';
 
 const MIN = 60_000;
@@ -88,5 +92,47 @@ describe('auto trip repository', () => {
     expect(getTrip(db, trip.id)).toMatchObject({ scope: 'personal', classifiedBy: 'user' });
     restoreTripScope(db, trip.id, prev);
     expect(getTrip(db, trip.id)?.scope).toBe('unsorted');
+  });
+
+  it('Undo of a split puts the trip back as one, segments and stop included', () => {
+    const db = makeTestDb();
+    const trip = seedTrip(db);
+    const stop = listStops(db, trip.id)[0];
+    const seg = toggleSegment(db, trip.id, { fromTs: stop.endedAt, toTs: trip.endedAt! })!;
+    const before = getTrip(db, trip.id)!;
+    const second = splitTripAt(db, trip.id, stop.endedAt)!;
+    expect(listSegments(db, second)).toHaveLength(1);
+    unsplitTrip(db, before, second);
+    expect(getTrip(db, second)).toBeUndefined();
+    expect(getTrip(db, trip.id)).toEqual(before);
+    expect(tripPointsOf(db, trip.id)).toHaveLength(12);
+    expect(listSegments(db, trip.id).map((s) => s.id)).toEqual([seg.id]);
+    expect(listStops(db, trip.id)).toHaveLength(1);
+  });
+
+  it('Undo of a delete restores the trip with its points, stops and segments', () => {
+    const db = makeTestDb();
+    const trip = seedTrip(db);
+    const stop = listStops(db, trip.id)[0];
+    toggleSegment(db, trip.id, { fromTs: T0, toTs: stop.startedAt });
+    const snap = snapshotTrip(db, trip.id)!;
+    deleteTrip(db, trip.id);
+    expect(getTrip(db, trip.id)).toBeUndefined();
+    expect(tripPointsOf(db, trip.id)).toHaveLength(0);
+    restoreTrip(db, snap);
+    expect(getTrip(db, trip.id)).toEqual(snap.trip);
+    expect(tripPointsOf(db, trip.id)).toEqual(snap.points);
+    expect(listStops(db, trip.id)).toEqual(snap.stops);
+    expect(listSegments(db, trip.id)).toEqual(snap.segments);
+    expect(snapshotTrip(db, 'nope')).toBeNull();
+  });
+
+  it('Undo of a hand edit brings back the recorded values and drops Edited', () => {
+    const db = makeTestDb();
+    const trip = seedTrip(db);
+    editGpsTrip(db, trip.id, { miles: 9 });
+    expect(getTrip(db, trip.id)?.edited).toBe(true);
+    revertTripRow(db, trip);
+    expect(getTrip(db, trip.id)).toEqual(trip);
   });
 });

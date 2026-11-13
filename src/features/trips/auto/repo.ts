@@ -3,7 +3,7 @@
 import { and, asc, desc, eq, gt, gte, lt, sql } from 'drizzle-orm';
 
 import { entries, settings, tripPoints, trips, tripSegments, tripStops } from '@/db/schema';
-import type { TripRow, TripSegmentRow, TripStopRow } from '@/db/schema';
+import type { TripPointRow, TripRow, TripSegmentRow, TripStopRow } from '@/db/schema';
 import { newId, type AppDb } from '@/db/types';
 import { milesToMeters, trackDistance } from '@/domain/mileage';
 import type { Scope, TripClassifiedBy, TripScope } from '@/domain/types';
@@ -109,6 +109,51 @@ export function splitTripAt(db: AppDb, tripId: string, at: number): string | nul
   rebuildStops(db, id);
   return id;
 }
+
+/**
+ * Undo of `splitTripAt`: the second trip's points and segments go back to the first, which gets its row back
+ * (`before` = the first trip as it was before the split); the second trip is deleted.
+ */
+export function unsplitTrip(db: AppDb, before: TripRow, secondId: string) {
+  db.transaction((tx) => {
+    tx.update(tripPoints).set({ tripId: before.id }).where(eq(tripPoints.tripId, secondId)).run();
+    tx.update(tripSegments).set({ tripId: before.id }).where(eq(tripSegments.tripId, secondId)).run();
+    tx.delete(trips).where(eq(trips.id, secondId)).run();
+    tx.update(trips).set(before).where(eq(trips.id, before.id)).run();
+  });
+  rebuildStops(db, before.id);
+}
+
+// ---------------- Undo snapshots (Trip detail) ----------------
+
+export interface TripSnapshot {
+  trip: TripRow;
+  points: TripPointRow[];
+  stops: TripStopRow[];
+  segments: TripSegmentRow[];
+}
+
+/** Everything a trip owns, to put it back after "Delete trip" → Undo. */
+export function snapshotTrip(db: AppDb, tripId: string): TripSnapshot | null {
+  const trip = db.select().from(trips).where(eq(trips.id, tripId)).get();
+  if (!trip) return null;
+  return { trip, points: pointsOf(db, tripId), stops: listStops(db, tripId), segments: listSegments(db, tripId) };
+}
+
+const CHUNK = 200;
+
+/** Puts a deleted trip back exactly as it was (ids included). */
+export function restoreTrip(db: AppDb, snap: TripSnapshot) {
+  db.transaction((tx) => {
+    tx.insert(trips).values(snap.trip).onConflictDoNothing().run();
+    for (let i = 0; i < snap.points.length; i += CHUNK) tx.insert(tripPoints).values(snap.points.slice(i, i + CHUNK)).run();
+    if (snap.stops.length) tx.insert(tripStops).values(snap.stops).run();
+    if (snap.segments.length) tx.insert(tripSegments).values(snap.segments).run();
+  });
+}
+
+/** Undo of a hand edit / purpose change: the trip row goes back to `row` (points are never touched by edits). */
+export const revertTripRow = (db: AppDb, row: TripRow) => db.update(trips).set(row).where(eq(trips.id, row.id)).run();
 
 // ---------------- Hand edits (Q19) ----------------
 

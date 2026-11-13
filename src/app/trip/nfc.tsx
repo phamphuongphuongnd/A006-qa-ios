@@ -10,7 +10,7 @@ import { router } from '@/services/router';
 import { useSettings } from '@/state/settings';
 import { useTheme } from '@/theme';
 import { Button, Card, Txt } from '@/ui';
-import { Check, ChevronLeft, Smartphone } from '@/ui/icons';
+import { Check, ChevronLeft, Nfc } from '@/ui/icons';
 
 export const NFC_TOGGLE_URL = 'sundaysort://trip/toggle';
 
@@ -63,7 +63,7 @@ export default function NfcTagScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 48 }}>
         <View style={{ alignItems: 'center', paddingVertical: 16 }}>
           <View style={{ width: 120, height: 120, borderRadius: 60, backgroundColor: phase === 'done' ? colors.incomeSoft : colors.sunSoft, alignItems: 'center', justifyContent: 'center' }}>
-            {phase === 'done' ? <Check size={56} color={colors.incomeText} strokeWidth={2} /> : <Smartphone size={56} color={colors.text} strokeWidth={1.6} />}
+            {phase === 'done' ? <Check size={56} color={colors.incomeText} strokeWidth={2} /> : <Nfc size={56} color={colors.text} strokeWidth={1.6} />}
           </View>
         </View>
         <Txt v="body" center>

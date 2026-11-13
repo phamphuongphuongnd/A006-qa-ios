@@ -10,7 +10,7 @@ import { t, type TKey } from '@/i18n';
 import { router } from '@/services/router';
 import { useTheme } from '@/theme';
 import { Button, Card, Txt } from '@/ui';
-import { Bell, Gauge, MapPin, Shield, Truck, X, type LucideIcon } from '@/ui/icons';
+import { Battery, Bell, Car, MapPin, Shield, X, type LucideIcon } from '@/ui/icons';
 
 const PACKAGE = 'com.phiotron.sundaysort';
 
@@ -51,10 +51,10 @@ async function openBatterySettings() {
 }
 
 const STEPS: Step[] = [
-  { key: 's1', icon: Truck, perm: Platform.OS === 'ios' ? 'autoTrip.s1PermIos' : 'autoTrip.s1PermAndroid', run: askMotion },
+  { key: 's1', icon: Car, perm: Platform.OS === 'ios' ? 'autoTrip.s1PermIos' : 'autoTrip.s1PermAndroid', run: askMotion },
   { key: 's2', icon: MapPin, perm: 'autoTrip.s2Perm', run: askBackgroundLocation },
   { key: 's3', icon: Bell, perm: 'autoTrip.s3Perm', run: askNotifications },
-  ...(Platform.OS === 'android' ? [{ key: 's4' as const, icon: Gauge, perm: 'autoTrip.s4Perm' as TKey, run: openBatterySettings }] : []),
+  ...(Platform.OS === 'android' ? [{ key: 's4' as const, icon: Battery, perm: 'autoTrip.s4Perm' as TKey, run: openBatterySettings }] : []),
 ];
 
 /** S-07e Automatic trips setup: one permission per step; skipping leaves S-07d orange ("may miss drives"). */
