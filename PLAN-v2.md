@@ -32,8 +32,8 @@
 ## Các phase
 | Phase | Ai | Việc | Ra gì | Xong khi |
 |---|---|---|---|---|
-| **P0 Nghiên cứu nốt** | Điều phối | (0) Cập nhật CHECKLIST / APP.md / TASKS theo file này **sau khi phiên Bước 6 đã dừng** (tránh 2 phiên cùng sửa). (1) Đọc 5 luồng Reddit trong file ý tưởng bằng **Claude in Chrome**. (2) Trình giả lập `Medium_Phone_API_37.0`: Phương đăng nhập Google Play + tự đăng ký app → cài MileIQ, Everlance, Hurdlr, Cash Book → thử ghi khoản, phân loại, chuyến (`adb emu geo fix` / GPX), xuất file; đếm số chạm so với A006; xong gỡ app. (3) Nghiên cứu giá → popup Q16 | Bổ sung `research.md` | Phương đọc, chốt giá |
-| **P1 product.md v2** | Điều phối | Grill chi tiết bằng popup (ngưỡng tự dừng, thời gian gộp điểm dừng, giới hạn ảnh miễn phí, màn Pro…) → **viết lại toàn bộ `product.md`**: mọi màn, nút, trạng thái, lỗi, chữ hiện trên app (tiếng Anh trong ngoặc kép), luồng tự động, màn Pro / dùng thử, dữ liệu mới, danh sách màn cho Claude Design. Sửa §1 bảng đối thủ, §10 (bỏ "không tự dò chuyến", "không mua trong app") | `product.md` v2 | Phương duyệt |
+| **P0 Nghiên cứu nốt** | Điều phối | Đã làm 2026-11-13: giá UK, Driversnote, MTD cộng dồn, từ khoá UK → `research.md` §6–7. **Còn:** (1) Reddit: **Phương dán nội dung** 5 link (bị chặn với mọi trình duyệt của Claude). (2) Trình giả lập `Medium_Phone_API_37.0`: Phương đăng nhập Google Play + tự đăng ký app → cài MileIQ, Everlance, Hurdlr, Cash Book, **Driversnote, TripLog** → thử ghi khoản, phân loại, chuyến (`adb emu geo fix` / GPX), xuất file; đếm số chạm so với A006; xong gỡ app. (3) Tải mẫu CSV của 1–2 bridging + FreeAgent (Phương cho tải). (4) Nhóm Facebook tài xế van (Phương đăng nhập). (5) Đề xuất kiểu thu + giá Pro → popup Q16 | Bổ sung `research.md` | Phương đọc, chốt giá |
+| **P1 product.md v2** | Điều phối | Grill chi tiết bằng popup (ngưỡng tự dừng, thời gian gộp điểm dừng, giới hạn ảnh miễn phí, màn Pro, **X2 cách tính xe, X5 NFC / Android Auto, X6 giới hạn bản miễn phí**…) → **viết lại toàn bộ `product.md`**: mọi màn, nút, trạng thái, lỗi, chữ hiện trên app (tiếng Anh trong ngoặc kép), luồng tự động, màn Pro / dùng thử, dữ liệu mới, danh sách màn cho Claude Design. Sửa §1 bảng đối thủ, §10 (bỏ "không tự dò chuyến", "không mua trong app") | `product.md` v2 | Phương duyệt |
 | **P2 Mockup Hi-Fi** | **Phương** | Gửi product.md v2 cho Claude Design → vẽ Hi-Fi toàn bộ app → export HTML + tokens vào `design/` | `design/` v2 | Phương báo xong |
 | **P3 Nền chung** | Điều phối (tuần tự) | Cài **mọi** thư viện native mới, kể cả mua trong app (phiên con không cài); schema + migration (luật phân loại, khoản lặp lại, đoạn chuyến, cấu hình sao lưu, kết quả OCR, quyền Pro); **hàm chung kiểm Pro + dùng thử 7 ngày**; kiểu dữ liệu chung; khoá i18n; **UI kit + token + các màn không thuộc S1–S5 theo mockup v2**; dev build chạy A13 | Commit `dev` | Test + lint + tsc xanh, A13 mở được |
 | **P4 Song song** | 5 phiên con | Bảng dưới; mỗi phiên 1 worktree, nhánh riêng, báo về điều phối bằng SendMessage | 5 nhánh | Test xanh + thử A13 + báo xong |
@@ -47,7 +47,7 @@
 | **S2 Phân loại** | Thẻ Sort sửa / tách / gộp tại chỗ; luật tự phân loại + tuyến/nơi quen; số tiền là tín hiệu riêng | `src/app/(tabs)/sort.tsx`, `src/app/sort-list.tsx`, `src/domain/suggest.ts`, phần sort trong `src/features/entries/` |
 | **S3 Đọc hoá đơn** | OCR trên máy → tự điền số tiền / nơi bán / ngày; đưa dữ liệu cho gợi ý qua giao diện chung từ P3 (không sửa `suggest.ts`); giới hạn ảnh miễn phí | `modules/receipt-ocr/`, `src/features/ocr/`, `src/app/capture.tsx`, `src/app/entry/[id].tsx` |
 | **S4 Sao lưu & lặp lại** | Sao lưu tự động vào thư mục đã chọn; khoản lặp lại; nhắc tuần không tắt sau 4 tuần | `src/features/backup/`, `src/features/recurring/`, `src/features/settings/notifications.ts`, `src/app/backup.tsx` |
-| **S5 Xuất MTD + Pro** | CSV đúng mẫu bridging + FreeAgent; xử lý Unsorted trước khi xuất quý; màn mua Pro, khôi phục mua, dùng thử 7 ngày | `src/features/reports/buildExport.ts`, `src/domain/csv.ts`, `src/features/reports/ExportPanel.tsx`, `src/features/pro/`, `src/app/pro.tsx` |
+| **S5 Xuất MTD + Pro** | CSV đúng mẫu bridging + FreeAgent, **tổng cộng dồn từ đầu năm theo danh mục HMRC, kỳ chuẩn / theo lịch (X3)**; xử lý Unsorted trước khi xuất quý; màn mua Pro, khôi phục mua, dùng thử 7 ngày | `src/features/reports/buildExport.ts`, `src/domain/csv.ts`, `src/features/reports/ExportPanel.tsx`, `src/features/pro/`, `src/app/pro.tsx` |
 
 ## Rủi ro kỹ thuật (grill ở P1, kiểm ở P3)
 - Tự viết module dò chuyến: thử nhiều trên xe thật; Samsung tắt app nền → hướng dẫn tắt tối ưu pin trong app.
@@ -56,5 +56,26 @@
 - OCR: ML Kit (Android) / Vision (iOS), chạy trên máy.
 - Mua trong app: thư viện cài ở P3; sản phẩm do Phương tạo trên 2 store.
 
-## Mở phiên điều phối mới
-Gõ cho phiên mới: "Phiên điều phối A006 bản 2: đọc `apps/A006-sundaysort/PLAN-v2.md` và `research.md`, chạy P0."
+## Lỗi / thiếu mới (research.md §7)
+| # | Việc | Làm ở |
+|---|---|---|
+| **X1** | Mức dặm UK 2026/27 = **55p** cho 10.000 dặm đầu (áp dụng lùi từ 6/4/2026), 25p sau đó; A006 để cứng 45p (`src/domain/mileage.ts:26`, chữ "(45p / 25p)" trên app, product.md) — dùng cơ chế mức theo ngày như US | **Sửa ngay, trước P1** |
+| **X2** | Mức dặm cố định đã gồm xăng / bảo hiểm / sửa xe / MOT / thuế đường → cài đặt "Cách tính xe: theo dặm / chi phí thật"; báo cáo + xuất theo cách đã chọn (đỗ xe, cầu đường, congestion luôn tính) | P1 → F-14/F-15 |
+| **X3** | CSV MTD cộng dồn từ đầu năm + kỳ chuẩn / theo lịch | S5 |
+| **X4** | Đối thủ UK chính: Driversnote; app UK mới miễn phí (MileClear, PocketReceipt) | P1 §1 + định vị |
+| **X5** | Bật chuyến không chạm máy: thẻ NFC, Android Auto / CarPlay | Hỏi ở P1 |
+| **X6** | Nói rõ giới hạn bản miễn phí ngay lúc cài | P1 onboarding + màn Pro |
+
+## Câu nhắn từng phase (Phương chép gửi)
+- **Sửa X1 ngay (phiên mới, nhỏ):** "A006: sửa mức dặm UK 2026/27 thành 55p (10.000 dặm đầu) theo PLAN-v2 X1, kể cả chữ trên app và product.md, thử A13."
+- **P0 (mở phiên điều phối):** "Phiên điều phối A006 bản 2: đọc `apps/A006-sundaysort/PLAN-v2.md` và `research.md`, chạy P0
+  phần còn lại (thử 4 app + Driversnote/TripLog trên giả lập, tải mẫu CSV bridging/FreeAgent, nhóm Facebook tài xế van).
+  Câu hỏi đưa popup, có cả phần thu phí; đề xuất giá Pro." — kèm nội dung 5 luồng Reddit Phương dán.
+- **P1:** "Chạy P1: grill tôi bằng popup chỗ còn mờ (gồm X2 cách tính xe, X5 NFC/Android Auto, X6 giới hạn bản miễn phí),
+  rồi viết lại toàn bộ `product.md` v2 cho Claude Design vẽ lại cả app. Xong gửi tôi duyệt."
+- **P2 (gửi Claude Design kèm product.md v2):** "Vẽ Hi-Fi toàn bộ app Sunday Sort theo product.md đính kèm, iPhone 390×844 +
+  Android 360×800, sáng + tối, một tay, đọc được ngoài nắng, chữ 200% không vỡ. Xuất HTML từng màn + tokens." → bỏ vào
+  `design/` rồi nhắn phiên điều phối: "Mockup v2 đã ở design/, chạy P3."
+- **P3 → P4:** "Chạy P3, xong tự mở 5 phiên S1–S5 cho P4, báo tôi từng phiên xong."
+- **P5 → P6:** "Gộp 5 nhánh, chạy P5 (test toàn bộ + chạy xe thật), rồi P6."
+- **Phiên dài (~150k token):** "/dong-phien" → phiên mới: "Tiếp tục điều phối A006 bản 2 từ CHECKLIST + PLAN-v2.md."

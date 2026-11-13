@@ -64,7 +64,34 @@ MTD chưa kiểm với hãng thật.
 danh mục tự đặt vs dựng sẵn; bảng đối thủ product.md §1 sai vài ô (Hurdlr có AI, Speed Tagging, gộp chuyến; bản free có
 Start/Stop + báo cáo) → không quảng bá Start/Stop và xuất file miễn phí là khác biệt.
 
+## 6. Khảo sát nốt K1–K8 (2026-11-13, chiều)
+| # | Việc | Kết quả |
+|---|---|---|
+| K1 | Reddit 5 luồng | ❌ bị chặn cả trình duyệt Claude, WebSearch và Claude in Chrome → Phương mở link, dán nội dung |
+| K2 | Thử app đối thủ | ⏳ P0 (trình giả lập, Phương đăng nhập) |
+| K3 | Giá UK | MileIQ ≈ £95/năm · Driversnote ≈ £96/năm · TripLog ≈ £51–60/năm · FlashTax (nộp MTD) £39.99/năm · MileClear, PocketReceipt miễn phí. **Chưa app nào bán mua 1 lần** |
+| K4 | Đánh giá UK | Play web **không lọc theo nước** (bản GB trùng bản US) → các con số mục 2–3 là toàn cầu. App Store UK chỉ xem được ~10 đánh giá/app |
+| K4b | Đối thủ UK thật | App Store UK: **Driversnote 7.658 đánh giá (4,76★)** — lớn nhất, không có trong file ý tưởng · MileIQ 3.958 · TripLog 259 · Everlance 55 · Hurdlr gần như không có |
+| K5 | Driversnote (Play, 940 đánh giá, đọc hết 389 lời chê) | Chê #1: **giấu giới hạn 15 chuyến/tháng**, £8–9/tháng, khoá dữ liệu khi ngừng trả; 2 người: "sẽ mua nếu là phí một lần". Tự động: iBeacon chập chờn, hụt 2 dặm đầu, chạy tiếp 30–45 phút sau khi dừng, cả ngày thành 1 chuyến, bắt "luôn cho phép vị trí", tốn pin (47). Người dùng đề xuất: **Bluetooth sẵn của xe làm công tắc, thẻ NFC, Start/Stop từ Android Auto/CarPlay**. Nhắc: chê cả "không báo khi cả tuần không có chuyến" lẫn email "9 ngày chưa ghi" → nhắc trong app, tắt được. Khen: hỗ trợ tận tình, dễ dùng, logbook đúng HMRC |
+| K6 | Mẫu CSV MTD | Bridging nhận **tổng theo danh mục HMRC**. Gov.uk: báo cáo quý **cộng dồn từ 6/4** tới hết kỳ (hạn 7/8, 7/11, 7/2, 7/5); có kỳ theo lịch (từ 1/4), chọn trước lần nộp đầu. Chưa tải file mẫu |
+| K7 | Tài xế van thật | ❌ codforum.org.uk + Reddit bị chặn; nhóm Facebook cần Phương đăng nhập |
+| K8 | Từ khoá UK (Google Trends 12 tháng, tương đối) | "receipt app" 63 · "self assessment app" 17 · "expense tracker" 14 · "mileage tracker" 8 · "courier expenses" ~0; tăng: "best mileage tracker app" +200%, "business expense tracker app" +150% → trang store dẫn bằng **receipt** |
+
+## 7. Lỗi / thiếu mới phát hiện
+| # | Việc | Bằng chứng | Mức |
+|---|---|---|---|
+| X1 | **Mức dặm UK 2026/27 = 55p** cho 10.000 dặm đầu (áp dụng lùi từ 6/4/2026), 25p sau đó. A006 để cứng 45p | gov.uk policy paper 17/6/2026; `src/domain/mileage.ts:26`; chữ "(45p / 25p)" trên app | 🔴 sửa trước store |
+| X2 | Mức dặm cố định **đã gồm** xăng, bảo hiểm, sửa xe, MOT, thuế đường; chỉ đỗ xe / cầu đường / congestion tính riêng; chọn rồi giữ cho chiếc xe đó. Báo cáo A006 hiện **cả** tổng các khoản xe **lẫn** tiền theo dặm → dễ khai trùng | gov.uk Simplified expenses: Vehicles; BIM75005 | 🔴 bản 2: cài đặt "Cách tính xe: theo dặm / chi phí thật" |
+| X3 | CSV MTD phải cộng dồn từ đầu năm + chọn kỳ chuẩn / theo lịch | gov.uk Send quarterly updates | 🟠 S5 |
+| X4 | Đối thủ UK chính là Driversnote + nhiều app UK mới miễn phí | App Store UK | 🟠 product.md v2 §1 |
+| X5 | Bật chuyến không chạm máy: thêm thẻ NFC, Android Auto / CarPlay | người dùng Driversnote; luật UK cấm cầm máy khi lái | 🟡 hỏi ở P1 |
+| X6 | Nói rõ giới hạn bản miễn phí ngay lúc cài | 149 lời chê Driversnote | 🟠 P1 (onboarding + màn Pro) |
+
 ## Nguồn
+- gov.uk: [Tăng mức dặm 17/6/2026](https://www.gov.uk/government/publications/increase-to-approved-mileage-allowance-payments-amaps-and-self-employed-simplified-mileage-rates) ·
+  [Simplified expenses: Vehicles](https://www.gov.uk/simpler-income-tax-simplified-expenses/vehicles-) · [BIM75005](https://www.gov.uk/hmrc-internal-manuals/business-income-manual/bim75005) ·
+  [Send quarterly updates](https://www.gov.uk/guidance/use-making-tax-digital-for-income-tax/send-quarterly-updates)
+- [MileIQ UK pricing](https://mileiq.com/en-gb/pricing) · [Driversnote (Play)](https://play.google.com/store/apps/details?id=com.driversnote.driversnote) · [MileClear – so sánh UK](https://mileclear.com/best-mileage-tracker-app-uk) · [FlashTax](https://flashtax.uk/tools/expense-tracker)
 - gov.uk: [Create digital records](https://www.gov.uk/guidance/use-making-tax-digital-for-income-tax/create-digital-records) ·
   [MTD cho sole trader](https://www.gov.uk/government/publications/extension-of-making-tax-digital-for-income-tax-self-assessment-to-sole-traders-and-landlords/making-tax-digital-for-income-tax-self-assessment-for-sole-traders-and-landlords)
 - [Monzo – Free MTD software](https://monzo.com/business-banking/features/making-tax-digital) · [NerdWallet – FreeAgent](https://www.nerdwallet.com/uk/accounting-software/freeagent) ·
