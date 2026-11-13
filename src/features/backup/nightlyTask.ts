@@ -3,6 +3,7 @@ import * as TaskManager from 'expo-task-manager';
 
 import { db } from '@/db/client';
 import { getSettings } from '@/db/settingsRepo';
+import { syncProNotices } from '@/features/pro/notices';
 import { generateDueRecurring } from '@/features/recurring/repo';
 import { notifyBackupNeedsTap, syncReminders } from '@/features/settings/notifications';
 
@@ -30,7 +31,11 @@ export async function runBackgroundWork(now = Date.now(), opts: { notifyOnFail: 
   } catch (e) {
     console.warn('[nightly] reminders failed', e);
   }
-  // TODO(merge S5): syncProNotices(db)
+  try {
+    await syncProNotices(db, now);
+  } catch (e) {
+    console.warn('[nightly] pro notices failed', e);
+  }
   const s = getSettings(db);
   if (!nightlyDue(s, now)) return null;
   const r = await runNightlyNow({ now });

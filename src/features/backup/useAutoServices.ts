@@ -4,6 +4,8 @@ import { AppState } from 'react-native';
 
 import { db } from '@/db/client';
 import { getSettings } from '@/db/settingsRepo';
+import { syncProNotices } from '@/features/pro/notices';
+import { refreshProFromStore } from '@/features/pro/store';
 import { generateDueRecurring } from '@/features/recurring/repo';
 import { BACKUP_TAP_URL, ensureSortChannel, NUDGE_URL, SORT_URL, syncReminders } from '@/features/settings/notifications';
 import { router } from '@/services/router';
@@ -16,7 +18,7 @@ import { registerNightlyTask } from './nightlyTask';
 
 const HOUR = 3_600_000;
 /** Notifications this hook opens (other sessions' notifications route themselves). */
-const OWN_URLS: string[] = [SORT_URL, NUDGE_URL, BACKUP_TAP_URL];
+const OWN_URLS: string[] = [SORT_URL, NUDGE_URL, BACKUP_TAP_URL, '/pro'];
 
 /** Foreground catch-up: recurring entries, and a nightly backup the background task missed for > 26 h (iOS mostly). */
 function catchUp() {
@@ -42,16 +44,19 @@ export function useAutoServices() {
   // Any change to entries may change "unsorted" and "logged today".
   const entriesVersion = useLive(() => Date.now(), [], ['entries']);
   const { reminder: r, dailyNudge: n, workHours: w } = settings;
-  const key = JSON.stringify([r, n, w.on, w.days, settings.onboarded]);
+  const key = JSON.stringify([r, n, w.on, w.days, settings.onboarded, settings.notify]);
 
   useEffect(() => {
     ensureSortChannel().catch(() => {});
     registerNightlyTask().catch(() => {});
     catchUp();
+    // S5: re-check the subscription with the store (≤ every 12 h, only phones that ever subscribed).
+    refreshProFromStore().catch(() => {});
     const sub = AppState.addEventListener('change', (st) => {
       if (st === 'active') {
         catchUp();
         syncReminders(db).catch(() => {});
+        refreshProFromStore().catch(() => {});
       }
     });
     return () => sub.remove();
@@ -61,7 +66,7 @@ export function useAutoServices() {
     // Debounce bursts (sorting a whole week changes the count many times).
     const id = setTimeout(() => {
       syncReminders(db).catch(() => {});
-      // TODO(merge S5): syncProNotices(db) — and add settings.notify to `key` so S-20 switches reschedule it.
+      syncProNotices(db).catch(() => {});
     }, 800);
     return () => clearTimeout(id);
   }, [key, entriesVersion]);
