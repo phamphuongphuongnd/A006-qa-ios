@@ -75,3 +75,6 @@
 - [x] **B-24** 🟡 Cỡ chữ 200%: số tiền vẫn hiện đủ nhưng nhiều nhãn bị cắt / vỡ: Ghi nhanh "Expens/e" xuống dòng, 3 nhãn
   "Photo · Tap for Personal · Note" dính thành một dòng; "This week ·..", "Kwik Fi..", "Unsorte..", "Add ma..", "Busine.."; badge số
   đè icon tab Sort — case TC-195 — tái hiện: Cỡ chữ lớn nhất (font_scale 2.0) → các tab. — commit: `41b6c0e`, thẻ Sort cuộn `4a66c4e` — thử A13 font_scale 2.0: Home nhãn xuống dòng gọn, badge không đè icon, Ghi nhanh không vỡ chữ, Miles nút xếp 2 hàng, thẻ Sort cuộn được tới Edit/Split/Skip
+- [x] **B-25** 🟡 Khôi phục từ file sao lưu xong, Settings vẫn ghi "Backup & restore · Never" và Home hiện "You haven't backed up yet" —
+  trạng thái sao lưu lấy theo nội dung file (đóng gói trước khi bấm "Yes, saved") — tìm thấy khi thử lại B-10/B-12 (2026-11-13) —
+  tái hiện: Back up now → lưu lên Drive → Yes, saved → Restore from backup → chọn file vừa lưu → Replace → Settings: "Never". — commit: `fix B-25` (khôi phục đặt Last backup = ngày tạo file, bỏ hoãn banner) — thử A13: khôi phục file Drive 13/11 → "Last backup 13 Nov 2026, 09:03", Home hết banner, dữ liệu nguyên (8,478 mi)

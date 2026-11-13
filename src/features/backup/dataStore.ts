@@ -32,8 +32,13 @@ function clearAll(tx: AppDb) {
   tx.delete(settings).run();
 }
 
-/** Restore: one transaction, so a failure leaves the phone's data untouched. */
-export function replaceAllData(db: AppDb, t: BackupTables): void {
+/**
+ * Restore: one transaction, so a failure leaves the phone's data untouched.
+ * `backupCreatedAt` (B-25): the restored data is exactly what that backup file holds, so "Last backup" becomes the
+ * file's date (or the file's own lastBackupAt if later) instead of whatever the settings said when it was packed —
+ * otherwise a phone restored a minute ago greets the user with "You haven't backed up yet".
+ */
+export function replaceAllData(db: AppDb, t: BackupTables, backupCreatedAt?: number): void {
   db.transaction((tx) => {
     const d = tx as unknown as AppDb;
     clearAll(d);
@@ -44,6 +49,18 @@ export function replaceAllData(db: AppDb, t: BackupTables): void {
     // Point ids are autoincrement; keep them so the order of a track is preserved.
     insertChunks(t.tripPoints, (p) => d.insert(tripPoints).values(p).run());
     insertChunks(t.settings, (p) => d.insert(settings).values(p).run());
+    if (backupCreatedAt !== undefined) {
+      const raw = t.settings.find((r) => r.key === 'lastBackupAt')?.value;
+      const packed = raw ? (JSON.parse(raw) as number | null) : null;
+      const last = Math.max(packed ?? 0, backupCreatedAt);
+      for (const [key, value] of [
+        ['lastBackupAt', last],
+        ['backupBannerSnoozedUntil', null],
+      ] as const) {
+        const json = JSON.stringify(value);
+        d.insert(settings).values({ key, value: json }).onConflictDoUpdate({ target: settings.key, set: { value: json } }).run();
+      }
+    }
   });
 }
 

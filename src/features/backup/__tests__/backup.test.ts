@@ -97,6 +97,28 @@ describe('backup round trip', () => {
     expect(listReceipts(dst, shell.id).map((r) => r.filePath).sort()).toEqual(['a1.jpg', 'b2.jpg']);
   });
 
+  it('B-25: a restore sets "Last backup" to the backup file date', async () => {
+    const src = makeTestDb();
+    seed(src);
+    updateSettings(src, { lastBackupAt: null, backupBannerSnoozedUntil: at(2026, 11, 20) });
+    const fileDate = at(2026, 11, 13, 9);
+    const res = unpackBackup((await pack(snapshotTables(src), [], fileDate)).bytes);
+    if (!res.ok) throw new Error(res.error);
+
+    const dst = makeTestDb();
+    replaceAllData(dst, res.manifest.tables, res.manifest.createdAt);
+    expect(getSettings(dst).lastBackupAt).toBe(fileDate);
+    expect(getSettings(dst).backupBannerSnoozedUntil).toBeNull();
+    expect(getSettings(dst).region).toBe('UK');
+
+    // A file whose own lastBackupAt is later than its creation date keeps the later one.
+    updateSettings(src, { lastBackupAt: at(2026, 11, 14) });
+    const res2 = unpackBackup((await pack(snapshotTables(src), [], fileDate)).bytes);
+    if (!res2.ok) throw new Error(res2.error);
+    replaceAllData(dst, res2.manifest.tables, res2.manifest.createdAt);
+    expect(getSettings(dst).lastBackupAt).toBe(at(2026, 11, 14));
+  });
+
   it('leaves out photos missing on disk and still restores', async () => {
     const db = makeTestDb();
     seed(db);

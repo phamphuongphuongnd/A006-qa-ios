@@ -82,7 +82,7 @@ export function restoreFromBackup(manifest: BackupManifest, photos: Map<string, 
       f.create({ overwrite: true });
       f.writeSync(bytes);
     }
-    replaceAllData(db, manifest.tables);
+    replaceAllData(db, manifest.tables, manifest.createdAt);
   } catch (e) {
     if (staging.exists) staging.delete();
     throw e;
