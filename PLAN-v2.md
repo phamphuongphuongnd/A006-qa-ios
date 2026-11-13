@@ -36,6 +36,22 @@
 - Cam kết: không quảng cáo; không khoá / xoá dữ liệu khi hết hạn; không tự gia hạn mà không báo trước.
 - **Phương tạo** sản phẩm trong Play Console / App Store Connect (không tự tạo khoá / tài khoản).
 
+## Quyết định P1 (grill 2026-11-13)
+| # | Việc | Chốt |
+|---|---|---|
+| P1-1 | Dò chuyến | Cảm biến chuyển động + **nhận diện hoạt động** (lái xe / đi bộ / xe đạp) tự phát hiện bắt đầu & kết thúc; Bluetooth van / cắm sạc là tín hiệu thêm. Ngắt Bluetooth **không** dừng chuyến. Dừng (đi bộ / đứng yên) **< 20 phút** gộp vào cùng **chuyến ca**; giờ kết thúc lùi về lúc xe dừng thật. Settings đổi được 10 / 20 / 45 phút (Claude chốt số, Phương không chọn) |
+| P1-2 | Gắn Work/Personal cho chuyến tự động | Chắc (tuyến/nơi quen, nối Bluetooth van, trong giờ làm) → tự gắn; không chắc → **Unsorted**, hiện ở màn Sort cùng khoản tiền; vuốt ở Miles vẫn được |
+| P1-3 | Giờ làm (Work hours) | Có, **mặc định tắt**; bật thì ngoài giờ vẫn ghi nhưng tự gắn Personal |
+| P1-4 | Ảnh bản miễn phí | **20 ảnh / tháng** (đếm cả nhiều ảnh/khoản), đếm ngược hiện rõ; hết lượt vẫn lưu khoản; ảnh đã có không bao giờ khoá |
+| P1-5 | Dùng thử | **Trong app** (store bắt thẻ), 7 ngày, **bắt đầu khi người dùng bấm** "Try Pro free for 7 days" lúc chạm tính năng Pro đầu tiên |
+| P1-6 | Cách tính xe (X2) | **Hỏi ở onboarding** (UK + US): Mileage rate / Actual costs / Not sure (= tạm theo dặm, báo cáo nhắc); đổi trong Settings |
+| P1-7 | Sao lưu tự động | **Mỗi đêm nếu có đổi, giữ 7 bản**; ghi lỗi 3 lần liền → thẻ cảnh báo Home |
+| P1-8 | File MTD (Pro) | **Cả 4**: MTD summary CSV (15 danh mục HMRC, cộng dồn, Standard/Calendar) · sổ chi tiết cột MTDsorted · FreeAgent Expenses + Mileage CSV · **.xlsx đúng mẫu MTDsorted** (P3 cài thư viện .xlsx) |
+| P1-9 | Khoản lặp lại | Tự tạo đúng hạn, **đã phân loại**, nhãn "Recurring", không vào hàng chờ; màn Done ghi số khoản đã thêm |
+| P1-10 | Luật tự phân loại | Cùng nơi bán → cùng danh mục 3 lần liền → **hỏi 1 chạm** "Always sort … as …?"; khoản tự xếp bỏ qua hàng chờ nhưng có "N auto-sorted — Review"; màn Rules trong Settings |
+| P1-11 | Báo gia hạn | Thông báo + thẻ Home **7 ngày trước** ngày gia hạn, nút "Manage subscription"; màn Pro luôn ghi ngày gia hạn |
+| P1-12 | OCR | Chụp khi ô trống → tự điền số tiền / nơi bán / ngày (tô "From receipt"); đã gõ số khác → chip "Receipt says £… — Use"; không đọc được thì im lặng |
+
 ## Các phase
 | Phase | Ai | Việc | Ra gì | Xong khi |
 |---|---|---|---|---|
