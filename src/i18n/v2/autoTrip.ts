@@ -116,8 +116,8 @@ export const autoTrip = {
   nfcIos3: 'Add action "Open URLs" with the link below',
   nfcIos4: 'Turn off "Ask before running"',
   nfcCopy: 'Copy link',
-  nfcCopied: 'Link copied',
   nfcStarted: 'Trip started',
+  nfcSaved: 'Trip saved · {distance}',
   // Miles / S-07c
   menu: 'More',
   markedWork: 'Marked as work',
