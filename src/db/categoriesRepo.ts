@@ -1,6 +1,6 @@
 import { and, asc, count, eq, max } from 'drizzle-orm';
 
-import { DEFAULT_CATEGORIES } from '@/domain/categories';
+import { DEFAULT_CATEGORIES, mapTaxLine } from '@/domain/categories';
 import type { EntryType, Region } from '@/domain/types';
 
 import { categories, entries, type CategoryRow } from './schema';
@@ -110,10 +110,14 @@ export function applyRegionToCategories(db: AppDb, from: Region, to: Region): vo
   const toByKey = new Map(DEFAULT_CATEGORIES[to].map((c) => [c.key, c]));
   db.transaction((tx) => {
     for (const c of tx.select().from(categories).all()) {
-      if (!c.key) continue;
-      const target = toByKey.get(c.key);
-      if (!target) continue;
-      const renamed = c.name !== fromByKey.get(c.key)?.name;
+      const target = c.key ? toByKey.get(c.key) : undefined;
+      if (!target) {
+        // Custom category: move to the new form's equivalent line (B-33).
+        const taxLine = mapTaxLine(c.taxLine, c.type, from, to);
+        if (taxLine !== c.taxLine) tx.update(categories).set({ taxLine }).where(eq(categories.id, c.id)).run();
+        continue;
+      }
+      const renamed = c.name !== fromByKey.get(target.key)?.name;
       tx.update(categories)
         .set({ taxLine: target.taxLine, name: renamed ? c.name : target.name })
         .where(eq(categories.id, c.id))

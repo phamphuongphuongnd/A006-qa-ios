@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { categoryUsage, createCategory, deleteCategory, updateCategory, type CategoryError } from '@/db/categoriesRepo';
 import { db } from '@/db/client';
 import type { CategoryRow } from '@/db/schema';
-import { TAX_LINES } from '@/domain/categories';
+import { defaultTaxLine, taxLinesFor } from '@/domain/categories';
 import type { EntryType, Region } from '@/domain/types';
 import { t } from '@/i18n';
 import { fonts, radius, useTheme } from '@/theme';
@@ -35,12 +35,13 @@ export function CategoryEditor({
 }) {
   const { colors } = useTheme();
   const snack = useSnackbar();
-  const lines = TAX_LINES[region];
   const [type, setType] = useState<EntryType>(category?.type ?? initialType);
+  // Only lines of the category's own type: an expense can't land on "Turnover" (B-31).
+  const lines = taxLinesFor(region, type);
   const [name, setName] = useState(category?.name ?? '');
   const [icon, setIcon] = useState(category?.icon ?? (initialType === 'income' ? 'banknote' : 'receipt'));
   const [color, setColor] = useState(category?.color ?? CATEGORY_COLORS[initialType === 'income' ? 3 : 0]);
-  const [taxLine, setTaxLine] = useState(category?.taxLine ?? defaultLine(lines, initialType));
+  const [taxLine, setTaxLine] = useState(category?.taxLine ?? defaultTaxLine(region, initialType));
   const [hidden, setHidden] = useState(category?.hidden ?? false);
   const [error, setError] = useState<string | null>(null);
   const [allIcons, setAllIcons] = useState(category ? ICON_NAMES.indexOf(category.icon) >= ICONS_COLLAPSED : false);
@@ -91,7 +92,7 @@ export function CategoryEditor({
           value={type}
           onChange={(v) => {
             setType(v);
-            setTaxLine(defaultLine(lines, v));
+            setTaxLine(defaultTaxLine(region, v));
             setError(null);
           }}
         />
@@ -233,11 +234,6 @@ export function CategoryEditor({
   );
 }
 
-function defaultLine(lines: string[], type: EntryType): string {
-  // Income lines come first in TAX_LINES; "Other …" lines are the safe defaults.
-  if (type === 'income') return lines.find((l) => /Other (business )?income/i.test(l)) ?? lines[0];
-  return lines.find((l) => /Other (allowable business )?expenses/i.test(l)) ?? lines[lines.length - 1];
-}
 
 const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

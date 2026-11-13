@@ -79,6 +79,19 @@ describe('categories', () => {
     expect(all.find((c) => c.key === 'repairs')).toMatchObject({ name: 'Vehicle repairs', taxLine: 'Schedule C: Line 21 Repairs and maintenance' });
     expect(all.find((c) => c.key === 'phone')).toMatchObject({ name: 'My phone', taxLine: 'Schedule C: Line 25 Utilities' });
   });
+  it('moves custom categories to the new region form too (B-33)', () => {
+    createCategory(db, { type: 'expense', name: 'Van cleaning', icon: 'x', color: '#000', taxLine: 'SA103: Car, van and travel expenses' });
+    createCategory(db, { type: 'expense', name: 'Bank fees', icon: 'x', color: '#000', taxLine: 'SA103: Bank, credit card and other financial charges' });
+    createCategory(db, { type: 'income', name: 'Referral', icon: 'x', color: '#000', taxLine: 'SA103: Turnover' });
+    applyRegionToCategories(db, 'UK', 'US');
+    const line = (name: string) => listCategories(db, { includeHidden: true }).find((c) => c.name === name)?.taxLine;
+    expect(line('Van cleaning')).toBe('Schedule C: Line 9 Car and truck expenses');
+    expect(line('Bank fees')).toBe('Schedule C: Line 27a Other expenses');
+    expect(line('Referral')).toBe('Schedule C: Line 1 Gross receipts');
+    applyRegionToCategories(db, 'US', 'UK');
+    expect(line('Van cleaning')).toBe('SA103: Car, van and travel expenses');
+    expect(line('Referral')).toBe('SA103: Turnover');
+  });
 });
 
 describe('entries', () => {

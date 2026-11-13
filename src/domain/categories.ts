@@ -99,6 +99,42 @@ export const TAX_LINES: Record<Region, string[]> = {
   ],
 };
 
+/** The income lines of each region's form; every other line is an expense line. */
+const INCOME_LINES: Record<Region, string[]> = {
+  UK: ['SA103: Turnover', 'SA103: Other business income'],
+  US: ['Schedule C: Line 1 Gross receipts', 'Schedule C: Line 6 Other income'],
+};
+
+/** Lines a category of this type may use: income lines for income, expense lines for expenses (B-31). */
+export function taxLinesFor(region: Region, type: EntryType): string[] {
+  const income = INCOME_LINES[region];
+  return TAX_LINES[region].filter((l) => income.includes(l) === (type === 'income'));
+}
+
+/** Safe default line for a new category: "Other business income" / "Other … expenses". */
+export function defaultTaxLine(region: Region, type: EntryType): string {
+  const key: CategoryKey = type === 'income' ? 'other_income' : 'other_expense';
+  return DEFAULT_CATEGORIES[region].find((c) => c.key === key)!.taxLine;
+}
+
+/**
+ * Line for a category when the region changes (B-33). Custom categories follow the built-ins that shared their old
+ * line (most common new line wins, e.g. "Car, van and travel" → "Line 9 Car and truck"); otherwise the type's default.
+ */
+export function mapTaxLine(line: string, type: EntryType, from: Region, to: Region): string {
+  if (taxLinesFor(to, type).includes(line)) return line;
+  const toByKey = new Map(DEFAULT_CATEGORIES[to].map((c) => [c.key, c.taxLine]));
+  const counts = new Map<string, number>();
+  for (const c of DEFAULT_CATEGORIES[from]) {
+    if (c.taxLine !== line || c.type !== type) continue;
+    const target = toByKey.get(c.key);
+    if (target) counts.set(target, (counts.get(target) ?? 0) + 1);
+  }
+  let best: string | null = null;
+  for (const [l, n] of counts) if (best === null || n > counts.get(best)!) best = l;
+  return best ?? defaultTaxLine(to, type);
+}
+
 /**
  * Built-in keywords per category key (lower case). Multi-word phrases match on the normalised note.
  * Region-neutral on purpose: a UK driver may still buy at a US-named chain and vice versa.
