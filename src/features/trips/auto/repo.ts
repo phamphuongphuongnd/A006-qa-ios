@@ -2,13 +2,13 @@
 // Lives here (not db/tripsRepo.ts) so S1 owns it; reads the shared tables only through these functions.
 import { and, asc, desc, eq, gt, gte, lt, sql } from 'drizzle-orm';
 
-import { entries, knownRoutes, settings, tripPoints, trips, tripSegments, tripStops } from '@/db/schema';
+import { entries, settings, tripPoints, trips, tripSegments, tripStops } from '@/db/schema';
 import type { TripRow, TripSegmentRow, TripStopRow } from '@/db/schema';
 import { newId, type AppDb } from '@/db/types';
 import { milesToMeters, trackDistance } from '@/domain/mileage';
 import type { Scope, TripClassifiedBy, TripScope } from '@/domain/types';
 
-import { matchRoute, type KnownRoute } from './classify';
+import { recordRoute } from './routes';
 import { findStops, type SegmentRange } from './stops';
 
 // ---------------- Small key–value store (settings table, keys the typed settings repo ignores) ----------------
@@ -150,8 +150,6 @@ export function editGpsTrip(db: AppDb, tripId: string, e: TripEdit) {
 
 // ---------------- Scope & known routes ----------------
 
-export const listKnownRoutes = (db: AppDb): KnownRoute[] => db.select().from(knownRoutes).all();
-
 function endsOf(db: AppDb, tripId: string) {
   const first = db.select().from(tripPoints).where(eq(tripPoints.tripId, tripId)).orderBy(asc(tripPoints.ts)).get();
   const last = db.select().from(tripPoints).where(eq(tripPoints.tripId, tripId)).orderBy(desc(tripPoints.ts)).get();
@@ -159,47 +157,18 @@ function endsOf(db: AppDb, tripId: string) {
 }
 
 /**
- * The driver sorted a GPS trip: remember its start / end as a known route (P1-2). Same scope again → count + 1;
- * the other scope → the route starts over with the new scope.
- */
-export function learnRoute(db: AppDb, tripId: string, scope: Scope, now = Date.now()) {
-  const ends = endsOf(db, tripId);
-  if (!ends) return;
-  const r = matchRoute(listKnownRoutes(db), ends.start, ends.end);
-  if (!r) {
-    db.insert(knownRoutes)
-      .values({
-        id: newId(),
-        startLat: ends.start.lat,
-        startLng: ends.start.lng,
-        endLat: ends.end.lat,
-        endLng: ends.end.lng,
-        scope,
-        count: 1,
-        lastSeenAt: now,
-      })
-      .run();
-    return;
-  }
-  db.update(knownRoutes)
-    .set(r.scope === scope ? { count: r.count + 1, lastSeenAt: now } : { scope, count: 1, lastSeenAt: now })
-    .where(eq(knownRoutes.id, r.id))
-    .run();
-}
-
-/**
  * Set a trip's Work / Personal by hand (Miles swipe, Trip detail, Sort). Returns the previous scope + reason for Undo.
- * GPS trips teach the known routes.
+ * Finished GPS trips teach the known routes (S2, via ./routes).
  */
 export function setTripScope(db: AppDb, tripId: string, scope: Scope): { scope: TripScope; classifiedBy: TripClassifiedBy | null } | null {
   const t = db.select().from(trips).where(eq(trips.id, tripId)).get();
   if (!t) return null;
   db.update(trips).set({ scope, classifiedBy: t.source === 'gps' ? 'user' : t.classifiedBy }).where(eq(trips.id, tripId)).run();
-  if (t.source === 'gps' && t.status === 'done' && t.scope !== scope) learnRoute(db, tripId, scope);
+  if (t.source === 'gps' && t.status === 'done' && t.scope !== scope) recordRoute(db, tripId, scope);
   return { scope: t.scope, classifiedBy: t.classifiedBy };
 }
 
-/** Undo of `setTripScope` (the learned route count stays: harmless, and the next sort corrects it). */
+/** Undo of `setTripScope` (a recorded route stays: harmless, the next sort corrects it). */
 export function restoreTripScope(db: AppDb, tripId: string, prev: { scope: TripScope; classifiedBy: TripClassifiedBy | null }) {
   db.update(trips).set(prev).where(eq(trips.id, tripId)).run();
 }

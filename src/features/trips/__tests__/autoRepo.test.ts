@@ -8,7 +8,6 @@ import {
   editGpsTrip,
   finishAutoTrip,
   getKV,
-  listKnownRoutes,
   listSegments,
   listStops,
   restoreTripScope,
@@ -81,19 +80,12 @@ describe('auto trip repository', () => {
     expect(() => editGpsTrip(db, trip.id, { endedAt: T0 })).toThrow();
   });
 
-  it('sorting by hand learns a known route; Undo restores the scope', () => {
+  it('sorting by hand marks the driver choice; Undo restores the scope', () => {
     const db = makeTestDb();
     const trip = seedTrip(db);
     const prev = setTripScope(db, trip.id, 'personal')!;
     expect(prev.scope).toBe('unsorted');
-    expect(getTrip(db, trip.id)?.classifiedBy).toBe('user');
-    expect(listKnownRoutes(db)).toMatchObject([{ scope: 'personal', count: 1 }]);
-    const again = seedTrip(db);
-    setTripScope(db, again.id, 'personal');
-    expect(listKnownRoutes(db)).toMatchObject([{ count: 2 }]);
-    const other = seedTrip(db);
-    setTripScope(db, other.id, 'work');
-    expect(listKnownRoutes(db)).toMatchObject([{ scope: 'work', count: 1 }]);
+    expect(getTrip(db, trip.id)).toMatchObject({ scope: 'personal', classifiedBy: 'user' });
     restoreTripScope(db, trip.id, prev);
     expect(getTrip(db, trip.id)?.scope).toBe('unsorted');
   });

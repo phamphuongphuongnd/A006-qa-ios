@@ -15,7 +15,8 @@ import { classifyTrip } from './classify';
 import { INITIAL_ENGINE_STATE, MIN_AUTO_TRIP_M, step, type EngineSignal, type EngineState } from './engine';
 import { configureNative, hasActivityPermission, isCharging, isSamsung, nativeHealth, readSignals, scheduleWake, setTransitions } from './native';
 import { notifyAutoPaused, notifyAutoSaved, notifyProEnded, notifySilent, notifyStartFailed, notifyStill } from './notifyAuto';
-import { finishAutoTrip, getKV, listKnownRoutes, setKV, tripEnds } from './repo';
+import { finishAutoTrip, getKV, setKV, tripEnds } from './repo';
+import { routeScopeFor } from './routes';
 import { syncTripActive } from './sync';
 
 const KEY_ENGINE = 'engine';
@@ -119,11 +120,9 @@ async function endAutoTrip(at: number, state: EngineState) {
   const c = classifyTrip({
     startedAt: done.startedAt,
     endedAt: done.endedAt ?? at,
-    start: ends?.start ?? null,
-    end: ends?.end ?? null,
+    routeScope: ends ? routeScopeFor(db, ends.start, ends.end) : null,
     vanConnected: state.vanConnectedAt >= done.startedAt - 10 * 60_000 && state.vanConnectedAt <= (done.endedAt ?? at),
     workHours: s.workHours,
-    routes: listKnownRoutes(db),
   });
   finishAutoTrip(db, done.id, c.scope, c.by);
   refreshWidgets().catch(() => {});

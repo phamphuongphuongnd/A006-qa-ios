@@ -1,4 +1,4 @@
-import { classifyTrip, inWorkHours, matchRoute, type WorkHoursCfg } from '../auto/classify';
+import { classifyTrip, inWorkHours, type WorkHoursCfg } from '../auto/classify';
 import {
   type Activity,
   DRIVING_STALE_MS,
@@ -131,7 +131,7 @@ describe('auto trip engine — shift trip and end', () => {
 
 describe('classify automatic trips', () => {
   const wh: WorkHoursCfg = { on: true, days: [1, 2, 3, 4, 5], startMin: 7 * 60, endMin: 19 * 60 };
-  const base = { startedAt: T0, endedAt: T0 + 60 * MIN, start: null, end: null, vanConnected: false, workHours: { ...wh, on: false }, routes: [] };
+  const base = { startedAt: T0, endedAt: T0 + 60 * MIN, routeScope: null, vanConnected: false, workHours: { ...wh, on: false } };
 
   it('work hours: inside, outside, weekend, overnight', () => {
     expect(inWorkHours(wh, T0)).toBe(true);
@@ -151,14 +151,10 @@ describe('classify automatic trips', () => {
     expect(classifyTrip({ ...base, workHours: wh, vanConnected: true, startedAt: sat })).toEqual({ scope: 'personal', by: 'work_hours' });
   });
 
-  it('known route decides from 3 sorts, either direction', () => {
-    const a = { lat: 51.5, lng: -0.1 };
-    const b = { lat: 51.6, lng: -0.2 };
-    const route = { id: 'r', startLat: a.lat, startLng: a.lng, endLat: b.lat, endLng: b.lng, scope: 'personal' as const, count: 3 };
-    expect(matchRoute([route], { lat: 51.5005, lng: -0.1 }, b)).toBe(route);
-    expect(classifyTrip({ ...base, start: b, end: a, routes: [route], vanConnected: true })).toEqual({ scope: 'personal', by: 'route' });
-    expect(classifyTrip({ ...base, start: a, end: b, routes: [{ ...route, count: 2 }] })).toEqual({ scope: 'unsorted', by: null });
-    expect(matchRoute([route], { lat: 52, lng: 0 }, b)).toBeUndefined();
+  it('a known route (S2) wins over van Bluetooth, but not over work hours', () => {
+    expect(classifyTrip({ ...base, routeScope: 'personal', vanConnected: true })).toEqual({ scope: 'personal', by: 'route' });
+    const sat = new Date(2026, 10, 14, 9, 0).getTime();
+    expect(classifyTrip({ ...base, routeScope: 'work', workHours: wh, startedAt: sat })).toEqual({ scope: 'personal', by: 'work_hours' });
   });
 });
 
