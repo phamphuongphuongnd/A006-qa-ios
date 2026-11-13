@@ -44,7 +44,7 @@
 - [ ] F-19 Widget iOS (nhỏ, vừa) — build EAS
 - [x] F-20 Settings (S-15) + xoá toàn bộ dữ liệu
 - [x] F-21 Not tax advice (S-16) + icon app + splash
-- [ ] Toàn bộ test xanh + dev build chạy trên Galaxy A13 → gộp `dev` → `main`
+- [x] Toàn bộ test xanh + dev build chạy trên Galaxy A13 → gộp `dev` → `main` (2026-11-13, `de880c6`)
 
 ## Bước 4 — Test toàn bộ (chỉ ghi lỗi)
 - [x] Viết TESTCASES.md (100–200 case) — 200 case
@@ -52,8 +52,8 @@
 
 ## Bước 5 — Sửa lỗi
 - [x] Tăng tốc app (Phương báo chậm): truy vấn chỉ chạy lại theo bảng, Entries FlashList + tải theo trang, SQL thô, vuốt dòng nhẹ, Miles vẽ dần, icon/font khởi động — `073f86a`..`be72dc6`
-- [ ] Sửa hết BUGS.md (tick trong BUGS.md)
-- [ ] Chạy lại toàn bộ test + case từng lỗi → gộp `dev` → `main`
+- [x] Sửa hết BUGS.md (tick trong BUGS.md) — 24/24
+- [x] Chạy lại toàn bộ test + case từng lỗi → gộp `dev` → `main` — 162 test, lint, tsc xanh; mỗi lỗi đã thử A13 khi tick; `main` = `de880c6`
 
 ## Bước 6 — Kiểm cuối & lên store
 - [ ] Giả lập người dùng thật trên máy, xem giao diện từng màn
