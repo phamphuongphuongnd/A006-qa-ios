@@ -13,9 +13,6 @@ import android.os.BatteryManager
 import android.os.Build
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.ActivityRecognition
-import com.google.android.gms.location.ActivityTransition
-import com.google.android.gms.location.ActivityTransitionRequest
-import com.google.android.gms.location.DetectedActivity
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.modules.Module
@@ -28,7 +25,8 @@ import expo.modules.kotlin.modules.ModuleDefinition
  * - van Bluetooth ACL connect / disconnect → EventLog (manifest receiver, works with the app closed)
  * - charging state; power connect / disconnect only while a runtime receiver is alive (Android 8+ limit)
  * - bonded Bluetooth devices for the "Van Bluetooth" picker
- * S1 adds: starting / ending trips from these signals, re-registering after reboot (BOOT_COMPLETED).
+ * S1: receivers wake the JS task "SundayTripDetect" (TripDetectTaskService) for start / end decisions,
+ * BootReceiver registers transitions again after reboot / update, AutoConfig keeps what they need.
  */
 class TripDetectModule : Module() {
   private val context: Context
@@ -44,9 +42,7 @@ class TripDetectModule : Module() {
     return PendingIntent.getBroadcast(context, requestCode, intent, flags)
   }
 
-  private fun hasActivityPermission(): Boolean =
-    Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
-      ContextCompat.checkSelfPermission(context, Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_GRANTED
+  private fun hasActivityPermission(): Boolean = AutoConfig.hasActivityPermission(context)
 
   private fun unregisterPower() {
     powerReceiver?.let { runCatching { context.unregisterReceiver(it) } }
@@ -70,30 +66,58 @@ class TripDetectModule : Module() {
     Function("hasActivityPermission") { hasActivityPermission() }
 
     AsyncFunction("startTransitions") { promise: Promise ->
-      if (!hasActivityPermission()) {
-        promise.reject("E_PERMISSION", "Activity recognition not granted", null)
-        return@AsyncFunction
+      AutoConfig.registerTransitions(context) { e ->
+        if (e == null) promise.resolve(null) else promise.reject("E_TRANSITIONS", e.message, e)
       }
-      val types = listOf(DetectedActivity.IN_VEHICLE, DetectedActivity.WALKING, DetectedActivity.ON_BICYCLE, DetectedActivity.STILL)
-      val transitions = types.flatMap { t ->
-        listOf(ActivityTransition.ACTIVITY_TRANSITION_ENTER, ActivityTransition.ACTIVITY_TRANSITION_EXIT).map { tr ->
-          ActivityTransition.Builder().setActivityType(t).setActivityTransition(tr).build()
-        }
-      }
-      ActivityRecognition.getClient(context)
-        .requestActivityTransitionUpdates(ActivityTransitionRequest(transitions), pendingIntent(REQ_TRANSITIONS))
-        .addOnSuccessListener { promise.resolve(null) }
-        .addOnFailureListener { promise.reject("E_TRANSITIONS", it.message, it) }
     }
 
     AsyncFunction("stopTransitions") { promise: Promise ->
-      if (!hasActivityPermission()) {
-        promise.resolve(null)
-        return@AsyncFunction
+      AutoConfig.unregisterTransitions(context) { promise.resolve(null) }
+    }
+
+    /** S1: what the receivers need while JS is dead (see AutoConfig). */
+    Function("configure") { cfg: Map<String, Any?> -> AutoConfig.write(context, cfg) }
+
+    Function("scheduleWake") { atMs: Double -> AutoConfig.scheduleWake(context, atMs.toLong()) }
+
+    Function("cancelWake") { AutoConfig.cancelWake(context) }
+
+    /**
+     * Can automatic trips work right now? `restricted`: the system or the user stopped background work (Samsung
+     * "sleeping apps" / background restriction) → "paused". `batteryOptimized`: not "Unrestricted" → may miss drives.
+     */
+    Function("health") {
+      val c = context
+      val am = c.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+      val pm = c.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+      val bucket = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        (c.getSystemService(Context.USAGE_STATS_SERVICE) as android.app.usage.UsageStatsManager).appStandbyBucket
+      } else 10
+      val bgLocation = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
+        ContextCompat.checkSelfPermission(c, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
+      mapOf(
+        "activityPermission" to hasActivityPermission(),
+        "backgroundLocation" to bgLocation,
+        "batteryOptimized" to !pm.isIgnoringBatteryOptimizations(c.packageName),
+        "backgroundRestricted" to (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && am.isBackgroundRestricted),
+        // 45 = STANDBY_BUCKET_RESTRICTED (Android 12+; Samsung "deep sleeping").
+        "restrictedBucket" to (bucket >= 45),
+        "registered" to (AutoConfig.registeredAt(context) > 0),
+        "manufacturer" to Build.MANUFACTURER.lowercase(),
+      )
+    }
+
+    /** Dev builds: feed a fake signal through the same path as a real one (S-07d dev tools, adb tests). */
+    Function("simulate") { kind: String, activity: String?, transition: String?, address: String? ->
+      val extra = mutableMapOf<String, Any?>()
+      if (activity != null) {
+        extra["activity"] = activity
+        extra["transition"] = transition ?: "enter"
+        extra["eventAt"] = System.currentTimeMillis()
       }
-      ActivityRecognition.getClient(context)
-        .removeActivityTransitionUpdates(pendingIntent(REQ_TRANSITIONS))
-        .addOnCompleteListener { promise.resolve(null) }
+      if (address != null) extra["address"] = address
+      EventLog.add(context, kind, extra)
+      AutoConfig.kick(context, "simulate", foreground = false)
     }
 
     /** Raw activity results about every `intervalMs` (device checks / tuning; battery-heavy, keep it short). */
@@ -163,7 +187,6 @@ class TripDetectModule : Module() {
   }
 
   companion object {
-    private const val REQ_TRANSITIONS = 4101
     private const val REQ_SAMPLES = 4102
   }
 }

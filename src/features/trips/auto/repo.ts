@@ -1,0 +1,240 @@
+// DB access for automatic trips, Stops, Personal segments, hand edits and known routes (S1).
+// Lives here (not db/tripsRepo.ts) so S1 owns it; reads the shared tables only through these functions.
+import { and, asc, desc, eq, gt, gte, lt, sql } from 'drizzle-orm';
+
+import { entries, knownRoutes, settings, tripPoints, trips, tripSegments, tripStops } from '@/db/schema';
+import type { TripRow, TripSegmentRow, TripStopRow } from '@/db/schema';
+import { newId, type AppDb } from '@/db/types';
+import { milesToMeters, trackDistance } from '@/domain/mileage';
+import type { Scope, TripClassifiedBy, TripScope } from '@/domain/types';
+
+import { matchRoute, type KnownRoute } from './classify';
+import { findStops, type SegmentRange } from './stops';
+
+// ---------------- Small key–value store (settings table, keys the typed settings repo ignores) ----------------
+
+const KV_PREFIX = 's1.';
+
+export function getKV<T>(db: AppDb, key: string, fallback: T): T {
+  const row = db.select().from(settings).where(eq(settings.key, KV_PREFIX + key)).get();
+  if (!row) return fallback;
+  try {
+    return JSON.parse(row.value) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+export function setKV(db: AppDb, key: string, value: unknown) {
+  const json = JSON.stringify(value);
+  db.insert(settings)
+    .values({ key: KV_PREFIX + key, value: json })
+    .onConflictDoUpdate({ target: settings.key, set: { value: json } })
+    .run();
+}
+
+// ---------------- Stops & segments ----------------
+
+export const listStops = (db: AppDb, tripId: string): TripStopRow[] =>
+  db.select().from(tripStops).where(eq(tripStops.tripId, tripId)).orderBy(asc(tripStops.startedAt)).all();
+
+export const listSegments = (db: AppDb, tripId: string): TripSegmentRow[] =>
+  db.select().from(tripSegments).where(eq(tripSegments.tripId, tripId)).orderBy(asc(tripSegments.fromTs)).all();
+
+const pointsOf = (db: AppDb, tripId: string) =>
+  db.select().from(tripPoints).where(eq(tripPoints.tripId, tripId)).orderBy(asc(tripPoints.ts)).all();
+
+/** Recompute a finished trip's Stops from its track (trip end, after a split). */
+export function rebuildStops(db: AppDb, tripId: string) {
+  const stops = findStops(pointsOf(db, tripId));
+  db.transaction((tx) => {
+    tx.delete(tripStops).where(eq(tripStops.tripId, tripId)).run();
+    for (const s of stops) tx.insert(tripStops).values({ id: newId(), tripId, ...s }).run();
+  });
+}
+
+/**
+ * Tap "Mark the drive to / from this stop as personal": adds that Personal segment, or removes it when the same
+ * range is already Personal. Returns the segment added (for Undo) or null when one was removed.
+ */
+export function toggleSegment(db: AppDb, tripId: string, range: SegmentRange): TripSegmentRow | null {
+  const existing = listSegments(db, tripId).find((s) => s.fromTs === range.fromTs && s.toTs === range.toTs);
+  if (existing) {
+    db.delete(tripSegments).where(eq(tripSegments.id, existing.id)).run();
+    return null;
+  }
+  const pts = pointsOf(db, tripId).filter((p) => p.ts >= range.fromTs && p.ts <= range.toTs);
+  const row: TripSegmentRow = { id: newId(), tripId, ...range, distanceM: trackDistance(pts), scope: 'personal' };
+  db.insert(tripSegments).values(row).run();
+  return row;
+}
+
+export const deleteSegment = (db: AppDb, id: string) => db.delete(tripSegments).where(eq(tripSegments.id, id)).run();
+export const restoreSegment = (db: AppDb, row: TripSegmentRow) => db.insert(tripSegments).values(row).onConflictDoNothing().run();
+
+/**
+ * "Split the trip here": points after `at` (the end of a Stop) move to a new trip with the same scope / purpose.
+ * Returns the new trip id, or null when one side would be empty.
+ */
+export function splitTripAt(db: AppDb, tripId: string, at: number): string | null {
+  const trip = db.select().from(trips).where(eq(trips.id, tripId)).get();
+  if (!trip || trip.source !== 'gps' || trip.status !== 'done') return null;
+  const pts = pointsOf(db, tripId);
+  const before = pts.filter((p) => p.ts < at);
+  const after = pts.filter((p) => p.ts >= at);
+  if (before.length < 2 || after.length < 2) return null;
+  const id = newId();
+  db.transaction((tx) => {
+    tx.insert(trips)
+      .values({
+        ...trip,
+        id,
+        startedAt: after[0].ts,
+        endedAt: trip.endedAt,
+        distanceM: trackDistance(after),
+        lastPointAt: after[after.length - 1].ts,
+        originalStartedAt: null,
+        originalEndedAt: null,
+        originalDistanceM: null,
+      })
+      .run();
+    tx.update(tripPoints).set({ tripId: id }).where(and(eq(tripPoints.tripId, tripId), gte(tripPoints.ts, at))).run();
+    tx.update(trips)
+      .set({ endedAt: before[before.length - 1].ts, distanceM: trackDistance(before), lastPointAt: before[before.length - 1].ts })
+      .where(eq(trips.id, tripId))
+      .run();
+    tx.update(tripSegments).set({ tripId: id }).where(and(eq(tripSegments.tripId, tripId), gte(tripSegments.fromTs, at))).run();
+  });
+  rebuildStops(db, tripId);
+  rebuildStops(db, id);
+  return id;
+}
+
+// ---------------- Hand edits (Q19) ----------------
+
+export interface TripEdit {
+  startedAt?: number;
+  endedAt?: number;
+  /** Miles typed by the driver; when only the times change, distance follows the track inside the new times. */
+  miles?: number;
+}
+
+/** Edit a GPS trip's start / end / miles. Keeps the recorded values once ("Recorded: …") and marks it Edited. */
+export function editGpsTrip(db: AppDb, tripId: string, e: TripEdit) {
+  const t = db.select().from(trips).where(eq(trips.id, tripId)).get();
+  if (!t || t.source !== 'gps') return;
+  const startedAt = e.startedAt ?? t.startedAt;
+  const endedAt = e.endedAt ?? t.endedAt ?? t.startedAt;
+  if (endedAt < startedAt) throw new Error('trip end before start');
+  let distanceM = t.distanceM;
+  if (e.miles !== undefined) {
+    if (!(e.miles > 0)) throw new Error('trip distance must be positive');
+    distanceM = milesToMeters(e.miles);
+  } else if (e.startedAt !== undefined || e.endedAt !== undefined) {
+    const pts = pointsOf(db, tripId).filter((p) => p.ts >= startedAt && p.ts <= endedAt);
+    if (pts.length >= 2) distanceM = trackDistance(pts);
+  }
+  db.update(trips)
+    .set({
+      startedAt,
+      endedAt,
+      distanceM,
+      edited: true,
+      originalStartedAt: t.originalStartedAt ?? t.startedAt,
+      originalEndedAt: t.originalEndedAt ?? t.endedAt,
+      originalDistanceM: t.originalDistanceM ?? t.distanceM,
+    })
+    .where(eq(trips.id, tripId))
+    .run();
+}
+
+// ---------------- Scope & known routes ----------------
+
+export const listKnownRoutes = (db: AppDb): KnownRoute[] => db.select().from(knownRoutes).all();
+
+function endsOf(db: AppDb, tripId: string) {
+  const first = db.select().from(tripPoints).where(eq(tripPoints.tripId, tripId)).orderBy(asc(tripPoints.ts)).get();
+  const last = db.select().from(tripPoints).where(eq(tripPoints.tripId, tripId)).orderBy(desc(tripPoints.ts)).get();
+  return first && last ? { start: { lat: first.lat, lng: first.lng }, end: { lat: last.lat, lng: last.lng } } : null;
+}
+
+/**
+ * The driver sorted a GPS trip: remember its start / end as a known route (P1-2). Same scope again → count + 1;
+ * the other scope → the route starts over with the new scope.
+ */
+export function learnRoute(db: AppDb, tripId: string, scope: Scope, now = Date.now()) {
+  const ends = endsOf(db, tripId);
+  if (!ends) return;
+  const r = matchRoute(listKnownRoutes(db), ends.start, ends.end);
+  if (!r) {
+    db.insert(knownRoutes)
+      .values({
+        id: newId(),
+        startLat: ends.start.lat,
+        startLng: ends.start.lng,
+        endLat: ends.end.lat,
+        endLng: ends.end.lng,
+        scope,
+        count: 1,
+        lastSeenAt: now,
+      })
+      .run();
+    return;
+  }
+  db.update(knownRoutes)
+    .set(r.scope === scope ? { count: r.count + 1, lastSeenAt: now } : { scope, count: 1, lastSeenAt: now })
+    .where(eq(knownRoutes.id, r.id))
+    .run();
+}
+
+/**
+ * Set a trip's Work / Personal by hand (Miles swipe, Trip detail, Sort). Returns the previous scope + reason for Undo.
+ * GPS trips teach the known routes.
+ */
+export function setTripScope(db: AppDb, tripId: string, scope: Scope): { scope: TripScope; classifiedBy: TripClassifiedBy | null } | null {
+  const t = db.select().from(trips).where(eq(trips.id, tripId)).get();
+  if (!t) return null;
+  db.update(trips).set({ scope, classifiedBy: t.source === 'gps' ? 'user' : t.classifiedBy }).where(eq(trips.id, tripId)).run();
+  if (t.source === 'gps' && t.status === 'done' && t.scope !== scope) learnRoute(db, tripId, scope);
+  return { scope: t.scope, classifiedBy: t.classifiedBy };
+}
+
+/** Undo of `setTripScope` (the learned route count stays: harmless, and the next sort corrects it). */
+export function restoreTripScope(db: AppDb, tripId: string, prev: { scope: TripScope; classifiedBy: TripClassifiedBy | null }) {
+  db.update(trips).set(prev).where(eq(trips.id, tripId)).run();
+}
+
+/** Finished automatic trip → scope, reason, Stops. */
+export function finishAutoTrip(db: AppDb, tripId: string, scope: TripScope, by: TripClassifiedBy | null) {
+  db.update(trips).set({ scope, classifiedBy: by }).where(eq(trips.id, tripId)).run();
+  rebuildStops(db, tripId);
+}
+
+export const tripEnds = endsOf;
+
+// ---------------- Missed-trip inputs ----------------
+
+/** Entry and trip times from `from` (missed-trip days). */
+export function activityTimes(db: AppDb, from: number, to: number) {
+  const entryTimes = db
+    .select({ at: entries.occurredAt })
+    .from(entries)
+    .where(and(gte(entries.occurredAt, from), lt(entries.occurredAt, to)))
+    .all()
+    .map((r) => r.at);
+  const tripTimes = db
+    .select({ at: trips.startedAt })
+    .from(trips)
+    .where(and(gte(trips.startedAt, from), lt(trips.startedAt, to)))
+    .all()
+    .map((r) => r.at);
+  return { entryTimes, tripTimes };
+}
+
+/** Automatic trips saved since `at` (S-07d status line "last trip …"). */
+export const lastAutoTrip = (db: AppDb): TripRow | undefined =>
+  db.select().from(trips).where(and(eq(trips.startedBy, 'auto'), gt(trips.distanceM, 0))).orderBy(desc(trips.startedAt)).get();
+
+/** Unsorted automatic trips (count for Miles / Sort). */
+export const unsortedTripCount = (db: AppDb): number =>
+  Number(db.select({ n: sql<number>`COUNT(*)` }).from(trips).where(eq(trips.scope, 'unsorted')).get()?.n ?? 0);

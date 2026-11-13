@@ -5,12 +5,15 @@
 import type { LocationObject } from 'expo-location';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
+import { AppRegistry, AppState } from 'react-native';
 
 import { db } from '@/db/client';
 import { getSettings } from '@/db/settingsRepo';
 import { appendPoints, getActiveTrip, getTrip } from '@/db/tripsRepo';
 import { refreshWidgets } from '@/features/widgets/refresh';
 
+import { TRIP_DETECT_TASK } from '../../../modules/trip-detect';
+import { processAutoSignals, syncAutoDetection } from './auto/runner';
 import { TRIP_TASK } from './constants';
 import { formatDistance } from './format';
 import { cancelLongTripReminder, clearTripNotification, showTripNotification } from './notify';
@@ -52,4 +55,24 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
     lastWidgetAt = now;
     refreshWidgets().catch(() => {});
   }
+});
+
+/**
+ * S1 automatic trips: the native receivers (activity transitions, van Bluetooth, wake alarms) run this headless task
+ * — also with the app closed or locked — to start / end trips. See features/trips/auto/runner.ts.
+ */
+AppRegistry.registerHeadlessTask(TRIP_DETECT_TASK, () => async () => {
+  await syncAutoDetection();
+  await processAutoSignals();
+});
+
+// App start and every return to the foreground: re-check Pro / permissions / registrations and catch up on signals.
+const onActive = () => {
+  syncAutoDetection()
+    .then(() => processAutoSignals())
+    .catch(() => {});
+};
+if (AppState.currentState === 'active') setTimeout(onActive, 2_000);
+AppState.addEventListener('change', (s) => {
+  if (s === 'active') onActive();
 });
