@@ -130,8 +130,11 @@ describe('export documents', () => {
       report,
       months: monthlySeries(entries, p, { now: at(2026, 11, 12) }),
       includePersonal: false,
-      mileage: { workMiles: 42.3, estimateMinor: 1904, ratesNote: 'at HMRC rates (45p / 25p)' },
-      trips: [],
+      mileage: { workMiles: 8477.5, estimateMinor: 381489, ratesNote: 'at HMRC rates (45p / 25p)' },
+      trips: [
+        { startedAt: at(2026, 11, 13), miles: 2.9, scope: 'work' as const, purpose: '', source: 'gps' as const },
+        { startedAt: at(2026, 4, 6), miles: 1070, scope: 'personal' as const, purpose: 'Depot', source: 'manual' as const },
+      ],
       entries: entries.map((e) => ({ ...e, categoryName: e.categoryId ? 'Delivery income' : null })),
       generatedAt: at(2026, 11, 12),
     });
@@ -141,5 +144,13 @@ describe('export documents', () => {
     expect(html).not.toContain('<b>Shell</b>');
     expect(html).toContain('6 Oct – 5 Nov 2026');
     expect(html).toContain("1 entry in this period isn't sorted yet");
+    // B-26: readable labels, thousands separators, oldest trip first, header repeats on each printed page.
+    expect(html).toContain('8,478 business miles');
+    expect(html).toContain('<td>1,070.0</td>');
+    expect(html).toContain('<td>Personal</td>');
+    expect(html).toContain('<td>Expense</td>');
+    expect(html).not.toMatch(/<td>(work|personal|income|expense)<\/td>/);
+    expect(html.indexOf('2026-04-06')).toBeLessThan(html.indexOf('2026-11-13'));
+    expect(html).toContain('<thead><tr><th>Date</th>');
   });
 });

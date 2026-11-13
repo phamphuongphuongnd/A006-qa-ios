@@ -168,7 +168,7 @@
 | TC-157 | F-15 | Mở sheet Export | Kỳ theo Reports; "Include personal entries" tắt; ghi chú MTD (chỉ UK) | M | ✅ |
 | TC-158 | F-15 | Có khoản chưa phân loại → Export | "N entries aren't sorted…" · "Export anyway" / "Sort first" | M | ✅ |
 | TC-159 | F-15 | Export đủ 5 loại; huỷ share sheet | "Preparing your files…" → share sheet đủ file; huỷ thì về app không lỗi | M | ✅ 1 file ZIP chứa các file đã chọn; huỷ share về app không lỗi |
-| TC-160 | F-15 | Mở PDF trên máy | Chân trang không đè chữ, nhiều trang đúng | M | ⏭ share sheet không có đích lưu cục bộ để mở PDF; chân trang PDF đã thử trên máy phiên trước |
+| TC-160 | F-15 | Mở PDF trên máy | Chân trang không đè chữ, nhiều trang đúng | M | ✅ 2026-11-13 mở bằng In (xem trước) trên A13: 6 trang, chân trang không đè, số khớp Reports; lỗi trình bày → B-26 (đã sửa) |
 | TC-161 | F-16 | Sao lưu → khôi phục vào máy trống | Đủ mọi bảng + ảnh | T backup | ✅ |
 | TC-162 | F-16 | Ảnh mất trên ổ / tên ảnh lạ | Bỏ qua ảnh đó, vẫn khôi phục | T backup | ✅ |
 | TC-163 | F-16 | Huỷ giữa chừng | Dừng, không hỏng dữ liệu | T backup | ✅ |

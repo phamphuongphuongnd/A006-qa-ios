@@ -78,3 +78,7 @@
 - [x] **B-25** 🟡 Khôi phục từ file sao lưu xong, Settings vẫn ghi "Backup & restore · Never" và Home hiện "You haven't backed up yet" —
   trạng thái sao lưu lấy theo nội dung file (đóng gói trước khi bấm "Yes, saved") — tìm thấy khi thử lại B-10/B-12 (2026-11-13) —
   tái hiện: Back up now → lưu lên Drive → Yes, saved → Restore from backup → chọn file vừa lưu → Replace → Settings: "Never". — commit: `fix B-25` (khôi phục đặt Last backup = ngày tạo file, bỏ hoãn banner) — thử A13: khôi phục file Drive 13/11 → "Last backup 13 Nov 2026, 09:03", Home hết banner, dữ liệu nguyên (8,478 mi)
+- [x] **B-26** 🟡 PDF báo cáo (mở xem thật lần đầu 2026-11-13, bản in xem trước trên A13): số liệu đúng (cộng tay khớp từng bảng)
+  nhưng trình bày thô — bảng sang trang không lặp tiêu đề cột; chữ "work"/"expense"/"income" viết thường; "8477.5 business miles"
+  không dấu phẩy (app ghi 8,478); nhật ký dặm mới→cũ còn bảng khoản cũ→mới; cột Note căn phải — case TC-160 —
+  tái hiện: Export → chỉ PDF → Export anyway → share sheet → In (xem trước). — commit: `fix B-26` (thead lặp mỗi trang, nhãn Work/Personal/Income/Expense, số dặm có dấu phẩy, nhật ký dặm cũ→mới, căn cột) — thử A13 bản xem trước 6 trang: tiêu đề cột lặp ở trang 2–6, "8,478 business miles", số liệu không đổi

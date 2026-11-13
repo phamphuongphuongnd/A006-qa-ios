@@ -1,4 +1,5 @@
 import { isoDate } from '@/domain/csv';
+import { formatDistanceNumber } from '@/domain/mileage';
 import { formatMoney, toDecimalString } from '@/domain/money';
 import type { Report } from '@/domain/report';
 import type { Currency, EntryType, Minor, Scope } from '@/domain/types';
@@ -77,7 +78,10 @@ export function reportHtml(p: PdfInput): string {
   const e = escapeHtml;
   const r = p.report;
   const row = (cells: string[], cls = '') => `<tr${cls ? ` class="${cls}"` : ''}>${cells.map((c) => `<td>${c}</td>`).join('')}</tr>`;
-  const head = (cells: string[]) => `<tr>${cells.map((c) => `<th>${e(c)}</th>`).join('')}</tr>`;
+  // <thead>: Android's print WebView repeats it at the top of every page a long table runs onto (B-26).
+  const head = (cells: string[]) => `<thead><tr>${cells.map((c) => `<th>${e(c)}</th>`).join('')}</tr></thead>`;
+  const scopeLabel = (s: Scope) => (s === 'work' ? 'Work' : 'Personal');
+  const typeLabel = (t: EntryType) => (t === 'income' ? 'Income' : 'Expense');
 
   const byCat = (type: EntryType) =>
     r.byCategory
@@ -97,7 +101,7 @@ export function reportHtml(p: PdfInput): string {
     `<h2>Income by category</h2><table>${head(['Category', 'Total'])}${byCat('income') || row(['—', m(0)])}</table>`,
     `<h2>Expenses by category</h2><table>${head(['Category', 'Total'])}${byCat('expense') || row(['—', m(0)])}</table>`,
     `<h2>By tax form line</h2><table>${head(['Line', 'Type', 'Total'])}${r.byTaxLine
-      .map((l) => row([e(l.taxLine), l.type === 'income' ? 'Income' : 'Expense', m(l.totalMinor)]))
+      .map((l) => row([e(l.taxLine), typeLabel(l.type), m(l.totalMinor)]))
       .join('')}</table>`,
     p.months.length
       ? `<h2>By month</h2><table>${head(['Month', 'Income', 'Expenses', 'Net'])}${p.months
@@ -105,15 +109,17 @@ export function reportHtml(p: PdfInput): string {
           .join('')}</table>`
       : '',
     p.mileage
-      ? `<h2>Mileage</h2><p>${p.mileage.workMiles.toFixed(1)} business miles · ≈ ${m(p.mileage.estimateMinor)} ${e(p.mileage.ratesNote)}</p><p class="note">Estimate only — not tax advice.</p>`
+      ? `<h2>Mileage</h2><p>${formatDistanceNumber(p.mileage.workMiles)} business miles · ≈ ${m(p.mileage.estimateMinor)} ${e(p.mileage.ratesNote)}</p><p class="note">Estimate only — not tax advice.</p>`
       : '',
     p.trips.length
-      ? `<h2>Mileage log</h2><table>${head(['Date', 'Miles', 'Work/Personal', 'Purpose', 'Source'])}${p.trips
-          .map((t) => row([isoDate(t.startedAt), t.miles.toFixed(1), t.scope, e(t.purpose), t.source === 'gps' ? 'GPS' : 'Manual']))
+      ? `<h2>Mileage log</h2><table class="trips">${head(['Date', 'Miles', 'Work/Personal', 'Purpose', 'Source'])}${[...p.trips]
+          // Oldest first, like the entries table below.
+          .sort((a, b) => a.startedAt - b.startedAt)
+          .map((t) => row([isoDate(t.startedAt), formatDistanceNumber(t.miles, 1), scopeLabel(t.scope), e(t.purpose), t.source === 'gps' ? 'GPS' : 'Manual']))
           .join('')}</table>`
       : '',
-    `<h2>Entries</h2><table>${head(['Date', 'Type', 'Amount', 'Category', 'Work/Personal', 'Note'])}${p.entries
-      .map((x) => row([isoDate(x.occurredAt), x.type, m(x.amountMinor), e(x.categoryName ?? 'Unsorted'), x.scope, e(x.note)]))
+    `<h2>Entries</h2><table class="entries">${head(['Date', 'Type', 'Amount', 'Category', 'Work/Personal', 'Note'])}${p.entries
+      .map((x) => row([isoDate(x.occurredAt), typeLabel(x.type), m(x.amountMinor), e(x.categoryName ?? 'Unsorted'), scopeLabel(x.scope), e(x.note)]))
       .join('')}</table>`,
   ];
 
@@ -126,7 +132,9 @@ h1 { font-size: 20pt; margin: 0 0 4px; } h2 { font-size: 13pt; margin: 18px 0 6p
 table { width: 100%; border-collapse: collapse; } th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #E6E0D5; }
 th { font-size: 9pt; text-transform: uppercase; color: #465062; } td:last-child, th:last-child { text-align: right; }
 tr.total td { font-weight: 700; border-top: 2px solid #161D2B; }
-tr { page-break-inside: avoid; }
+tr { page-break-inside: avoid; } thead { display: table-header-group; }
+table.trips td:last-child, table.trips th:last-child, table.entries td:last-child, table.entries th:last-child { text-align: left; }
+table.trips td:nth-child(2), table.trips th:nth-child(2), table.entries td:nth-child(3), table.entries th:nth-child(3) { text-align: right; }
 .foot { margin-top: 24px; text-align: center; font-size: 8pt; color: #5F6877; }
 </style></head><body>
 ${sections.join('\n')}
