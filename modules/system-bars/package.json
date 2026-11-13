@@ -1,0 +1,6 @@
+{
+  "name": "system-bars",
+  "version": "1.0.0",
+  "private": true,
+  "description": "B-12: set the Android navigation bar appearance through the platform WindowInsetsController"
+}

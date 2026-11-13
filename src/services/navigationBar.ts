@@ -4,22 +4,19 @@ import { AppState, Platform } from 'react-native';
 
 /**
  * B-12: Android nav bar buttons/scrim follow the in-app theme (dark app on a light phone kept a white bar).
- * The declarative <NavigationBar> did not change the window on a Galaxy A13, so set it imperatively on every theme
- * change and whenever the app comes back to the foreground; failures are logged (logcat tag ReactNativeJS).
+ * expo-navigation-bar's setStyle only flips the legacy flag on Android 11–14, which the system ignores once the
+ * window's appearance is "controlled", so use the local module `modules/system-bars` (platform
+ * setSystemBarsAppearance). Re-applied on every theme change and whenever the app comes back to the foreground.
  */
-// The library's NavigationBar.setStyle caches the last style and skips the native call when it thinks nothing
-// changed, so talk to the native module directly.
-const native = requireOptionalNativeModule<{ setStyle(style: 'light' | 'dark'): Promise<void> }>('ExpoNavigationBar');
+const native = requireOptionalNativeModule<{ setNavigationBarLight(light: boolean): Promise<void> }>(
+  'SundaySystemBars',
+);
 
 export function useNavigationBarStyle(dark: boolean) {
   useEffect(() => {
-    if (Platform.OS !== 'android') return;
+    if (Platform.OS !== 'android' || !native) return;
     const apply = () => {
-      if (!native) {
-        console.warn('[navbar] ExpoNavigationBar native module missing');
-        return;
-      }
-      native.setStyle(dark ? 'light' : 'dark').catch((e: unknown) => console.warn('[navbar] setStyle failed', e));
+      native.setNavigationBarLight(!dark).catch((e: unknown) => console.warn('[navbar] set failed', e));
     };
     apply();
     // Activity recreation / returning from another app can reset the window's appearance.

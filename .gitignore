@@ -49,3 +49,6 @@ example
 
 # Windows
 Thumbs.db
+
+# local Expo modules build output
+modules/*/android/build/
