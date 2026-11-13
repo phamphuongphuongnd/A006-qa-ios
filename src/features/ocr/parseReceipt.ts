@@ -96,13 +96,21 @@ function rowAmounts(line: Line, lines: Line[]): Money[] {
     const next = lines[line.i + 1];
     return next && !/[A-Z]{3}/.test(next.up.replace(/GBP|USD|EUR/g, '')) ? moneyIn(next.text) : [];
   }
+  // A hand-held photo is a few degrees off: the figure's row may sit up to about a line height away. Take the figure
+  // whose centre is nearest this label's row, never one nearer to another row's label.
   const cy = line.box.y + line.box.h / 2;
-  const tol = Math.max(line.box.h * 0.7, 0.01);
+  const tol = Math.max(line.box.h, 0.01);
   const right = line.box.x + line.box.w * 0.5;
-  return lines
-    .filter((o) => o !== line && o.box && Math.abs(o.box.y + o.box.h / 2 - cy) <= tol && o.box.x >= right)
-    .sort((a, b) => a.box!.x - b.box!.x)
-    .flatMap((o) => moneyIn(o.text).map((m) => ({ ...m, at: m.at + 1000 * (o.box!.x + 1) })));
+  const dy = (o: Line) => Math.abs(o.box!.y + o.box!.h / 2 - cy);
+  const near = lines
+    .filter((o) => o !== line && o.box && dy(o) <= tol && o.box.x >= right && moneyIn(o.text).length > 0)
+    .sort((a, b) => dy(a) - dy(b))[0];
+  if (!near) return [];
+  const nearCy = near.box!.y + near.box!.h / 2;
+  const closerLabel = lines.some(
+    (o) => o !== line && o.box && o.box.x < right && !moneyIn(o.text).length && Math.abs(o.box.y + o.box.h / 2 - nearCy) < dy(near) * 0.6,
+  );
+  return closerLabel ? [] : moneyIn(near.text);
 }
 
 const rightmost = (ms: Money[]) => ms.reduce((a, b) => (b.at > a.at ? b : a));

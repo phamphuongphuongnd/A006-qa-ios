@@ -9,7 +9,7 @@ const day = (y: number, m: number, d: number) => new Date(y, m - 1, d).getTime()
  * Builds OCR output the way ML Kit returns a till roll: each row is a left label and an optional right-hand figure
  * in a separate block, blocks out of order (all right column first) to prove the parser re-sorts by position.
  */
-function receipt(rows: (string | [string, string])[], opts: { h?: number; shuffle?: boolean; noBoxes?: boolean } = {}): RawOcr {
+function receipt(rows: (string | [string, string])[], opts: { h?: number; shuffle?: boolean; noBoxes?: boolean; tilt?: number } = {}): RawOcr {
   const h = opts.h ?? 0.025;
   const left: RawLine[] = [];
   const right: RawLine[] = [];
@@ -17,7 +17,7 @@ function receipt(rows: (string | [string, string])[], opts: { h?: number; shuffl
     const y = 0.05 + i * 0.04;
     const [l, rt] = typeof r === 'string' ? [r, null] : r;
     left.push({ text: l, box: opts.noBoxes ? null : { x: 0.08, y, w: 0.4, h } });
-    if (rt) right.push({ text: rt, box: opts.noBoxes ? null : { x: 0.7, y: y + 0.002, w: 0.2, h } });
+    if (rt) right.push({ text: rt, box: opts.noBoxes ? null : { x: 0.7, y: y + (opts.tilt ?? 0.002), w: 0.2, h } });
   });
   const lines = opts.noBoxes
     ? rows.flatMap((r) => (typeof r === 'string' ? [{ text: r, box: null }] : [{ text: r[0], box: null }, { text: r[1], box: null }]))
@@ -66,6 +66,13 @@ describe('parseReceipt — UK fuel receipt', () => {
     expect(r.date).toBe(day(2026, 11, 9));
     expect(r.minutes).toBe(6 * 60 + 12);
     expect(r.confidence.date).toBeGreaterThanOrEqual(OCR_FILL_CONFIDENCE);
+  });
+
+  it('pairs labels with figures on a tilted photo (figure column ~half a line lower)', () => {
+    const tilted = receipt([['SUBTOTAL', '£60.33'], ['VAT @ 20%', '£12.07'], ['TOTAL', '£72.40'], ['CARD', '£72.40'], 'SHELL'], { tilt: 0.018 });
+    expect(parseReceipt(tilted, 'UK', NOW).amountMinor).toBe(7240);
+    const up = receipt([['SUBTOTAL', '£60.33'], ['TOTAL', '£72.40'], ['CASH', '£80.00']], { tilt: -0.018 });
+    expect(parseReceipt(up, 'UK', NOW).amountMinor).toBe(7240);
   });
 
   it('works without boxes (line order only)', () => {
