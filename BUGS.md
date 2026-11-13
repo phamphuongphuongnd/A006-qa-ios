@@ -54,7 +54,7 @@
 - [x] **B-19** 🟠 APK khai quyền thừa so với app không mạng / không push: `SYSTEM_ALERT_WINDOW`, `READ/WRITE_EXTERNAL_STORAGE`,
   `com.google.android.c2dm.permission.RECEIVE`, `INTERNET` (+ quyền badge của nhiều hãng launcher) — ảnh hưởng Data safety và
   câu "dữ liệu không rời máy" — case TC-198 — tái hiện: `aapt2 dump permissions app-release.apk`. — commit: `38be276` — aapt2: APK release chỉ còn vị trí, dịch vụ nền, thông báo, sinh trắc, camera, wake lock
-- [ ] **B-20** 🟠 Cuộn Entries giật với dữ liệu lớn (1.515 khoản): 50% khung hình 61–101 ms, 90% 150–250 ms trên Galaxy A13
+- [x] **B-20** 🟠 Cuộn Entries giật với dữ liệu lớn (1.515 khoản): 50% khung hình 61–101 ms, 90% 150–250 ms trên Galaxy A13
   (mượt cần ≤ 16 ms) — case TC-175 — tái hiện: khôi phục file 1.500 khoản → Entries → vuốt nhanh; `dumpsys gfxinfo`. — commit: `be72dc6` (nhánh perf/speed) — **cải thiện, chưa đạt ≤ 16 ms**:
   đo lại cùng cách (1.515 khoản, 20 lần vuốt): khung hình vẽ được 98 → 413, giật 20% → 11%, p90 89 → 44 ms, p99 200 → 61 ms.
   Đo lại 2026-11-12 tối (bản `9a50703`, cùng cách): 1.052 khung hình, giật 7,9%, p50 36 ms, p90 48 ms, p95 57 ms — máy đang bật chữ tương phản cao (vẽ chữ chậm hơn). Chờ Phương: chấp nhận hay làm đợt tối ưu riêng.
@@ -62,7 +62,7 @@
   ~như nhau ở mọi biến thể (FlashList đo lại ô mỗi lần cuộn, không làm giật vì cuộn chạy native); giật đến từ dựng lại dòng trên luồng UI.
   Sửa: ô tái dùng theo icon danh mục (không dựng lại SVG) + SwipeRow chỉ gắn transform khi đang vuốt → giật 16% → 8,5%, p90 69 → 48 ms,
   p99 ~110 → 77 ms (p50 ~33 ms không đổi). Dòng tối giản 1 chữ (giới hạn dưới) đạt 1%, p90 24 ms → phần còn lại là chữ + Pressable của dòng.
-  Đã thử không có lợi: luôn gắn sẵn nhãn Personal/kẹp giấy. Chờ Phương: chấp nhận mức này hay đơn giản hoá thiết kế dòng.
+  Đã thử không có lợi: luôn gắn sẵn nhãn Personal/kẹp giấy. Phương chấp nhận mức này 2026-11-13 (commit `838f3fa`).
 - [x] **B-21** 🟡 Mở Ghi nhanh qua màn khoá (widget / thông báo khi App lock bật): sau khi mở khoá, bàn phím số không tự bật
   (product.md: "bàn phím số tự bật"), dòng "No category needed…" nằm dưới thanh điều hướng — case TC-178 — tái hiện: App lock +
   Immediately → ra màn hình chính → widget 2×1 "−" → mở khoá vân tay. — commit: `41195ac` — thử A13: App lock + Immediately → widget "−" → Phương mở khoá vân tay → bàn phím số tự bật (mInputShown=true), dòng "No category needed…" hiện đủ; App lock đã tắt lại
