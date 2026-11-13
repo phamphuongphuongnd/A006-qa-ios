@@ -56,7 +56,7 @@
 - [x] Chạy lại toàn bộ test + case từng lỗi → gộp `dev` → `main` — 162 test, lint, tsc xanh; mỗi lỗi đã thử A13 khi tick; `main` = `de880c6`
 
 ## Bước 6 — Kiểm cuối & lên store
-- [ ] Giả lập người dùng thật trên máy, xem giao diện từng màn
+- [x] Giả lập người dùng thật trên máy, xem giao diện từng màn — cài mới, vai UK + US, tối / 200% / 320dp, vân tay, widget, TalkBack nghe thật (Phương): 10 mục mới B-27…B-36 sửa + thử A13 (`6c87170`, `bd04cfe`, `40493d6`)
 - [ ] Store listing + privacy + Data safety / App Privacy + ảnh store
 - [ ] Phương tạo khoá ký → tag `v1.0.0` → AAB + iOS
 - [ ] checklists release-android + release-ios
