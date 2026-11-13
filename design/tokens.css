@@ -1,0 +1,116 @@
+/* Sunday Sort v2 — generated from tokens.json. Light = :root / [data-theme="light"], dark = [data-theme="dark"]. */
+:root, [data-theme="light"] {
+  --bg: #faf8f4;
+  --surface: #ffffff;
+  --surface-sunk: #f2eee6;
+  --line: #e6e0d5;
+  --line-strong: #8a8478;
+  --ink: #18202f;
+  --ink-muted: #596273;
+  --primary: #1f2a44;
+  --on-primary: #ffffff;
+  --sunday: #f5b841;
+  --on-sunday: #18202f;
+  --sunday-soft: #fdf1d8;
+  --sunday-ink: #6e4b00;
+  --income: #1e8e5a;
+  --income-text: #0c5c37;
+  --income-soft: #e3f2ea;
+  --expense: #c8553d;
+  --expense-text: #8c331f;
+  --expense-soft: #f8e6df;
+  --error: #b42318;
+  --error-soft: #fbe9e7;
+  --work: #2e6fd8;
+  --work-text: #1f57b3;
+  --work-soft: #e5eefb;
+  --personal: #7a6f9b;
+  --personal-text: #5f557f;
+  --personal-soft: #eeebf4;
+  --on-scope: #ffffff;
+  --ok: #2f8a5f;
+  --ok-text: #1d6b47;
+  --warn: #d9822b;
+  --warn-text: #9a4f0c;
+  --warn-soft: #fcefe1;
+  --off: #7c838e;
+  --live: #d92d20;
+  --focus-ring: #2e6fd8;
+  --scrim: rgba(18,22,28,0.48);
+  --device: #0b0d10;
+  --shadow-card: 0 1px 2px rgba(24,32,47,0.06), 0 2px 8px rgba(24,32,47,0.04);
+  --shadow-raised: 0 6px 24px rgba(24,32,47,0.12);
+}
+[data-theme="dark"] {
+  --bg: #12161c;
+  --surface: #1b2129;
+  --surface-sunk: #0d1015;
+  --line: #2c343f;
+  --line-strong: #6b7480;
+  --ink: #f2efe9;
+  --ink-muted: #a7afbc;
+  --primary: #f5b841;
+  --on-primary: #12161c;
+  --sunday: #f5b841;
+  --on-sunday: #12161c;
+  --sunday-soft: #3a3020;
+  --sunday-ink: #f5b841;
+  --income: #3fbf84;
+  --income-text: #6fd9a6;
+  --income-soft: #16302a;
+  --expense: #e07a62;
+  --expense-text: #f29c86;
+  --expense-soft: #352220;
+  --error: #f97066;
+  --error-soft: #3a1c1a;
+  --work: #6ea0f0;
+  --work-text: #8db6f5;
+  --work-soft: #1a2a44;
+  --personal: #b3a9d6;
+  --personal-text: #c4bce2;
+  --personal-soft: #2a2638;
+  --on-scope: #12161c;
+  --ok: #4fbf8a;
+  --ok-text: #79d6a8;
+  --warn: #f0a04b;
+  --warn-text: #f5b871;
+  --warn-soft: #3a2a18;
+  --off: #8a919c;
+  --live: #ff6b5e;
+  --focus-ring: #f5b841;
+  --scrim: rgba(0,0,0,0.6);
+  --device: #000000;
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-raised: 0 6px 24px rgba(0,0,0,0.5);
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --tap-min: 48px;
+  --tap-main: 56px;
+  --tap-hero: 72px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-card: 16px;
+  --radius-sheet: 24px;
+  --radius-pill: 28px;
+  --radius-full: 999px;
+  --font-sans: "Inter", -apple-system, "SF Pro Text", Roboto, system-ui, sans-serif;
+}
+.amount-xl { font-family: var(--font-sans); font-size:56px; line-height:64px; font-weight:700; letter-spacing:-0.02em; }
+.amount-lg { font-family: var(--font-sans); font-size:34px; line-height:40px; font-weight:700; letter-spacing:-0.01em; }
+.amount-md { font-family: var(--font-sans); font-size:22px; line-height:28px; font-weight:700; }
+.amount-row { font-family: var(--font-sans); font-size:17px; line-height:24px; font-weight:600; }
+.title { font-family: var(--font-sans); font-size:28px; line-height:34px; font-weight:700; letter-spacing:-0.01em; }
+.headline { font-family: var(--font-sans); font-size:20px; line-height:26px; font-weight:700; }
+.body-strong { font-family: var(--font-sans); font-size:16px; line-height:24px; font-weight:600; }
+.body { font-family: var(--font-sans); font-size:16px; line-height:24px; font-weight:400; }
+.label { font-family: var(--font-sans); font-size:14px; line-height:20px; font-weight:500; }
+.caption { font-family: var(--font-sans); font-size:13px; line-height:18px; font-weight:400; }
+.overline { font-family: var(--font-sans); font-size:12px; line-height:16px; font-weight:700; letter-spacing:0.06em; }
+
