@@ -6,7 +6,7 @@ import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { LONG_TRIP_MILES } from '@/domain/mileage';
 import { t } from '@/i18n';
 import { fonts, radius, useTheme } from '@/theme';
-import { Button, Card, Dialog, Field, Segmented, Sheet, Txt } from '@/ui';
+import { Button, Card, Dialog, Field, Screen, Segmented, Sheet, Txt } from '@/ui';
 
 import { formatDay, formatDistance, sameDay, type DistanceUnit } from './format';
 import { checkTripForm, type TripFormResult, type TripFormValues } from './tripFormCheck';
@@ -14,23 +14,28 @@ import { checkTripForm, type TripFormResult, type TripFormValues } from './tripF
 export type { TripFormResult, TripFormValues, TripInputMode } from './tripFormCheck';
 
 /**
- * S-08 Add / edit trip body. `gpsOnly` (editing a GPS trip): only distance, scope and purpose can change.
- * Calls `onSubmit` after the long-trip question (> 1,000 mi) is answered.
+ * S-08 Add / edit trip screen (`header` from the route). `gpsOnly` (editing a GPS trip): only distance, scope and
+ * purpose can change. Calls `onSubmit` after the long-trip question (> 1,000 mi) is answered. The submit button sits in
+ * the bottom bar, above the keyboard while typing (B-36). `children`: route overlays (e.g. the delete dialog).
  */
 export function TripForm({
+  header,
   initial,
   unit,
   gpsOnly,
   submitLabel,
   onSubmit,
   extra,
+  children,
 }: {
+  header: React.ReactNode;
   initial: TripFormValues;
   unit: DistanceUnit;
   gpsOnly?: boolean;
   submitLabel: string;
   onSubmit: (r: TripFormResult) => void;
   extra?: React.ReactNode;
+  children?: React.ReactNode;
 }) {
   const { colors, dark } = useTheme();
   const [v, setV] = useState<TripFormValues>(initial);
@@ -73,7 +78,8 @@ export function TripForm({
   const unitField = unit === 'km' ? t('trip.kmField') : t('trip.milesField');
 
   return (
-    <View style={{ gap: 16 }}>
+    <Screen header={header} avoidKeyboard bottomInset bottom={<Button label={submitLabel} full onPress={submit} style={{ flex: 1 }} />}>
+      <View style={{ gap: 16 }}>
       {!gpsOnly ? (
         <Segmented
           accessibilityLabel={t('trip.addTitle')}
@@ -176,8 +182,6 @@ export function TripForm({
 
       {extra}
 
-      <Button label={submitLabel} full onPress={submit} />
-
       <Dialog
         visible={longAsk !== null}
         title={longAsk ? t('trip.longTripTitle', { distance: formatDistance(longAsk.miles * 1609.344, unit, 0) }) : ''}
@@ -211,7 +215,9 @@ export function TripForm({
           <Button label={t('common.done')} full onPress={() => setIosDate(false)} />
         </Sheet>
       ) : null}
-    </View>
+      </View>
+      {children}
+    </Screen>
   );
 }
 

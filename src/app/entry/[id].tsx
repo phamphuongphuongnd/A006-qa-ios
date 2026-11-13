@@ -2,7 +2,7 @@ import { useFocusEffect, useLocalSearchParams, useNavigation, usePreventRemove }
 import { router } from '@/services/router';
 import { CalendarClock, ChevronDown, Copy, ImagePlus, MoreHorizontal, Split, Trash2, X } from '@/ui/icons';
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { listCategories } from '@/db/categoriesRepo';
@@ -155,7 +155,10 @@ function Editor({ entry }: { entry: EntryRowT }) {
   const splitFrom = entry.splitGroupId && entry.splitFromMinor ? entry.splitFromMinor : null;
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: Platform.OS === 'ios' ? 8 : insets.top }}>
+    // Keyboard up (amount / note): the Save bar rides above it, as on Quick capture (B-36).
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1, backgroundColor: colors.background, paddingTop: Platform.OS === 'ios' ? 8 : insets.top }}>
       <View style={[styles.top, { paddingHorizontal: GUTTER }]}>
         <IconButton icon={X} label={t('common.close')} onPress={() => (dirty ? setDialog('discard') : setLeaving(true))} />
         <Txt v="h3" accessibilityRole="header">
@@ -406,7 +409,7 @@ function Editor({ entry }: { entry: EntryRowT }) {
         }}
       />
       {picker.element}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

@@ -82,3 +82,30 @@
   nhưng trình bày thô — bảng sang trang không lặp tiêu đề cột; chữ "work"/"expense"/"income" viết thường; "8477.5 business miles"
   không dấu phẩy (app ghi 8,478); nhật ký dặm mới→cũ còn bảng khoản cũ→mới; cột Note căn phải — case TC-160 —
   tái hiện: Export → chỉ PDF → Export anyway → share sheet → In (xem trước). — commit: `fix B-26` (thead lặp mỗi trang, nhãn Work/Personal/Income/Expense, số dặm có dấu phẩy, nhật ký dặm cũ→mới, căn cột) — thử A13 bản xem trước 6 trang: tiêu đề cột lặp ở trang 2–6, "8,478 business miles", số liệu không đổi
+
+## Bước 6 — giả lập người dùng thật (2026-11-13, APK release `14cbdf0`, cài mới)
+
+- [x] **B-27** 🟠 Snackbar có Undo nằm đè lên FAB "+" (Entries/Sort/Miles/Reports): bấm Undo trễ một chút (snackbar vừa tắt ở giây
+  thứ 5) thì cú bấm rơi xuống FAB → mở Ghi nhanh, không Undo được → người dùng tưởng đã Undo nhưng khoản vẫn bị xoá —
+  tái hiện: Entries → vuốt trái 1 dòng → Delete → chờ ~5 s → bấm "Undo" → mở màn Ghi nhanh, dòng vẫn mất. — sửa: snackbar nổi trên FAB (FAB báo vị trí khi màn đang hiện) — thử A13: snackbar ở trên nút +, Undo khôi phục dòng; bấm chỗ cũ sau khi snackbar tắt không mở Ghi nhanh
+- [x] **B-28** 🟡 Màn giải thích quyền vị trí (S-07a bước 1 và 2): nút "Not now" ở đáy bị thanh điều hướng hệ thống che nửa chữ —
+  nút nằm cuối nội dung cuộn nhưng không cộng inset đáy — tái hiện: cài mới → Miles → Start trip → nhìn đáy màn. — sửa: đệm inset đáy cho nội dung màn quyền — thử A13: "Not now" nằm trọn trên thanh hệ thống
+- [x] **B-29** 🟡 PDF báo cáo: tiêu đề mục ("Mileage log") có thể nằm trơ cuối trang, bảng của nó sang trang sau — tái hiện: dữ liệu
+  ít (6 khoản, 1 chuyến) → Export chỉ PDF → share sheet → In: trang 1 kết thúc bằng "Mileage log", bảng ở đầu trang 2. — sửa: h2 break-after: avoid — thử A13 bản In xem trước: "Mileage log" sang trang 2 cùng bảng
+- [x] **B-30** 🟡 Settings › About: hàng "Privacy policy" hiện cả mũi tên mở web ↗ lẫn chevron > (mockup S-15 chỉ có ↗) — tái hiện:
+  Settings → cuộn tới ABOUT. — sửa: NavRow `external` — thử A13: chỉ còn ↗
+- [x] **B-31** 🟠 Thêm/sửa danh mục: ô "Tax form line" của danh mục **Expense** vẫn cho chọn dòng thu ("SA103: Turnover", "Other business
+  income"; US: "Line 1 Gross receipts", "Line 6 Other income") và ngược lại → báo cáo/PDF/CSV cho kế toán có thể cộng chi phí vào
+  doanh thu — tái hiện: Settings → Categories → + → Expense → Tax form line: danh sách bắt đầu bằng Turnover. — sửa: `taxLinesFor(region, type)` — thử A13: danh mục Expense (US) chỉ có Line 8…27a, không còn Line 1/Line 6
+- [x] **B-32** 🟡 Hộp thoại / sheet có ô nhập không đẩy lên khi bàn phím mở (Android): "Change region?" — nút Cancel/Change nằm dưới
+  bàn phím (bấm trúng phím của bàn phím); sheet "New category" — nút Save bị che. Người dùng phải tự ẩn bàn phím mới thấy nút —
+  tái hiện: Settings → Region → United States → chạm ô "Exchange rate". — sửa: KeyboardAvoidingView cho Sheet + Dialog trên Android — thử A13: "Change region?" và sheet New category nổi trên bàn phím, bấm được Change/Save
+- [x] **B-33** 🟠 Đổi vùng UK → US: danh mục tự tạo giữ nguyên dòng thuế cũ ("SA103: Car, van and travel expenses") trong khi danh mục có
+  sẵn đã sang Schedule C → báo cáo/CSV US có dòng SA103 lạc (và ngược lại US → UK) — tái hiện: Settings → Categories → + "Van cleaning"
+  (Car, van and travel) → Region → United States → Change → Categories: "Van cleaning · SA103: …". — sửa: `mapTaxLine` cho danh mục tự tạo khi đổi vùng — thử A13: US→UK→US, "Van cleaning" = Line 9 Car and truck expenses
+- [x] **B-34** 🟡 Chữ 200%: thẻ GPS trên Home ("GPS records your business miles until you stop.") bị ép thành cột hẹp cạnh nút
+  "Start trip", ngắt giữa chữ "bu / siness" — tái hiện: font_scale 2.0 → Home, cuộn tới thẻ Start trip. — sửa: chữ cạnh nút có minWidth theo fontScale + flexWrap — thử A13: 0.8/1.0 nút cạnh chữ; 1.3, 2.0, 320dp nút xuống dòng, không ngắt giữa từ
+- [x] **B-35** 🟡 (góp ý, Phương duyệt 2026-11-13) Export: "CSV – mileage log" mặc định tắt kể cả khi kỳ xuất có chuyến → tài xế dễ quên
+  gửi nhật ký dặm cho kế toán. Sửa: tự tick khi kỳ có chuyến. — sửa: `defaultExportKinds` theo kỳ có chuyến — thử A13: Export năm 2026 tự tick mileage log
+- [x] **B-36** 🟡 (góp ý, Phương duyệt 2026-11-13) Màn sửa khoản (S-05) và Add trip (S-08): khi bàn phím mở, nút "Save changes" /
+  "Save trip" bị che, phải ẩn bàn phím mới thấy. Sửa: nút lưu nổi ngay trên bàn phím như màn Ghi nhanh. — sửa: Screen `avoidKeyboard` + nút lưu ở thanh đáy (Add/Edit trip), KeyboardAvoidingView ở S-05 — thử A13: Save trip / Save changes nổi trên bàn phím, lưu được khi bàn phím mở

@@ -3,7 +3,7 @@ import Constants from 'expo-constants';
 import { type Href } from 'expo-router';
 import { router } from '@/services/router';
 import * as WebBrowser from 'expo-web-browser';
-import { ArrowUpRight, CloudUpload, Download, Lock, Tag as TagIcon, Trash2 } from '@/ui/icons';
+import { CloudUpload, Download, Lock, Tag as TagIcon, Trash2 } from '@/ui/icons';
 import { useEffect, useState } from 'react';
 import { Linking, Platform, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -247,7 +247,7 @@ export default function SettingsScreen() {
               <NavRow
                 key="privacy"
                 title={t('settings.privacy')}
-                right={<ArrowUpRight size={18} color={colors.textTertiary} />}
+                external
                 onPress={() => WebBrowser.openBrowserAsync(ABOUT_LINKS.privacyUrl!)}
               />
             ) : null,

@@ -53,8 +53,8 @@ export default function EditTripScreen() {
   const odo = !gps && trip.odoStart !== null && trip.odoEnd !== null && unit === 'mi';
 
   return (
-    <Screen header={header}>
       <TripForm
+        header={header}
         unit={unit}
         gpsOnly={gps}
         submitLabel={t('common.save')}
@@ -86,8 +86,7 @@ export default function EditTripScreen() {
           refreshWidgets().catch(() => {});
           snack({ message: t('trip.updated') });
           close();
-        }}
-      />
+        }}>
       <Dialog
         visible={askDelete}
         title={t('trip.deleteConfirm')}
@@ -108,6 +107,6 @@ export default function EditTripScreen() {
           },
         ]}
       />
-    </Screen>
+      </TripForm>
   );
 }

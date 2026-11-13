@@ -1,6 +1,6 @@
 import { router } from '@/services/router';
 import { CloudUpload, Flag, Minus, Pause, Play, Plus, Settings, Square, Check, X } from '@/ui/icons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { listCategories } from '@/db/categoriesRepo';
 import { db } from '@/db/client';
@@ -30,6 +30,10 @@ export default function HomeScreen() {
   const { settings, update } = useSettings();
   const now = useNow(30_000);
   useAppShortcuts();
+  // Card text beside a button: with large text or a narrow screen the button drops below instead of squeezing the
+  // text into a one-word column ("bu / siness", B-34).
+  const { fontScale } = useWindowDimensions();
+  const rowText = { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 110 * Math.min(fontScale, 1.6) };
 
   const region = settings.region ?? 'UK';
   const currency = currencyOf(region);
@@ -104,7 +108,7 @@ export default function HomeScreen() {
       {!empty ? (
         data.unsorted > 0 ? (
           <Card variant="sun" style={styles.rowCard}>
-            <View style={{ flex: 1, gap: 2 }}>
+            <View style={[rowText, { gap: 2 }]}>
               <Txt v="h2">{data.unsorted === 1 ? t('home.toSortOne') : t('home.toSort', { count: data.unsorted })}</Txt>
               <Txt v="small" c="sunText">
                 {sortMinutes(data.unsorted) === 1 ? t('home.toSortSubOne') : t('home.toSortSub', { minutes: sortMinutes(data.unsorted) })}
@@ -128,7 +132,7 @@ export default function HomeScreen() {
       {!tripData.trip ? (
         <Card style={styles.rowCard}>
           <Avatar kind="work" icon={Flag} />
-          <Txt v="small" c="textSecondary" style={{ flex: 1 }}>
+          <Txt v="small" c="textSecondary" style={rowText}>
             {t('home.startTripSub')}
           </Txt>
           <Button label={t('home.startTrip')} variant="outline" size="sm" onPress={() => router.push('/trip/active?start=1')} />
@@ -247,7 +251,7 @@ function NavyButton({ icon: Icon, label, onPress }: { icon: typeof Play; label: 
 }
 
 const styles = StyleSheet.create({
-  rowCard: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  rowCard: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 14 },
   redDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#FF5A4E', borderWidth: 3, borderColor: 'rgba(255,90,78,0.35)' },
   navyBtn: {
     flex: 1,

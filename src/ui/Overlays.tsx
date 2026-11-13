@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -26,9 +26,17 @@ export interface SnackOptions {
 
 const SnackCtx = createContext<(o: SnackOptions) => void>(() => {});
 
+/**
+ * Top edge (window y) of the FAB on the focused screen, or null. A snackbar over a tab screen sits above it, so a late
+ * tap on "Undo" can never land on the FAB underneath once the snackbar has gone (B-27).
+ */
+const FabTopCtx = createContext<(top: number | null) => void>(() => {});
+export const useReportFabTop = () => useContext(FabTopCtx);
+
 /** `.snack` — one at a time; a new one replaces (and dismisses) the current. */
 export function SnackbarProvider({ children }: { children: ReactNode }) {
   const [snack, setSnack] = useState<(SnackOptions & { id: number }) | null>(null);
+  const [fabTop, setFabTop] = useState<number | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const current = useRef<(SnackOptions & { id: number }) | null>(null);
 
@@ -53,18 +61,32 @@ export function SnackbarProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => () => void (timer.current && clearTimeout(timer.current)), []);
 
+  // Window y of the bottom edge of the area the snackbar is laid out in (same coordinates as the FAB's measure).
+  const frame = useRef<ComponentRef<typeof View>>(null);
+  const [frameBottom, setFrameBottom] = useState<number | null>(null);
+  const measureFrame = useCallback(() => frame.current?.measureInWindow((_x, y, _w, h) => setFrameBottom(y + h)), []);
+
   return (
     <SnackCtx.Provider value={show}>
-      {children}
-      {snack && <SnackView s={snack} onAction={() => { snack.onAction?.(); close(true); }} />}
+      <FabTopCtx.Provider value={setFabTop}>{children}</FabTopCtx.Provider>
+      <View ref={frame} pointerEvents="none" style={StyleSheet.absoluteFill} onLayout={measureFrame} />
+      {snack && (
+        <SnackView
+          s={snack}
+          fabClearance={fabTop != null && frameBottom != null && fabTop < frameBottom ? frameBottom - fabTop + 8 : 0}
+          onAction={() => { snack.onAction?.(); close(true); }}
+        />
+      )}
     </SnackCtx.Provider>
   );
 }
 
-function SnackView({ s, onAction }: { s: SnackOptions; onAction: () => void }) {
+function SnackView({ s, fabClearance, onAction }: { s: SnackOptions; fabClearance: number; onAction: () => void }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const bottom = insets.bottom + ((s.above ?? 'tabs') === 'tabs' ? 90 : 16) + (s.bottomOffset ?? 0);
+  const overTabs = (s.above ?? 'tabs') === 'tabs';
+  let bottom = insets.bottom + (overTabs ? 90 : 16) + (s.bottomOffset ?? 0);
+  if (overTabs) bottom = Math.max(bottom, fabClearance);
   return (
     <View
       pointerEvents="box-none"
@@ -110,7 +132,8 @@ export function Sheet({
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+      {/* Android too: the modal window doesn't resize for the keyboard, so a field's Save would sit under it (B-32). */}
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <Pressable accessibilityLabel="Close" style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }]} onPress={onClose} />
         <View style={{ flex: 1 }} pointerEvents="box-none" />
         <View style={[styles.sheet, { backgroundColor: colors.surface, paddingBottom: Math.max(insets.bottom, 16) + 18 }]}>
@@ -162,7 +185,9 @@ export function Dialog({
   const { colors } = useTheme();
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
-      <View style={[styles.dlgWrap, { backgroundColor: colors.scrim }]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={[styles.dlgWrap, { backgroundColor: colors.scrim }]}>
         <View accessibilityViewIsModal style={[styles.dlg, { backgroundColor: colors.surface }]}>
           <Txt v="h2" accessibilityRole="header">
             {title}
@@ -179,7 +204,7 @@ export function Dialog({
             ))}
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

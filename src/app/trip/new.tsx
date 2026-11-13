@@ -11,7 +11,7 @@ import { TripForm } from '@/features/trips/TripForm';
 import { refreshWidgets } from '@/features/widgets/refresh';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
-import { Screen, useSnackbar } from '@/ui';
+import { useSnackbar } from '@/ui';
 
 /** S-08 Add trip (manual). Optional `?date=<ms>` (from "Add missing miles"). */
 export default function NewTripScreen() {
@@ -23,8 +23,8 @@ export default function NewTripScreen() {
   const close = () => (router.canGoBack() ? router.back() : router.replace('/miles'));
 
   return (
-    <Screen header={<ModalHeader icon={X} iconLabel={t('trip.close')} onIcon={close} title={t('trip.addTitle')} />}>
-      <TripForm
+    <TripForm
+        header={<ModalHeader icon={X} iconLabel={t('trip.close')} onIcon={close} title={t('trip.addTitle')} />}
         unit={unit}
         submitLabel={t('trip.save')}
         initial={{ mode: 'odometer', start: '', end: '', distance: '', date: initialDate, scope: 'work', purpose: '' }}
@@ -35,6 +35,5 @@ export default function NewTripScreen() {
           close();
         }}
       />
-    </Screen>
   );
 }

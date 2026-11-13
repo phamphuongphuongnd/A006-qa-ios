@@ -4,6 +4,7 @@ import { router } from '@/services/router';
 import { ChevronLeft, Lock, X } from '@/ui/icons';
 import { useEffect, useState } from 'react';
 import { Linking, Platform, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect, Text as SvgText } from 'react-native-svg';
 
 import { markBackgroundStepShown } from '@/features/trips/permissionState';
@@ -20,6 +21,8 @@ export default function PermissionScreen() {
   const { next, step: stepParam } = useLocalSearchParams<{ next?: string; step?: string }>();
   const [step, setStep] = useState<1 | 2>(stepParam === '2' ? 2 : 1);
   const [busy, setBusy] = useState(false);
+  // The buttons end the scrolling content: keep "Not now" clear of the system navigation bar (B-28).
+  const bottomPad = { paddingBottom: useSafeAreaInsets().bottom + 20 };
 
   useEffect(() => {
     if (step === 2) markBackgroundStepShown();
@@ -82,7 +85,7 @@ export default function PermissionScreen() {
             }
           />
         }
-        contentStyle={{ gap: 20, flexGrow: 1 }}>
+        contentStyle={[{ gap: 20, flexGrow: 1 }, bottomPad]}>
         <Txt v="h1" accessibilityRole="header">
           {t('trip.alwaysTitle')}
         </Txt>
@@ -99,7 +102,7 @@ export default function PermissionScreen() {
   }
 
   return (
-    <Screen header={<ModalHeader icon={X} iconLabel={t('trip.close')} onIcon={close} />} contentStyle={{ gap: 20, flexGrow: 1 }}>
+    <Screen header={<ModalHeader icon={X} iconLabel={t('trip.close')} onIcon={close} />} contentStyle={[{ gap: 20, flexGrow: 1 }, bottomPad]}>
       <RouteArt />
       <Txt v="h1" accessibilityRole="header">
         {t('miles.permTitle')}

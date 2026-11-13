@@ -1,10 +1,12 @@
 import type { LucideIcon } from '@/ui/icons';
-import type { ReactNode } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useRef, type ComponentRef, type ReactNode } from 'react';
+import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GUTTER, radius, touch, useTheme } from '@/theme';
 
+import { useReportFabTop } from './Overlays';
 import { Txt } from './Txt';
 
 /**
@@ -25,6 +27,7 @@ export function Screen({
   bottomInset = false,
   fab,
   onEndReached,
+  avoidKeyboard = false,
 }: {
   title?: string;
   subtitle?: string;
@@ -42,13 +45,18 @@ export function Screen({
   fab?: ReactNode;
   /** Scrolled to within one screen of the bottom (grow a long list in steps). */
   onEndReached?: () => void;
+  /** Shrink above the on-screen keyboard so the `bottom` bar (e.g. Save) stays visible while typing (B-36). */
+  avoidKeyboard?: boolean;
 }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   // With a FAB the last rows scroll clear of it (64dp button + 16dp margin + gap).
   const body = [{ paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: fab ? 100 : 20, gap: 14 }, contentStyle];
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: topInset ? insets.top : 0 }}>
+    <KeyboardAvoidingView
+      enabled={avoidKeyboard}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1, backgroundColor: colors.background, paddingTop: topInset ? insets.top : 0 }}>
       {header ??
         (title || headerRight || headerLeft ? (
           <View style={[styles.top, { paddingHorizontal: GUTTER }]}>
@@ -99,7 +107,7 @@ export function Screen({
           {bottom}
         </View>
       ) : null}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -172,8 +180,27 @@ export function ListRow({
 /** `.fab` — 64dp rounded-square floating action button above the tab bar. */
 export function Fab({ icon: Icon, label, onPress }: { icon: LucideIcon; label: string; onPress: () => void }) {
   const { colors } = useTheme();
+  const reportTop = useReportFabTop();
+  const ref = useRef<ComponentRef<typeof View>>(null);
+  const focused = useRef(false);
+  const measure = useCallback(() => {
+    if (focused.current) ref.current?.measureInWindow((_x, y) => reportTop(y));
+  }, [reportTop]);
+  // Only the FAB of the screen in front counts: tab screens stay mounted behind each other.
+  useFocusEffect(
+    useCallback(() => {
+      focused.current = true;
+      measure();
+      return () => {
+        focused.current = false;
+        reportTop(null);
+      };
+    }, [measure, reportTop]),
+  );
   return (
     <Pressable
+      ref={ref}
+      onLayout={measure}
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}

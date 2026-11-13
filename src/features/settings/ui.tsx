@@ -1,5 +1,5 @@
 import { router } from '@/services/router';
-import { Check, ChevronLeft, ChevronRight, type LucideIcon } from '@/ui/icons';
+import { ArrowUpRight, Check, ChevronLeft, ChevronRight, type LucideIcon } from '@/ui/icons';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -39,6 +39,7 @@ export function NavRow({
   icon,
   right,
   danger,
+  external,
 }: {
   title: string;
   value?: string;
@@ -46,6 +47,8 @@ export function NavRow({
   icon?: LucideIcon;
   right?: ReactNode;
   danger?: boolean;
+  /** Opens a web page: ↗ instead of the chevron (B-30). */
+  external?: boolean;
 }) {
   const { colors } = useTheme();
   const Icon = icon;
@@ -61,7 +64,11 @@ export function NavRow({
         </Txt>
       ) : null}
       {right}
-      {onPress && !danger ? <ChevronRight size={18} color={colors.textTertiary} /> : null}
+      {external ? (
+        <ArrowUpRight size={18} color={colors.textTertiary} />
+      ) : onPress && !danger ? (
+        <ChevronRight size={18} color={colors.textTertiary} />
+      ) : null}
     </>
   );
   if (!onPress) return <View style={styles.row}>{body}</View>;
