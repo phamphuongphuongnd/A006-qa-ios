@@ -1,0 +1,339 @@
+import type { ReceiptReading } from '@/domain/receiptSignal';
+import type { Region } from '@/domain/types';
+
+/**
+ * Receipt parser (P1-12): raw on-device OCR lines → total / merchant / date with a confidence per field.
+ * Same TypeScript for ML Kit (Android) and Vision (iOS). Never guesses loudly: a field it is unsure of gets a
+ * confidence under OCR_FILL_CONFIDENCE so the capture screen leaves it alone.
+ */
+
+/** Structural copy of modules/receipt-ocr's OcrRaw (kept here so Jest never loads the native module). */
+export interface RawLine {
+  text: string;
+  confidence?: number;
+  box: { x: number; y: number; w: number; h: number } | null;
+}
+export interface RawOcr {
+  text: string;
+  lines: RawLine[];
+}
+
+export interface ParsedReceipt extends ReceiptReading {
+  /** Time printed next to the date, minutes after midnight (null if none). */
+  minutes: number | null;
+}
+
+export const EMPTY_READING: ParsedReceipt = {
+  amountMinor: null,
+  merchant: null,
+  date: null,
+  minutes: null,
+  confidence: { amount: 0, merchant: 0, date: 0 },
+};
+
+interface Line {
+  i: number;
+  text: string;
+  up: string;
+  box: RawLine['box'];
+}
+
+/** Lines in reading order (top to bottom, then left to right) when boxes are known. */
+function prepare(raw: RawOcr): Line[] {
+  const lines = raw.lines
+    .map((l, i) => ({ i, text: l.text.replace(/\s+/g, ' ').trim(), up: '', box: l.box }))
+    .filter((l) => l.text !== '');
+  const boxed = lines.every((l) => l.box);
+  if (boxed) lines.sort((a, b) => a.box!.y + a.box!.h / 2 - (b.box!.y + b.box!.h / 2) || a.box!.x - b.box!.x);
+  lines.forEach((l, i) => {
+    l.i = i;
+    l.up = l.text.toUpperCase();
+  });
+  return lines;
+}
+
+// ---------------------------------------------------------------- amount
+
+interface Money {
+  minor: number;
+  /** Position in the line (rightmost wins when a line has several). */
+  at: number;
+}
+
+const MONEY_RE = /([£$€]?)\s?(\d{1,3}(?:,\d{3})+|\d{1,6})(?:\.\s?|,)(\d{2})(?!\d)/g;
+
+/** Amounts in one line, skipping dates (12.11.26), litres (45.20L), rates (20.00%) and per-unit prices. */
+export function moneyIn(text: string): Money[] {
+  const out: Money[] = [];
+  for (const m of text.matchAll(MONEY_RE)) {
+    const start = m.index ?? 0;
+    const end = start + m[0].length;
+    const before = text.slice(Math.max(0, start - 2), start);
+    const after = text.slice(end, end + 6);
+    if (/\d[./-]$/.test(before) || /^[./-]\d/.test(after)) continue;
+    if (/^\s?(%|l\b|ltr|lit|gal|kg|p\/|\/)/i.test(after)) continue;
+    // "1,250.50" groups thousands; a lone "72,40" is a decimal comma.
+    const whole = Number(m[2].replace(/,/g, ''));
+    out.push({ minor: whole * 100 + Number(m[3]), at: start });
+  }
+  return out.filter((x) => x.minor > 0);
+}
+
+const TOTAL_STRONG = /\b(GRAND\s*TOTAL|AMOUNT\s*DUE|BALANCE\s*DUE|TOTAL\s*(TO\s*PAY|DUE|PAID)|AMOUNT\s*TO\s*PAY|TO\s*PAY)\b/;
+const TOTAL = /\b(TOTAL|AMOUNT|BALANCE|TOTAL\s*SALE|SALE\s*TOTAL|PAYMENT|FARE|TARIFF)\b/;
+const PAID_BY = /\b(VISA|MASTER\s*CARD|MASTERCARD|MAESTRO|AMEX|DEBIT|CREDIT|CARD|CONTACTLESS|APPLE\s*PAY|GOOGLE\s*PAY|CHIP\s*&?\s*PIN|PAID)\b/;
+/** Lines whose amount is never the total paid. */
+const NOT_TOTAL = /\b(SUB\s*-?\s*TOTAL|CHANGE|CASH\s*BACK|CASHBACK|TENDER(ED)?|SAVING|SAVINGS|DISCOUNT|YOU\s*SAVED|POINTS|ITEMS?|QTY|NET|EXCL?|EX\.?\s*VAT|DEPOSIT|PER\s*(LITRE|LITER|GALLON)|PRICE\s*\/)\b/;
+/** VAT / tax lines are the tax figure unless they say the total includes it ("TOTAL INC VAT"). */
+const TAX = /\b(VAT|TAX|GST)\b/;
+const INCL = /\b(INC|INCL|INCLUDING|INC\.)\b/;
+
+/** Amounts printed on the same row as `line` (a label on the left, the figure in another OCR block on the right). */
+function rowAmounts(line: Line, lines: Line[]): Money[] {
+  const own = moneyIn(line.text);
+  if (own.length) return own;
+  if (!line.box) {
+    const next = lines[line.i + 1];
+    return next && !/[A-Z]{3}/.test(next.up.replace(/GBP|USD|EUR/g, '')) ? moneyIn(next.text) : [];
+  }
+  const cy = line.box.y + line.box.h / 2;
+  const tol = Math.max(line.box.h * 0.7, 0.01);
+  const right = line.box.x + line.box.w * 0.5;
+  return lines
+    .filter((o) => o !== line && o.box && Math.abs(o.box.y + o.box.h / 2 - cy) <= tol && o.box.x >= right)
+    .sort((a, b) => a.box!.x - b.box!.x)
+    .flatMap((o) => moneyIn(o.text).map((m) => ({ ...m, at: m.at + 1000 * (o.box!.x + 1) })));
+}
+
+const rightmost = (ms: Money[]) => ms.reduce((a, b) => (b.at > a.at ? b : a));
+
+function readAmount(lines: Line[]): { minor: number | null; confidence: number } {
+  type Cand = { minor: number; score: number; kind: 'strong' | 'total' | 'paid' };
+  const cands: Cand[] = [];
+  for (const l of lines) {
+    if (NOT_TOTAL.test(l.up)) continue;
+    if (TAX.test(l.up) && !INCL.test(l.up)) continue;
+    const kind = TOTAL_STRONG.test(l.up) ? 'strong' : TOTAL.test(l.up) ? 'total' : PAID_BY.test(l.up) ? 'paid' : null;
+    if (!kind) continue;
+    const ms = rowAmounts(l, lines);
+    if (!ms.length) continue;
+    cands.push({ minor: rightmost(ms).minor, score: kind === 'strong' ? 0.95 : kind === 'total' ? 0.9 : 0.75, kind });
+  }
+
+  if (cands.length) {
+    // Prefer the strongest label; among equals the larger figure (a later "TOTAL" after a voided line).
+    const best = cands.reduce((a, b) => (b.score > a.score || (b.score === a.score && b.minor > a.minor) ? b : a));
+    const agree = cands.filter((c) => c.minor === best.minor && c.kind !== best.kind).length > 0;
+    // Two different "totals" disagree: only trust it if the paid-by line confirms one of them.
+    const rivals = cands.filter((c) => c.kind !== 'paid' && c.minor !== best.minor && c.score === best.score).length > 0;
+    let confidence = best.score;
+    if (agree) confidence = Math.min(0.98, confidence + 0.05);
+    if (rivals && !agree) confidence = 0.5;
+    return { minor: best.minor, confidence };
+  }
+
+  // No label at all (parking ticket, till slip): a single figure is probably it; several → not sure.
+  const all = lines.filter((l) => !NOT_TOTAL.test(l.up) && !TAX.test(l.up)).flatMap((l) => moneyIn(l.text));
+  if (!all.length) return { minor: null, confidence: 0 };
+  const distinct = new Set(all.map((m) => m.minor));
+  const max = Math.max(...distinct);
+  return { minor: max, confidence: distinct.size === 1 ? 0.65 : 0.4 };
+}
+
+// ---------------------------------------------------------------- merchant
+
+/** Chains drivers use, matched anywhere on the receipt → printed name. First match wins (order: fuel, food, retail). */
+const BRANDS: [RegExp, string][] = [
+  [/\bSHELL\b/, 'Shell'],
+  [/\bBP\b|\bB\.P\.\b/, 'BP'],
+  [/\bESSO\b/, 'Esso'],
+  [/\bTEXACO\b/, 'Texaco'],
+  [/\bJET\b(?!\s*WASH)/, 'Jet'],
+  [/\bGULF\b/, 'Gulf'],
+  [/\bAPPLEGREEN\b/, 'Applegreen'],
+  [/\bEURO\s*GARAGES\b|\bEG\s+ON\s+THE\s+MOVE\b/, 'Euro Garages'],
+  [/\bMOTO\b/, 'Moto'],
+  [/\bWELCOME\s*BREAK\b/, 'Welcome Break'],
+  [/\bROADCHEF\b/, 'Roadchef'],
+  [/\bCHEVRON\b/, 'Chevron'],
+  [/\bEXXON\b/, 'Exxon'],
+  [/\bMOBIL\b/, 'Mobil'],
+  [/\bSPEEDWAY\b/, 'Speedway'],
+  [/\bSUNOCO\b/, 'Sunoco'],
+  [/\bMARATHON\b/, 'Marathon'],
+  [/\bWAWA\b/, 'Wawa'],
+  [/\bSHEETZ\b/, 'Sheetz'],
+  [/\bCIRCLE\s*K\b/, 'Circle K'],
+  [/\b7[\s-]?ELEVEN\b/, '7-Eleven'],
+  [/\bPILOT\b|\bFLYING\s*J\b/, 'Pilot Flying J'],
+  [/\bLOVE'?S\s+TRAVEL\b/, "Love's"],
+  [/\bRINGGO\b/, 'RingGo'],
+  [/\bJUSTPARK\b/, 'JustPark'],
+  [/\bNCP\b/, 'NCP'],
+  [/\bAPCOA\b/, 'APCOA'],
+  [/\bDART\s*CHARGE\b/, 'Dart Charge'],
+  [/\bTESCO\b/, 'Tesco'],
+  [/\bSAINSBURY'?S?\b/, "Sainsbury's"],
+  [/\bASDA\b/, 'Asda'],
+  [/\bMORRISONS\b/, 'Morrisons'],
+  [/\bALDI\b/, 'Aldi'],
+  [/\bLIDL\b/, 'Lidl'],
+  [/\bCO-?OP\b/, 'Co-op'],
+  [/\bWAITROSE\b/, 'Waitrose'],
+  [/\bM\s*&\s*S\b|\bMARKS\s*(&|AND)\s*SPENCER\b/, 'M&S'],
+  [/\bGREGGS\b/, 'Greggs'],
+  [/\bCOSTA\b/, 'Costa'],
+  [/\bSTARBUCKS\b/, 'Starbucks'],
+  [/\bPRET\b/, 'Pret'],
+  [/\bMCDONALD'?S\b/, "McDonald's"],
+  [/\bBURGER\s*KING\b/, 'Burger King'],
+  [/\bKFC\b/, 'KFC'],
+  [/\bSUBWAY\b/, 'Subway'],
+  [/\bDUNKIN'?\b/, "Dunkin'"],
+  [/\bHALFORDS\b/, 'Halfords'],
+  [/\bSCREWFIX\b/, 'Screwfix'],
+  [/\bTOOLSTATION\b/, 'Toolstation'],
+  [/\bB\s*&\s*Q\b/, 'B&Q'],
+  [/\bEURO\s*CAR\s*PARTS\b/, 'Euro Car Parts'],
+  [/\bKWIK\s*FIT\b/, 'Kwik Fit'],
+  [/\bAUTOZONE\b/, 'AutoZone'],
+  [/\bO'?REILLY\b/, "O'Reilly"],
+  [/\bNAPA\b/, 'NAPA'],
+  [/\bWALMART\b|\bWAL-MART\b/, 'Walmart'],
+  [/\bCOSTCO\b/, 'Costco'],
+  [/\bTARGET\b/, 'Target'],
+  [/\bHOME\s*DEPOT\b/, 'Home Depot'],
+  [/\bLOWE'?S\b/, "Lowe's"],
+  [/\bWALGREENS\b/, 'Walgreens'],
+  [/\bCVS\b/, 'CVS'],
+  [/\bBOOTS\b/, 'Boots'],
+  [/\bWHSMITH\b|\bWH\s*SMITH\b/, 'WHSmith'],
+  [/\bSTAPLES\b/, 'Staples'],
+  [/\bCURRYS\b/, 'Currys'],
+  [/\bARGOS\b/, 'Argos'],
+];
+
+const NOT_NAME =
+  /(\bVAT\b|\bREG\b|\bTEL\b|\bPHONE\b|\bWWW\.|\.CO\b|\.COM\b|@|\bRECEIPT\b|\bINVOICE\b|\bWELCOME\b|\bCOPY\b|\bCUSTOMER\b|\bMERCHANT\b|\bTERMINAL\b|\bTILL\b|\bCASHIER\b|\bSTORE\s*(NO|#)|\bTRANS|\bAUTH|\bROAD\b|\bRD\b|\bSTREET\b|\bST\b\.?$|\bLANE\b|\bAVE(NUE)?\b|\bWAY\b|\bUNIT\b|\bPARK\b|\bESTATE\b|\bBLVD\b|\bSUITE\b|\bHIGHWAY\b|\bHWY\b|\bDRIVE\b|\bTHANK)/;
+const POSTCODE = /\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b|\b\d{5}(-\d{4})?\b/;
+
+/** "TESCO EXPRESS" → "Tesco Express"; mixed case is kept as printed. */
+function tidyName(s: string): string {
+  const t = s.replace(/[*#|_~=]+/g, ' ').replace(/\s+/g, ' ').replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9')]+$/g, '').trim();
+  const name = t === t.toUpperCase() ? t.toLowerCase().replace(/(^|[\s&/-])([a-z])/g, (_m, p: string, c: string) => p + c.toUpperCase()) : t;
+  return name.slice(0, 40);
+}
+
+function readMerchant(lines: Line[]): { name: string | null; confidence: number } {
+  const n = lines.length;
+  if (!n) return { name: null, confidence: 0 };
+  const topCut = Math.max(3, Math.ceil(n * 0.35));
+  for (const [re, name] of BRANDS) {
+    const hit = lines.find((l) => re.test(l.up));
+    if (hit) return { name, confidence: hit.i < topCut ? 0.92 : 0.8 };
+  }
+  // No known chain: the first plausible name in the top lines (biggest text = shop name on most till rolls).
+  const top = lines.slice(0, Math.min(n, Math.max(4, Math.ceil(n * 0.2))));
+  const named = top.filter((l) => {
+    const letters = (l.text.match(/[A-Za-z]/g) ?? []).length;
+    const digits = (l.text.match(/\d/g) ?? []).length;
+    return letters >= 3 && digits <= letters * 0.3 && l.text.length <= 40 && !NOT_NAME.test(l.up) && !POSTCODE.test(l.up) && !moneyIn(l.text).length && !findDate(l.text, 'UK');
+  });
+  if (!named.length) return { name: null, confidence: 0 };
+  const tallest = named.every((l) => l.box) ? named.reduce((a, b) => (b.box!.h > a.box!.h * 1.15 ? b : a)) : named[0];
+  return { name: tidyName(tallest.text) || null, confidence: tallest === named[0] || tallest.i <= 1 ? 0.62 : 0.6 };
+}
+
+// ---------------------------------------------------------------- date
+
+const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+const MON = '(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|SEPT|OCT|NOV|DEC)[A-Z]*\\.?';
+
+interface FoundDate {
+  y: number | null;
+  m: number;
+  d: number;
+  confidence: number;
+}
+
+const year4 = (y: string) => (y.length === 2 ? 2000 + Number(y) : Number(y));
+const validDay = (y: number, m: number, d: number) => m >= 1 && m <= 12 && d >= 1 && d <= new Date(y, m, 0).getDate();
+
+/** First date in a line. UK reads 03/04/26 as 3 Apr, US as Mar 4; an impossible order is swapped either way. */
+function findDate(text: string, region: Region): FoundDate | null {
+  const up = text.toUpperCase();
+  let m = up.match(/\b(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})\b/);
+  if (m) return { y: Number(m[1]), m: Number(m[2]), d: Number(m[3]), confidence: 0.92 };
+
+  m = up.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4}|\d{2})(?![\d.])/);
+  if (m) {
+    const a = Number(m[1]);
+    const b = Number(m[2]);
+    let dayFirst = region !== 'US';
+    if (a > 12 && b <= 12) dayFirst = true;
+    else if (b > 12 && a <= 12) dayFirst = false;
+    return { y: year4(m[3]), m: dayFirst ? b : a, d: dayFirst ? a : b, confidence: m[3].length === 4 ? 0.9 : 0.85 };
+  }
+
+  m = up.match(new RegExp(`\\b(\\d{1,2})(?:ST|ND|RD|TH)?[\\s-]*${MON}[\\s,-]*(\\d{4}|\\d{2})?\\b`));
+  if (m) return { y: m[3] ? year4(m[3]) : null, m: MONTHS.indexOf(m[2].slice(0, 3)) + 1, d: Number(m[1]), confidence: m[3] ? 0.9 : 0.75 };
+
+  m = up.match(new RegExp(`\\b${MON}\\s*(\\d{1,2})(?:ST|ND|RD|TH)?,?\\s*(\\d{4})?\\b`));
+  if (m) return { y: m[3] ? Number(m[3]) : null, m: MONTHS.indexOf(m[1].slice(0, 3)) + 1, d: Number(m[2]), confidence: m[3] ? 0.9 : 0.75 };
+  return null;
+}
+
+const TIME_RE = /\b([01]?\d|2[0-3])[:.]([0-5]\d)(?::[0-5]\d)?\s?([AP]\.?M\.?)?(?![\d.])/i;
+
+function findTime(text: string): number | null {
+  const m = text.match(TIME_RE);
+  if (!m) return null;
+  let h = Number(m[1]);
+  const pm = m[3]?.toUpperCase().startsWith('P');
+  if (m[3] && h > 12) return null;
+  if (m[3]) h = (h % 12) + (pm ? 12 : 0);
+  return h * 60 + Number(m[2]);
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function readDate(lines: Line[], region: Region, now: number): { date: number | null; minutes: number | null; confidence: number } {
+  for (const l of lines) {
+    // Card expiry lines ("EXP 12/27") never hold the receipt date.
+    if (/\bEXP|\bEXPIRY|\bVALID\b/.test(l.up)) continue;
+    const f = findDate(l.text, region);
+    if (!f) continue;
+    const today = new Date(now);
+    let y = f.y ?? today.getFullYear();
+    // No year printed: the most recent such day that is not in the future.
+    if (f.y === null && new Date(y, f.m - 1, f.d).getTime() > now + DAY_MS) y -= 1;
+    if (!validDay(y, f.m, f.d)) continue;
+    const date = new Date(y, f.m - 1, f.d).getTime();
+    let confidence = f.confidence;
+    if (date > now + DAY_MS) confidence = 0.2;
+    else if (now - date > 400 * DAY_MS) confidence = 0.3;
+    // Time on the date line, else the first time on the line just below / above.
+    const near = [l, lines[l.i + 1], lines[l.i - 1]].filter(Boolean) as Line[];
+    const timeText = near.map((x) => (x === l ? x.text.replace(/\b\d{1,4}[-/.]\d{1,2}[-/.]\d{2,4}\b/, ' ') : x.text));
+    const minutes = timeText.map(findTime).find((v) => v !== null) ?? null;
+    return { date, minutes, confidence };
+  }
+  return { date: null, minutes: null, confidence: 0 };
+}
+
+// ---------------------------------------------------------------- entry point
+
+export function parseReceipt(raw: RawOcr | null, region: Region, now = Date.now()): ParsedReceipt {
+  if (!raw || !raw.lines?.length) return EMPTY_READING;
+  const lines = prepare(raw);
+  const amount = readAmount(lines);
+  const merchant = readMerchant(lines);
+  const date = readDate(lines, region, now);
+  return {
+    amountMinor: amount.minor,
+    merchant: merchant.name,
+    date: date.date,
+    minutes: date.minutes,
+    confidence: { amount: amount.confidence, merchant: merchant.confidence, date: date.confidence },
+  };
+}
