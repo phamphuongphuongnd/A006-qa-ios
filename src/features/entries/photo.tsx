@@ -28,6 +28,33 @@ export async function takePhoto(source: 'camera' | 'library'): Promise<PhotoResu
   }
 }
 
+export type PhotosResult = { ok: true; uris: string[] } | { ok: false; reason: 'cancelled' | 'denied' | 'failed' };
+
+/**
+ * Several photos at once (Q21): the camera gives one, the library lets the driver pick up to `max` (Android 13+ /
+ * iOS 14+ system picker). Extra picks past `max` are dropped here, so callers never exceed the free allowance.
+ */
+export async function takePhotos(source: 'camera' | 'library', max: number): Promise<PhotosResult> {
+  if (max <= 0) return { ok: false, reason: 'cancelled' };
+  if (source === 'camera' || max === 1) {
+    const one = await takePhoto(source);
+    return one.ok ? { ok: true, uris: [one.uri] } : one;
+  }
+  try {
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.6,
+      allowsMultipleSelection: true,
+      selectionLimit: max,
+      orderedSelection: true,
+    });
+    if (res.canceled || !res.assets.length) return { ok: false, reason: 'cancelled' };
+    return { ok: true, uris: res.assets.slice(0, max).map((a) => a.uri) };
+  } catch {
+    return { ok: false, reason: 'failed' };
+  }
+}
+
 /** "Camera access is off" (mockup 11-dialogs · S-03 camera denied). */
 export function CameraDeniedDialog({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   return (

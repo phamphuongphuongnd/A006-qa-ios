@@ -1,8 +1,8 @@
 import { useFocusEffect, useLocalSearchParams, useNavigation, usePreventRemove } from 'expo-router';
 import { router } from '@/services/router';
-import { CalendarClock, ChevronDown, Copy, ImagePlus, MoreHorizontal, Split, Trash2, X } from '@/ui/icons';
+import { CalendarClock, ChevronDown, Copy, ImagePlus, MoreHorizontal, Repeat, Split, Trash2, X } from '@/ui/icons';
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { listCategories } from '@/db/categoriesRepo';
@@ -10,21 +10,31 @@ import { db } from '@/db/client';
 import { addReceipt, createEntry, getEntry, listReceipts, splitSiblings, updateEntry, type EntryPatch } from '@/db/entriesRepo';
 import type { EntryRow as EntryRowT } from '@/db/schema';
 import { formatMoney } from '@/domain/money';
+import { readingToEntryFields } from '@/domain/receiptSignal';
 import type { Currency, EntryType, Scope } from '@/domain/types';
 import { CategorySheet } from '@/features/entries/CategorySheet';
 import { useDateTimePicker } from '@/features/entries/DateTimePick';
 import { EntryRow } from '@/features/entries/EntryRow';
 import { dateTimeLabel, dayMonth } from '@/features/entries/format';
 import { categoryIcon } from '@/features/entries/icons';
-import { keypadText, keypadValue } from '@/features/entries/logic';
-import { CameraDeniedDialog, takePhoto } from '@/features/entries/photo';
+import { CameraDeniedDialog, takePhotos } from '@/features/entries/photo';
 import { ReceiptViewer } from '@/features/entries/ReceiptViewer';
 import { useEntryActions, useReceiptRemoval } from '@/features/entries/useEntryActions';
+import { MAX_PHOTOS_PER_ENTRY, photoSlots } from '@/features/ocr/fill';
+import { OriginCard } from '@/features/ocr/OriginCard';
+import { ocrAvailable, ocrDev, readReceipt } from '@/features/ocr/reader';
+import { entryOrigin, fillEntryOcr, setReceiptOcrText } from '@/features/ocr/repo';
+import { afterSave } from '@/features/ocr/rulesHook';
+import { CalcBar, ExprLine, PhotosUsedUpSheet, trialOffered } from '@/features/ocr/ui';
+import { useAmountExpr } from '@/features/ocr/useAmountExpr';
+import { openPro } from '@/features/pro/openPro';
 import { receiptUri, saveReceipt } from '@/files/receipts';
 import { t } from '@/i18n';
+import { usePhotoAllowance, usePro } from '@/state/pro';
+import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, radius, useTheme } from '@/theme';
-import { Button, Dialog, EmptyState, Group, IconButton, ReceiptThumb, Segmented, Sheet, Txt, useSnackbar } from '@/ui';
+import { Badge, Button, Dialog, EmptyState, Group, IconButton, ReceiptThumb, Segmented, Sheet, Txt, useSnackbar } from '@/ui';
 
 type Draft = Pick<EntryRowT, 'type' | 'amountMinor' | 'occurredAt' | 'note' | 'categoryId' | 'scope'>;
 
@@ -37,7 +47,11 @@ const draftOf = (e: EntryRowT): Draft => ({
   scope: e.scope,
 });
 
-/** S-05 Entry detail — edit in place; ⋯ = Split / Duplicate / Delete; receipts open full screen. */
+/**
+ * S-05 Entry detail — edit in place (amount has the + − × ÷ calculator, Q20); ⋯ = Split / Duplicate / Make recurring
+ * [Pro] / Delete; receipts open full screen; a photo added here is read on the device with Pro (P1-12) and shown as
+ * "Read from receipt: …" for checking. Shows the rule / recurring template that made or sorted the entry (F-05).
+ */
 export default function EntryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const entry = useLive(() => getEntry(db, id), [id], ['entries']);
@@ -78,27 +92,44 @@ function Editor({ entry }: { entry: EntryRowT }) {
   const [dialog, setDialog] = useState<'delete' | 'discard' | null>(null);
   const [viewer, setViewer] = useState<{ id: string; entryId: string; filePath: string } | null>(null);
   const [cameraDenied, setCameraDenied] = useState(false);
+  const [usedUp, setUsedUp] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const amountRef = useRef<ComponentRef<typeof TextInput>>(null);
+  const amount = useAmountExpr(entry.amountMinor);
+  const { status, pro } = usePro();
+  const allowance = usePhotoAllowance();
+  const { settings } = useSettings();
+  const [keyboardUp, setKeyboardUp] = useState(false);
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardUp(true));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardUp(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   const data = useLive(
     () => ({
       receipts: listReceipts(db, entry.id),
       cats: listCategories(db, { includeHidden: true }),
       siblings: entry.splitGroupId ? splitSiblings(db, entry.splitGroupId) : [],
+      origin: entryOrigin(db, entry),
     }),
-    [entry.id, entry.splitGroupId],
-    ['receipts', 'categories', 'entries'],
+    [entry.id, entry.splitGroupId, entry.ruleId, entry.recurringId],
+    ['receipts', 'categories', 'entries', 'rules', 'recurring'],
   );
   const category = draft.categoryId ? data.cats.find((c) => c.id === draft.categoryId) : undefined;
 
   const saved = draftOf(entry);
+  // The amount lives in the calculator; an invalid sum keeps the saved amount out of the patch and blocks Save.
+  const current: Draft = { ...draft, amountMinor: amount.minor > 0 ? amount.minor : saved.amountMinor };
   const patch: EntryPatch = {};
-  (Object.keys(draft) as (keyof Draft)[]).forEach((k) => {
-    if (draft[k] !== saved[k]) (patch as Record<string, unknown>)[k] = draft[k];
+  (Object.keys(current) as (keyof Draft)[]).forEach((k) => {
+    if (current[k] !== saved[k]) (patch as Record<string, unknown>)[k] = current[k];
   });
-  const dirty = Object.keys(patch).length > 0;
-  const valid = draft.amountMinor > 0;
+  const dirty = Object.keys(patch).length > 0 || amount.minor !== saved.amountMinor;
+  const valid = amount.minor > 0;
 
   usePreventRemove(dirty && !leaving, () => setDialog('discard'));
   useEffect(() => {
@@ -122,18 +153,49 @@ function Editor({ entry }: { entry: EntryRowT }) {
     setLeaving(true);
   };
 
+  const slots = photoSlots(allowance.left, 0, MAX_PHOTOS_PER_ENTRY);
+  const ocrOn = (pro || (__DEV__ && ocrDev.forceOn)) && ocrAvailable();
+
   const addPhoto = async (source: 'camera' | 'library') => {
-    const res = await takePhoto(source);
+    // Photos already attached never lock (P1-4); only a new one counts against the free allowance.
+    if (slots.locked) {
+      setUsedUp(true);
+      return;
+    }
+    const res = await takePhotos(source, slots.canAdd);
     if (!res.ok) {
       if (res.reason === 'denied') setCameraDenied(true);
       else if (res.reason === 'failed') snack({ message: t('capture.photoFailed'), above: 'none' });
       return;
     }
-    try {
-      addReceipt(db, entry.id, await saveReceipt(res.uri));
-    } catch {
-      snack({ message: t('capture.photoFailed'), above: 'none', tone: 'error' });
+    const entryId = entry.id;
+    for (const uri of res.uris) {
+      let name: string;
+      try {
+        name = await saveReceipt(uri);
+        addReceipt(db, entryId, name);
+      } catch {
+        snack({ message: t('capture.photoFailed'), above: 'none', tone: 'error' });
+        continue;
+      }
+      if (!ocrOn) continue;
+      readReceipt(uri, settings.region ?? 'UK').then((r) => {
+        if (!r) return;
+        try {
+          setReceiptOcrText(db, entryId, name, r.text);
+          // A still-unsorted entry may now match a rule by the receipt's merchant.
+          if (fillEntryOcr(db, entryId, readingToEntryFields(r.reading))) afterSave(db, entryId);
+        } catch {
+          // Entry deleted meanwhile.
+        }
+      });
     }
+  };
+
+  const makeRecurring = () => {
+    setMenu(false);
+    if (pro) router.push(`/recurring?from=${entry.id}`);
+    else openPro('recurring');
   };
 
   const duplicate = () => {
@@ -171,22 +233,31 @@ function Editor({ entry }: { entry: EntryRowT }) {
         <View>
           <View style={{ paddingHorizontal: GUTTER, gap: 14, paddingTop: 6 }}>
             <View style={{ alignItems: 'center', gap: 10, paddingTop: 4, paddingBottom: 6 }}>
+              <ExprLine amount={amount} />
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`${t('entries.editAmount')}, ${formatMoney(draft.amountMinor, currency)}`}
+                accessibilityLabel={`${t('entries.editAmount')}, ${formatMoney(amount.shownMinor, currency)}${amount.invalid ? `. ${t('ocr.checkSum')}` : ''}`}
                 onPress={() => {
                   setEditingAmount(true);
                   amountRef.current?.focus();
                 }}
                 style={[styles.amountBox, editingAmount && { borderColor: colors.primary }]}>
-                <Txt v="amount" c={draft.amountMinor > 0 ? amountColor : 'textTertiary'} style={{ fontSize: 52, lineHeight: 60 }} adjustsFontSizeToFit numberOfLines={1}>
-                  {formatMoney(draft.amountMinor, currency)}
+                <Txt
+                  v="amount"
+                  c={amount.shownMinor > 0 ? amountColor : 'textTertiary'}
+                  style={[{ fontSize: 52, lineHeight: 60 }, amount.invalid && { opacity: 0.4 }]}
+                  adjustsFontSizeToFit
+                  numberOfLines={1}>
+                  {amount.isExpression
+                    ? t('ocr.equals', { amount: formatMoney(amount.shownMinor, currency) })
+                    : formatMoney(amount.shownMinor, currency)}
                 </Txt>
               </Pressable>
               <TextInput
                 ref={amountRef}
-                value={keypadText(draft.amountMinor)}
-                onChangeText={(v) => set({ amountMinor: keypadValue(v) })}
+                value={amount.expr}
+                selection={amount.selection}
+                onChangeText={amount.onChangeText}
                 onBlur={() => setEditingAmount(false)}
                 keyboardType="number-pad"
                 caretHidden
@@ -278,6 +349,8 @@ function Editor({ entry }: { entry: EntryRowT }) {
               </Row>
             </Group>
 
+            <OriginCard entry={entry} origin={data.origin} currency={currency} />
+
             <View style={{ gap: 6 }}>
               <Txt v="caption" c="textSecondary" style={{ fontFamily: fonts.bold }}>
                 {t('entries.receipts')}
@@ -304,9 +377,10 @@ function Editor({ entry }: { entry: EntryRowT }) {
         </View>
       </ScrollView>
 
-      <View style={{ paddingHorizontal: GUTTER, paddingTop: 8, paddingBottom: Math.max(insets.bottom, 16) + 12 }}>
+      <View style={{ paddingHorizontal: GUTTER, paddingTop: 8, paddingBottom: keyboardUp ? 12 : Math.max(insets.bottom, 16) + 12 }}>
         <Button label={t('entries.saveChanges')} full disabled={!dirty || !valid} onPress={save} />
       </View>
+      {keyboardUp && editingAmount ? <CalcBar onOp={amount.op} /> : null}
 
       {/* ⋯ menu */}
       <Modal visible={menu} transparent animationType="fade" onRequestClose={() => setMenu(false)} statusBarTranslucent>
@@ -321,6 +395,7 @@ function Editor({ entry }: { entry: EntryRowT }) {
             }}
           />
           <MenuItem icon={Copy} label={t('entries.duplicate')} onPress={duplicate} />
+          <MenuItem icon={Repeat} label={t('ocr.makeRecurring')} pro={!pro} onPress={makeRecurring} />
           <MenuItem
             icon={Trash2}
             label={t('common.delete')}
@@ -399,6 +474,7 @@ function Editor({ entry }: { entry: EntryRowT }) {
         ]}
       />
       <CameraDeniedDialog visible={cameraDenied} onClose={() => setCameraDenied(false)} />
+      <PhotosUsedUpSheet visible={usedUp} onClose={() => setUsedUp(false)} trialAvailable={trialOffered(status)} />
       <ReceiptViewer
         uri={viewer ? receiptUri(viewer.filePath) : null}
         caption={`${entry.note || t('common.noNote')} · ${formatMoney(entry.amountMinor, currency)} · ${dayMonth(entry.occurredAt)}`}
@@ -424,7 +500,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-function MenuItem({ icon: Icon, label, onPress, danger }: { icon: typeof Copy; label: string; onPress: () => void; danger?: boolean }) {
+function MenuItem({ icon: Icon, label, onPress, danger, pro }: { icon: typeof Copy; label: string; onPress: () => void; danger?: boolean; pro?: boolean }) {
   const { colors } = useTheme();
   const c = danger ? colors.error : colors.text;
   return (
@@ -433,7 +509,8 @@ function MenuItem({ icon: Icon, label, onPress, danger }: { icon: typeof Copy; l
       onPress={onPress}
       style={({ pressed }) => [styles.menuItem, pressed && { backgroundColor: colors.surfaceAlt }]}>
       <Icon size={22} color={c} />
-      <Txt style={{ color: c }}>{label}</Txt>
+      <Txt style={{ color: c, flex: 1 }}>{label}</Txt>
+      {pro ? <Badge kind="pro" label="PRO" /> : null}
     </Pressable>
   );
 }
@@ -458,7 +535,7 @@ const styles = StyleSheet.create({
   },
   menu: {
     position: 'absolute',
-    width: 200,
+    width: 240,
     padding: 6,
     borderRadius: radius.card,
     borderWidth: 1,
