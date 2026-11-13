@@ -9,7 +9,7 @@ import { openPro } from '@/features/pro/openPro';
 import { t } from '@/i18n';
 import { fonts, useTheme } from '@/theme';
 import { Button, ReceiptThumb, Sheet, Txt } from '@/ui';
-import { Camera, Lock, Receipt, X } from '@/ui/icons';
+import { Camera, Lock, Receipt, X, Zap } from '@/ui/icons';
 
 import { CALC_OPS, formatExpr, type CalcOp } from './calc';
 import { allowanceResetsOn, FREE_PHOTOS_PER_MONTH } from './fill';
@@ -104,7 +104,7 @@ export function ReadingChip() {
       accessibilityLiveRegion="polite"
       accessibilityLabel={t('ocr.reading')}
       style={[styles.chip, { backgroundColor: colors.sunSoft, borderColor: colors.sun, minHeight: 36 }]}>
-      <Receipt size={16} color={colors.text} />
+      <Zap size={16} color={colors.text} />
       <Txt style={{ fontSize: 14, fontFamily: fonts.semibold }} maxFontSizeMultiplier={1.4} numberOfLines={1}>
         {t('ocr.reading')}
       </Txt>

@@ -1,6 +1,6 @@
 import { useFocusEffect, useLocalSearchParams, useNavigation, usePreventRemove } from 'expo-router';
 import { router } from '@/services/router';
-import { CalendarClock, ChevronDown, Copy, ImagePlus, MoreHorizontal, RotateCcw, Split, Trash2, X } from '@/ui/icons';
+import { CalendarClock, ChevronDown, Copy, ImagePlus, MoreHorizontal, Repeat, Split, Trash2, X } from '@/ui/icons';
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,6 +24,7 @@ import { MAX_PHOTOS_PER_ENTRY, photoSlots } from '@/features/ocr/fill';
 import { OriginCard } from '@/features/ocr/OriginCard';
 import { ocrAvailable, ocrDev, readReceipt } from '@/features/ocr/reader';
 import { entryOrigin, fillEntryOcr, setReceiptOcrText } from '@/features/ocr/repo';
+import { afterSave } from '@/features/ocr/rulesHook';
 import { CalcBar, ExprLine, PhotosUsedUpSheet, trialOffered } from '@/features/ocr/ui';
 import { useAmountExpr } from '@/features/ocr/useAmountExpr';
 import { openPro } from '@/features/pro/openPro';
@@ -182,7 +183,8 @@ function Editor({ entry }: { entry: EntryRowT }) {
         if (!r) return;
         try {
           setReceiptOcrText(db, entryId, name, r.text);
-          fillEntryOcr(db, entryId, readingToEntryFields(r.reading));
+          // A still-unsorted entry may now match a rule by the receipt's merchant.
+          if (fillEntryOcr(db, entryId, readingToEntryFields(r.reading))) afterSave(db, entryId);
         } catch {
           // Entry deleted meanwhile.
         }
@@ -393,7 +395,7 @@ function Editor({ entry }: { entry: EntryRowT }) {
             }}
           />
           <MenuItem icon={Copy} label={t('entries.duplicate')} onPress={duplicate} />
-          <MenuItem icon={RotateCcw} label={t('ocr.makeRecurring')} pro={!pro} onPress={makeRecurring} />
+          <MenuItem icon={Repeat} label={t('ocr.makeRecurring')} pro={!pro} onPress={makeRecurring} />
           <MenuItem
             icon={Trash2}
             label={t('common.delete')}

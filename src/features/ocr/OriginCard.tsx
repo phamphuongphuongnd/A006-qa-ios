@@ -7,7 +7,7 @@ import { t } from '@/i18n';
 import { router } from '@/services/router';
 import { fonts, useTheme } from '@/theme';
 import { Txt } from '@/ui';
-import { Receipt, RotateCcw, Tag } from '@/ui/icons';
+import { Receipt, Repeat, Zap } from '@/ui/icons';
 
 import type { entryOrigin } from './repo';
 
@@ -40,7 +40,7 @@ export function OriginCard({
       {origin.rule ? (
         <View style={{ gap: 2 }}>
           <View style={styles.row}>
-            <Tag size={16} color={colors.text} />
+            <Zap size={16} color={colors.text} />
             <Txt style={{ fontFamily: fonts.bold, flexShrink: 1 }} maxFontSizeMultiplier={1.6}>
               {t('ocr.sortedByRule', { rule: origin.rule.label })}
             </Txt>
@@ -51,7 +51,7 @@ export function OriginCard({
       {origin.recurring ? (
         <View style={{ gap: 2 }}>
           <View style={styles.row}>
-            <RotateCcw size={16} color={colors.personal} />
+            <Repeat size={16} color={colors.personal} />
             <Txt style={{ fontFamily: fonts.bold, flexShrink: 1, color: colors.personal }} maxFontSizeMultiplier={1.6}>
               {t('ocr.createdByRecurring', { name: origin.recurring.name })}
             </Txt>

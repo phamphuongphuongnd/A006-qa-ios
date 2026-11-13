@@ -7,6 +7,8 @@ export const ocr = {
   useA11y: 'Use the receipt amount, {amount}',
   reading: 'Reading receipt…',
   readFrom: 'Read from receipt: {parts}',
+  /** F-02; S2 has the same text as sortV2.autoSortedAs — keep one when merging. */
+  savedAutoSorted: 'Saved · {name} (auto-sorted)',
   // Calculator (Q20)
   checkSum: 'Check the sum',
   equals: '= {amount}',

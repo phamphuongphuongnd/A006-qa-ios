@@ -5,6 +5,7 @@ import { signalsOf } from '@/domain/receiptSignal';
 import { allowanceResetsOn, mergeReadings, photoSlots, planFill, planIsEmpty, receiptAt } from '../fill';
 import type { ParsedReceipt } from '../parseReceipt';
 import { attachReadings } from '../reader';
+import { afterSave, rulesHook } from '../rulesHook';
 import { fillEntryOcr, OCR_TEXT_MAX, setReceiptOcrText } from '../repo';
 
 const NOW = new Date(2026, 10, 13, 18, 0).getTime();
@@ -114,5 +115,36 @@ describe('OCR persistence', () => {
     expect(getEntry(db, e.id)).toMatchObject({ ocrAmountMinor: 7240, ocrMerchant: 'Shell', ocrDate: NOV9 });
     expect(listReceipts(db, e.id)[0].ocrText).toBe('SHELL');
     await expect(attachReadings(db, 'gone', [{ filePath: 'a.jpg', read: Promise.reject(new Error('x')) }])).resolves.toBeUndefined();
+  });
+});
+
+describe('rules hook (S2 applyRulesOnSave seam)', () => {
+  afterEach(() => {
+    rulesHook.apply = null;
+    rulesHook.undo = null;
+  });
+
+  it('is a no-op until S2 plugs in, never throws', () => {
+    const db = makeTestDb();
+    expect(afterSave(db, 'x')).toBeNull();
+    rulesHook.apply = () => {
+      throw new Error('boom');
+    };
+    expect(afterSave(db, 'x')).toBeNull();
+  });
+
+  it('re-applies rules after a late reading filled the merchant', async () => {
+    const db = makeTestDb();
+    const e = createEntry(db, { type: 'expense', amountMinor: 7240, currency: 'GBP', receiptPaths: ['a.jpg'] }, NOW);
+    const seen: (string | null)[] = [];
+    rulesHook.apply = (d, id) => {
+      seen.push(getEntry(d, id)!.ocrMerchant);
+      return null;
+    };
+    await attachReadings(db, e.id, [{ filePath: 'a.jpg', read: Promise.resolve({ reading: reading(), text: 'SHELL' }) }], afterSave);
+    expect(seen).toEqual(['Shell']);
+    // Nothing new filled → rules not run again.
+    await attachReadings(db, e.id, [{ filePath: 'a.jpg', read: Promise.resolve({ reading: reading(), text: 'SHELL' }) }], afterSave);
+    expect(seen).toHaveLength(1);
   });
 });

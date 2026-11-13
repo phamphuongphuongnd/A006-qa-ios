@@ -54,13 +54,19 @@ export interface PendingRead {
  * After Save: writes each photo's text and fills the entry's empty ocr_* columns from readings that finished late.
  * Runs detached — the capture sheet may already be gone.
  */
-export async function attachReadings(db: AppDb, entryId: string, items: PendingRead[]): Promise<void> {
+export async function attachReadings(
+  db: AppDb,
+  entryId: string,
+  items: PendingRead[],
+  /** Re-run rules once a late merchant / amount landed (rulesHook.afterSave). */
+  onFilled?: (db: AppDb, entryId: string) => unknown,
+): Promise<void> {
   const results = await Promise.all(items.map((it) => (it.read ?? Promise.resolve(null)).catch(() => null)));
   try {
     results.forEach((r, i) => {
       if (r?.text) setReceiptOcrText(db, entryId, items[i].filePath, r.text);
     });
-    fillEntryOcr(db, entryId, mergeReadings(results.map((r) => r?.reading ?? null)));
+    if (fillEntryOcr(db, entryId, mergeReadings(results.map((r) => r?.reading ?? null)))) onFilled?.(db, entryId);
   } catch {
     // Entry deleted (Undo) before the reading finished: nothing to attach to.
   }

@@ -16,6 +16,7 @@ import { dateTimeLabel } from '@/features/entries/format';
 import { MAX_PHOTOS_PER_ENTRY, photoSlots, planFill } from '@/features/ocr/fill';
 import type { ParsedReceipt } from '@/features/ocr/parseReceipt';
 import { attachReadings, ocrAvailable, ocrDev, type PendingRead } from '@/features/ocr/reader';
+import { afterSave, undoAfterSave } from '@/features/ocr/rulesHook';
 import {
   CalcBar,
   ExprLine,
@@ -205,19 +206,24 @@ export default function CaptureScreen() {
       receiptPaths: items.map((i) => i.filePath),
       ...photos.finishedFields(),
     });
-    if (items.some((i) => i.read)) void attachReadings(db, row.id, items);
-    // TODO(S2): apply rules at save here (function name from the coordinator) → "Saved · Fuel (auto-sorted)".
+    // Rules [Pro] sort it now (S2's applyRulesOnSave via rulesHook); a reading that lands later re-applies them.
+    const auto = afterSave(db, row.id);
+    if (items.some((i) => i.read)) void attachReadings(db, row.id, items, afterSave);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const keep = settings.keepAdding;
     snack({
       message: photoFailed
         ? t('capture.photoFailed')
-        : t('capture.saved', {
-            amount: formatMoney(minor, currency),
-            type: type === 'income' ? t('capture.typeIncome') : t('capture.typeExpense'),
-          }),
+        : auto
+          ? t('ocr.savedAutoSorted', { name: auto.categoryName })
+          : t('capture.saved', {
+              amount: formatMoney(minor, currency),
+              type: type === 'income' ? t('capture.typeIncome') : t('capture.typeExpense'),
+            }),
       actionLabel: t('common.undo'),
       onAction: () => {
+        // "Saved · Fuel (auto-sorted)" + Undo takes back the sorting, not the entry (F-02).
+        if (auto && !photoFailed) return undoAfterSave(db, row.id);
         const { orphaned } = deleteEntries(db, [row.id]);
         deleteReceiptFiles(orphaned);
       },
