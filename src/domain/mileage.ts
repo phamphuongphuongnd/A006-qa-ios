@@ -18,19 +18,28 @@ export interface RateTier {
 }
 
 /**
- * Defaults, editable in Settings (route /mileage-rates). UK: HMRC approved mileage rates for cars and vans.
- * US: IRS 2026 business rate 72.5¢ (IR-2025-128), 76¢ for miles driven from 1 Jul 2026. Re-check every January.
+ * Defaults, editable in Settings (route /mileage-rates). UK: HMRC approved mileage rates for cars and vans —
+ * 45p / 25p until 5 Apr 2026, 55p / 25p from 6 Apr 2026 (gov.uk policy paper, 17 Jun 2026; the 10,000-mile
+ * threshold counts cumulative miles in the tax year). US: IRS 2026 business rate 72.5¢ (IR-2025-128), 76¢ for miles driven from 1 Jul 2026. Re-check every January.
  */
 export const DEFAULT_RATES: Record<Region, RateTier[]> = {
   UK: [
     { upToMiles: 10_000, minorPerMile: 45 },
     { upToMiles: null, minorPerMile: 25 },
+    { upToMiles: 10_000, minorPerMile: 55, from: '2026-04-06' },
+    { upToMiles: null, minorPerMile: 25, from: '2026-04-06' },
   ],
   US: [
     { upToMiles: null, minorPerMile: 72.5 },
     { upToMiles: null, minorPerMile: 76, from: '2026-07-01' },
   ],
 };
+
+/** UK default before the 2026/27 change. Stored settings still holding exactly this are read as `DEFAULT_RATES.UK`. */
+export const LEGACY_UK_RATES: RateTier[] = [
+  { upToMiles: 10_000, minorPerMile: 45 },
+  { upToMiles: null, minorPerMile: 25 },
+];
 
 /**
  * Tiered estimate for a tax year's business miles. Estimate only — not tax advice.

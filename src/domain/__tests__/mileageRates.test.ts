@@ -3,6 +3,7 @@ import {
   flattenPeriods,
   formatDistanceNumber,
   formatRate,
+  LEGACY_UK_RATES,
   mileageEstimate,
   mileageEstimateByDate,
   parseLocalDate,
@@ -73,7 +74,22 @@ describe('mileageEstimateByDate', () => {
       { at: day(2026, 5, 1), miles: 6000 },
       { at: day(2026, 9, 1), miles: 2412 },
     ];
-    expect(mileageEstimateByDate(trips, DEFAULT_RATES.UK)).toBe(mileageEstimate(8412, DEFAULT_RATES.UK));
+    expect(mileageEstimateByDate(trips, LEGACY_UK_RATES)).toBe(mileageEstimate(8412, LEGACY_UK_RATES));
+  });
+
+  it('UK: 45p up to 5 Apr 2026, 55p from 6 Apr 2026 (X1)', () => {
+    expect(mileageEstimateByDate([{ at: day(2026, 4, 5), miles: 100 }], DEFAULT_RATES.UK)).toBe(4500);
+    expect(mileageEstimateByDate([{ at: new Date(2026, 3, 6).getTime(), miles: 100 }], DEFAULT_RATES.UK)).toBe(5500);
+    expect(ratesOn(DEFAULT_RATES.UK, day(2025, 6, 1)).map((t) => t.minorPerMile)).toEqual([45, 25]);
+    expect(ratesOn(DEFAULT_RATES.UK, day(2026, 4, 6)).map((t) => t.minorPerMile)).toEqual([55, 25]);
+  });
+
+  it('UK 2025/26 stays at 45p / 25p over 10,000 mi (X1)', () => {
+    const trips = [
+      { at: day(2025, 5, 1), miles: 9800 },
+      { at: day(2026, 3, 1), miles: 500 },
+    ];
+    expect(mileageEstimateByDate(trips, DEFAULT_RATES.UK)).toBe(10_000 * 45 + 300 * 25);
   });
 
   it('crosses the UK 10,000 mi threshold inside one trip, in date order', () => {
@@ -81,8 +97,8 @@ describe('mileageEstimateByDate', () => {
       { at: day(2026, 12, 1), miles: 500 },
       { at: day(2026, 5, 1), miles: 9800 },
     ];
-    // 10,000 × 45p + 300 × 25p
-    expect(mileageEstimateByDate(trips, DEFAULT_RATES.UK)).toBe(450000 + 7500);
+    // 2026/27: 10,000 × 55p + 300 × 25p
+    expect(mileageEstimateByDate(trips, DEFAULT_RATES.UK)).toBe(550000 + 7500);
   });
 
   it('keeps the cumulative threshold across a rate change', () => {

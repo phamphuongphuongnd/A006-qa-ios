@@ -143,7 +143,7 @@
 | TC-132 | F-12 | Chuyến bị ngắt (force-stop app khi đang chạy) | Lần mở sau: thẻ cam "Your trip stopped recording at …" + "Add missing miles" / "OK" | M + T tripsX | ❌ B-11 thẻ chỉ ở Miles, không ở Home |
 | TC-133 | F-12 | Chạy xe thật 10–20 dặm | Sai lệch ≤ 3% so đồng hồ xe | M·P | ⏭ chờ Phương chạy xe thật (mục treo Bước 3) |
 | TC-134 | F-13 | Tổng Business / Personal theo năm thuế | Đúng | T repos | ✅ |
-| TC-135 | F-13 | UK ước tính | 45p 10.000 dặm đầu, 25p sau; vượt ngưỡng trong 1 chuyến | T rates, splitM | ✅ |
+| TC-135 | F-13 | UK ước tính | 2026/27: 55p 10.000 dặm đầu, 25p sau; vượt ngưỡng trong 1 chuyến; 2025/26 vẫn 45p / 25p | T rates, splitM, reports | ✅ |
 | TC-136 | F-13 | US ước tính | 72.5¢ tới 30/6, 76¢ từ 1/7/2026 | T rates | ✅ |
 | TC-137 | F-13 | Header "Miles · Tax year 2026/27 ▾" | Đổi năm thì tổng đổi theo | M | ✅ |
 | TC-138 | F-13 | Danh sách chuyến | Nhóm theo tháng, dòng "Tue 10 Nov · 128.4 mi · GPS · Work · …" | M + T fmt | ✅ |
@@ -209,3 +209,4 @@
 | TC-198 | Mặc định | Quyền trong APK, không mạng, không quảng cáo, không đăng nhập | Không có quyền thừa; không gọi mạng ngoài link Privacy | M | ❌ B-19 quyền thừa trong APK |
 | TC-199 | Tiền | Số thực / làm tròn | formatMoney từ chối số thực; mọi tổng là số nguyên | T money | ✅ |
 | TC-200 | Ngôn ngữ | Chỉ tiếng Anh, mọi chuỗi qua i18n | Không lộ key i18n trên màn | M | ✅ không thấy key i18n lộ trên mọi màn đã đi qua |
+| TC-201 | F-13 | Mức UK đổi 6/4/2026 (X1) | Chuyến 5/4/2026 tính 45p, 6/4/2026 tính 55p; mức mặc định cũ đã lưu (45p/25p) tự đọc thành mặc định mới, mức tự sửa giữ nguyên; Settings → Mileage rates có kỳ "From 6 Apr 2026" | T rates, repos + M | ⏳ |
