@@ -3,7 +3,7 @@ import { and, count, desc, eq, exists, gte, inArray, isNull, lt, or, sql, type S
 import { convertMinor, parseMinor } from '@/domain/money';
 import { checkSplit, planMerge } from '@/domain/splitMerge';
 import type { SortedEntry } from '@/domain/suggest';
-import type { Currency, EntryType, Minor, Period, Scope } from '@/domain/types';
+import type { Currency, EntrySource, EntryType, Minor, Period, Scope } from '@/domain/types';
 import { weekOf } from '@/domain/week';
 
 import { entries, receipts, type EntryRow, type ReceiptRow } from './schema';
@@ -19,6 +19,13 @@ export interface NewEntry {
   categoryId?: string | null;
   /** Paths (relative to the receipts dir) of photos already saved to disk. */
   receiptPaths?: string[];
+  /** Bản 2: set by the recurring generator / rule engine / OCR (S2–S4). */
+  source?: EntrySource;
+  recurringId?: string | null;
+  ruleId?: string | null;
+  ocrAmountMinor?: Minor | null;
+  ocrMerchant?: string | null;
+  ocrDate?: number | null;
 }
 
 export function createEntry(db: AppDb, input: NewEntry, now = Date.now()): EntryRow {
@@ -39,6 +46,13 @@ export function createEntry(db: AppDb, input: NewEntry, now = Date.now()): Entry
     splitFromMinor: null,
     createdAt: now,
     updatedAt: now,
+    source: input.source ?? 'manual',
+    ruleId: input.ruleId ?? null,
+    recurringId: input.recurringId ?? null,
+    autoReviewedAt: null,
+    ocrAmountMinor: input.ocrAmountMinor ?? null,
+    ocrMerchant: input.ocrMerchant ?? null,
+    ocrDate: input.ocrDate ?? null,
   } satisfies EntryRow;
   db.transaction((tx) => {
     tx.insert(entries).values(row).run();
@@ -88,7 +102,7 @@ export const listReceipts = (db: AppDb, entryId: string): ReceiptRow[] =>
   db.select().from(receipts).where(eq(receipts.entryId, entryId)).all();
 
 export function addReceipt(db: AppDb, entryId: string, filePath: string, now = Date.now()): ReceiptRow {
-  const row = { id: newId(), entryId, filePath, createdAt: now };
+  const row: ReceiptRow = { id: newId(), entryId, filePath, createdAt: now, ocrText: null };
   db.insert(receipts).values(row).run();
   return row;
 }
@@ -251,6 +265,9 @@ const LIST_COLUMNS = sql.raw(
   "entries"."occurred_at" AS occurredAt, "entries"."note" AS note, "entries"."category_id" AS categoryId,
   "entries"."scope" AS scope, "entries"."sorted_at" AS sortedAt, "entries"."split_group_id" AS splitGroupId,
   "entries"."split_from_minor" AS splitFromMinor, "entries"."created_at" AS createdAt, "entries"."updated_at" AS updatedAt,
+  "entries"."source" AS source, "entries"."rule_id" AS ruleId, "entries"."recurring_id" AS recurringId,
+  "entries"."auto_reviewed_at" AS autoReviewedAt, "entries"."ocr_amount_minor" AS ocrAmountMinor,
+  "entries"."ocr_merchant" AS ocrMerchant, "entries"."ocr_date" AS ocrDate,
   (SELECT COUNT(*) FROM "receipts" WHERE "receipts"."entry_id" = "entries"."id") AS receiptCount`,
 );
 

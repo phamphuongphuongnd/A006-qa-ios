@@ -1,6 +1,7 @@
 import { and, asc, count, eq, max } from 'drizzle-orm';
 
 import { DEFAULT_CATEGORIES, mapTaxLine } from '@/domain/categories';
+import { defaultMtdCategory, isVehicleRunningCostKey, type HmrcCategory } from '@/domain/mtd';
 import type { EntryType, Region } from '@/domain/types';
 
 import { categories, entries, type CategoryRow } from './schema';
@@ -22,6 +23,8 @@ export function seedCategories(db: AppDb, region: Region): void {
         taxLine: c.taxLine,
         sortOrder: i,
         hidden: false,
+        mtdCategory: defaultMtdCategory(c.taxLine, c.type),
+        vehicleRunningCost: isVehicleRunningCostKey(c.key),
       })),
     )
     .run();
@@ -55,14 +58,31 @@ function checkName(db: AppDb, type: EntryType, name: string, exceptId?: string):
 
 export function createCategory(
   db: AppDb,
-  input: { type: EntryType; name: string; icon: string; color: string; taxLine: string },
+  input: {
+    type: EntryType;
+    name: string;
+    icon: string;
+    color: string;
+    taxLine: string;
+    mtdCategory?: HmrcCategory | null;
+    vehicleRunningCost?: boolean;
+  },
 ): { ok: true; id: string } | { ok: false; error: CategoryError } {
   const error = checkName(db, input.type, input.name);
   if (error) return { ok: false, error };
   const top = db.select({ m: max(categories.sortOrder) }).from(categories).get();
   const id = newId();
   db.insert(categories)
-    .values({ id, ...input, name: input.name.trim(), key: null, sortOrder: (top?.m ?? -1) + 1, hidden: false })
+    .values({
+      id,
+      ...input,
+      name: input.name.trim(),
+      key: null,
+      sortOrder: (top?.m ?? -1) + 1,
+      hidden: false,
+      mtdCategory: input.mtdCategory !== undefined ? input.mtdCategory : defaultMtdCategory(input.taxLine, input.type),
+      vehicleRunningCost: input.vehicleRunningCost ?? false,
+    })
     .run();
   return { ok: true, id };
 }
@@ -70,7 +90,9 @@ export function createCategory(
 export function updateCategory(
   db: AppDb,
   id: string,
-  patch: Partial<Pick<CategoryRow, 'name' | 'icon' | 'color' | 'taxLine' | 'hidden'>>,
+  patch: Partial<
+    Pick<CategoryRow, 'name' | 'icon' | 'color' | 'taxLine' | 'hidden' | 'mtdCategory' | 'vehicleRunningCost'>
+  >,
 ): { ok: true } | { ok: false; error: CategoryError } {
   const cur = db.select().from(categories).where(eq(categories.id, id)).get();
   if (!cur) return { ok: true };
@@ -78,6 +100,10 @@ export function updateCategory(
     const error = checkName(db, cur.type, patch.name, id);
     if (error) return { ok: false, error };
     patch = { ...patch, name: patch.name.trim() };
+  }
+  // A new tax line brings its default MTD category unless the editor chose one in the same save.
+  if (patch.taxLine !== undefined && patch.taxLine !== cur.taxLine && patch.mtdCategory === undefined) {
+    patch = { ...patch, mtdCategory: defaultMtdCategory(patch.taxLine, cur.type) };
   }
   db.update(categories).set(patch).where(eq(categories.id, id)).run();
   return { ok: true };
@@ -114,12 +140,21 @@ export function applyRegionToCategories(db: AppDb, from: Region, to: Region): vo
       if (!target) {
         // Custom category: move to the new form's equivalent line (B-33).
         const taxLine = mapTaxLine(c.taxLine, c.type, from, to);
-        if (taxLine !== c.taxLine) tx.update(categories).set({ taxLine }).where(eq(categories.id, c.id)).run();
+        if (taxLine !== c.taxLine) {
+          tx.update(categories)
+            .set({ taxLine, mtdCategory: defaultMtdCategory(taxLine, c.type) })
+            .where(eq(categories.id, c.id))
+            .run();
+        }
         continue;
       }
       const renamed = c.name !== fromByKey.get(target.key)?.name;
       tx.update(categories)
-        .set({ taxLine: target.taxLine, name: renamed ? c.name : target.name })
+        .set({
+          taxLine: target.taxLine,
+          name: renamed ? c.name : target.name,
+          mtdCategory: defaultMtdCategory(target.taxLine, c.type),
+        })
         .where(eq(categories.id, c.id))
         .run();
     }

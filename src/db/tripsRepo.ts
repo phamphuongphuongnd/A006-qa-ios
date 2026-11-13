@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 
 import { isStationaryFix, metersToMiles, milesToMeters, trackDistance, TRIP_REMINDER_MS } from '@/domain/mileage';
-import type { Period, Scope } from '@/domain/types';
+import type { Period, Scope, TripStartedBy } from '@/domain/types';
 
 import { tripPoints, trips, type TripRow } from './schema';
 import { newId, type AppDb } from './types';
@@ -12,7 +12,12 @@ export const getTrip = (db: AppDb, id: string) => db.select().from(trips).where(
 export const getActiveTrip = (db: AppDb) =>
   db.select().from(trips).where(inArray(trips.status, ['running', 'paused'])).orderBy(desc(trips.startedAt)).get();
 
-export function startTrip(db: AppDb, scope: Scope = 'work', now = Date.now()): TripRow {
+export function startTrip(
+  db: AppDb,
+  scope: Scope = 'work',
+  now = Date.now(),
+  startedBy: TripStartedBy = 'user',
+): TripRow {
   const active = getActiveTrip(db);
   if (active) return active;
   const row: TripRow = {
@@ -28,6 +33,11 @@ export function startTrip(db: AppDb, scope: Scope = 'work', now = Date.now()): T
     purpose: '',
     edited: false,
     lastPointAt: now,
+    startedBy,
+    originalStartedAt: null,
+    originalEndedAt: null,
+    originalDistanceM: null,
+    classifiedBy: null,
   };
   db.insert(trips).values(row).run();
   return row;
@@ -125,6 +135,11 @@ export function addManualTrip(db: AppDb, t: ManualTrip): TripRow {
     purpose: t.purpose.trim(),
     edited: false,
     lastPointAt: null,
+    startedBy: null,
+    originalStartedAt: null,
+    originalEndedAt: null,
+    originalDistanceM: null,
+    classifiedBy: null,
   };
   db.insert(trips).values(row).run();
   return row;

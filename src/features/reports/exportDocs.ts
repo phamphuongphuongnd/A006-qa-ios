@@ -2,7 +2,7 @@ import { isoDate } from '@/domain/csv';
 import { formatDistanceNumber } from '@/domain/mileage';
 import { formatMoney, toDecimalString } from '@/domain/money';
 import type { Report } from '@/domain/report';
-import type { Currency, EntryType, Minor, Scope } from '@/domain/types';
+import type { Currency, EntryType, Minor, Scope, TripScope } from '@/domain/types';
 
 import type { MonthPoint } from './series';
 
@@ -69,7 +69,7 @@ export interface PdfInput {
   months: MonthPoint[];
   includePersonal: boolean;
   mileage: { workMiles: number; estimateMinor: Minor; ratesNote: string } | null;
-  trips: { startedAt: number; miles: number; scope: Scope; purpose: string; source: 'gps' | 'manual' }[];
+  trips: { startedAt: number; miles: number; scope: TripScope; purpose: string; source: 'gps' | 'manual' }[];
   entries: { occurredAt: number; type: EntryType; amountMinor: Minor; categoryName: string | null; scope: Scope; note: string }[];
   generatedAt: number;
 }
@@ -85,7 +85,7 @@ export function reportHtml(p: PdfInput): string {
   const row = (cells: string[], cls = '') => `<tr${cls ? ` class="${cls}"` : ''}>${cells.map((c) => `<td>${c}</td>`).join('')}</tr>`;
   // <thead>: Android's print WebView repeats it at the top of every page a long table runs onto (B-26).
   const head = (cells: string[]) => `<thead><tr>${cells.map((c) => `<th>${e(c)}</th>`).join('')}</tr></thead>`;
-  const scopeLabel = (s: Scope) => (s === 'work' ? 'Work' : 'Personal');
+  const scopeLabel = (s: TripScope) => (s === 'work' ? 'Work' : s === 'personal' ? 'Personal' : 'Unsorted');
   const typeLabel = (t: EntryType) => (t === 'income' ? 'Income' : 'Expense');
 
   const byCat = (type: EntryType) =>

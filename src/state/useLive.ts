@@ -5,7 +5,20 @@ import { addDatabaseChangeListener } from 'expo-sqlite';
 import { useContext, useEffect, useReducer, useRef, type DependencyList } from 'react';
 
 /** SQLite tables a live query can depend on (names as in `src/db/schema.ts`). */
-export type LiveTable = 'entries' | 'receipts' | 'categories' | 'trips' | 'trip_points' | 'settings';
+export type LiveTable =
+  | 'entries'
+  | 'receipts'
+  | 'categories'
+  | 'trips'
+  | 'trip_points'
+  | 'settings'
+  | 'trip_stops'
+  | 'trip_segments'
+  | 'rules'
+  | 'rule_offers'
+  | 'recurring'
+  | 'known_routes'
+  | 'pro_state';
 
 const versions = new Map<string, number>();
 const subs = new Map<string, Set<() => void>>();

@@ -5,6 +5,7 @@ import { useState } from 'react';
 
 import { db } from '@/db/client';
 import { deleteTrip, getTrip, updateManualTrip, updateTrip } from '@/db/tripsRepo';
+import { pickerScope } from '@/domain/types';
 import { distanceValue, formatClock, formatDay, inputToMiles } from '@/features/trips/format';
 import { ModalHeader } from '@/features/trips/ModalHeader';
 import { TripForm } from '@/features/trips/TripForm';
@@ -64,7 +65,7 @@ export default function EditTripScreen() {
           end: odo ? trim(trip.odoEnd!) : '',
           distance: trim(distanceValue(trip.distanceM, unit)),
           date: trip.startedAt,
-          scope: trip.scope,
+          scope: pickerScope(trip.scope),
           purpose: trip.purpose,
         }}
         extra={

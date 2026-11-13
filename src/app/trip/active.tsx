@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { db } from '@/db/client';
 import type { TripRow } from '@/db/schema';
 import { getTrip, recentPurposes, tripPointsOf } from '@/db/tripsRepo';
-import type { Scope } from '@/domain/types';
+import { pickerScope, type Scope } from '@/domain/types';
 import {
   discardTrip,
   endActiveTrip,
@@ -298,7 +298,7 @@ function EndButton({ onPress }: { onPress: () => void }) {
 /** "Trip saved · 128.4 mi" sheet: Work / Personal, purpose, Save / Discard trip. Closing the sheet saves. */
 function EndTripSheet({ trip, unit, onDone }: { trip: TripRow; unit: 'mi' | 'km'; onDone: (saved: boolean) => void }) {
   const { colors } = useTheme();
-  const [scope, setScope] = useState<Scope>(trip.scope);
+  const [scope, setScope] = useState<Scope>(pickerScope(trip.scope));
   const [purpose, setPurpose] = useState(trip.purpose);
   const [askDiscard, setAskDiscard] = useState(false);
   const [suggestions] = useState(() => recentPurposes(db, 4));

@@ -1,5 +1,5 @@
 import { toDecimalString } from './money';
-import type { Currency, EntryType, Minor, Scope } from './types';
+import type { Currency, EntryType, Minor, Scope, TripScope } from './types';
 
 /** RFC 4180 field; also neutralises spreadsheet formula injection (=, +, -, @ at start). */
 export function csvField(value: string | number | boolean | null | undefined): string {
@@ -79,7 +79,8 @@ export function totalsCsv(totals: CsvTotal[], currency: Currency, periodLabel: s
 export interface CsvTrip {
   startedAt: number;
   miles: number;
-  scope: Scope;
+  /** Raw export: an automatic trip still waiting in the Sort queue exports as "unsorted". */
+  scope: TripScope;
   purpose: string;
   source: 'gps' | 'manual';
   odoStart: number | null;

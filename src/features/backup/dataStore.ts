@@ -1,5 +1,22 @@
-import { categories, entries, receipts, settings, tripPoints, trips } from '@/db/schema';
+import {
+  categories,
+  entries,
+  knownRoutes,
+  proState,
+  receipts,
+  recurring,
+  ruleOffers,
+  rules,
+  settings,
+  tripPoints,
+  trips,
+  tripSegments,
+  tripStops,
+  type CategoryRow,
+  type TripRow,
+} from '@/db/schema';
 import type { AppDb } from '@/db/types';
+import { defaultMtdCategory, isVehicleRunningCostKey } from '@/domain/mtd';
 
 import type { BackupTables } from './pack';
 
@@ -12,11 +29,18 @@ export function snapshotTables(db: AppDb): BackupTables {
     trips: db.select().from(trips).all(),
     tripPoints: db.select().from(tripPoints).all(),
     settings: db.select().from(settings).all(),
+    tripStops: db.select().from(tripStops).all(),
+    tripSegments: db.select().from(tripSegments).all(),
+    rules: db.select().from(rules).all(),
+    ruleOffers: db.select().from(ruleOffers).all(),
+    recurring: db.select().from(recurring).all(),
+    knownRoutes: db.select().from(knownRoutes).all(),
+    proState: db.select().from(proState).all(),
   };
 }
 
-/** SQLite allows ~999 bound variables per statement; entries have 14 columns. */
-const CHUNK = 50;
+/** SQLite allows ~999 bound variables per statement; entries have 21 columns. */
+const CHUNK = 40;
 
 function insertChunks<T>(rows: T[], insert: (part: T[]) => void) {
   for (let i = 0; i < rows.length; i += CHUNK) insert(rows.slice(i, i + CHUNK));
@@ -24,12 +48,39 @@ function insertChunks<T>(rows: T[], insert: (part: T[]) => void) {
 
 function clearAll(tx: AppDb) {
   // Children first (foreign keys are on).
+  tx.delete(tripSegments).run();
+  tx.delete(tripStops).run();
   tx.delete(tripPoints).run();
   tx.delete(trips).run();
+  tx.delete(knownRoutes).run();
   tx.delete(receipts).run();
   tx.delete(entries).run();
+  tx.delete(rules).run();
+  tx.delete(ruleOffers).run();
+  tx.delete(recurring).run();
   tx.delete(categories).run();
   tx.delete(settings).run();
+  // pro_state is not the driver's records: "Delete all data" keeps it and a restore never overwrites it (a backup made
+  // before the trial must not hand out a second trial). A new phone with no Pro state takes the backup's.
+}
+
+/**
+ * Version-1 backups have no bản-2 columns. Give them what the 0001 migration gives existing rows: MTD category from
+ * the SA103 line, built-in vehicle running costs, GPS trips started by the user. Rows that carry the columns are
+ * left as they are (the driver's own choices).
+ */
+function upgradeCategory(c: CategoryRow): CategoryRow {
+  const r = c as Partial<CategoryRow> & CategoryRow;
+  return {
+    ...c,
+    mtdCategory: r.mtdCategory === undefined ? defaultMtdCategory(c.taxLine, c.type) : r.mtdCategory,
+    vehicleRunningCost: r.vehicleRunningCost === undefined ? isVehicleRunningCostKey(c.key) : r.vehicleRunningCost,
+  };
+}
+
+function upgradeTrip(t: TripRow): TripRow {
+  const r = t as Partial<TripRow> & TripRow;
+  return r.startedBy === undefined ? { ...t, startedBy: t.source === 'gps' ? 'user' : null } : t;
 }
 
 /**
@@ -42,12 +93,19 @@ export function replaceAllData(db: AppDb, t: BackupTables, backupCreatedAt?: num
   db.transaction((tx) => {
     const d = tx as unknown as AppDb;
     clearAll(d);
-    insertChunks(t.categories, (p) => d.insert(categories).values(p).run());
+    insertChunks(t.categories.map(upgradeCategory), (p) => d.insert(categories).values(p).run());
     insertChunks(t.entries, (p) => d.insert(entries).values(p).run());
     insertChunks(t.receipts, (p) => d.insert(receipts).values(p).run());
-    insertChunks(t.trips, (p) => d.insert(trips).values(p).run());
+    insertChunks(t.trips.map(upgradeTrip), (p) => d.insert(trips).values(p).run());
     // Point ids are autoincrement; keep them so the order of a track is preserved.
     insertChunks(t.tripPoints, (p) => d.insert(tripPoints).values(p).run());
+    insertChunks(t.tripStops ?? [], (p) => d.insert(tripStops).values(p).run());
+    insertChunks(t.tripSegments ?? [], (p) => d.insert(tripSegments).values(p).run());
+    insertChunks(t.rules ?? [], (p) => d.insert(rules).values(p).run());
+    insertChunks(t.ruleOffers ?? [], (p) => d.insert(ruleOffers).values(p).run());
+    insertChunks(t.recurring ?? [], (p) => d.insert(recurring).values(p).run());
+    insertChunks(t.knownRoutes ?? [], (p) => d.insert(knownRoutes).values(p).run());
+    if (!d.select().from(proState).get()) insertChunks(t.proState ?? [], (p) => d.insert(proState).values(p).run());
     insertChunks(t.settings, (p) => d.insert(settings).values(p).run());
     if (backupCreatedAt !== undefined) {
       const raw = t.settings.find((r) => r.key === 'lastBackupAt')?.value;

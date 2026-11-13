@@ -1,6 +1,19 @@
 import { strFromU8, strToU8, unzipSync, Zip, ZipDeflate, ZipPassThrough } from 'fflate';
 
-import type { CategoryRow, EntryRow, ReceiptRow, TripPointRow, TripRow } from '@/db/schema';
+import type {
+  CategoryRow,
+  EntryRow,
+  KnownRouteRow,
+  ProStateRow,
+  ReceiptRow,
+  RecurringRow,
+  RuleOfferRow,
+  RuleRow,
+  TripPointRow,
+  TripRow,
+  TripSegmentRow,
+  TripStopRow,
+} from '@/db/schema';
 
 /**
  * Backup file = a ZIP with the extension `.sundaysort`:
@@ -9,8 +22,12 @@ import type { CategoryRow, EntryRow, ReceiptRow, TripPointRow, TripRow } from '@
  * Pure functions (no file system, no DB) so the round trip is unit-tested.
  */
 export const BACKUP_FORMAT = 'sundaysort-backup';
-/** Bump when the backup layout or the DB schema changes in a way older apps can't read. */
-export const BACKUP_VERSION = 1;
+/**
+ * Bump when the backup layout or the DB schema changes in a way older apps can't read.
+ * 2 (bản 2): + trip stops / segments, rules, rule offers, recurring, known routes, Pro state; new columns.
+ * Version-1 files still restore: the new tables come back empty and new columns take their defaults.
+ */
+export const BACKUP_VERSION = 2;
 export const BACKUP_EXT = 'sundaysort';
 export const MANIFEST_NAME = 'backup.json';
 export const PHOTO_DIR = 'receipts/';
@@ -22,7 +39,18 @@ export interface BackupTables {
   trips: TripRow[];
   tripPoints: TripPointRow[];
   settings: { key: string; value: string }[];
+  // Bản 2 (absent from version-1 files → read as []).
+  tripStops: TripStopRow[];
+  tripSegments: TripSegmentRow[];
+  rules: RuleRow[];
+  ruleOffers: RuleOfferRow[];
+  recurring: RecurringRow[];
+  knownRoutes: KnownRouteRow[];
+  proState: ProStateRow[];
 }
+
+/** Tables a version-1 backup does not have. */
+export const V2_TABLES = ['tripStops', 'tripSegments', 'rules', 'ruleOffers', 'recurring', 'knownRoutes', 'proState'] as const;
 
 export interface BackupCounts {
   entries: number;
@@ -193,9 +221,17 @@ const ROW_CHECKS: Record<keyof BackupTables, (r: Record<string, unknown>) => boo
     (r.scope === 'work' || r.scope === 'personal') &&
     (r.categoryId === null || isStr(r.categoryId)),
   receipts: (r) => isStr(r.id) && isStr(r.entryId) && isStr(r.filePath) && isSafePhotoName(r.filePath as string),
-  trips: (r) => isStr(r.id) && isNum(r.distanceM) && isInt(r.startedAt) && (r.scope === 'work' || r.scope === 'personal'),
+  trips: (r) =>
+    isStr(r.id) && isNum(r.distanceM) && isInt(r.startedAt) && (r.scope === 'work' || r.scope === 'personal' || r.scope === 'unsorted'),
   tripPoints: (r) => isStr(r.tripId) && isNum(r.lat) && isNum(r.lng) && isInt(r.ts),
   settings: (r) => isStr(r.key) && isStr(r.value),
+  tripStops: (r) => isStr(r.id) && isStr(r.tripId) && isInt(r.startedAt) && isInt(r.endedAt) && isNum(r.lat) && isNum(r.lng),
+  tripSegments: (r) => isStr(r.id) && isStr(r.tripId) && isInt(r.fromTs) && isInt(r.toTs) && isNum(r.distanceM),
+  rules: (r) => isStr(r.id) && isStr(r.matchText) && (r.type === 'income' || r.type === 'expense'),
+  ruleOffers: (r) => isStr(r.merchantKey) && isInt(r.declinedUntil),
+  recurring: (r) => isStr(r.id) && isInt(r.amountMinor) && isStr(r.freq) && isInt(r.day) && isStr(r.nextOn),
+  knownRoutes: (r) => isStr(r.id) && isNum(r.startLat) && isNum(r.startLng) && isNum(r.endLat) && isNum(r.endLng),
+  proState: (r) => isStr(r.id),
 };
 
 /** Format → version → shape. Order matters: an unknown file is "not a backup", a future one is "newer". */
@@ -206,6 +242,7 @@ export function validateManifest(json: unknown): { ok: true; manifest: BackupMan
   const tables = json.tables;
   const counts = json.counts;
   if (!isObj(tables) || !isObj(counts) || !isInt(json.createdAt)) return { ok: false, error: 'damaged' };
+  for (const key of V2_TABLES) if (tables[key] === undefined) tables[key] = [];
   for (const key of Object.keys(ROW_CHECKS) as (keyof BackupTables)[]) {
     const rows = tables[key];
     if (!Array.isArray(rows)) return { ok: false, error: 'damaged' };

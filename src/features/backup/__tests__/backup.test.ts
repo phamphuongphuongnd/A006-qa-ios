@@ -5,6 +5,7 @@ import { createEntry, listReceipts } from '@/db/entriesRepo';
 import { getSettings, updateSettings } from '@/db/settingsRepo';
 import { makeTestDb } from '@/db/testing/testDb';
 import { addManualTrip, appendPoints, endTrip, startTrip } from '@/db/tripsRepo';
+import { proState } from '@/db/schema';
 import type { AppDb } from '@/db/types';
 
 import { referencedPhotos, replaceAllData, snapshotTables, wipeAllData } from '../dataStore';
@@ -95,6 +96,58 @@ describe('backup round trip', () => {
     expect(s.appLock).toBe(true);
     const shell = snapshotTables(dst).entries.find((e) => e.note === 'Shell, M62')!;
     expect(listReceipts(dst, shell.id).map((r) => r.filePath).sort()).toEqual(['a1.jpg', 'b2.jpg']);
+  });
+
+  it('bản 2: restores a version-1 file (no new tables / columns) with migration defaults', async () => {
+    const src = makeTestDb();
+    seed(src);
+    const t = snapshotTables(src);
+    const strip = <T extends object>(rows: T[], keys: string[]) =>
+      rows.map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => !keys.includes(k))));
+    const v1Tables = {
+      categories: strip(t.categories, ['mtdCategory', 'vehicleRunningCost']),
+      entries: strip(t.entries, ['source', 'ruleId', 'recurringId', 'autoReviewedAt', 'ocrAmountMinor', 'ocrMerchant', 'ocrDate']),
+      receipts: strip(t.receipts, ['ocrText']),
+      trips: strip(t.trips, ['startedBy', 'originalStartedAt', 'originalEndedAt', 'originalDistanceM', 'classifiedBy']),
+      tripPoints: t.tripPoints,
+      settings: t.settings,
+    };
+    const manifest = {
+      format: BACKUP_FORMAT,
+      version: 1,
+      createdAt: at(2026, 11, 10, 18),
+      appVersion: '1.0.0',
+      counts: { entries: 3, trips: 2, photos: 2, categories: 12 },
+      tables: v1Tables,
+    };
+    const bytes = zipSync({ [MANIFEST_NAME]: strToU8(JSON.stringify(manifest)), 'receipts/a1.jpg': PHOTOS['a1.jpg'], 'receipts/b2.jpg': PHOTOS['b2.jpg'] });
+    const res = unpackBackup(bytes);
+    if (!res.ok) throw new Error(res.error);
+    expect(res.manifest.tables.rules).toEqual([]);
+
+    const dst = makeTestDb();
+    replaceAllData(dst, res.manifest.tables);
+    const back = snapshotTables(dst);
+    expect(back.categories).toEqual(t.categories);
+    expect(back.entries).toEqual(t.entries);
+    expect(back.trips).toEqual(t.trips);
+    expect(back.trips.find((x) => x.source === 'gps')?.startedBy).toBe('user');
+  });
+
+  it('bản 2: a restore keeps the phone\'s Pro state (no second trial from an old backup)', async () => {
+    const src = makeTestDb();
+    seed(src);
+    const tables = snapshotTables(src);
+    const dst = makeTestDb();
+    dst.insert(proState).values({ id: 'pro', trialStartedAt: 5, trialEndsAt: 10, entitlement: 'none' }).run();
+    replaceAllData(dst, tables);
+    expect(snapshotTables(dst).proState).toEqual([expect.objectContaining({ trialStartedAt: 5 })]);
+    wipeAllData(dst);
+    expect(snapshotTables(dst).proState).toHaveLength(1);
+    // A new phone takes the backup's Pro state.
+    const fresh = makeTestDb();
+    replaceAllData(fresh, { ...tables, proState: [{ id: 'pro', trialStartedAt: 7, trialEndsAt: 8, entitlement: 'none', expiresAt: null, productId: null, autoRenewing: null, lastVerifiedAt: null }] });
+    expect(snapshotTables(fresh).proState[0].trialStartedAt).toBe(7);
   });
 
   it('B-25: a restore sets "Last backup" to the backup file date', async () => {
