@@ -12,7 +12,8 @@ const { withDangerousMod } = require('expo/config-plugins');
 
 const REMOVE = [
   'android.permission.INTERNET',
-  'android.permission.ACCESS_NETWORK_STATE',
+  // ACCESS_NETWORK_STATE is kept (bản 2): expo-background-task schedules WorkManager with NetworkType.CONNECTED and
+  // JobScheduler throws SecurityException for a network constraint without it (Android 9+) → nightly backup (S4).
   'android.permission.SYSTEM_ALERT_WINDOW',
   'android.permission.READ_EXTERNAL_STORAGE',
   'android.permission.WRITE_EXTERNAL_STORAGE',

@@ -79,6 +79,23 @@
 - OCR: ML Kit (Android) / Vision (iOS), chạy trên máy.
 - Mua trong app: thư viện cài ở P3; sản phẩm do Phương tạo trên 2 store.
 
+**Kết quả thử sớm trên Galaxy A13 (2026-11-13, dev build, màn `sundaysort://dev/probe` chỉ bản dev):**
+- ✅ **Ghi ngầm vào thư mục Google Drive:** chọn thư mục Drive "A006" qua trình chọn hệ thống (Android giữ quyền vĩnh viễn) →
+  ghi tiền cảnh được; tác vụ `expo-background-task` chạy **headless** (không màn hình, JS khởi động lại từ đầu, ép chạy bằng
+  `cmd jobscheduler run -f -n androidx.work.systemjobscheduler com.phiotron.sundaysort <id>`) ghi được file vào Drive.
+  → Sao lưu đêm (S4) đi đường này; dự phòng "Tap to finish last night's backup" chỉ khi ghi lỗi. Còn lại: thử máy không
+  mạng (Drive xếp hàng tải lên) + thử bản release.
+- ⚠️ `expo-background-task` luôn đòi "có mạng" (WorkManager `NetworkType.CONNECTED`) → cần quyền `ACCESS_NETWORK_STATE`
+  (Android 9+ ném lỗi nếu thiếu); bản release từng gỡ quyền này → **đã giữ lại** trong `plugins/withReleasePermissions.js`.
+  Hệ quả: máy không mạng thì đêm đó không sao lưu (đếm lỗi khi > 24 giờ chưa chạy, không chỉ khi ghi lỗi).
+- ✅ **Nhận diện hoạt động:** quyền + đăng ký chuyển trạng thái chạy nền thành công; receiver nhận "still" (100%) và sự kiện
+  `still enter`. **Lái xe / đi bộ chưa thử được** (máy cắm cáp, đứng yên) → để S1 / P5 chạy xe thật (Phương); đăng ký chuyển
+  trạng thái vẫn bật trên A13, sự kiện lưu trong `EventLog` (xem bằng nút "Events" ở màn probe).
+- ✅ Migration 0001 chạy trên dữ liệu thật của A13 (233 khoản, 264 chuyến): 12 danh mục có MTD + cờ chi phí xe đúng §5.
+- ✅ Manifest bản release (đã kiểm `processReleaseMainManifest`): giữ BILLING, NFC, ACTIVITY_RECOGNITION, BLUETOOTH_CONNECT,
+  ACCESS_NETWORK_STATE; vẫn gỡ INTERNET; có meta-data ML Kit + bộ lọc thẻ NFC.
+- File thử trong Drive "A006" của Phương: `probe-foreground-…txt`, `probe-background-…txt` — xoá tay được.
+
 ## P3 — nền chung đã làm (phần không cần mockup, 2026-11-13)
 **Thư viện đã cài (phiên con KHÔNG cài thêm):**
 | Việc | Chọn | Lý do ngắn |

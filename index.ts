@@ -5,4 +5,6 @@
  */
 import './src/features/trips/backgroundTask';
 import './src/features/widgets/register';
+// P3 device probe (dev builds only; the task body is harmless in release, the screen redirects).
+import './src/dev/probeTask';
 import 'expo-router/entry';

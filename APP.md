@@ -30,7 +30,8 @@
 - **Đăng nhập / đồng bộ:** không (yêu cầu file ý tưởng §6.2: "không cần tạo tài khoản").
 - **Native:** expo-location + expo-task-manager (GPS nền) · react-native-android-widget + @bacons/apple-targets
   (widget iOS) · expo-local-authentication · expo-notifications (local) · expo-image-picker · expo-print + expo-sharing ·
-  expo-file-system + expo-document-picker.
+  expo-file-system + expo-document-picker · bản 2: expo-iap · react-native-nfc-manager · write-excel-file ·
+  expo-background-task · expo-intent-launcher · module tự viết `modules/trip-detect`, `receipt-ocr`, `backup-folder` (PLAN-v2 §P3).
 - **Build:** EAS Build (tài khoản Expo `phamthuphuong` đã đăng nhập trên máy). Thử Android trên Galaxy A13 qua adb.
 
 ## Cách làm app này
