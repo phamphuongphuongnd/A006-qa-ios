@@ -1,0 +1,24 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Activity recognition: runtime permission on Android 10+, the gms one for 9 and lower. -->
+  <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+  <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
+  <!-- Van Bluetooth: list bonded devices + ACL connect broadcasts. -->
+  <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+  <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+  <application>
+    <!-- Activity transitions arrive through a PendingIntent, even when the app process is dead. -->
+    <receiver
+      android:name=".TripDetectReceiver"
+      android:exported="false" />
+    <!-- ACL_CONNECTED / ACL_DISCONNECTED are exempt from the Android 8 implicit-broadcast limit. -->
+    <receiver
+      android:name=".BluetoothReceiver"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />
+        <action android:name="android.bluetooth.device.action.ACL_DISCONNECTED" />
+      </intent-filter>
+    </receiver>
+  </application>
+</manifest>

@@ -1,0 +1,6 @@
+{
+  "name": "receipt-ocr",
+  "version": "0.1.0",
+  "private": true,
+  "description": "On-device receipt text recognition (S3): ML Kit on Android, Vision on iOS. Images never leave the phone."
+}

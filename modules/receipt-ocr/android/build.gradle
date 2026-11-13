@@ -1,0 +1,22 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.phiotron.sundaysort'
+version = '0.1.0'
+
+android {
+  namespace "com.phiotron.sundaysort.receiptocr"
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+  }
+}
+
+dependencies {
+  implementation 'com.facebook.react:react-android'
+  // Unbundled Latin model served by Google Play services: ~0 MB in the APK, downloaded at install time
+  // (release manifest meta-data, plugins/withReleasePermissions.js). The bundled artifact (com.google.mlkit:text-recognition) adds ~4 MB per ABI.
+  implementation 'com.google.android.gms:play-services-mlkit-text-recognition:19.0.2'
+}

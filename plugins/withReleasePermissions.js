@@ -1,4 +1,7 @@
 /**
+ * Release-only manifest overrides (android/app/src/release/AndroidManifest.xml).
+ * Play Billing (expo-iap) talks to the Play Store app over IPC with com.android.vending.BILLING — never remove it.
+ *
  * B-19: Sunday Sort has no network, no push and no overlay, but Expo / RN libraries declare those permissions.
  * Remove them from the RELEASE build only (android/app/src/release/AndroidManifest.xml has the highest merge
  * priority), so debug / dev-client builds keep INTERNET for Metro and SYSTEM_ALERT_WINDOW for the dev menu.
@@ -39,6 +42,11 @@ const manifest = () =>
     '<manifest xmlns:android="http://schemas.android.com/apk/res/android"',
     '    xmlns:tools="http://schemas.android.com/tools">',
     ...REMOVE.map((p) => `    <uses-permission android:name="${p}" tools:node="remove"/>`),
+    // S3 OCR: ask Play services to download the ML Kit text model at install time, not on the first scan.
+    // Release only: in debug, expo-dev-launcher declares the same key ("barcode_ui") and the merge would clash.
+    '    <application>',
+    '        <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="ocr" tools:replace="android:value"/>',
+    '    </application>',
     '</manifest>',
     '',
   ].join('\n');

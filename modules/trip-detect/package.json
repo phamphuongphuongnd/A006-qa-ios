@@ -1,0 +1,6 @@
+{
+  "name": "trip-detect",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Automatic trips (S1): background activity transitions, van Bluetooth and charging signals; iOS CoreMotion history."
+}

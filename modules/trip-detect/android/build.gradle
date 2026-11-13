@@ -1,0 +1,22 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.phiotron.sundaysort'
+version = '0.1.0'
+
+android {
+  namespace "com.phiotron.sundaysort.tripdetect"
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+  }
+}
+
+dependencies {
+  implementation 'androidx.core:core:1.17.0'
+  implementation 'com.facebook.react:react-android'
+  // Same artifact expo-location already ships (ActivityRecognitionClient).
+  implementation 'com.google.android.gms:play-services-location:21.0.1'
+}

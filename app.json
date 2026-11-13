@@ -56,7 +56,9 @@
           "locationAlwaysAndWhenInUsePermission": "Allow all the time so a trip keeps recording with the screen off. Recording stops when you end the trip.",
           "isIosBackgroundLocationEnabled": true,
           "isAndroidBackgroundLocationEnabled": true,
-          "isAndroidForegroundServiceEnabled": true
+          "isAndroidForegroundServiceEnabled": true,
+          "isAndroidMotionActivityEnabled": true,
+          "motionUsagePermission": "Sunday Sort uses motion to notice when you start and stop driving, so automatic trips record on their own. Motion data stays on your phone."
         }
       ],
       [
@@ -127,7 +129,10 @@
         }
       ],
       "@bacons/apple-targets",
-      "./plugins/withReleasePermissions"
+      "./plugins/withReleasePermissions",
+      "expo-iap",
+      "./plugins/withNfcTripTag",
+      "expo-background-task"
     ],
     "experiments": {
       "typedRoutes": true,
