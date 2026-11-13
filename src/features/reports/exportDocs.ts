@@ -11,6 +11,11 @@ export const EXPORT_KINDS: ExportKind[] = ['entriesCsv', 'totalsCsv', 'mileageCs
 /** Mockup default selection. */
 export const DEFAULT_EXPORT: ExportKind[] = ['entriesCsv', 'totalsCsv', 'pdf'];
 
+/** Default ticks for a period: the mileage log too when the period has trips, so it isn't forgotten (B-35). */
+export function defaultExportKinds(hasTrips: boolean): ExportKind[] {
+  return hasTrips ? EXPORT_KINDS.filter((k) => k === 'mileageCsv' || DEFAULT_EXPORT.includes(k)) : DEFAULT_EXPORT;
+}
+
 export function exportFileName(kind: ExportKind, fileStem: string): string {
   const base = `SundaySort-${{ entriesCsv: 'entries', totalsCsv: 'totals', mileageCsv: 'mileage', pdf: 'report', receiptsZip: 'receipts' }[kind]}-${fileStem}`;
   return `${base}.${kind === 'pdf' ? 'pdf' : kind === 'receiptsZip' ? 'zip' : 'csv'}`;
@@ -127,7 +132,7 @@ export function reportHtml(p: PdfInput): string {
 <style>
 @page { margin: 18mm 14mm 20mm; }
 body { font-family: -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif; color: #161D2B; font-size: 11pt; }
-h1 { font-size: 20pt; margin: 0 0 4px; } h2 { font-size: 13pt; margin: 18px 0 6px; }
+h1 { font-size: 20pt; margin: 0 0 4px; } h2 { font-size: 13pt; margin: 18px 0 6px; break-after: avoid; page-break-after: avoid; }
 .sub, .note { color: #465062; margin: 4px 0; }
 table { width: 100%; border-collapse: collapse; } th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #E6E0D5; }
 th { font-size: 9pt; text-transform: uppercase; color: #465062; } td:last-child, th:last-child { text-align: right; }

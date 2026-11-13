@@ -7,6 +7,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 
 import { db } from '@/db/client';
 import { unsortedCount } from '@/db/entriesRepo';
+import { listTrips } from '@/db/tripsRepo';
 import type { Region } from '@/domain/types';
 import { withLockSuspended } from '@/features/settings/lockState';
 import { t } from '@/i18n';
@@ -15,7 +16,7 @@ import { fonts, radius, useTheme } from '@/theme';
 import { Button, Dialog, IconButton, Toggle, Txt } from '@/ui';
 
 import { buildExport, ExportCancelled, NothingToExport } from './buildExport';
-import { DEFAULT_EXPORT, EXPORT_KINDS, type ExportKind } from './exportDocs';
+import { defaultExportKinds, EXPORT_KINDS, type ExportKind } from './exportDocs';
 import { periodFor, type PeriodMode, type ReportPeriod } from './period';
 
 const KIND_LABEL: Record<ExportKind, () => string> = {
@@ -46,14 +47,20 @@ export function ExportPanel({
   const { settings } = useSettings();
   const [period, setPeriod] = useState(initial);
   const [periodOpen, setPeriodOpen] = useState(false);
-  const [kinds, setKinds] = useState<ExportKind[]>(DEFAULT_EXPORT);
+  const defaultsFor = (p: ReportPeriod) => defaultExportKinds(listTrips(db, p).length > 0);
+  const [kinds, setKinds] = useState<ExportKind[]>(() => defaultsFor(initial));
+  // Until the user ticks a box, the defaults follow the chosen period (mileage log on when it has trips).
+  const kindsTouched = useRef(false);
   const [includePersonal, setIncludePersonal] = useState(false);
   const [unsortedAsk, setUnsortedAsk] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const cancelled = useRef(false);
 
   const options = periodOptions(initial, region);
-  const toggle = (k: ExportKind) => setKinds((ks) => (ks.includes(k) ? ks.filter((x) => x !== k) : EXPORT_KINDS.filter((x) => x === k || ks.includes(x))));
+  const toggle = (k: ExportKind) => {
+    kindsTouched.current = true;
+    setKinds((ks) => (ks.includes(k) ? ks.filter((x) => x !== k) : EXPORT_KINDS.filter((x) => x === k || ks.includes(x))));
+  };
 
   const start = () => {
     const n = unsortedCount(db, period);
@@ -143,6 +150,7 @@ export function ExportPanel({
                   accessibilityState={{ selected: on }}
                   onPress={() => {
                     setPeriod(o);
+                    if (!kindsTouched.current) setKinds(defaultsFor(o));
                     setPeriodOpen(false);
                   }}
                   style={({ pressed }) => [

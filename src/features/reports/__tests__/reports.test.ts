@@ -1,7 +1,7 @@
 import { DEFAULT_RATES } from '@/domain/mileage';
 import { buildReport } from '@/domain/report';
 
-import { exportFileName, receiptZipNames, reportHtml } from '../exportDocs';
+import { defaultExportKinds, exportFileName, receiptZipNames, reportHtml } from '../exportDocs';
 import { availableTaxYears, endOfDay, periodFor, startOfDay } from '../period';
 import { linePoints, monthlySeries, periodMileageEstimate, ratesLabel } from '../series';
 
@@ -152,5 +152,14 @@ describe('export documents', () => {
     expect(html).not.toMatch(/<td>(work|personal|income|expense)<\/td>/);
     expect(html.indexOf('2026-04-06')).toBeLessThan(html.indexOf('2026-11-13'));
     expect(html).toContain('<thead><tr><th>Date</th>');
+    // B-29: a section title never ends a page on its own.
+    expect(html).toMatch(/h2 \{[^}]*break-after: avoid/);
+  });
+});
+
+describe('export defaults (B-35)', () => {
+  it('ticks the mileage log only when the period has trips, in list order', () => {
+    expect(defaultExportKinds(false)).toEqual(['entriesCsv', 'totalsCsv', 'pdf']);
+    expect(defaultExportKinds(true)).toEqual(['entriesCsv', 'totalsCsv', 'mileageCsv', 'pdf']);
   });
 });
