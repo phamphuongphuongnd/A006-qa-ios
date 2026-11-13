@@ -3,7 +3,7 @@
 > Brief tĩnh của app. **≤ 60 dòng, không ghi lịch sử** (lịch sử ở git + `memory/sessions/`).
 > Tiến độ: `CHECKLIST.md` · Tính năng: `product.md` · Test: `TESTCASES.md` · Lỗi: `BUGS.md`.
 
-**Đang ở:** Bước 6 — giả lập người dùng xong (B-27…B-36 sửa); kế: store listing + privacy; Bước 3 còn treo: widget iOS (EAS) (2026-11-13)
+**Đang ở:** Bước 6 dừng sau giả lập người dùng (BUGS 36/36 đã sửa) → kế: bản 2 tự động + Pro theo `PLAN-v2.md` (P0–P6), lên store sau bản 2; Bước 3 còn treo: widget iOS (EAS) (2026-11-13)
 
 ## Brief
 - **Mã app / thư mục:** `A006-sundaysort` → `apps/A006-sundaysort/`

@@ -57,6 +57,7 @@
 
 ## Bước 6 — Kiểm cuối & lên store
 - [x] Giả lập người dùng thật trên máy, xem giao diện từng màn — cài mới, vai UK + US, tối / 200% / 320dp, vân tay, widget, TalkBack nghe thật (Phương): 10 mục mới B-27…B-36 sửa + thử A13 (`6c87170`, `bd04cfe`, `40493d6`)
+- [ ] **Bản 2 — tự động + Pro: xem `PLAN-v2.md` (P0–P6)** — Phương chốt 2026-11-13: dừng Bước 6 ở đây, lên store sau bản 2
 - [ ] Store listing + privacy + Data safety / App Privacy + ảnh store
 - [ ] Phương tạo khoá ký → tag `v1.0.0` → AAB + iOS
 - [ ] checklists release-android + release-ios
