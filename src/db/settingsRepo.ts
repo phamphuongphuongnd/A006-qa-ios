@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 
 import { DEFAULT_RATES, LEGACY_UK_RATES, type RateTier } from '@/domain/mileage';
-import type { Region, Scope } from '@/domain/types';
+import type { Region, Scope, VehicleCostMethod } from '@/domain/types';
 
 import { settings } from './schema';
 import type { AppDb } from './types';
@@ -22,6 +22,49 @@ export interface AppSettings {
   backupReminder: boolean;
   /** Home backup banner dismissed until this time. */
   backupBannerSnoozedUntil: number | null;
+
+  // ---- Bản 2 (product.md §8). UI comes with the v2 mockups; S1–S5 read / write these keys. ----
+  /** X2 / Q24: asked in onboarding; 'unsure' counts like mileage and Reports nudges. See domain/vehicleCosts.ts. */
+  vehicleCostMethod: VehicleCostMethod;
+  /** P1-1: stops shorter than this stay in one shift trip; end of trip after this long not driving. */
+  mergeStopMinutes: MergeStopMinutes;
+  /** P1-3: trips outside these hours are recorded as Personal. days: 0 = Sunday … 6; minutes after midnight. */
+  workHours: WorkHours;
+  /** Pro: record trips automatically (S-07d). */
+  autoTrips: boolean;
+  /** Android: van Bluetooth device that starts a trip at once (S-07d "Start faster"). */
+  vanBtDevice: { address: string; name: string | null } | null;
+  /** Android: start when charging + moving. */
+  startOnCharge: boolean;
+  /**
+   * Q10: folder picked once for nightly backups. Android: SAF tree URI (permission persisted). iOS: `bookmark` from
+   * modules/backup-folder (the URI alone dies with the process). `label`: "Google Drive / Sunday Sort".
+   */
+  backupFolder: { uri: string; label: string; bookmark: string | null } | null;
+  /** P1-7: nightly backup when something changed, keeps 7 files. */
+  backupNightly: boolean;
+  /** Consecutive failed nightly backups (3 → Home card). */
+  backupFailCount: number;
+  lastAutoBackupAt: number | null;
+  /** Q22: one notification after the shift if nothing was logged that day; off by default. */
+  dailyNudge: { on: boolean; hour: number; minute: number; days: number[] };
+  /** S-20 switches for the notifications that are not reminders. */
+  notify: { tripAuto: boolean; missedTrip: boolean; proRenewal: boolean; trialEnding: boolean };
+  /** FreeAgent mileage CSV "Claimant" column. */
+  freeagentClaimant: string;
+  /** X3: MTD quarters by standard (6 Apr) or calendar (1 Apr) periods. */
+  mtdPeriod: 'standard' | 'calendar';
+  /** S-07g: an NFC tag was written on this phone. */
+  nfcTagWritten: boolean;
+}
+
+export type MergeStopMinutes = 10 | 20 | 45;
+
+export interface WorkHours {
+  on: boolean;
+  days: number[];
+  startMin: number;
+  endMin: number;
 }
 
 /** weekday: 0 = Sunday … 6 = Saturday (JS Date convention). */
@@ -39,6 +82,21 @@ export const DEFAULT_SETTINGS: AppSettings = {
   lastBackupAt: null,
   backupReminder: true,
   backupBannerSnoozedUntil: null,
+  vehicleCostMethod: 'unsure',
+  mergeStopMinutes: 20,
+  workHours: { on: false, days: [1, 2, 3, 4, 5], startMin: 7 * 60, endMin: 19 * 60 },
+  autoTrips: false,
+  vanBtDevice: null,
+  startOnCharge: false,
+  backupFolder: null,
+  backupNightly: false,
+  backupFailCount: 0,
+  lastAutoBackupAt: null,
+  dailyNudge: { on: false, hour: 19, minute: 0, days: [1, 2, 3, 4, 5, 6] },
+  notify: { tripAuto: true, missedTrip: true, proRenewal: true, trialEnding: true },
+  freeagentClaimant: '',
+  mtdPeriod: 'standard',
+  nfcTagWritten: false,
 };
 
 export function getSettings(db: AppDb): AppSettings {

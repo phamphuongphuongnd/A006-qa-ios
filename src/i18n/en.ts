@@ -1,3 +1,11 @@
+import { autoTrip } from './v2/autoTrip';
+import { backupAuto, recurringV2 } from './v2/backupAuto';
+import { mtd } from './v2/mtd';
+import { ocr } from './v2/ocr';
+import { pro } from './v2/pro';
+import { sortV2 } from './v2/sortV2';
+import { vehicle } from './v2/vehicle';
+
 /**
  * All UI strings (English only in v1). Keys are grouped by screen code from product.md.
  * Use {name} placeholders; t() fills them.
@@ -620,4 +628,13 @@ export const en = {
     locked: 'Locked',
     disclaimer: 'Not tax advice',
   },
+  // Bản 2: one namespace per file in ./v2 (P4 sessions edit only their own file).
+  vehicle,
+  pro,
+  autoTrip,
+  sortV2,
+  ocr,
+  backupAuto,
+  recurring: recurringV2,
+  mtd,
 } as const;

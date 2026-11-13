@@ -79,6 +79,33 @@
 - OCR: ML Kit (Android) / Vision (iOS), chạy trên máy.
 - Mua trong app: thư viện cài ở P3; sản phẩm do Phương tạo trên 2 store.
 
+## P3 — nền chung đã làm (phần không cần mockup, 2026-11-13)
+**Thư viện đã cài (phiên con KHÔNG cài thêm):**
+| Việc | Chọn | Lý do ngắn |
+|---|---|---|
+| Mua trong app | `expo-iap` 6.4 | Module Expo (OpenIAP), Play Billing 8 + StoreKit 2, không cần server / RevenueCat (không tài khoản, không khoá); config plugin sẵn. Mã sản phẩm tạm `sundaysort_pro_annual` (`src/domain/pro.ts`) — Phương tạo đúng mã này trên 2 store |
+| NFC (ghi thẻ Android) | `react-native-nfc-manager` 4.2 | Thư viện NFC duy nhất còn bảo trì; **không** dùng plugin của nó (luôn thêm entitlement NFC iOS cần bật capability trong tài khoản Apple) → `plugins/withNfcTripTag.js`: chỉ Android, intent-filter `NDEF_DISCOVERED` `sundaysort://trip/...` (chạm thẻ mở app thẳng). iOS dùng Phím tắt như product.md |
+| Tạo .xlsx | `write-excel-file` 4.1 | Nhỏ, chỉ phụ thuộc `fflate` (đã có); có bản `universal` chạy trong RN. ExcelJS / SheetJS nặng + phụ thuộc Node |
+| Chạy nền định kỳ (sao lưu đêm, khoản lặp lại) | `expo-background-task` | WorkManager (Android) / BGTaskScheduler (iOS), cùng SDK 58 |
+| Mở cài đặt pin / ứng dụng | `expo-intent-launcher` | S-07e bước 4, S-07f "Open battery settings" |
+| Chọn thư mục + ghi sao lưu | `expo-file-system` (có sẵn) | Android: `Directory.pickDirectoryAsync()` giữ quyền SAF vĩnh viễn (takePersistableUriPermission). iOS: URL hết hạn khi tắt app → module `modules/backup-folder/` (bookmark) |
+| Nhận diện hoạt động (foreground) | `expo-location` (có sẵn) | SDK 58 có `watchMotionActivityAsync` + quyền motion; bật `isAndroidMotionActivityEnabled` + `motionUsagePermission` trong app.json |
+
+**Module tự viết (`modules/`):**
+- `trip-detect/` (S1): Android — chuyển trạng thái hoạt động **chạy nền kể cả khi app tắt** (PendingIntent → `TripDetectReceiver`), lấy mẫu thô để thử, Bluetooth ACL nối/ngắt (receiver trong manifest, được miễn giới hạn broadcast Android 8), cắm sạc (chỉ receiver lúc chạy — Android 8+ không gửi cho manifest), danh sách thiết bị đã ghép; mọi tín hiệu ghi vào sổ `EventLog` (SharedPreferences, 200 dòng) + phát `onSignal` khi JS sống. iOS — CoreMotion live + `queryActivities` (đọc lùi ~7 ngày để lùi giờ bắt đầu). Việc S1: bắt đầu/kết thúc chuyến từ tín hiệu, đăng ký lại sau khởi động máy, dịch vụ vị trí từ nền (Android 12+ được miễn khi có sự kiện activity transition).
+- `receipt-ocr/` (S3): `recognize(uri)` → dòng chữ + khung chuẩn hoá 0..1 (ML Kit bản tải qua Play services, ~0 MB trong APK; iOS Vision). Model tải lúc cài: meta-data chỉ ở bản release (`plugins/withReleasePermissions.js`) vì bản debug trùng khoá với expo-dev-launcher.
+- `backup-folder/` (S4, iOS): bookmark thư mục + copyInto / list / copyOut / remove. **Chưa build iOS** (cần EAS, P5).
+
+**Dữ liệu (migration `0001_v2_automation_pro`):** bảng `trip_stops`, `trip_segments`, `rules`, `rule_offers`, `recurring`,
+`known_routes`, `pro_state`; cột mới Entry (`source`, `rule_id`, `recurring_id`, `auto_reviewed_at`, `ocr_*`), Receipt
+(`ocr_text`), Category (`mtd_category`, `vehicle_running_cost` — điền sẵn theo §5), Trip (`started_by` thay cho `source`
+gps/auto/nfc của §8 để không vỡ chỗ đang kiểm `source === 'gps'`; `scope` thêm `unsorted`; `original_*`; `classified_by`).
+Sao lưu lên bản 2 (file bản 1 vẫn khôi phục được; khôi phục / "Delete all data" không đụng `pro_state`).
+**Hàm chung:** `src/domain/pro.ts` + `src/db/proRepo.ts` + `usePro()` / `usePhotoAllowance()` (`src/state/pro.ts`);
+`src/domain/vehicleCosts.ts` + `src/db/vehicleCostsRepo.ts` (Q24, hỏi lại khi đổi giữa năm); `src/domain/receiptSignal.ts`
+(OCR → gợi ý / luật, S3 không sửa `suggest.ts`); `src/domain/mtd.ts` (15 HMRC category); Settings mới trong `settingsRepo.ts`;
+i18n: mỗi phiên 1 file `src/i18n/v2/<tên>.ts` (S1 `autoTrip`, S2 `sortV2`, S3 `ocr`, S4 `backupAuto`, S5 `mtd` + `pro`).
+
 ## Lỗi / thiếu mới (research.md §7)
 | # | Việc | Làm ở |
 |---|---|---|
