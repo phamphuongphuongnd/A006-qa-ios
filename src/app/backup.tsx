@@ -1,21 +1,28 @@
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
-import { router } from '@/services/router';
+import { useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import { Check, CloudUpload, FileText, RotateCcw, TriangleAlert } from '@/ui/icons';
-import { useRef, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { backupPlan, createBackupFile, restoreFromBackup } from '@/features/backup/backupFile';
+import { folderPort, folderReachable, pickBackupFolder, runNightlyNow, saveFolder } from '@/features/backup/folder';
+import { countsLabel, itemSub, listDate, shortDate, whenLabel } from '@/features/backup/labels';
+import { backupFailures, listFolderBackups, type BackupListItem, type RunResult } from '@/features/backup/nightly';
+import { BACKUP_FAILS_FOR_ALERT } from '@/features/backup/homeAlerts';
 import { inspectBackup, unpackBackup, type BackupError, type BackupManifest } from '@/features/backup/pack';
+import { clearBackupNeedsTap } from '@/features/settings/notifications';
 import { withLockSuspended } from '@/features/settings/lockState';
 import { stopOrphanRecording } from '@/features/trips/controller';
-import { formatCount, formatDate, formatDateTime, NavHeader } from '@/features/settings/ui';
+import { useNow } from '@/features/entries/useNow';
+import { formatCount, formatDate, NavHeader } from '@/features/settings/ui';
 import { t } from '@/i18n';
+import { router } from '@/services/router';
 import { useSettings } from '@/state/settings';
 import { fonts, GUTTER, useTheme } from '@/theme';
-import { Button, Card, Dialog, Group, Progress, SettingRow, Toggle, Txt, useSnackbar } from '@/ui';
+import { Button, Card, Dialog, Group, Progress, SettingRow, StatusDot, Toggle, Txt, useSnackbar } from '@/ui';
+import { Bell, ChevronRight, Cloud, FileText, Folder, RotateCcw, Upload } from '@/ui/icons';
 
 const ERRORS: Record<BackupError, () => string> = {
   not_backup: () => t('backup.notBackup'),
@@ -28,31 +35,105 @@ const countLabel = (n: number, one: 'backup.entriesOne' | 'backup.photosOne', ma
 
 type Packing = { entries: number; photos: number; done: number; total: number; fileName: string };
 type Preview = { manifest: BackupManifest; fileName: string; uri: string };
+type Confirm = { uri: string | null; name: string; createdAt: number; counts: { entries: number; photos: number } | null };
 
-/** S-12 Backup & restore. */
+/** S-12 Backup & restore (v2: nightly backup into a picked folder, restore from its last 7 files). */
 export default function BackupScreen() {
+  'use no memo';
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const snack = useSnackbar();
+  const params = useLocalSearchParams<{ run?: string }>();
   const { settings, update } = useSettings();
   const [packing, setPacking] = useState<Packing | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
-  const [confirm, setConfirm] = useState(false);
+  const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [restoring, setRestoring] = useState(false);
-  // B-02: the share sheet can't tell us whether the file was saved or the sheet was dismissed, so we ask.
   const [savedAsk, setSavedAsk] = useState<number | null>(null);
+  const [running, setRunning] = useState(false);
+  const [list, setList] = useState<BackupListItem[] | 'loading' | 'error' | null>(null);
+  const [reach, setReach] = useState<{ uri: string; ok: boolean } | null>(null);
   const cancelled = useRef(false);
 
+  const folder = settings.backupFolder;
+  const nightly = settings.backupNightly && !!folder;
+  const now = useNow(60_000);
+  const fails = backupFailures(settings, now);
+  const failing = nightly && fails >= BACKUP_FAILS_FOR_ALERT;
+  const lastError = settings.backupRun?.lastError ?? null;
+
   const error = (message: string) => snack({ message, tone: 'error', above: 'none' });
+
+  // Is the folder still there? (only shown when backups fail, but cheap enough to check on open)
+  useEffect(() => {
+    let live = true;
+    if (folder) folderReachable(folder).then((ok) => live && setReach({ uri: folder.uri, ok }));
+    return () => {
+      live = false;
+    };
+  }, [folder]);
+  const reachable = folder && reach?.uri === folder.uri ? reach.ok : null;
+
+  const reportRun = (r: RunResult | null) => {
+    if (!r || !folder) return;
+    if (r.status === 'written') snack({ message: t('backupAuto.doneWritten', { folder: folder.label }), above: 'none' });
+    else if (r.status === 'unchanged') snack({ message: t('backupAuto.doneUnchanged'), above: 'none' });
+    else error(r.error === 'folder' ? t('backupAuto.failedBodyFolder') : r.error === 'space' ? t('backupAuto.failedBodySpace') : t('backup.failed'));
+    if (r.status !== 'failed') setReach({ uri: folder.uri, ok: true });
+  };
+
+  const runNow = async (force = true) => {
+    if (running) return;
+    setRunning(true);
+    try {
+      reportRun(await (runNightlyNow({ force }) ?? Promise.resolve(null)));
+      clearBackupNeedsTap();
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  // "Tap to finish last night's backup" opens /backup?run=1.
+  const ranParam = useRef(false);
+  useEffect(() => {
+    if (params.run === '1' && !ranParam.current && nightly) {
+      ranParam.current = true;
+      runNow(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.run, nightly]);
+
+  const chooseFolder = async () => {
+    const picked = await pickBackupFolder();
+    if (!picked) return;
+    saveFolder(picked);
+    update({}); // reload settings
+    snack({ message: t('backupAuto.folderSaved', { folder: picked.label }), above: 'none' });
+    // First backup right away: proves the folder works and starts the 7.
+    setRunning(true);
+    try {
+      reportRun(await (runNightlyNow({ force: true }) ?? Promise.resolve(null)));
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const setNightly = (on: boolean) => {
+    if (on && !folder) {
+      chooseFolder();
+      return;
+    }
+    update({ backupNightly: on, ...(on ? { backupFailCount: 0 } : {}) });
+  };
 
   const backUp = async () => {
     const plan = backupPlan();
     cancelled.current = false;
-    const now = Date.now();
+    const at = Date.now();
     setPacking({ entries: plan.tables.entries.length, photos: plan.photoNames.length, done: 0, total: plan.photoNames.length, fileName: '' });
     try {
       const res = await createBackupFile(plan, {
-        now,
+        now: at,
         isCancelled: () => cancelled.current,
         onProgress: (done, total) => setPacking((p) => (p ? { ...p, done, total } : p)),
       });
@@ -65,16 +146,15 @@ export default function BackupScreen() {
       await withLockSuspended(() =>
         Sharing.shareAsync(res.file.uri, { mimeType: 'application/octet-stream', UTI: 'public.data', dialogTitle: t('backup.backUp') }),
       );
-      setSavedAsk(now);
+      setSavedAsk(at);
     } catch {
-      // Out of space (NoSpaceError) and write errors get the same storage message.
       error(t('backup.failed'));
     } finally {
       setPacking(null);
     }
   };
 
-  const pick = async () => {
+  const pickFile = async () => {
     const res = await withLockSuspended(() => DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true, multiple: false }));
     if (res.canceled || !res.assets?.length) return;
     const asset = res.assets[0];
@@ -91,24 +171,38 @@ export default function BackupScreen() {
     }
   };
 
-  const replace = async () => {
-    if (!preview) return;
-    setConfirm(false);
+  const openRestore = async () => {
+    if (!folder) {
+      pickFile();
+      return;
+    }
+    setList('loading');
+    try {
+      const port = folderPort(folder);
+      setList(port ? await listFolderBackups(port) : []);
+    } catch {
+      setList('error');
+    }
+  };
+
+  /** Replaces everything from a local / content URI (file picker or the backup folder). */
+  const restoreUri = async (uri: string | null, name: string) => {
+    setConfirm(null);
     setRestoring(true);
     try {
-      // Let the "Restoring…" state paint before the synchronous unzip + DB swap.
-      await new Promise((r) => setTimeout(r, 50));
-      const bytes = await new File(preview.uri).bytes();
+      await new Promise((r) => setTimeout(r, 50)); // let "Restoring…" paint before the synchronous unzip
+      const local = uri ?? (await folderPort(folder)!.fetch(name));
+      const bytes = await new File(local).bytes();
       const r = unpackBackup(bytes);
       if (!r.ok) {
         error(ERRORS[r.error]());
         return;
       }
       restoreFromBackup(r.manifest, r.photos);
-      // A trip that was recording is gone now: stop GPS + its notifications (B-18).
       await stopOrphanRecording().catch(() => {});
-      update({}); // reload settings from the restored table
+      update({});
       setPreview(null);
+      setList(null);
       snack({ message: t('backup.restored'), above: 'none' });
       router.back();
     } catch {
@@ -118,6 +212,26 @@ export default function BackupScreen() {
     }
   };
 
+  const confirmDialog = (
+    <Dialog
+      visible={confirm !== null}
+      title={t('backupAuto.confirmTitle')}
+      body={
+        confirm
+          ? confirm.counts
+            ? t('backupAuto.confirmBody', { date: shortDate(confirm.createdAt), counts: countsLabel(confirm.counts) })
+            : t('backupAuto.confirmBodyNoCounts', { date: shortDate(confirm.createdAt) })
+          : ''
+      }
+      onClose={() => setConfirm(null)}
+      actions={[
+        { label: t('backupAuto.restoreButton'), variant: 'primary', onPress: () => confirm && restoreUri(confirm.uri, confirm.name) },
+        { label: t('backup.cancel'), variant: 'outline', onPress: () => setConfirm(null) },
+      ]}
+    />
+  );
+
+  // ---------- Restore from a picked file (bản 1 flow) ----------
   if (preview) {
     const c = preview.manifest.counts;
     return (
@@ -142,58 +256,162 @@ export default function BackupScreen() {
               <Stat value={c.photos} label={t('backup.photos')} />
             </View>
           </Card>
-          <Button label={restoring ? t('backup.restoring') : t('backup.replaceButton')} variant="danger" full loading={restoring} onPress={() => setConfirm(true)} />
+          <Button
+            label={restoring ? t('backup.restoring') : t('backup.replaceButton')}
+            variant="danger"
+            full
+            loading={restoring}
+            onPress={() => setConfirm({ uri: preview.uri, name: preview.fileName, createdAt: preview.manifest.createdAt, counts: c })}
+          />
         </ScrollView>
-        <Dialog
-          visible={confirm}
-          title={t('backup.replaceTitle')}
-          body={t('backup.replaceBody')}
-          onClose={() => setConfirm(false)}
-          actions={[
-            { label: t('backup.cancel'), onPress: () => setConfirm(false) },
-            { label: t('backup.replace'), variant: 'danger', onPress: replace },
-          ]}
-        />
+        {confirmDialog}
       </View>
     );
   }
 
+  // ---------- Restore from the backup folder (last 7) ----------
+  if (list !== null && folder) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
+        <NavHeader title={t('backupAuto.restore')} onBack={() => setList(null)} />
+        <ScrollView contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 6, gap: 12, paddingBottom: insets.bottom + 24 }}>
+          {list === 'loading' ? (
+            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', paddingVertical: 16 }}>
+              <ActivityIndicator color={colors.textSecondary} />
+              <Txt c="textSecondary">{t('backupAuto.loadingList')}</Txt>
+            </View>
+          ) : list === 'error' ? (
+            <Card variant="warn" style={{ gap: 4 }}>
+              <StatusDot kind="warn" label={t('backupAuto.failedBodyFolder')} />
+            </Card>
+          ) : (
+            <>
+              <Txt c="textSecondary">
+                {t('backupAuto.restoreFolderHeader', { folder: folder.label, count: list.filter((i) => i.nightly).length || list.length })}
+              </Txt>
+              {list.length === 0 ? (
+                <Txt c="textSecondary">{t('backupAuto.restoreEmpty')}</Txt>
+              ) : (
+                <Group>
+                  {list.map((i) => (
+                    <Pressable
+                      key={i.name}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${listDate(i.createdAt)}, ${itemSub(i)}`}
+                      disabled={restoring}
+                      onPress={() => setConfirm({ uri: i.uri, name: i.name, createdAt: i.createdAt, counts: i.counts })}
+                      style={({ pressed }) => [
+                        { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 64, paddingVertical: 8, paddingHorizontal: 16 },
+                        pressed && { backgroundColor: colors.surfaceAlt },
+                      ]}>
+                      <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
+                        <Cloud size={20} color={colors.textSecondary} />
+                      </View>
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <Txt style={{ fontFamily: fonts.bold }}>{listDate(i.createdAt)}</Txt>
+                        <Txt v="small" c="textSecondary">
+                          {itemSub(i)}
+                        </Txt>
+                      </View>
+                      <ChevronRight size={18} color={colors.textTertiary} />
+                    </Pressable>
+                  ))}
+                </Group>
+              )}
+            </>
+          )}
+          {restoring ? (
+            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+              <ActivityIndicator color={colors.textSecondary} />
+              <Txt c="textSecondary">{t('backup.restoring')}</Txt>
+            </View>
+          ) : null}
+          <Button label={t('backupAuto.restoreFromFile')} icon={FileText} variant="outline" full disabled={restoring} onPress={pickFile} />
+        </ScrollView>
+        {confirmDialog}
+      </View>
+    );
+  }
+
+  // ---------- Main ----------
   const last = settings.lastBackupAt;
   const pct = packing && packing.total > 0 ? packing.done / packing.total : packing ? 1 : 0;
+  const folderNotReachable = !!folder && (reachable === false || (failing && lastError === 'folder'));
+  const failBody =
+    lastError === 'space' ? t('backupAuto.failedBodySpace') : lastError === 'other' ? t('backupAuto.failedBodyOther') : t('backupAuto.failedBodyFolder');
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
       <NavHeader title={t('screens.backup')} />
       <ScrollView contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 6, gap: 16, paddingBottom: insets.bottom + 24 }}>
-        <Card style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
-          <View
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 26,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: last ? colors.incomeSoft : colors.expenseSoft,
-            }}>
-            {last ? <Check size={26} color={colors.incomeText} strokeWidth={2.6} /> : <TriangleAlert size={24} color={colors.expenseText} />}
-          </View>
-          <View style={{ flex: 1 }}>
-            {last ? (
-              <>
-                <Txt v="caption" c="textSecondary" style={{ fontFamily: fonts.bold }}>
-                  {t('backup.lastBackup')}
-                </Txt>
-                <Txt v="h3">{formatDateTime(last)}</Txt>
-              </>
-            ) : (
-              <Txt v="h3" c="expenseText">
-                {t('backup.never')}
-              </Txt>
-            )}
-          </View>
-        </Card>
+        {/* Status card */}
+        {failing ? (
+          <StatusCard tone="warn" title={t('backupAuto.failedTitle', { count: Math.max(fails, BACKUP_FAILS_FOR_ALERT) })} body={failBody} />
+        ) : nightly ? (
+          <StatusCard
+            tone="ok"
+            title={t('backupAuto.statusOn')}
+            body={
+              settings.lastAutoBackupAt && last
+                ? t('backupAuto.statusLast', { when: whenLabel(last, now), folder: folder!.label })
+                : t('backupAuto.statusNoneYet', { folder: folder!.label })
+            }
+          />
+        ) : last ? (
+          <StatusCard tone="off" title={t('backupAuto.statusOff')} body={t('backupAuto.statusOffLast', { when: whenLabel(last, now) })} />
+        ) : (
+          <StatusCard tone="warn" title={t('backupAuto.neverTitle')} body={t('backupAuto.neverBody')} />
+        )}
 
-        <Txt c="textSecondary">{t('backup.explain')}</Txt>
+        {failing ? (
+          lastError === 'folder' || folderNotReachable ? (
+            <Button label={t('backupAuto.chooseAgain')} icon={Folder} variant="sun" full onPress={chooseFolder} disabled={running} />
+          ) : (
+            <Button label={t('backupAuto.backUpNow')} icon={Cloud} variant="sun" full onPress={() => runNow(true)} loading={running} />
+          )
+        ) : null}
+
+        {running ? (
+          <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }} accessibilityLiveRegion="polite">
+            <ActivityIndicator color={colors.textSecondary} />
+            <Txt v="small" c="textSecondary">
+              {t('backupAuto.running', { folder: folder?.label ?? '' })}
+            </Txt>
+          </View>
+        ) : null}
+
+        {/* Nightly backup: hero until a folder is picked */}
+        {!folder ? (
+          <Card style={{ alignItems: 'center', gap: 10, paddingVertical: 24 }}>
+            <View style={{ width: 72, height: 56, borderRadius: 10, backgroundColor: colors.sunSoft, alignItems: 'center', justifyContent: 'center' }}>
+              <Upload size={28} color={colors.text} />
+            </View>
+            <Txt v="h2" style={{ textAlign: 'center' }}>
+              {t('backupAuto.heroTitle')}
+            </Txt>
+            <Txt c="textSecondary" style={{ textAlign: 'center' }}>
+              {t('backupAuto.heroBody')}
+            </Txt>
+            <Button label={t('backupAuto.chooseFolder')} icon={Folder} full onPress={chooseFolder} style={{ marginTop: 6 }} />
+          </Card>
+        ) : (
+          <Group>
+            <SettingRow
+              icon={Cloud}
+              title={t('backupAuto.nightly')}
+              subtitle={failing ? t('backupAuto.tryingTonight') : t('backupAuto.keeps7')}
+              right={<Toggle value={settings.backupNightly} onChange={setNightly} label={t('backupAuto.nightly')} />}
+            />
+            <SettingRow
+              icon={Folder}
+              title={t('backupAuto.folder')}
+              subtitle={folderNotReachable ? t('backupAuto.notReachable', { folder: folder.label }) : folder.label}
+              value={folderNotReachable ? undefined : t('backupAuto.change')}
+              right={<ChevronRight size={18} color={colors.textTertiary} />}
+              onPress={chooseFolder}
+            />
+          </Group>
+        )}
 
         {packing ? (
           <View style={{ gap: 10, borderRadius: 16, padding: 16, backgroundColor: colors.sunSoft }} accessibilityLiveRegion="polite">
@@ -209,27 +427,36 @@ export default function BackupScreen() {
               </Txt>
             </View>
             <Progress value={pct} />
-            {packing.fileName ? (
-              <Txt v="caption" c="textSecondary" style={{ fontFamily: fonts.medium }}>
-                {packing.fileName}
-              </Txt>
+            {packing.done < packing.total ? (
+              <Button label={t('export.cancel')} variant="text" full onPress={() => (cancelled.current = true)} />
             ) : null}
           </View>
         ) : null}
 
-        <Button label={t('backup.backUp')} icon={CloudUpload} full disabled={!!packing} onPress={backUp} />
-        {packing && packing.done < packing.total ? (
-          <Button label={t('export.cancel')} variant="text" full onPress={() => (cancelled.current = true)} />
-        ) : null}
-        <Button label={t('backup.restore')} icon={RotateCcw} variant="outline" full disabled={!!packing} onPress={pick} />
-
-        <Group style={{ marginTop: 4 }}>
+        <Group>
           <SettingRow
-            title={t('backup.remind')}
-            right={<Toggle value={settings.backupReminder} onChange={(v) => update({ backupReminder: v })} label={t('backup.remind')} />}
+            icon={Upload}
+            title={t('backupAuto.backUpNow')}
+            subtitle={t('backupAuto.backUpNowSub')}
+            right={<ChevronRight size={18} color={colors.textTertiary} />}
+            onPress={packing ? undefined : backUp}
           />
+          <SettingRow
+            icon={RotateCcw}
+            title={t('backupAuto.restore')}
+            right={restoring ? <ActivityIndicator color={colors.textSecondary} /> : <ChevronRight size={18} color={colors.textTertiary} />}
+            onPress={packing || restoring ? undefined : openRestore}
+          />
+          {!nightly ? (
+            <SettingRow
+              icon={Bell}
+              title={t('backupAuto.remind30')}
+              right={<Toggle value={settings.backupReminder} onChange={(v) => update({ backupReminder: v })} label={t('backupAuto.remind30')} />}
+            />
+          ) : null}
         </Group>
       </ScrollView>
+      {confirmDialog}
       <Dialog
         visible={savedAsk !== null}
         title={t('backup.savedTitle')}
@@ -246,6 +473,31 @@ export default function BackupScreen() {
           },
         ]}
       />
+    </View>
+  );
+}
+
+function StatusCard({ tone, title, body }: { tone: 'ok' | 'warn' | 'off'; title: string; body: string }) {
+  const { colors } = useTheme();
+  const dot = tone === 'ok' ? colors.ok : tone === 'warn' ? colors.warn : colors.off;
+  return (
+    <View
+      accessible
+      accessibilityLabel={`${title}. ${body}`}
+      style={{
+        flexDirection: 'row',
+        gap: 12,
+        borderRadius: 16,
+        padding: 16,
+        backgroundColor: tone === 'warn' ? colors.warnSoft : colors.surface,
+      }}>
+      <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: dot + '33', alignItems: 'center', justifyContent: 'center', marginTop: 2 }}>
+        <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: dot }} />
+      </View>
+      <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+        <Txt v="h3">{title}</Txt>
+        <Txt c="textSecondary">{body}</Txt>
+      </View>
     </View>
   );
 }

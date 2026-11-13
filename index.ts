@@ -5,6 +5,8 @@
  */
 import './src/features/trips/backgroundTask';
 import './src/features/widgets/register';
+// S4: nightly backup + recurring entries + reminder window (one periodic task).
+import './src/features/backup/nightlyTask';
 // P3 device probe (dev builds only; the task body is harmless in release, the screen redirects).
 import './src/dev/probeTask';
 import 'expo-router/entry';

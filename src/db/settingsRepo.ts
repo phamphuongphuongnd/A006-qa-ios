@@ -46,10 +46,12 @@ export interface AppSettings {
   /** Consecutive failed nightly backups (3 → Home card). */
   backupFailCount: number;
   lastAutoBackupAt: number | null;
+  /** S4 nightly bookkeeping: data fingerprint of the last nightly file, last try (retry next night), last error. */
+  backupRun: { fingerprint: string | null; lastTryAt: number | null; lastError: 'folder' | 'space' | 'other' | null } | null;
   /** Q22: one notification after the shift if nothing was logged that day; off by default. */
   dailyNudge: { on: boolean; hour: number; minute: number; days: number[] };
   /** S-20 switches for the notifications that are not reminders. */
-  notify: { tripAuto: boolean; missedTrip: boolean; proRenewal: boolean; trialEnding: boolean };
+  notify: { tripAuto: boolean; missedTrip: boolean; proRenewal: boolean; trialEnding: boolean; backupTap: boolean };
   /** FreeAgent mileage CSV "Claimant" column. */
   freeagentClaimant: string;
   /** X3: MTD quarters by standard (6 Apr) or calendar (1 Apr) periods. */
@@ -94,8 +96,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   backupNightly: false,
   backupFailCount: 0,
   lastAutoBackupAt: null,
+  backupRun: null,
   dailyNudge: { on: false, hour: 19, minute: 0, days: [1, 2, 3, 4, 5, 6] },
-  notify: { tripAuto: true, missedTrip: true, proRenewal: true, trialEnding: true },
+  notify: { tripAuto: true, missedTrip: true, proRenewal: true, trialEnding: true, backupTap: true },
   freeagentClaimant: '',
   mtdPeriod: 'standard',
   nfcTagWritten: false,

@@ -40,3 +40,53 @@ export function backupDue(s: { backupReminder: boolean; lastBackupAt: number | n
   const days = daysSince(s.lastBackupAt, now);
   return days === null || days > 30;
 }
+
+/** Q22 daily nudge settings, as stored. */
+export interface NudgeTime {
+  on: boolean;
+  hour: number;
+  minute: number;
+  /** 0 = Sunday … 6. */
+  days: number[];
+}
+
+/**
+ * Days the daily nudge may fire: the driver's work days when work hours are set (S1, P1-3), otherwise its own
+ * Mon–Sat list.
+ */
+export const nudgeDays = (n: NudgeTime, work: { on: boolean; days: number[] }) => (work.on && work.days.length ? work.days : n.days);
+
+/**
+ * Next `count` nudge times from `now` (local). Today's is left out once something was logged today — the nudge only
+ * comes on a day with nothing logged ("Nothing logged today").
+ */
+export function nudgeTimes(n: NudgeTime, days: number[], now: number, loggedToday: boolean, count = 7): number[] {
+  if (!n.on || days.length === 0) return [];
+  const out: number[] = [];
+  const d = new Date(now);
+  for (let i = 0; out.length < count && i < 14 + count; i++) {
+    const c = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i, n.hour, n.minute, 0, 0);
+    if (!days.includes(c.getDay())) continue;
+    if (c.getTime() <= now) continue;
+    if (i === 0 && loggedToday) continue;
+    out.push(c.getTime());
+  }
+  return out;
+}
+
+/** Local midnight of `now`'s day. */
+export const startOfDay = (now: number) => {
+  const d = new Date(now);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+};
+
+/** "Mon–Sat", "Mon–Fri", "Sun, Wed", "Every day" for the S-20 subtitle. */
+export function daysLabel(days: number[]): string {
+  const set = [...new Set(days)].sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)); // Monday first
+  if (set.length === 7) return 'Every day';
+  if (set.length === 0) return 'No days';
+  const mon = set.map((d) => (d + 6) % 7);
+  const run = mon.every((v, i) => i === 0 || v === mon[i - 1] + 1);
+  if (run && set.length >= 3) return `${WEEKDAYS_SHORT[set[0]]}–${WEEKDAYS_SHORT[set.at(-1)!]}`;
+  return set.map((d) => WEEKDAYS_SHORT[d]).join(', ');
+}

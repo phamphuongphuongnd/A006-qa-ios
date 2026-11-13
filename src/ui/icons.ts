@@ -86,3 +86,8 @@ export { default as User } from 'lucide-react-native/icons/user';
 export { default as Utensils } from 'lucide-react-native/icons/utensils';
 export { default as Wrench } from 'lucide-react-native/icons/wrench';
 export { default as X } from 'lucide-react-native/icons/x';
+// S4 (P4): backup folder / recurring.
+export { default as Cloud } from 'lucide-react-native/icons/cloud';
+export { default as Folder } from 'lucide-react-native/icons/folder';
+export { default as Repeat } from 'lucide-react-native/icons/repeat';
+export { default as Upload } from 'lucide-react-native/icons/upload';
