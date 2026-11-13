@@ -1,4 +1,3 @@
-import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import Constants from 'expo-constants';
 import { type Href } from 'expo-router';
 import { router } from '@/services/router';
@@ -25,7 +24,7 @@ import { stopOrphanRecording } from '@/features/trips/controller';
 import { formatRate, ratesOn, type RateTier } from '@/domain/mileage';
 import { ABOUT_LINKS, openRate, rateUrl } from '@/features/settings/about';
 import { authenticate, deviceCanLock } from '@/features/settings/LockedView';
-import { cancelSortReminders, requestNotifications } from '@/features/settings/notifications';
+import { cancelSortReminders } from '@/features/settings/notifications';
 import { backupDue, daysSince, timeLabel, WEEKDAYS } from '@/features/settings/reminder';
 import { GroupLabel, NavHeader, NavRow, OptionSheet, Pill, type Option } from '@/features/settings/ui';
 import { t } from '@/i18n';
@@ -34,9 +33,9 @@ import { usePro } from '@/state/pro';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, useTheme } from '@/theme';
-import { Badge, Button, Dialog, Field, Group, Segmented, Sheet, Toggle, Txt, useSnackbar } from '@/ui';
+import { Badge, Dialog, Field, Group, Segmented, Sheet, Toggle, Txt } from '@/ui';
 
-type Picker = 'region' | 'scope' | 'unit' | 'day' | 'lockAfter' | 'vehicle' | null;
+type Picker = 'region' | 'scope' | 'unit' | 'lockAfter' | 'vehicle' | null;
 
 const LOCK_AFTER: Option<AppSettings['lockAfterMs']>[] = [
   { value: 0, label: 'Immediately' },
@@ -52,9 +51,8 @@ const currentRatesText = (rates: RateTier[], currency: 'GBP' | 'USD') =>
     .join(' / ');
 
 export default function SettingsScreen() {
-  const { colors, dark } = useTheme();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const snack = useSnackbar();
   const { settings, update, setRegion } = useSettings();
   const region: Region = settings.region ?? 'UK';
   const [picker, setPicker] = useState<Picker>(null);
@@ -63,7 +61,6 @@ export default function SettingsScreen() {
   const [convertCount, setConvertCount] = useState(0);
   const [rateText, setRateText] = useState('');
   const [rateError, setRateError] = useState(false);
-  const [timeSheet, setTimeSheet] = useState(false);
   const [howSheet, setHowSheet] = useState(false);
   const [deleteStep, setDeleteStep] = useState<0 | 1 | 2>(0);
   const [deleteText, setDeleteText] = useState('');
@@ -104,15 +101,6 @@ export default function SettingsScreen() {
   const lockOptions = LOCK_AFTER.map((o, i) => ({ ...o, label: lockLabels[i] }));
   const r = settings.reminder;
 
-  const setReminderOn = async (on: boolean) => {
-    if (!on) {
-      update({ reminder: { ...r, on: false } });
-      return;
-    }
-    if (await requestNotifications()) update({ reminder: { ...r, on: true } });
-    else snack({ message: t('settings.remindersOff'), above: 'none' });
-  };
-
   const setAppLock = async (on: boolean) => {
     if (!on) {
       update({ appLock: false });
@@ -123,20 +111,6 @@ export default function SettingsScreen() {
       return;
     }
     if (await authenticate(t('lock.enablePrompt'))) update({ appLock: true });
-  };
-
-  const openTime = () => {
-    const value = new Date(2026, 0, 4, r.hour, r.minute);
-    if (Platform.OS === 'android') {
-      DateTimePickerAndroid.open({
-        value,
-        mode: 'time',
-        is24Hour: true,
-        onValueChange: (_, d) => update({ reminder: { ...r, hour: d.getHours(), minute: d.getMinutes() } }),
-      });
-    } else {
-      setTimeSheet(true);
-    }
   };
 
   const deleteAll = async () => {
@@ -220,13 +194,9 @@ export default function SettingsScreen() {
           <NavRow icon={TagIcon} title={t('settings.categories')} value={String(categoryCount)} onPress={() => router.push('/categories')} />
         </Group>
 
-        {/* S4 moves the weekly reminder into S-20 (Notifications) and removes these three rows. */}
         <GroupLabel>{t('settingsV2.notifications')}</GroupLabel>
         <Group>
           <NavRow title={t('settingsV2.notificationsRow')} value={r.on ? `${WEEKDAYS[r.weekday].slice(0, 3)} ${timeLabel(r.hour, r.minute)}` : t('settingsV2.remindersOff')} onPress={() => router.push('/notifications')} />
-          <NavRow title={t('settings.weeklyReminder')} right={<Toggle value={r.on} onChange={setReminderOn} label={t('settings.weeklyReminder')} />} />
-          {r.on ? <NavRow title={t('settings.day')} value={WEEKDAYS[r.weekday]} onPress={() => setPicker('day')} /> : null}
-          {r.on ? <NavRow title={t('settings.time')} value={timeLabel(r.hour, r.minute)} onPress={openTime} /> : null}
         </Group>
 
         <GroupLabel>{t('settings.security')}</GroupLabel>
@@ -374,14 +344,6 @@ export default function SettingsScreen() {
         onPick={(v) => update({ distanceUnit: v })}
         onClose={() => setPicker(null)}
       />
-      <OptionSheet<number>
-        visible={picker === 'day'}
-        title={t('settings.day')}
-        options={WEEKDAYS.map((d, i) => ({ value: i, label: d }))}
-        value={r.weekday}
-        onPick={(v) => update({ reminder: { ...r, weekday: v } })}
-        onClose={() => setPicker(null)}
-      />
       <OptionSheet<AppSettings['lockAfterMs']>
         visible={picker === 'lockAfter'}
         title={t('settings.lockAfter')}
@@ -391,21 +353,6 @@ export default function SettingsScreen() {
         onClose={() => setPicker(null)}
       />
 
-      {Platform.OS === 'ios' ? (
-        <Sheet
-          visible={timeSheet}
-          onClose={() => setTimeSheet(false)}
-          title={t('settings.time')}
-          footer={<Button label={t('common.done')} full onPress={() => setTimeSheet(false)} />}>
-          <DateTimePicker
-            value={new Date(2026, 0, 4, r.hour, r.minute)}
-            mode="time"
-            display="spinner"
-            themeVariant={dark ? 'dark' : 'light'}
-            onValueChange={(_, d) => update({ reminder: { ...r, hour: d.getHours(), minute: d.getMinutes() } })}
-          />
-        </Sheet>
-      ) : null}
 
       <Sheet visible={howSheet} onClose={() => setHowSheet(false)} title={t('settings.howItWorks')}>
         {[t('settings.how1'), t('settings.how2'), t('settings.how3'), t('settings.how4')].map((line, i) => (

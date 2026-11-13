@@ -1,15 +1,11 @@
 import * as Notifications from 'expo-notifications';
-import { router } from '@/services/router';
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AppState, StyleSheet, View } from 'react-native';
 
-import { db } from '@/db/client';
-import { unsortedCount } from '@/db/entriesRepo';
+import { useAutoServices } from '@/features/backup/useAutoServices';
 import { lockSuspended } from '@/features/settings/lockState';
 import { LockedView } from '@/features/settings/LockedView';
-import { ensureSortChannel, scheduleSortReminders, SORT_URL } from '@/features/settings/notifications';
 import { useSettings } from '@/state/settings';
-import { useLive } from '@/state/useLive';
 
 export { withLockSuspended } from '@/features/settings/lockState';
 
@@ -19,35 +15,11 @@ Notifications.setNotificationHandler({
 });
 
 /**
- * Data / settings background services, mounted once in the root layout after onboarding:
- * notification channel, the weekly "entries to sort" reminder (F-17) rescheduled whenever the settings or the
- * unsorted count change, and opening Sort when that notification is tapped.
+ * Data / settings background services, mounted once in the root layout after onboarding (see useAutoServices).
  */
 export function DataServices() {
-  const { settings } = useSettings();
-  const unsorted = useLive(() => unsortedCount(db), [], ['entries']);
-  const { on, weekday, hour, minute } = settings.reminder;
-
-  useEffect(() => {
-    ensureSortChannel().catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    // Debounce bursts (sorting a whole week changes the count many times).
-    const id = setTimeout(() => {
-      scheduleSortReminders({ on, weekday, hour, minute }, unsorted).catch(() => {});
-    }, 800);
-    return () => clearTimeout(id);
-  }, [on, weekday, hour, minute, unsorted]);
-
-  const last = Notifications.useLastNotificationResponse();
-  useEffect(() => {
-    if (!last || last.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
-    if (last.notification.request.content.data?.url !== SORT_URL) return;
-    router.navigate(SORT_URL);
-    Notifications.clearLastNotificationResponseAsync().catch(() => {});
-  }, [last]);
-
+  // S4: Sunday reminder + daily nudge, recurring entries, nightly backup task, reminder taps.
+  useAutoServices();
   return null;
 }
 

@@ -5,11 +5,12 @@ import { db } from '@/db/client';
 import { receiptsDir } from '@/files/receipts';
 
 import { referencedPhotos, replaceAllData, snapshotTables } from './dataStore';
+import { NoSpaceError } from './nightly';
 import { backupFileName, packBackup, type BackupCounts, type BackupManifest, type PhotoSource } from './pack';
 
 export const appVersion = () => Constants.expoConfig?.version ?? '1.0.0';
 
-export class NoSpaceError extends Error {}
+export { NoSpaceError } from './nightly';
 
 /** What a backup of this phone would contain right now (for "Packing 1,204 entries and 318 photos…"). */
 export function backupPlan() {
@@ -23,7 +24,7 @@ export function backupPlan() {
  */
 export async function createBackupFile(
   plan: ReturnType<typeof backupPlan>,
-  opts: { onProgress: (done: number, total: number) => void; isCancelled: () => boolean; now?: number },
+  opts: { onProgress: (done: number, total: number) => void; isCancelled: () => boolean; now?: number; name?: string; dir?: string },
 ): Promise<{ file: File; counts: BackupCounts } | null> {
   const now = opts.now ?? Date.now();
   const rdir = receiptsDir();
@@ -35,10 +36,11 @@ export async function createBackupFile(
   const free = Paths.availableDiskSpace;
   if (free > 0 && free < need) throw new NoSpaceError();
 
-  const dir = new Directory(Paths.cache, 'backup');
+  // The share-sheet file and the nightly file use separate cache folders (both may run at once).
+  const dir = new Directory(Paths.cache, opts.dir ?? 'backup');
   if (dir.exists) dir.delete();
   dir.create({ intermediates: true });
-  const file = new File(dir, backupFileName(now));
+  const file = new File(dir, opts.name ?? backupFileName(now));
   file.create({ overwrite: true });
   const handle = file.open(FileMode.WriteOnly);
   try {
