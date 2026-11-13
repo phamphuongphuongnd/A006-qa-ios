@@ -3,52 +3,79 @@ import { Pressable, View } from 'react-native';
 
 import { listCategories } from '@/db/categoriesRepo';
 import { db } from '@/db/client';
-import { listEntries, sortHistory, unsortedWeeks, type EntryListItem } from '@/db/entriesRepo';
-import type { CategoryRow } from '@/db/schema';
-import { suggest, type SuggestCategory } from '@/domain/suggest';
+import { listEntries, type EntryListItem } from '@/db/entriesRepo';
+import type { CategoryRow, TripRow } from '@/db/schema';
+import { mostUsed, suggest, type SuggestCategory } from '@/domain/suggest';
 import type { Period, Scope } from '@/domain/types';
 import { weekLabel, weekOf } from '@/domain/week';
+import { unreviewedAutoCount } from '@/features/rules/repo';
 import { t } from '@/i18n';
+import { usePro } from '@/state/pro';
 import { useLive } from '@/state/useLive';
 import { fonts, useTheme } from '@/theme';
 import { Progress, Sheet, Txt } from '@/ui';
 
-import { pickSortWeek, sortQueue } from './logic';
+import { mixedQueue, pickSortWeek, type QueueItem } from './logic';
+import { categoryUsage90, openTrips, sortedQueueTrips, sortHistoryV2, sortWeeks } from './sortRepo';
 
 export interface SortSuggestion {
   categories: CategoryRow[];
   scope: Scope | null;
+  /** Pro "Suggested" (history, merchant, amount, OCR) or free "Most used" (90-day usage). */
+  kind: 'suggested' | 'mostUsed';
 }
 
+export type SortItem = QueueItem<EntryListItem, TripRow>;
+
 /**
- * Data for the Sunday sort screens: the week being sorted (user's pick or the newest week with work), its entries,
- * progress, card queue and a `suggestFor(entry)` backed by `suggest()` + the user's sort history.
+ * Data for the Sunday sort screens: the week being sorted (user's pick or the newest week with work), its entries and
+ * Unsorted trips, progress, the card queue and `suggestFor(entry)` — Pro: `suggest()` over the user's sort history with
+ * the receipt signals; free: the 3 most used categories (F-07).
  */
 export function useSortWeek(chosen: number | null, skipped: string[] = []) {
+  'use no memo';
+  const { pro } = usePro();
   const data = useLive(
     () => {
-      const weeks = unsortedWeeks(db);
+      const weeks = sortWeeks(db);
       const week = pickSortWeek(chosen, weeks);
       return {
         weeks,
         week,
         entries: week ? listEntries(db, { period: week }) : ([] as EntryListItem[]),
-        history: sortHistory(db),
+        trips: week ? openTrips(db, week) : ([] as TripRow[]),
+        tripsDone: week ? sortedQueueTrips(db, week) : 0,
+        autoCount: week ? unreviewedAutoCount(db, week) : 0,
       };
     },
     [chosen],
-    ['entries', 'receipts'],
+    ['entries', 'receipts', 'trips'],
+  );
+  const learn = useLive(
+    () =>
+      pro
+        ? { history: sortHistoryV2(db), usage: { income: [], expense: [] } }
+        : { history: [], usage: { income: categoryUsage90(db, 'income'), expense: categoryUsage90(db, 'expense') } },
+    [pro],
+    ['entries'],
   );
   const cats = useLive(() => listCategories(db), [], ['categories']);
   const sugCats: SuggestCategory[] = cats.map((c) => ({ id: c.id, type: c.type, key: c.key, hidden: c.hidden, order: c.sortOrder }));
   const byId = new Map(cats.map((c) => [c.id, c]));
+  const toRows = (ids: string[]) => ids.map((id) => byId.get(id)).filter((c): c is CategoryRow => !!c);
   const suggestFor = (e: EntryListItem): SortSuggestion => {
-    const s = suggest({ type: e.type, note: e.note, amountMinor: e.amountMinor }, sugCats, data.history);
-    return { categories: s.categoryIds.map((id) => byId.get(id)).filter((c): c is CategoryRow => !!c), scope: s.scope };
+    if (!pro) return { categories: toRows(mostUsed(e.type, sugCats, learn.usage[e.type])), scope: null, kind: 'mostUsed' };
+    const s = suggest(
+      { type: e.type, note: e.note, amountMinor: e.amountMinor, merchant: e.ocrMerchant, ocrAmountMinor: e.ocrAmountMinor },
+      sugCats,
+      learn.history,
+    );
+    return { categories: toRows(s.categoryIds), scope: s.scope, kind: 'suggested' };
   };
-  const total = data.entries.length;
-  const done = data.entries.filter((e) => e.categoryId !== null).length;
-  return { ...data, cats, queue: sortQueue(data.entries, skipped), total, done, suggestFor };
+  const queue: SortItem[] = mixedQueue(data.entries, data.trips, skipped);
+  const total = data.entries.length + data.trips.length + data.tripsDone;
+  const done = data.entries.filter((e) => e.categoryId !== null).length + data.tripsDone;
+  return { ...data, pro, cats, queue, total, done, suggestFor, autoCount: pro ? data.autoCount : 0 };
 }
 
 export const weekChipLabel = (week: Period, now = Date.now()) =>

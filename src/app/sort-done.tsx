@@ -1,26 +1,30 @@
 import { useLocalSearchParams } from 'expo-router';
 import { router } from '@/services/router';
 import { CloudUpload } from '@/ui/icons';
+import { Zap } from '@/features/rules/icons';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { db } from '@/db/client';
-import { entryCount, totalsFor } from '@/db/entriesRepo';
+import { totalsFor } from '@/db/entriesRepo';
 import { mileageTotals } from '@/db/tripsRepo';
 import { formatMoney } from '@/domain/money';
 import { currencyOf } from '@/domain/types';
 import { weekOf } from '@/domain/week';
 import { SunDoneArt } from '@/features/entries/art';
 import { milesLabel } from '@/features/entries/format';
-import { backupDue, daysSince } from '@/features/entries/logic';
 import { useNow } from '@/features/entries/useNow';
+import { autoCounts } from '@/features/rules/repo';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, useTheme } from '@/theme';
 import { Button, Card, Txt } from '@/ui';
 
-/** S-06c Week sorted. Param `week` = week start (ms). Shows the week's work totals and a backup nudge when due. */
+/**
+ * S-06c Week sorted. Param `week` = week start (ms). The week's work totals, "9 auto-sorted · 2 recurring entries
+ * added", and a nudge to turn on nightly backup while it is off.
+ */
 export default function SortDoneScreen() {
   const params = useLocalSearchParams<{ week?: string }>();
   const { colors } = useTheme();
@@ -34,12 +38,19 @@ export default function SortDoneScreen() {
     () => ({
       totals: totalsFor(db, week, 'work'),
       miles: mileageTotals(db, week).work,
-      count: entryCount(db),
+      auto: autoCounts(db, week),
     }),
     [week.start],
     ['entries', 'trips'],
   );
-  const showBackup = backupDue(settings, data.count, now);
+  const autoText =
+    data.auto.auto > 0 && data.auto.recurring > 0
+      ? t('sortV2.autoAndRecurring', data.auto)
+      : data.auto.auto > 0
+        ? t('sortV2.autoOnly', data.auto)
+        : data.auto.recurring > 0
+          ? t('sortV2.recurringOnly', data.auto)
+          : null;
 
   const done = () => (router.canGoBack() ? router.back() : router.replace('/sort'));
 
@@ -50,28 +61,32 @@ export default function SortDoneScreen() {
         <Txt v="h1" accessibilityRole="header" center style={{ fontSize: 34, lineHeight: 40 }}>
           {t('sort.weekSorted')}
         </Txt>
-        <Card style={{ alignSelf: 'stretch', flexDirection: 'row', gap: 6 }}>
-          <Stat label={t('sort.inLabel')} value={formatMoney(data.totals.incomeMinor, currency)} c="incomeText" />
-          <Stat label={t('sort.outLabel')} value={formatMoney(data.totals.expenseMinor, currency)} c="expenseText" />
+        <Card style={{ alignSelf: 'stretch', gap: 14 }}>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            <Stat label={t('sort.inLabel')} value={formatMoney(data.totals.incomeMinor, currency)} c="incomeText" />
+            <Stat label={t('sort.outLabel')} value={formatMoney(data.totals.expenseMinor, currency)} c="expenseText" />
+          </View>
           <Stat label={t('sort.businessLabel')} value={t('common.miles', { miles: milesLabel(data.miles) })} c="text" />
+          {autoText ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, borderTopWidth: 1, borderTopColor: colors.line, paddingTop: 12 }}>
+              <Zap size={18} color={colors.sunText} />
+              <Txt style={{ flex: 1, fontFamily: fonts.semibold, color: colors.sunText }}>{autoText}</Txt>
+            </View>
+          ) : null}
         </Card>
-        {showBackup ? (
-          <Card variant="sun" style={{ alignSelf: 'stretch', gap: 10 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <CloudUpload size={24} color={colors.text} />
-              <Txt v="h3">{t('sort.backupTitle')}</Txt>
+        {!settings.backupNightly ? (
+          <Card variant="sun" style={{ alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <CloudUpload size={24} color={colors.sunText} />
+            <View style={{ flex: 1 }}>
+              <Txt v="h3">{t('sortV2.keepSafe')}</Txt>
+              <Txt v="small">{t('sortV2.turnOnNightly')}</Txt>
             </View>
-            <Txt v="small" c="sunText">
-              {settings.lastBackupAt === null ? t('sort.backupNever') : t('sort.backupDays', { days: daysSince(settings.lastBackupAt, now) })}
-            </Txt>
-            <View style={{ alignSelf: 'flex-start' }}>
-              <Button label={t('sort.backupNow')} size="sm" onPress={() => router.push('/backup')} />
-            </View>
+            <Button label={t('sortV2.setUp')} variant="outline" size="sm" onPress={() => router.push('/backup')} />
           </Card>
         ) : null}
       </ScrollView>
       <View style={{ paddingHorizontal: GUTTER, paddingBottom: Math.max(insets.bottom, 16) + 20, paddingTop: 8 }}>
-        <Button label={t('common.done')} variant="outline" full onPress={done} />
+        <Button label={t('common.done')} full onPress={done} />
       </View>
     </View>
   );

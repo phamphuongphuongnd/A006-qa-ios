@@ -28,6 +28,8 @@ import {
   showBackupBanner,
   sortCardScope,
   sortQueue,
+  mixedQueue,
+  tripKey,
   toggledScope,
   toRepoFilter,
 } from '../logic';
@@ -189,5 +191,23 @@ describe('periodLabel (B-07)', () => {
     expect(periodLabel({ start: at(2026, 4, 6, 0), end: at(2027, 4, 6, 0) })).toBe('6 Apr 2026 – 5 Apr 2027');
     expect(periodLabel({ start: at(2026, 7, 1, 0), end: at(2026, 10, 1, 0) })).toBe('1 Jul – 30 Sep 2026');
     expect(periodLabel({ start: at(2026, 11, 12, 0), end: at(2026, 11, 13, 0) })).toBe('12 Nov 2026');
+  });
+});
+
+describe('mixedQueue (bản 2: entries + Unsorted trips)', () => {
+  const e = (id: string, occurredAt: number, categoryId: string | null = null) => ({ id, occurredAt, categoryId });
+  const tr = (id: string, startedAt: number) => ({ id, startedAt });
+
+  it('orders entries and trips oldest first, sorted entries drop out', () => {
+    const q = mixedQueue([e('a', 30), e('b', 10), e('c', 5, 'fuel')], [tr('t', 20)], []);
+    expect(q.map((i) => i.key)).toEqual(['b', tripKey('t'), 'a']);
+    expect(q[1]).toMatchObject({ kind: 'trip', trip: { id: 't' } });
+  });
+
+  it('skipped cards go to the back in skip order', () => {
+    const q = mixedQueue([e('a', 1), e('b', 2)], [tr('t', 3)], [tripKey('t'), 'a']);
+    expect(q.map((i) => i.key)).toEqual(['b', tripKey('t'), 'a']);
+    const q2 = mixedQueue([e('a', 1), e('b', 2)], [tr('t', 0)], ['a', tripKey('t')]);
+    expect(q2.map((i) => i.key)).toEqual(['b', 'a', tripKey('t')]);
   });
 });
