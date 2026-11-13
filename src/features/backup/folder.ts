@@ -46,8 +46,9 @@ function androidPort(uri: string): BackupFolderPort {
       return f ? f.text() : null;
     },
     async writeText(name, text) {
-      const f = child(name) ?? dir().createFile(name, 'application/json');
-      f.write(text);
+      // Replace rather than overwrite: some providers don't truncate on write, leaving the old tail behind.
+      child(name)?.delete();
+      dir().createFile(name, 'application/json').write(text);
     },
     async fetch(name) {
       const f = child(name);

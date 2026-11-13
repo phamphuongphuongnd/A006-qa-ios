@@ -14,6 +14,7 @@ import {
   createRecurring,
   deleteRecurring,
   generateDueRecurring,
+  getRecurring,
   isEnded,
   listRecurring,
   updateRecurring,
@@ -35,7 +36,10 @@ type Editing = { id: string | null; input: RecurringInput; fromDay?: string; key
 
 const fromRow = ({ id: _i, nextOn: _n, createdAt: _c, updatedAt: _u, ...input }: RecurringRow): RecurringInput => input;
 
-/** S-17 Recurring entries [Pro] (F-10). `?from=<entryId>`: "Make recurring" on an entry opens the sheet filled from it. */
+/**
+ * S-17 Recurring entries [Pro] (F-10). From S-05: `?from=<entryId>` ("Make recurring") opens a new template filled from
+ * the entry; `?id=<recurringId>` ("Edit recurring") opens that template's sheet.
+ */
 export default function RecurringScreen() {
   'use no memo';
   const { colors } = useTheme();
@@ -43,7 +47,7 @@ export default function RecurringScreen() {
   const snack = useSnackbar();
   const { settings } = useSettings();
   const { pro } = usePro();
-  const params = useLocalSearchParams<{ from?: string }>();
+  const params = useLocalSearchParams<{ from?: string; id?: string }>();
   const rows = useLive(() => listRecurring(db), [], ['recurring']);
   const [editing, setEditing] = useState<Editing | null>(null);
   const [askDelete, setAskDelete] = useState(false);
@@ -96,6 +100,15 @@ export default function RecurringScreen() {
       },
     });
   }, [params.from, pro]);
+
+  // "Edit recurring" from an entry made by a template.
+  const idDone = useRef(false);
+  useEffect(() => {
+    if (!params.id || idDone.current) return;
+    idDone.current = true;
+    const r = getRecurring(db, params.id);
+    if (r) setEditing({ id: r.id, input: fromRow(r), key: ++seq.current });
+  }, [params.id]);
 
   const add = () => {
     if (!pro) {
@@ -194,7 +207,8 @@ export default function RecurringScreen() {
           onDelete={editing.id ? () => setAskDelete(true) : undefined}
           onClose={() => {
             setEditing(null);
-            if (params.from) router.back();
+            // Opened straight from an entry: Close goes back to it.
+            if (params.from || params.id) router.back();
           }}
         />
       ) : null}

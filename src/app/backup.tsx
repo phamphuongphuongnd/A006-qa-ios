@@ -123,7 +123,9 @@ export default function BackupScreen() {
       chooseFolder();
       return;
     }
-    update({ backupNightly: on, ...(on ? { backupFailCount: 0 } : {}) });
+    // Back on after a while: old misses don't count, and one backup now shows the folder still works.
+    update({ backupNightly: on, ...(on ? { backupFailCount: 0, lastAutoBackupAt: null } : {}) });
+    if (on) setTimeout(() => runNow(true), 0);
   };
 
   const backUp = async () => {
@@ -338,7 +340,11 @@ export default function BackupScreen() {
   const pct = packing && packing.total > 0 ? packing.done / packing.total : packing ? 1 : 0;
   const folderNotReachable = !!folder && (reachable === false || (failing && lastError === 'folder'));
   const failBody =
-    lastError === 'space' ? t('backupAuto.failedBodySpace') : lastError === 'other' ? t('backupAuto.failedBodyOther') : t('backupAuto.failedBodyFolder');
+    lastError === 'folder' || folderNotReachable
+      ? t('backupAuto.failedBodyFolder')
+      : lastError === 'space'
+        ? t('backupAuto.failedBodySpace')
+        : t('backupAuto.failedBodyOther');
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>

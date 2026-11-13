@@ -30,6 +30,7 @@ export async function runBackgroundWork(now = Date.now(), opts: { notifyOnFail: 
   } catch (e) {
     console.warn('[nightly] reminders failed', e);
   }
+  // TODO(merge S5): syncProNotices(db)
   const s = getSettings(db);
   if (!nightlyDue(s, now)) return null;
   const r = await runNightlyNow({ now });

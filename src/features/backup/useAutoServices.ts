@@ -61,6 +61,7 @@ export function useAutoServices() {
     // Debounce bursts (sorting a whole week changes the count many times).
     const id = setTimeout(() => {
       syncReminders(db).catch(() => {});
+      // TODO(merge S5): syncProNotices(db) — and add settings.notify to `key` so S-20 switches reschedule it.
     }, 800);
     return () => clearTimeout(id);
   }, [key, entriesVersion]);
