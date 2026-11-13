@@ -15,6 +15,7 @@ export const mtd = {
     mtdCategories: 'MTD categories',
     unsortedEntriesTrips: "{entries} and {trips} in this period aren't sorted yet",
     unsortedOnly: "{what} in this period aren't sorted yet",
+    unsortedTripOne: "1 trip in this period isn't sorted yet",
     entriesN: '{count} entries',
     entriesOne: '1 entry',
     tripsN: '{count} trips',
@@ -81,6 +82,8 @@ export const mtd = {
     freeagentEngine: 'Engine',
     freeagentEngineSize: 'Engine size',
     freeagentContinue: 'Continue',
+    freeagentAs: 'FreeAgent: {name} · {engine}',
+    freeagentChange: 'Change',
     period: 'Period',
   },
 } as const;

@@ -9,7 +9,7 @@ import { startTrial } from '@/db/proRepo';
 import { TRIAL_DAYS, type ProFeature } from '@/domain/pro';
 import { useProRenewalSignal } from '@/features/pro/homeAlerts';
 import { openManageSubscription } from '@/features/pro/manage';
-import { rememberProPrice, syncProNotifications } from '@/features/pro/notifications';
+import { rememberProPrice, syncProNotices } from '@/features/pro/notices';
 import { perWeekText, priceText, shortDate, type PurchaseProblem } from '@/features/pro/purchase';
 import { buyPro, loadProProduct, refreshProFromStore, restorePro } from '@/features/pro/store';
 import { ABOUT_LINKS } from '@/features/settings/about';
@@ -107,7 +107,7 @@ export default function ProScreen() {
   const tryFree = () => {
     if (startTrial(db)) {
       snack({ message: t('pro.trialStarted') });
-      void syncProNotifications();
+      void syncProNotices(db);
     } else snack({ message: t('pro.trialUsed') });
   };
 

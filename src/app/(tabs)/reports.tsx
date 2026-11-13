@@ -264,9 +264,8 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
     }
     const e = report.unsortedCount === 1 ? t('mtd.reports.entriesOne') : t('mtd.reports.entriesN', { count: report.unsortedCount });
     const tr = trips.unsortedCount === 1 ? t('mtd.reports.tripsOne') : t('mtd.reports.tripsN', { count: trips.unsortedCount });
-    return report.unsortedCount === 0
-      ? t('mtd.reports.unsortedOnly', { what: tr })
-      : t('mtd.reports.unsortedEntriesTrips', { entries: e, trips: tr });
+    if (report.unsortedCount === 0) return trips.unsortedCount === 1 ? t('mtd.reports.unsortedTripOne') : t('mtd.reports.unsortedOnly', { what: tr });
+    return t('mtd.reports.unsortedEntriesTrips', { entries: e, trips: tr });
   })();
   const toSort = report.unsortedCount + trips.unsortedCount;
   const mtdRows = report.byMtd.filter((m) => m.totalMinor !== 0 || m.mtdCategory !== null);

@@ -2,17 +2,18 @@ import * as Notifications from 'expo-notifications';
 import { AndroidImportance, IosAuthorizationStatus } from 'expo-notifications';
 import { Platform } from 'react-native';
 
-import { db } from '@/db/client';
 import { getProState } from '@/db/proRepo';
 import { getSettings } from '@/db/settingsRepo';
+import type { AppDb } from '@/db/types';
 import { t } from '@/i18n';
 
 import { priceText, proNotificationPlan, type ProNotificationId } from './purchase';
 
 /**
  * Pro renewal + trial-ending notifications (F-17, P1-11). S5 owns the timing and text; S4's S-20 Notifications
- * screen owns the switches (`settings.notify.proRenewal` / `trialEnding`) and calls `syncProNotifications()` after
- * changing them. S5 calls it after a trial starts, a purchase, a restore and a store refresh.
+ * screen owns the switches (`settings.notify.proRenewal` / `trialEnding`) and calls `syncProNotices(db)` after
+ * changing them and from the nightly task. S5 calls it after a trial starts, a purchase, a restore and a store refresh.
+ * Idempotent: always cancels both, then schedules what the current state calls for.
  */
 
 export const PRO_CHANNEL = 'pro';
@@ -40,7 +41,7 @@ const allowed = async () => {
 };
 
 /** Replaces the scheduled Pro notifications with what the current Pro state and switches call for. */
-export async function syncProNotifications(now = Date.now()): Promise<void> {
+export async function syncProNotices(db: AppDb, now = Date.now()): Promise<void> {
   await Promise.all(IDS.map((id) => Notifications.cancelScheduledNotificationAsync(id).catch(() => undefined)));
   const settings = getSettings(db);
   const plan = proNotificationPlan(getProState(db), now, {

@@ -16,7 +16,7 @@ import { db } from '@/db/client';
 import { applyStoreEntitlement, getProState } from '@/db/proRepo';
 import { PRO_PRODUCT_ID } from '@/domain/pro';
 
-import { syncProNotifications } from './notifications';
+import { syncProNotices } from './notices';
 import { nextAnnualRenewal, purchaseProblem, type PurchaseProblem } from './purchase';
 
 /**
@@ -93,7 +93,7 @@ async function grant(p: Purchase, now = Date.now()) {
     autoRenewing,
   });
   await finishTransaction({ purchase: p, isConsumable: false }).catch(() => undefined);
-  await syncProNotifications().catch(() => undefined);
+  await syncProNotices(db).catch(() => undefined);
 }
 
 /** Loads the subscription from the store (price + offer). null when the store has no such product (yet) or is offline. */
@@ -143,7 +143,7 @@ async function readEntitlement(): Promise<'active' | 'none'> {
     return 'active';
   }
   applyStoreEntitlement(db, { active: false, expiresAt: null, productId: null, autoRenewing: null });
-  await syncProNotifications().catch(() => undefined);
+  await syncProNotices(db).catch(() => undefined);
   return 'none';
 }
 

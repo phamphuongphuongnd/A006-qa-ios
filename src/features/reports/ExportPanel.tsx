@@ -101,7 +101,8 @@ export function ExportPanel({
   const [ask, setAsk] = useState<{ kind: 'mtd' | 'plain'; count: number } | null>(null);
   /** "Leave them out" pressed for this period. */
   const [leftOutFor, setLeftOutFor] = useState<string | null>(null);
-  const [freeagentAsk, setFreeagentAsk] = useState(false);
+  /** FreeAgent name + engine sheet: before exporting ('run') or from the "Change" link ('edit'). */
+  const [freeagentAsk, setFreeagentAsk] = useState<'run' | 'edit' | null>(null);
   const [busy, setBusy] = useState(false);
   const cancelled = useRef(false);
 
@@ -137,12 +138,12 @@ export function ExportPanel({
 
   const afterUnsorted = () => {
     setAsk(null);
-    if (chosen.includes('freeagent') && (!settings.freeagentClaimant.trim() || !savedVehicle(settings.freeagentVehicle))) setFreeagentAsk(true);
+    if (chosen.includes('freeagent') && (!settings.freeagentClaimant.trim() || !savedVehicle(settings.freeagentVehicle))) setFreeagentAsk('run');
     else run();
   };
 
   const run = async (freeagent?: { claimant: string; vehicle: FreeAgentVehicle }) => {
-    setFreeagentAsk(false);
+    setFreeagentAsk(null);
     cancelled.current = false;
     setBusy(true);
     try {
@@ -326,6 +327,21 @@ export function ExportPanel({
         </>
       )}
 
+      {chosen.includes('freeagent') && settings.freeagentClaimant.trim() ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Txt v="small" c="textSecondary" style={{ flex: 1 }}>
+            {t('mtd.export.freeagentAs', {
+              name: settings.freeagentClaimant.trim(),
+              engine: (() => {
+                const v = savedVehicle(settings.freeagentVehicle) ?? DEFAULT_FREEAGENT_VEHICLE;
+                return v.engineSize === 'All' ? v.engineType : `${v.engineType} ${v.engineSize}`;
+              })(),
+            })}
+          </Txt>
+          <Button label={t('mtd.export.freeagentChange')} size="sm" variant="text" onPress={() => setFreeagentAsk('edit')} />
+        </View>
+      ) : null}
+
       <View style={[styles.toggle, { backgroundColor: colors.surface, borderColor: colors.line }]}>
         <Txt style={{ flex: 1 }}>{t('export.includePersonal')}</Txt>
         <Toggle value={includePersonal} onChange={setIncludePersonal} label={t('export.includePersonal')} />
@@ -386,10 +402,11 @@ export function ExportPanel({
         <FreeAgentSheet
           initialName={settings.freeagentClaimant}
           initialVehicle={savedVehicle(settings.freeagentVehicle) ?? DEFAULT_FREEAGENT_VEHICLE}
-          onClose={() => setFreeagentAsk(false)}
+          onClose={() => setFreeagentAsk(null)}
           onDone={(claimant, vehicle) => {
             update({ freeagentClaimant: claimant, freeagentVehicle: vehicle });
-            run({ claimant, vehicle });
+            if (freeagentAsk === 'run') run({ claimant, vehicle });
+            else setFreeagentAsk(null);
           }}
         />
       ) : null}
