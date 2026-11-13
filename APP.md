@@ -3,7 +3,7 @@
 > Brief tĩnh của app. **≤ 60 dòng, không ghi lịch sử** (lịch sử ở git + `memory/sessions/`).
 > Tiến độ: `CHECKLIST.md` · Tính năng: `product.md` · Test: `TESTCASES.md` · Lỗi: `BUGS.md`.
 
-**Đang ở:** Bước 6 dừng sau giả lập người dùng (BUGS 36/36 đã sửa) → kế: bản 2 tự động + Pro theo `PLAN-v2.md` (P0–P6), lên store sau bản 2; Bước 3 còn treo: widget iOS (EAS) (2026-11-13)
+**Đang ở:** bản 2 (`PLAN-v2.md`): X1 + P0 + P1 xong, product.md v2 đã duyệt → P2 mockup (Phương gửi Claude Design) → P3; Bước 3 còn treo: widget iOS (EAS) (2026-11-13)
 
 ## Brief
 - **Mã app / thư mục:** `A006-sundaysort` → `apps/A006-sundaysort/`
@@ -11,13 +11,13 @@
 - **Một câu mô tả:** Sổ thu chi cho tài xế van/courier tự kinh doanh: ghi khoản trong 10 giây không chọn danh mục,
   Chủ nhật phân loại cả tuần, ghi quãng đường, cuối năm thuế có sẵn tổng + file cho kế toán.
 - **Người dùng mục tiêu:** tài xế van, courier, multi-drop, sole trader tự khai thuế ở UK (Self Assessment) và Mỹ (Schedule C).
-- **Kiếm tiền:** miễn phí hoàn toàn — không quảng cáo, không mua trong app.
+- **Kiếm tiền:** miễn phí phần ghi + phân loại tay; **Pro thuê bao năm** (giá tạm £24.99, US theo tỷ giá), dùng thử 7 ngày trong app; không quảng cáo (product.md §6).
 - **Nền tảng:** Android + iOS — **tất cả tính năng trong 1 bản**, không chia bản.
 - **Ngôn ngữ / tiền tệ / vùng:** chỉ tiếng Anh (i18n dựng sẵn). Lần mở đầu chọn vùng: UK (£, năm thuế 6/4–5/4,
   danh mục SA103, dặm 55p/25p từ 6/4/2026) hoặc US ($, năm dương lịch, danh mục Schedule C, IRS rate). Đổi được trong Settings.
 - **Thị trường:** UK + Mỹ ngang nhau.
 - **Khác đối thủ ở đâu:** ghi nhanh không danh mục + phân loại tuần là bước chính + sửa/gộp/tách trên 1 màn;
-  không tài khoản, không kết nối ngân hàng, dữ liệu không rời máy; GPS bấm Start/Stop (không tự dò → không sót âm thầm);
+  không tài khoản, không kết nối ngân hàng, dữ liệu không rời máy; chuyến tự động [Pro] + Start/Stop/NFC, luôn báo khi ngừng ghi (không sót âm thầm);
   miễn phí, không thu phí âm thầm.
 - **Cố ý không làm:** không tư vấn khoản nào được trừ thuế; không nộp thuế/MTD thay (chỉ xuất CSV quý + năm cho
   phần mềm cầu nối/kế toán, ghi rõ "not MTD software").
