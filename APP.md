@@ -3,7 +3,7 @@
 > Brief tĩnh của app. **≤ 60 dòng, không ghi lịch sử** (lịch sử ở git + `memory/sessions/`).
 > Tiến độ: `CHECKLIST.md` · Tính năng: `product.md` · Test: `TESTCASES.md` · Lỗi: `BUGS.md`.
 
-**Đang ở:** Bước 5 — BUGS.md tick 22/24; còn B-12 (điều tra bản debug), B-20 (đợt tối ưu riêng) (Bước 3 còn treo: GPS chạy xe thật, widget iOS, gộp main) (2026-11-12)
+**Đang ở:** Bước 5 — BUGS.md tick 22/24; còn B-12 (điều tra bản debug), B-20 (đợt tối ưu riêng) (Bước 3 còn treo: widget iOS, gộp main) (2026-11-12)
 
 ## Brief
 - **Mã app / thư mục:** `A006-sundaysort` → `apps/A006-sundaysort/`

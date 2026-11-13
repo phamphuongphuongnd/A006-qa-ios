@@ -33,7 +33,7 @@
 - [x] F-08 Phân loại tuần: thẻ, List view, Done (S-06, S-06a, S-06c)
 - [x] F-10 Danh mục (S-11)
 - [x] F-11 Quãng đường nhập tay (S-08)
-- [ ] F-12 Chuyến GPS nền Start/Stop/Personal stop + thông báo + nhắc 12h + phát hiện ngắt (S-07a, S-07b) — lọc nhiễu đứng yên đã thử trên máy (0.0 mi / 4 phút); còn chạy xe thật
+- [x] F-12 Chuyến GPS nền Start/Stop/Personal stop + thông báo + nhắc 12h + phát hiện ngắt (S-07a, S-07b) — lọc nhiễu đứng yên đã thử trên máy (0.0 mi / 4 phút); chạy xe thật 2026-11-13: 2 chuyến (3.3 mi, 2.9 mi), Phương xác nhận quãng đường đúng
 - [x] F-13 Tab Miles (S-07) + mức dặm theo khoảng ngày (IRS 2026: 72.5¢ tới 30/6, 76¢ từ 1/7)
 - [x] F-14 Báo cáo năm/quý (S-09)
 - [x] F-15 Xuất CSV ×3 + PDF + ZIP ảnh (S-10)
