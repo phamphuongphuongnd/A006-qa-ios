@@ -20,6 +20,13 @@
 | Q16 | Giá | P0 nghiên cứu (đối thủ UK/US + app mua 1 lần cùng loại) → **đề xuất kiểu thu (mua 1 lần / thuê bao) + giá bằng popup** |
 | Q17 | Dùng thử | **7 ngày, không cần thẻ**; hết hạn chỉ tắt phần Pro |
 | Q13 | Bước 6 cũ | Phiên Bước 6 sửa xong lỗi rồi dừng (B-27…B-36 đã sửa); **lên store sau P5** |
+| Q18 | Bật chuyến không chạm máy (X5) | **Thêm thẻ NFC** (Android: chạm thẻ mở deep link bật/tắt chuyến; iOS: qua Phím tắt). **Bỏ Android Auto / CarPlay** (dễ bị store từ chối) — miễn phí |
+| Q19 | Sửa giờ chuyến GPS | **Cho sửa** giờ đầu / cuối + số dặm; chuyến đã sửa có nhãn "Edited" trong sổ, báo cáo, CSV — miễn phí |
+| Q20 | Máy tính trong ô số tiền | **Có** ("12.50+4.20" → 16.70) — miễn phí |
+| Q21 | Nhiều ảnh lúc ghi nhanh | **Có** (2–3 ảnh khi ghi; tính vào giới hạn ảnh bản miễn phí; không giới hạn vẫn là Pro) |
+| Q22 | Nhắc ghi hằng ngày | **Có**: 1 thông báo cuối ca nếu hôm đó chưa ghi khoản nào; **mặc định tắt** — miễn phí |
+| Q23 | TalkBack | P5: Claude soạn kịch bản ~10 phút qua 6 màn chính, **Phương nghe trên A13**, báo chỗ đọc sai |
+| Q24 | Cách tính xe (X2) | Cài đặt "Vehicle costs: Mileage rate / Actual costs" — **miễn phí** |
 
 **Miễn phí / Pro** (Phương "No preference" → chốt theo mục 7 + đánh giá đối thủ):
 - **Miễn phí:** ghi nhanh · phân loại Chủ nhật bằng tay · Start/Stop tay · ảnh hoá đơn có giới hạn (số chốt ở P1) · báo khi
@@ -35,19 +42,19 @@
 | **P0 Nghiên cứu nốt** | Điều phối | Đã làm 2026-11-13: giá UK, Driversnote, MTD cộng dồn, từ khoá UK → `research.md` §6–7. **Còn:** (1) Reddit: **Phương dán nội dung** 5 link (bị chặn với mọi trình duyệt của Claude). (2) Trình giả lập `Medium_Phone_API_37.0`: Phương đăng nhập Google Play + tự đăng ký app → cài MileIQ, Everlance, Hurdlr, Cash Book, **Driversnote, TripLog** → thử ghi khoản, phân loại, chuyến (`adb emu geo fix` / GPX), xuất file; đếm số chạm so với A006; xong gỡ app. (3) Tải mẫu CSV của 1–2 bridging + FreeAgent (Phương cho tải). (4) Nhóm Facebook tài xế van (Phương đăng nhập). (5) Đề xuất kiểu thu + giá Pro → popup Q16 | Bổ sung `research.md` | Phương đọc, chốt giá |
 | **P1 product.md v2** | Điều phối | Grill chi tiết bằng popup (ngưỡng tự dừng, thời gian gộp điểm dừng, giới hạn ảnh miễn phí, màn Pro, **X2 cách tính xe, X5 NFC / Android Auto, X6 giới hạn bản miễn phí**…) → **viết lại toàn bộ `product.md`**: mọi màn, nút, trạng thái, lỗi, chữ hiện trên app (tiếng Anh trong ngoặc kép), luồng tự động, màn Pro / dùng thử, dữ liệu mới, danh sách màn cho Claude Design. Sửa §1 bảng đối thủ, §10 (bỏ "không tự dò chuyến", "không mua trong app") | `product.md` v2 | Phương duyệt |
 | **P2 Mockup Hi-Fi** | **Phương** | Gửi product.md v2 cho Claude Design → vẽ Hi-Fi toàn bộ app → export HTML + tokens vào `design/` | `design/` v2 | Phương báo xong |
-| **P3 Nền chung** | Điều phối (tuần tự) | Cài **mọi** thư viện native mới, kể cả mua trong app (phiên con không cài); schema + migration (luật phân loại, khoản lặp lại, đoạn chuyến, cấu hình sao lưu, kết quả OCR, quyền Pro); **hàm chung kiểm Pro + dùng thử 7 ngày**; kiểu dữ liệu chung; khoá i18n; **UI kit + token + các màn không thuộc S1–S5 theo mockup v2**; dev build chạy A13 | Commit `dev` | Test + lint + tsc xanh, A13 mở được |
+| **P3 Nền chung** | Điều phối (tuần tự) | Cài **mọi** thư viện native mới, kể cả mua trong app (phiên con không cài); schema + migration (luật phân loại, khoản lặp lại, đoạn chuyến, cấu hình sao lưu, kết quả OCR, quyền Pro); **hàm chung kiểm Pro + dùng thử 7 ngày**; kiểu dữ liệu chung; khoá i18n; **UI kit + token + các màn không thuộc S1–S5 theo mockup v2**; **ô cài đặt "Vehicle costs" (Q24)**; **trang onboarding nói rõ giới hạn bản miễn phí (X6, nội dung do S5)**; **nội dung widget bản 2**; dev build chạy A13 | Commit `dev` | Test + lint + tsc xanh, A13 mở được |
 | **P4 Song song** | 5 phiên con | Bảng dưới; mỗi phiên 1 worktree, nhánh riêng, báo về điều phối bằng SendMessage | 5 nhánh | Test xanh + thử A13 + báo xong |
-| **P5 Ghép & kiểm** | Điều phối | Gộp 5 nhánh vào `dev`; thêm TESTCASES cho tính năng mới; chạy toàn bộ; **chạy xe thật** cho chuyến tự động (nhiều điểm dừng, đèn đỏ, đi bộ, ngồi nhà) | BUGS.md | Chạy hết case |
-| **P6 Sửa lỗi → store** | Điều phối (+ phiên con nếu nhiều lỗi) | Sửa BUGS → Bước 6: giả lập người dùng, store listing (nhấn: UK, không tài khoản, không ngân hàng, ghi không danh mục, tự động không sót âm thầm), privacy, khoá ký (Phương tạo), AAB + iOS, nộp | Bản nộp store | CHECKLIST Bước 6 |
+| **P5 Ghép & kiểm** | Điều phối | Gộp 5 nhánh vào `dev`; thêm TESTCASES cho tính năng mới; chạy toàn bộ; **chạy xe thật** cho chuyến tự động (nhiều điểm dừng, đèn đỏ, đi bộ, ngồi nhà); **build + thử widget iOS trên EAS** (treo từ Bước 3); **TalkBack theo kịch bản, Phương nghe (Q23)** | BUGS.md | Chạy hết case |
+| **P6 Sửa lỗi → store** | Điều phối (+ phiên con nếu nhiều lỗi) | Sửa BUGS → Bước 6: giả lập người dùng, store listing (nhấn: UK, không tài khoản, không ngân hàng, ghi không danh mục, tự động không sót âm thầm; **tiêu đề / mô tả ngắn dẫn bằng "receipt", kèm "mileage", "self assessment"** — K8), privacy, khoá ký (Phương tạo), AAB + iOS, nộp | Bản nộp store | CHECKLIST Bước 6 |
 
 ## P4 — 5 phiên song song (không 2 phiên cùng sửa 1 file)
 | Phiên | Phạm vi | File chính |
 |---|---|---|
-| **S1 Chuyến tự động** | Tự bắt đầu (Bluetooth / cắm sạc / chuyển động), gộp điểm dừng thành chuyến ca, tự dừng, báo khi nghi sót, tách đoạn Cá nhân sau chuyến, khoá phần Pro | `modules/trip-detect/`, `src/features/trips/`, `src/app/trip/`, `src/app/(tabs)/miles.tsx` |
+| **S1 Chuyến tự động** | Tự bắt đầu (Bluetooth / cắm sạc / chuyển động), gộp điểm dừng thành chuyến ca, tự dừng, báo khi nghi sót, tách đoạn Cá nhân sau chuyến, khoá phần Pro; **thẻ NFC bật/tắt chuyến + hướng dẫn trong app (Q18)**; **sửa giờ đầu/cuối chuyến GPS, nhãn "Edited" (Q19)**; **vuốt phải = Công việc, trái = Cá nhân ở tab Miles, có Undo (mục 6.3)** | `modules/trip-detect/`, `src/features/trips/`, `src/app/trip/`, `src/app/(tabs)/miles.tsx` |
 | **S2 Phân loại** | Thẻ Sort sửa / tách / gộp tại chỗ; luật tự phân loại + tuyến/nơi quen; số tiền là tín hiệu riêng | `src/app/(tabs)/sort.tsx`, `src/app/sort-list.tsx`, `src/domain/suggest.ts`, phần sort trong `src/features/entries/` |
-| **S3 Đọc hoá đơn** | OCR trên máy → tự điền số tiền / nơi bán / ngày; đưa dữ liệu cho gợi ý qua giao diện chung từ P3 (không sửa `suggest.ts`); giới hạn ảnh miễn phí | `modules/receipt-ocr/`, `src/features/ocr/`, `src/app/capture.tsx`, `src/app/entry/[id].tsx` |
-| **S4 Sao lưu & lặp lại** | Sao lưu tự động vào thư mục đã chọn; khoản lặp lại; nhắc tuần không tắt sau 4 tuần | `src/features/backup/`, `src/features/recurring/`, `src/features/settings/notifications.ts`, `src/app/backup.tsx` |
-| **S5 Xuất MTD + Pro** | CSV đúng mẫu bridging + FreeAgent, **tổng cộng dồn từ đầu năm theo danh mục HMRC, kỳ chuẩn / theo lịch (X3)**; xử lý Unsorted trước khi xuất quý; màn mua Pro, khôi phục mua, dùng thử 7 ngày | `src/features/reports/buildExport.ts`, `src/domain/csv.ts`, `src/features/reports/ExportPanel.tsx`, `src/features/pro/`, `src/app/pro.tsx` |
+| **S3 Đọc hoá đơn** | OCR trên máy → tự điền số tiền / nơi bán / ngày; đưa dữ liệu cho gợi ý qua giao diện chung từ P3 (không sửa `suggest.ts`); giới hạn ảnh miễn phí; **máy tính trong ô số tiền (Q20)**; **nhiều ảnh lúc ghi nhanh (Q21)** | `modules/receipt-ocr/`, `src/features/ocr/`, `src/app/capture.tsx`, `src/app/entry/[id].tsx` |
+| **S4 Sao lưu & lặp lại** | Sao lưu tự động vào thư mục đã chọn; khoản lặp lại; nhắc tuần không tắt sau 4 tuần; **nhắc ghi hằng ngày, mặc định tắt (Q22)** | `src/features/backup/`, `src/features/recurring/`, `src/features/settings/notifications.ts`, `src/app/backup.tsx` |
+| **S5 Báo cáo, Xuất MTD, Pro** | CSV đúng mẫu bridging + FreeAgent, **tổng cộng dồn từ đầu năm theo danh mục HMRC, kỳ chuẩn / theo lịch (X3)**; xử lý Unsorted trước khi xuất quý; màn mua Pro, khôi phục mua, dùng thử 7 ngày; **báo cáo + xuất theo cách tính xe (X2/Q24)**: theo dặm → chi phí chạy xe (xăng, sửa xe, bảo hiểm, thuế xe, thuê xe) không cộng vào ô thuế, ghi chú rõ; đỗ xe / cầu đường / congestion luôn cộng; theo chi phí thật → ẩn tiền theo dặm, hiện tỷ lệ dặm công việc / tổng dặm; **nội dung nói rõ giới hạn bản miễn phí (X6)** | `src/features/reports/buildExport.ts`, `src/domain/csv.ts`, `src/features/reports/ExportPanel.tsx`, `src/app/(tabs)/reports.tsx`, `src/features/reports/series.ts`, `src/features/reports/useReport.ts`, `src/features/pro/`, `src/app/pro.tsx` |
 
 ## Rủi ro kỹ thuật (grill ở P1, kiểm ở P3)
 - Tự viết module dò chuyến: thử nhiều trên xe thật; Samsung tắt app nền → hướng dẫn tắt tối ưu pin trong app.
@@ -59,19 +66,36 @@
 ## Lỗi / thiếu mới (research.md §7)
 | # | Việc | Làm ở |
 |---|---|---|
-| **X1** | Mức dặm UK 2026/27 = **55p** cho 10.000 dặm đầu (áp dụng lùi từ 6/4/2026), 25p sau đó; A006 để cứng 45p (`src/domain/mileage.ts:26`, chữ "(45p / 25p)" trên app, product.md) — dùng cơ chế mức theo ngày như US | **Sửa ngay, trước P1** |
-| **X2** | Mức dặm cố định đã gồm xăng / bảo hiểm / sửa xe / MOT / thuế đường → cài đặt "Cách tính xe: theo dặm / chi phí thật"; báo cáo + xuất theo cách đã chọn (đỗ xe, cầu đường, congestion luôn tính) | P1 → F-14/F-15 |
+| **X1** | Mức dặm UK 2026/27 = **55p** cho 10.000 dặm đầu (áp dụng lùi từ 6/4/2026), 25p sau đó; A006 để cứng 45p | **Sửa ngay, trước P1** — kế hoạch chi tiết ở mục dưới |
+| **X2** | Mức dặm cố định đã gồm xăng / bảo hiểm / sửa xe / MOT / thuế đường → cài đặt "Vehicle costs" (Q24) | P1 viết spec → P3 ô cài đặt → S5 báo cáo + xuất |
 | **X3** | CSV MTD cộng dồn từ đầu năm + kỳ chuẩn / theo lịch | S5 |
 | **X4** | Đối thủ UK chính: Driversnote; app UK mới miễn phí (MileClear, PocketReceipt) | P1 §1 + định vị |
-| **X5** | Bật chuyến không chạm máy: thẻ NFC, Android Auto / CarPlay | Hỏi ở P1 |
-| **X6** | Nói rõ giới hạn bản miễn phí ngay lúc cài | P1 onboarding + màn Pro |
+| **X5** | Bật chuyến không chạm máy | Đã chốt Q18 (NFC, bỏ Android Auto/CarPlay) → S1 |
+| **X6** | Nói rõ giới hạn bản miễn phí ngay lúc cài | P1 spec → P3 trang onboarding → S5 nội dung + màn Pro |
+
+## Sửa X1 ngay — kế hoạch chi tiết (Phương duyệt 2026-11-13, làm ở phiên mới)
+1. `src/domain/mileage.ts` `DEFAULT_RATES.UK`: giữ kỳ cũ `{10_000, 45}`, `{null, 25}` + thêm kỳ
+   `{ upToMiles: 10_000, minorPerMile: 55, from: '2026-04-06' }`, `{ upToMiles: null, minorPerMile: 25, from: '2026-04-06' }`;
+   chú thích nguồn: gov.uk policy paper 17/6/2026. Không đổi hàm — `mileageEstimateByDate`, `ratesOn`, `periodsIn` và
+   `ratesLabel` (`src/features/reports/series.ts`) đã xử lý kỳ theo ngày; bậc 10.000 dặm đếm cộng dồn trong năm thuế.
+2. `src/db/settingsRepo.ts` `getSettings`: `mileageRates.UK` lưu đúng mặc định cũ (45/10.000 + 25) → đọc ra mặc định mới;
+   mức người dùng tự sửa giữ nguyên. Cũng áp cho dữ liệu khôi phục từ sao lưu (cùng đi qua `getSettings`).
+3. `src/i18n/en.ts:247` `estimateUK` để cứng "(45p / 25p)": còn dùng thì đổi sang `{rates}`, không dùng thì xoá
+   (màn Miles dùng `miles.hmrcRates` động; Reports dùng `reports.estimateUK` có `{rates}`).
+4. Tài liệu: `product.md` (dòng 136, 327), `APP.md` (dòng 17), `TESTCASES.md` TC-135 + 1 case mới. Không sửa `design/`.
+5. Test: sửa kỳ vọng năm 2026/27 trong `src/domain/__tests__/mileageRates.test.ts` và
+   `src/features/reports/__tests__/reports.test.ts` (45p → 55p, nhãn "55p / 25p", ghi chú PDF); thêm: chuyến 5/4/2026 tính 45p,
+   6/4/2026 tính 55p; vượt 10.000 dặm năm 2026/27; nhãn 2025/26 vẫn "45p / 25p"; `getSettings` đổi mức cũ đã lưu, giữ mức tự
+   sửa. `splitMergeMileage.test.ts` dùng `mileageEstimate` (bỏ qua ngày) → không đổi.
+6. Kiểm: `npx jest`, `npx expo lint`, `npx tsc --noEmit` xanh; Galaxy A13: Miles + Reports năm 2026/27 hiện "55p / 25p", tiền =
+   dặm × 55p; Settings → Mileage rates có kỳ "From 6 Apr 2026"; năm 2025/26 vẫn 45p; PDF ghi "(55p / 25p)". Commit `dev`.
 
 ## Câu nhắn từng phase (Phương chép gửi)
-- **Sửa X1 ngay (phiên mới, nhỏ):** "A006: sửa mức dặm UK 2026/27 thành 55p (10.000 dặm đầu) theo PLAN-v2 X1, kể cả chữ trên app và product.md, thử A13."
+- **Sửa X1 ngay (phiên mới, nhỏ):** "A006: làm theo PLAN-v2.md mục 'Sửa X1 ngay — kế hoạch chi tiết' (mức dặm UK 55p từ 6/4/2026), thử A13, commit dev."
 - **P0 (mở phiên điều phối):** "Phiên điều phối A006 bản 2: đọc `apps/A006-sundaysort/PLAN-v2.md` và `research.md`, chạy P0
   phần còn lại (thử 4 app + Driversnote/TripLog trên giả lập, tải mẫu CSV bridging/FreeAgent, nhóm Facebook tài xế van).
   Câu hỏi đưa popup, có cả phần thu phí; đề xuất giá Pro." — kèm nội dung 5 luồng Reddit Phương dán.
-- **P1:** "Chạy P1: grill tôi bằng popup chỗ còn mờ (gồm X2 cách tính xe, X5 NFC/Android Auto, X6 giới hạn bản miễn phí),
+- **P1:** "Chạy P1: grill tôi bằng popup chỗ còn mờ (ngưỡng tự dừng, gộp điểm dừng, giới hạn ảnh miễn phí, màn Pro, X2, X6, Q18–Q22),
   rồi viết lại toàn bộ `product.md` v2 cho Claude Design vẽ lại cả app. Xong gửi tôi duyệt."
 - **P2 (gửi Claude Design kèm product.md v2):** "Vẽ Hi-Fi toàn bộ app Sunday Sort theo product.md đính kèm, iPhone 390×844 +
   Android 360×800, sáng + tối, một tay, đọc được ngoài nắng, chữ 200% không vỡ. Xuất HTML từng màn + tokens." → bỏ vào
