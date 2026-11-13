@@ -244,7 +244,6 @@ export const en = {
     title: 'Miles',
     business: 'Business {miles}',
     personal: 'Personal {miles}',
-    estimateUK: '≈ {amount} at HMRC rates (45p / 25p)',
     estimateUS: '≈ {amount} at {rate}/mi',
     addManually: 'Add manually',
     empty: 'No trips yet',

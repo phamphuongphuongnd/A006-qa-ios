@@ -133,7 +133,8 @@ Người dùng đổi tên / thêm / ẩn / sắp xếp được. Mỗi danh m�
 | Expense | "Professional fees" | Line 17 Legal and professional services |
 | Expense | "Other expenses" | Line 27a Other expenses |
 
-**Mức tính dặm mặc định (sửa được trong Settings):** UK 45p/dặm cho 10.000 dặm đầu, 25p sau đó (theo năm thuế).
+**Mức tính dặm mặc định (sửa được trong Settings):** UK 55p/dặm cho 10.000 dặm đầu, 25p sau đó (theo năm thuế; mức HMRC
+mới từ 6/4/2026 theo gov.uk policy paper 17/6/2026 — trước đó 45p/25p, app giữ cả 2 kỳ theo ngày chuyến).
 US: $0.725/dặm (IRS 2026; từ 1/7/2026 IRS nâng lên $0.76 — app hỗ trợ mức theo khoảng ngày). Ghi chú luôn hiện: "Estimate only — not tax advice."
 
 ---
@@ -324,7 +325,7 @@ Mở từ: 2 nút lớn Home, FAB "+", widget, phím tắt icon app (long-press:
 
 **S-07 Miles**
 - Header: "Miles · Tax year 2026/27 ▾".
-- Thẻ tổng: "Business 8,412 mi" (lớn) · "Personal 1,032 mi" · dòng ước tính "≈ £3,785.40 at HMRC rates (45p / 25p)"
+- Thẻ tổng: "Business 8,412 mi" (lớn) · "Personal 1,032 mi" · dòng ước tính "≈ £4,626.60 at HMRC rates (55p / 25p)"
   + "Estimate only — not tax advice." (US: "≈ $6,098.70 at $0.725/mi").
 - Thẻ chuyến đang chạy (nếu có) như Home.
 - 2 nút: "Start trip" (chính) · "Add manually" (viền).

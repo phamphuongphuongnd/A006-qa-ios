@@ -14,7 +14,7 @@
 - **Kiếm tiền:** miễn phí hoàn toàn — không quảng cáo, không mua trong app.
 - **Nền tảng:** Android + iOS — **tất cả tính năng trong 1 bản**, không chia bản.
 - **Ngôn ngữ / tiền tệ / vùng:** chỉ tiếng Anh (i18n dựng sẵn). Lần mở đầu chọn vùng: UK (£, năm thuế 6/4–5/4,
-  danh mục SA103, dặm 45p/25p) hoặc US ($, năm dương lịch, danh mục Schedule C, IRS rate). Đổi được trong Settings.
+  danh mục SA103, dặm 55p/25p từ 6/4/2026) hoặc US ($, năm dương lịch, danh mục Schedule C, IRS rate). Đổi được trong Settings.
 - **Thị trường:** UK + Mỹ ngang nhau.
 - **Khác đối thủ ở đâu:** ghi nhanh không danh mục + phân loại tuần là bước chính + sửa/gộp/tách trên 1 màn;
   không tài khoản, không kết nối ngân hàng, dữ liệu không rời máy; GPS bấm Start/Stop (không tự dò → không sót âm thầm);

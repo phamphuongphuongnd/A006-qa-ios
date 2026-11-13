@@ -32,6 +32,7 @@ import {
   startTrip,
   updateTrip,
 } from '../tripsRepo';
+import { DEFAULT_RATES, LEGACY_UK_RATES } from '@/domain/mileage';
 import { taxYearFor } from '@/domain/taxYear';
 import { weekOf } from '@/domain/week';
 import type { AppDb } from '../types';
@@ -50,6 +51,24 @@ describe('settings', () => {
     expect(getSettings(db)).toMatchObject({ region: null, onboarded: false, defaultScope: 'work' });
     updateSettings(db, { region: 'UK', reminder: { on: true, weekday: 0, hour: 18, minute: 0 } });
     expect(getSettings(db)).toMatchObject({ region: 'UK', reminder: { on: true } });
+  });
+
+  it('reads the saved pre-2026/27 UK default as the new default (X1)', () => {
+    updateSettings(db, { mileageRates: { UK: LEGACY_UK_RATES, US: DEFAULT_RATES.US } });
+    expect(getSettings(db).mileageRates.UK).toEqual(DEFAULT_RATES.UK);
+    expect(getSettings(db).mileageRates.US).toEqual(DEFAULT_RATES.US);
+  });
+
+  it('keeps UK rates the user edited (X1)', () => {
+    const edited = [
+      { upToMiles: 10_000, minorPerMile: 45 },
+      { upToMiles: null, minorPerMile: 30 },
+    ];
+    updateSettings(db, { mileageRates: { UK: edited, US: DEFAULT_RATES.US } });
+    expect(getSettings(db).mileageRates.UK).toEqual(edited);
+    const dated = [...LEGACY_UK_RATES, { upToMiles: null, minorPerMile: 60, from: '2026-04-06' }];
+    updateSettings(db, { mileageRates: { UK: dated, US: DEFAULT_RATES.US } });
+    expect(getSettings(db).mileageRates.UK).toEqual(dated);
   });
 });
 

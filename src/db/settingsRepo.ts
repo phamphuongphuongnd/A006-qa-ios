@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 
-import { DEFAULT_RATES, type RateTier } from '@/domain/mileage';
+import { DEFAULT_RATES, LEGACY_UK_RATES, type RateTier } from '@/domain/mileage';
 import type { Region, Scope } from '@/domain/types';
 
 import { settings } from './schema';
@@ -52,8 +52,18 @@ export function getSettings(db: AppDb): AppSettings {
       // Corrupt value: keep the default.
     }
   }
-  return out as unknown as AppSettings;
+  const result = out as unknown as AppSettings;
+  const uk = result.mileageRates?.UK;
+  // Rates saved before the 2026/27 change (55p from 6 Apr 2026) still hold the old untouched default: read them as the
+  // new default. Rates the user edited are kept as they are. Restored backups pass through here too.
+  if (uk && sameRates(uk, LEGACY_UK_RATES)) result.mileageRates = { ...result.mileageRates, UK: DEFAULT_RATES.UK };
+  return result;
 }
+
+const sameRates = (a: RateTier[], b: RateTier[]) =>
+  Array.isArray(a) &&
+  a.length === b.length &&
+  a.every((t, i) => t.upToMiles === b[i].upToMiles && t.minorPerMile === b[i].minorPerMile && (t.from ?? null) === (b[i].from ?? null));
 
 export function updateSettings(db: AppDb, patch: Partial<AppSettings>): AppSettings {
   db.transaction((tx) => {
