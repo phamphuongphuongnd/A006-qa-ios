@@ -1,10 +1,10 @@
 import { router } from '@/services/router';
-import { CloudUpload, Flag, Minus, Pause, Play, Plus, Settings, Square, Check, X } from '@/ui/icons';
+import { Flag, Minus, Pause, Play, Plus, Settings, Square, Check } from '@/ui/icons';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { listCategories } from '@/db/categoriesRepo';
 import { db } from '@/db/client';
-import { entryCount, listEntries, totalsFor, unsortedCount } from '@/db/entriesRepo';
+import { autoSortedCount, entryCount, listEntries, totalsFor, unsortedCount } from '@/db/entriesRepo';
 import type { TripRow } from '@/db/schema';
 import { getActiveTrip, mileageTotals } from '@/db/tripsRepo';
 import { KM_PER_MILE, metersToMiles } from '@/domain/mileage';
@@ -15,19 +15,21 @@ import { weekLabel, weekOf } from '@/domain/week';
 import { DownArrowArt, ReceiptCheckArt } from '@/features/entries/art';
 import { EntryRow } from '@/features/entries/EntryRow';
 import { durationLabel, greetingKey, milesLabel, sortMinutes } from '@/features/entries/format';
-import { BACKUP_SNOOZE_MS, daysSince, showBackupBanner } from '@/features/entries/logic';
-import { InterruptedTripCard } from '@/features/trips/TripCards';
+import { HomeAlert } from '@/features/home/HomeAlert';
+import { autoTripState } from '@/features/trips/autoState';
 import { useAppShortcuts } from '@/features/entries/quickActions';
 import { useNow } from '@/features/entries/useNow';
 import { t } from '@/i18n';
+import { usePro } from '@/state/pro';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
-import { fonts, useTheme } from '@/theme';
-import { Avatar, Button, Card, IconButton, Screen, SectionHeader, Txt } from '@/ui';
+import { fonts } from '@/theme';
+import { Avatar, Badge, Button, Card, IconButton, Screen, SectionHeader, StatusDot, Txt } from '@/ui';
 
 /** S-02 Home: greeting, backup banner, this week, to-sort, trip, recent; Expense / Income fixed above the tab bar. */
 export default function HomeScreen() {
-  const { settings, update } = useSettings();
+  const { settings } = useSettings();
+  const { status: proStatus, pro } = usePro();
   const now = useNow(30_000);
   useAppShortcuts();
   // Card text beside a button: with large text or a narrow screen the button drops below instead of squeezing the
@@ -53,7 +55,8 @@ export default function HomeScreen() {
   const cats = useLive(() => listCategories(db, { includeHidden: true }), [], ['categories']);
   const catById = new Map(cats.map((c) => [c.id, c]));
   const empty = data.count === 0;
-  const banner = showBackupBanner(settings, data.count, now);
+  const auto = autoTripState(settings, pro);
+  const autoSorted = useLive(() => (pro ? autoSortedCount(db, week) : 0), [pro, week.start], ['entries']);
 
   const capture = (type: 'expense' | 'income') => router.push(`/capture?type=${type}&from=home`);
 
@@ -61,7 +64,16 @@ export default function HomeScreen() {
     <Screen
       title={t(`home.${greetingKey(now)}`)}
       subtitle={t('home.taxYear', { label: taxYearOf(now, region).label })}
-      headerRight={<IconButton icon={Settings} label={t('home.settings')} filled onPress={() => router.push('/settings')} />}
+      headerRight={
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {proStatus.kind === 'trial' ? (
+            <Badge kind="trial" label={proStatus.daysLeft === 1 ? t('homeV2.trialOne') : t('homeV2.trial', { days: proStatus.daysLeft })} />
+          ) : proStatus.kind === 'pro' ? (
+            <Badge kind="pro" label={t('pro.badge')} />
+          ) : null}
+          <IconButton icon={Settings} label={t('home.settings')} filled onPress={() => router.push('/settings')} />
+        </View>
+      }
       contentStyle={empty ? { flexGrow: 1 } : undefined}
       bottom={
         <>
@@ -69,16 +81,7 @@ export default function HomeScreen() {
           <Button label={t('home.newIncome')} icon={Plus} variant="income" size="big" onPress={() => capture('income')} accessibilityLabel={t('capture.quickIncome')} />
         </>
       }>
-      {banner ? (
-        <BackupBanner
-          lastBackupAt={settings.lastBackupAt}
-          now={now}
-          onBackup={() => router.push('/backup')}
-          onHide={() => update({ backupBannerSnoozedUntil: now + BACKUP_SNOOZE_MS })}
-        />
-      ) : null}
-
-      <InterruptedTripCard />
+      <HomeAlert now={now} />
       {tripData.trip ? <TripCard trip={tripData.trip} now={now} unit={settings.distanceUnit} /> : null}
 
       <Card onPress={() => router.push({ pathname: '/reports', params: { from: String(week.start), to: String(week.end) } })} accessibilityLabel={t('home.thisWeek')} style={{ gap: 10 }}>
@@ -113,6 +116,7 @@ export default function HomeScreen() {
               <Txt v="small" c="sunText">
                 {sortMinutes(data.unsorted) === 1 ? t('home.toSortSubOne') : t('home.toSortSub', { minutes: sortMinutes(data.unsorted) })}
               </Txt>
+              <AutoSortedLine count={autoSorted} />
             </View>
             <Button label={t('home.sortNow')} size="sm" onPress={() => router.navigate('/sort')} />
           </Card>
@@ -124,19 +128,38 @@ export default function HomeScreen() {
               <Txt v="small" c="textSecondary">
                 {t('home.allSortedSub')}
               </Txt>
+              <AutoSortedLine count={autoSorted} />
             </View>
           </Card>
         )
       ) : null}
 
       {!tripData.trip ? (
-        <Card style={styles.rowCard}>
-          <Avatar kind="work" icon={Flag} />
-          <Txt v="small" c="textSecondary" style={rowText}>
-            {t('home.startTripSub')}
-          </Txt>
-          <Button label={t('home.startTrip')} variant="outline" size="sm" onPress={() => router.push('/trip/active?start=1')} />
-        </Card>
+        auto === 'off' ? (
+          <Card style={styles.rowCard}>
+            <Avatar kind="work" icon={Flag} />
+            <Txt v="small" c="textSecondary" style={rowText}>
+              {settings.nfcTagWritten ? t('homeV2.nfcHint') : t('home.startTripSub')}
+            </Txt>
+            <Button label={t('home.startTrip')} variant="outline" size="sm" onPress={() => router.push('/trip/active?start=1')} />
+          </Card>
+        ) : (
+          <Card style={styles.rowCard}>
+            <View style={[rowText, { gap: 2 }]}>
+              <StatusDot kind={auto === 'on' ? 'ok' : 'warn'} label={auto === 'on' ? t('homeV2.autoOn') : t('homeV2.autoPaused')} />
+              {auto === 'on' ? (
+                <Txt v="small" c="textSecondary">
+                  {t('homeV2.autoOnSub')}
+                </Txt>
+              ) : null}
+            </View>
+            {auto === 'on' ? (
+              <Button label={t('homeV2.startNow')} variant="text" size="sm" onPress={() => router.push('/trip/active?start=1')} />
+            ) : (
+              <Button label={t('homeV2.fix')} variant="outline" size="sm" onPress={() => router.push('/trip/battery')} />
+            )}
+          </Card>
+        )
       ) : null}
 
       {empty ? (
@@ -186,21 +209,15 @@ function StatRow({ items }: { items: { label: string; value: string; c: 'text' |
   );
 }
 
-function BackupBanner({ lastBackupAt, now, onBackup, onHide }: { lastBackupAt: number | null; now: number; onBackup: () => void; onHide: () => void }) {
-  const { colors } = useTheme();
+/** Pro: "9 auto-sorted this week" → S-06d review. */
+function AutoSortedLine({ count }: { count: number }) {
+  if (count === 0) return null;
   return (
-    <Card variant="warn" style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingLeft: 14, paddingRight: 6 }}>
-      <CloudUpload size={24} color={colors.expenseText} />
-      <View style={{ flex: 1 }}>
-        <Txt style={{ fontFamily: fonts.bold }}>
-          {lastBackupAt === null ? t('home.backupNever') : t('home.backupDays', { days: daysSince(lastBackupAt, now) })}
-        </Txt>
-        <Pressable accessibilityRole="link" onPress={onBackup} hitSlop={8} style={{ minHeight: 28, justifyContent: 'center', alignSelf: 'flex-start' }}>
-          <Txt style={{ fontFamily: fonts.bold, fontSize: 15, color: colors.expenseText, textDecorationLine: 'underline' }}>{t('home.backupNow')}</Txt>
-        </Pressable>
-      </View>
-      <IconButton icon={X} label={t('home.hideBanner')} onPress={onHide} />
-    </Card>
+    <Pressable accessibilityRole="link" onPress={() => router.push('/auto-sorted')} hitSlop={8} style={{ minHeight: 28, justifyContent: 'center', alignSelf: 'flex-start' }}>
+      <Txt v="small" c="work" style={{ fontFamily: fonts.bold }}>
+        {count === 1 ? t('homeV2.autoSortedOne') : t('homeV2.autoSorted', { count })}
+      </Txt>
+    </Pressable>
   );
 }
 

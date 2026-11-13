@@ -8,6 +8,8 @@ import { PermissionsAndroid, ScrollView } from 'react-native';
 import { db } from '@/db/client';
 import { getSettings, updateSettings } from '@/db/settingsRepo';
 import { PROBE_TASK, writeProbeFile } from '@/dev/probeTask';
+import { router } from '@/services/router';
+import { useSettings } from '@/state/settings';
 import { Button, Screen, Txt } from '@/ui';
 
 import { TripDetect } from '../../../modules/trip-detect';
@@ -18,6 +20,7 @@ import { TripDetect } from '../../../modules/trip-detect';
  */
 export default function Probe() {
   const [log, setLog] = useState<string[]>([]);
+  const { settings, update } = useSettings();
   if (!__DEV__) return <Redirect href="/" />;
   const say = (s: string) => {
     console.log(`[probe] ${s}`);
@@ -36,6 +39,13 @@ export default function Probe() {
     <Screen>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 8 }}>
         <Txt v="h2">P3 probe</Txt>
+        {/* Walk the v2 onboarding again on a phone with data: keeps entries, region and settings. */}
+        <Button label="Replay onboarding (keeps data)" variant="outline" onPress={() => {
+            update({ onboarded: false });
+            setTimeout(() => router.replace('/onboarding'), 300);
+          }}
+        />
+        <Txt v="small">Onboarded: {String(settings.onboarded)} · Reminder now: {JSON.stringify(settings.reminder)} · vehicle: {settings.vehicleCostMethod}</Txt>
         <Txt>Folder: {getSettings(db).backupFolder?.uri ?? '—'}</Txt>
         <Button
           label="Pick folder"

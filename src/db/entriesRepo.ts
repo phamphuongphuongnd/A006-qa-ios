@@ -1,4 +1,4 @@
-import { and, count, desc, eq, exists, gte, inArray, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
+import { and, count, desc, eq, exists, gte, inArray, isNotNull, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
 
 import { convertMinor, parseMinor } from '@/domain/money';
 import { checkSplit, planMerge } from '@/domain/splitMerge';
@@ -245,6 +245,9 @@ export interface EntryFilter {
   scope?: Scope;
   unsorted?: boolean;
   withReceipt?: boolean;
+  /** Bản 2 chips: made by a Recurring template / sorted by a Rule. */
+  recurring?: boolean;
+  autoSorted?: boolean;
   categoryId?: string;
   period?: Period;
   limit?: number;
@@ -300,6 +303,8 @@ function entryWhere(db: AppDb, f: EntryFilter): SQL[] {
   if (f.scope) where.push(eq(entries.scope, f.scope));
   if (f.unsorted) where.push(isNull(entries.categoryId));
   if (f.categoryId) where.push(eq(entries.categoryId, f.categoryId));
+  if (f.recurring) where.push(isNotNull(entries.recurringId));
+  if (f.autoSorted) where.push(isNotNull(entries.ruleId));
   if (f.period) where.push(gte(entries.occurredAt, f.period.start), lt(entries.occurredAt, f.period.end));
   if (f.withReceipt) where.push(exists(db.select().from(receipts).where(eq(receipts.entryId, entries.id))));
   const q = f.search?.trim();
@@ -316,6 +321,17 @@ export function unsortedCount(db: AppDb, period?: Period): number {
   const where: SQL[] = [isNull(entries.categoryId)];
   if (period) where.push(gte(entries.occurredAt, period.start), lt(entries.occurredAt, period.end));
   return db.select({ n: count() }).from(entries).where(and(...where)).get()?.n ?? 0;
+}
+
+/** Pro "N auto-sorted this week": entries a Rule sorted in the period that the driver hasn't reviewed yet. */
+export function autoSortedCount(db: AppDb, period: Period): number {
+  return (
+    db
+      .select({ n: count() })
+      .from(entries)
+      .where(and(isNotNull(entries.ruleId), isNull(entries.autoReviewedAt), gte(entries.occurredAt, period.start), lt(entries.occurredAt, period.end)))
+      .get()?.n ?? 0
+  );
 }
 
 /** Weeks (newest first) that still have unsorted entries, with counts — for the Sort week picker. */

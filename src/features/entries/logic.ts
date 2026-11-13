@@ -31,6 +31,8 @@ export interface EntriesFilterState {
   type: EntryType | null;
   scope: Scope | null;
   withReceipt: boolean;
+  recurring: boolean;
+  autoSorted: boolean;
   date: DateRange;
   /** Explicit period from a deep link (Reports → Entries); overrides `date`. */
   period: Period | null;
@@ -43,13 +45,15 @@ export const EMPTY_FILTER: EntriesFilterState = {
   type: null,
   scope: null,
   withReceipt: false,
+  recurring: false,
+  autoSorted: false,
   date: 'any',
   period: null,
   categoryId: null,
 };
 
 export const hasActiveFilter = (f: EntriesFilterState) =>
-  !!f.search.trim() || f.unsorted || !!f.type || !!f.scope || f.withReceipt || f.date !== 'any' || !!f.period || !!f.categoryId;
+  !!f.search.trim() || f.unsorted || !!f.type || !!f.scope || f.withReceipt || f.recurring || f.autoSorted || f.date !== 'any' || !!f.period || !!f.categoryId;
 
 export function datePeriod(range: DateRange, now: number, taxYear: Period): Period | undefined {
   const d = new Date(now);
@@ -76,6 +80,8 @@ export function toRepoFilter(f: EntriesFilterState, now: number, taxYear: Period
     type: f.type ?? undefined,
     scope: f.scope ?? undefined,
     withReceipt: f.withReceipt || undefined,
+    recurring: f.recurring || undefined,
+    autoSorted: f.autoSorted || undefined,
     categoryId: f.categoryId ?? undefined,
     period: f.period ?? datePeriod(f.date, now, taxYear),
   };

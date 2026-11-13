@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { listCategories, reorderCategories } from '@/db/categoriesRepo';
 import { db } from '@/db/client';
 import type { CategoryRow } from '@/db/schema';
+import { hmrcLabel } from '@/domain/mtd';
 import type { EntryType } from '@/domain/types';
 import { CategoryEditor } from '@/features/settings/CategoryEditor';
 import { iconFor, shortTaxLine } from '@/features/settings/categoryIcons';
@@ -24,6 +25,7 @@ export default function CategoriesScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { settings } = useSettings();
+  const region = settings.region ?? 'UK';
   const all = useLive(() => listCategories(db, { includeHidden: true }), [], ['categories']);
   const [editing, setEditing] = useState<Editing>(null);
   const [dragging, setDragging] = useState(false);
@@ -47,7 +49,7 @@ export default function CategoriesScreen() {
       accessibilityRole="button"
       onPress={() => open(c)}
       style={({ pressed }) => [
-        { flexDirection: 'row', alignItems: 'center', gap: 14, height: 64, paddingLeft: 16 },
+        { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 64, paddingVertical: 8, paddingLeft: 16 },
         pressed && { opacity: 0.7 },
       ]}>
       <Avatar kind="neutral" icon={iconFor(c.icon)} tint={c.color} size={36} />
@@ -58,6 +60,11 @@ export default function CategoriesScreen() {
         <Txt v="caption" c="textTertiary" numberOfLines={1} style={{ fontFamily: fonts.medium }}>
           {c.taxLine}
         </Txt>
+        {region === 'UK' && c.mtdCategory ? (
+          <Txt v="caption" c="textTertiary" numberOfLines={1} style={{ fontFamily: fonts.medium }}>
+            {t('settingsV2.mtdLine', { label: hmrcLabel(c.mtdCategory) })}
+          </Txt>
+        ) : null}
       </View>
     </Pressable>
   );

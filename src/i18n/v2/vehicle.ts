@@ -23,4 +23,19 @@ export const vehicle = {
   chooseNudge: 'Choose how you claim vehicle costs',
   runningCost: 'Vehicle running cost',
   runningCostHint: 'Covered by the mileage rate',
+  /** S-01c (onboarding) + its "What's the difference?" sheet. */
+  onboarding: {
+    title: 'How do you claim your vehicle?',
+    mileageUK: '55p a mile for the first 10,000 business miles, then 25p. Fuel, repairs and insurance are included.',
+    mileageUS: 'IRS standard rate per mile. Gas, repairs and insurance are included.',
+    actual: 'Claim what you spend on the van, split by business use.',
+    unsure: "We'll use the mileage rate for now. Ask your accountant.",
+    difference: "What's the difference?",
+    diffMileage: 'Mileage rate — a fixed amount for every business mile. Fuel, repairs, insurance and road tax are included.',
+    diffActual: 'Actual costs — what you really spend on the van, times the share of miles that are for work.',
+    diffOnTop: 'Parking, tolls and congestion charges are claimed on top with either method.',
+    diffKeep: 'You normally keep one method for the same van. Your accountant can say which suits you.',
+    estimate: 'Estimate only — not tax advice.',
+    gotIt: 'Got it',
+  },
 } as const;

@@ -107,6 +107,16 @@ function Navigator({ onboarded }: { onboarded: boolean }) {
           <Stack.Screen name="trip/new" options={{ presentation: 'modal' }} />
           <Stack.Screen name="trip/[id]" options={{ presentation: 'modal' }} />
           <Stack.Screen name="trip/permission" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="trip/auto" />
+          <Stack.Screen name="trip/nfc" />
+          <Stack.Screen name="trip/battery" />
+          <Stack.Screen name="trip/work-hours" />
+          <Stack.Screen name="rules" />
+          <Stack.Screen name="auto-sorted" />
+          <Stack.Screen name="recurring" />
+          <Stack.Screen name="notifications" />
+          {/* S-19 (onboarding S-01e opens the same screen as onboarding/pro). */}
+          <Stack.Screen name="pro" />
           <Stack.Screen name="export" options={{ presentation: 'modal' }} />
           <Stack.Screen name="backup" />
           <Stack.Screen name="categories" />

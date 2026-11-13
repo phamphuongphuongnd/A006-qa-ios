@@ -15,6 +15,9 @@ struct WidgetSnapshot {
   /// "none" | "running" | "paused"
   var trip: String
   var tripDistance: String
+  /// Bản 2: "off" | "on" | "paused" → "Auto trips on" (green dot) / "Auto trips paused" (orange)
+  var auto: String
+  var autoText: String
 
   static func load() -> WidgetSnapshot {
     let d = UserDefaults(suiteName: appGroup)?.dictionary(forKey: snapshotKey) ?? [:]
@@ -27,13 +30,16 @@ struct WidgetSnapshot {
       netText: str("netText"),
       weekLine: str("weekLine"),
       trip: str("trip").isEmpty ? "none" : str("trip"),
-      tripDistance: str("tripDistance")
+      tripDistance: str("tripDistance"),
+      auto: str("auto").isEmpty ? "off" : str("auto"),
+      autoText: str("autoText")
     )
   }
 
   static let preview = WidgetSnapshot(
     ready: true, toSort: 14, toSortText: "14 to sort", netText: "£1,053.60",
-    weekLine: "This week: Net £1,053.60 · 14 to sort", trip: "none", tripDistance: ""
+    weekLine: "This week: Net £1,053.60 · 14 to sort", trip: "none", tripDistance: "",
+    auto: "on", autoText: "Auto trips on"
   )
 }
 
@@ -176,6 +182,18 @@ struct QuickAddView: View {
             AppGlyph(color: skin.glyph)
             Spacer(minLength: 4)
             SortTag(text: s.toSortText, skin: skin)
+          }
+          if s.auto != "off" {
+            HStack(spacing: 6) {
+              Circle()
+                .fill(s.auto == "on" ? Color(hex: scheme == .dark ? 0x4FBF8A : 0x2F8A5F) : Color(hex: scheme == .dark ? 0xF0A04B : 0xD9822B))
+                .frame(width: 8, height: 8)
+              Text(s.autoText)
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(skin.muted)
+                .lineLimit(1)
+              Spacer(minLength: 0)
+            }
           }
           HStack(spacing: 8) {
             ActionTile(url: Links.expense, bg: skin.expBg, a11y: "New expense") {

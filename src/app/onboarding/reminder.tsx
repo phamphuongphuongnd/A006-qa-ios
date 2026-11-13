@@ -72,7 +72,7 @@ export default function ReminderStep() {
 
   return (
     <OnboardingPage
-      step={3}
+      step={6}
       bottom={
         <>
           <Button label={t('onboarding.reminderOn')} icon={Bell} full loading={busy} onPress={turnOn} />

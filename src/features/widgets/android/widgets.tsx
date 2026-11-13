@@ -33,6 +33,10 @@ interface Skin {
   /** "All sorted" pill */
   okBg: Hex;
   okFg: Hex;
+  ok: Hex;
+  okText: Hex;
+  warn: Hex;
+  warnText: Hex;
 }
 
 /** From design/screens/13-system__s-14__android-{light,dark}*.html. */
@@ -54,6 +58,10 @@ const LIGHT: Skin = {
   pendDot: '#F5B841',
   okBg: '#E3F1E9',
   okFg: '#0F5C39',
+  ok: '#2F8A5F',
+  okText: '#1D6B47',
+  warn: '#D9822B',
+  warnText: '#9A4F0C',
 };
 const DARK: Skin = {
   bg: '#1F2632',
@@ -73,6 +81,10 @@ const DARK: Skin = {
   pendDot: '#F5B841',
   okBg: '#1E3A2C',
   okFg: '#7EDDB0',
+  ok: '#4FBF8A',
+  okText: '#79D6A8',
+  warn: '#F0A04B',
+  warnText: '#F5B871',
 };
 
 /** lucide "flag", stroked in `color`. */
@@ -216,7 +228,14 @@ function Week({ s, k }: { s: WidgetSnapshot; k: Skin }) {
           <SortPill s={s} k={k} size={11} />
         </FlexWidget>
         <TextWidget text={s.netText} maxLines={1} style={{ fontSize: 30, fontWeight: '800', color: k.text as ColorProp }} />
-        <TextWidget text={s.detailText} maxLines={1} truncate="END" style={{ fontSize: 12, fontWeight: '500', color: k.muted as ColorProp }} />
+        {s.auto === 'off' ? (
+          <TextWidget text={s.detailText} maxLines={1} truncate="END" style={{ fontSize: 12, fontWeight: '500', color: k.muted as ColorProp }} />
+        ) : (
+          <FlexWidget style={{ flexDirection: 'row', alignItems: 'center', flexGap: 6 }}>
+            <FlexWidget style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: (s.auto === 'on' ? k.ok : k.warn) as ColorProp }} />
+            <TextWidget text={s.autoText} maxLines={1} style={{ fontSize: 12, fontWeight: '700', color: (s.auto === 'on' ? k.okText : k.warnText) as ColorProp }} />
+          </FlexWidget>
+        )}
       </FlexWidget>
       <FlexWidget style={{ width: 'match_parent', flexDirection: 'row', flexGap: 8 }}>
         <Btn label={t('widget.expense')} uri={WIDGET_LINKS.expense} bg={k.expBg} fg={k.expFg} size={14} radius={16} height={48} a11y={t('widget.newExpense')} />

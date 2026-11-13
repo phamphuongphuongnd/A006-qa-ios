@@ -91,7 +91,7 @@ export function AlertCard({
   tone: 'warn' | 'info';
   icon: LucideIcon;
   title: string;
-  body: string;
+  body?: string;
   action: string;
   onAction: () => void;
   secondary?: string;
@@ -116,9 +116,11 @@ export function AlertCard({
           </Pressable>
         ) : null}
       </View>
-      <Txt v="body" c="textSecondary">
-        {body}
-      </Txt>
+      {body ? (
+        <Txt v="body" c="textSecondary">
+          {body}
+        </Txt>
+      ) : null}
       {children}
       <View style={styles.alertActions}>
         <Button label={action} onPress={onAction} size="sm" />

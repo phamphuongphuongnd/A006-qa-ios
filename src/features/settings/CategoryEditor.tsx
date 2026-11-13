@@ -6,6 +6,7 @@ import { categoryUsage, createCategory, deleteCategory, updateCategory, type Cat
 import { db } from '@/db/client';
 import type { CategoryRow } from '@/db/schema';
 import { defaultTaxLine, taxLinesFor } from '@/domain/categories';
+import { hmrcCategoriesFor, hmrcLabel, mtdCategoryFor, type HmrcCategory } from '@/domain/mtd';
 import type { EntryType, Region } from '@/domain/types';
 import { t } from '@/i18n';
 import { fonts, radius, useTheme } from '@/theme';
@@ -43,6 +44,11 @@ export function CategoryEditor({
   const [color, setColor] = useState(category?.color ?? CATEGORY_COLORS[initialType === 'income' ? 3 : 0]);
   const [taxLine, setTaxLine] = useState(category?.taxLine ?? defaultTaxLine(region, initialType));
   const [hidden, setHidden] = useState(category?.hidden ?? false);
+  // Bản 2 (S-11): MTD category follows the tax line until the driver picks one; vehicle running cost (§5.3).
+  const [mtd, setMtd] = useState<HmrcCategory | null>(category ? category.mtdCategory : mtdCategoryFor(region, taxLine, initialType));
+  const [mtdTouched, setMtdTouched] = useState(false);
+  const [mtdOpen, setMtdOpen] = useState(false);
+  const [running, setRunning] = useState(category?.vehicleRunningCost ?? false);
   const [error, setError] = useState<string | null>(null);
   const [allIcons, setAllIcons] = useState(category ? ICON_NAMES.indexOf(category.icon) >= ICONS_COLLAPSED : false);
   const [linesOpen, setLinesOpen] = useState(false);
@@ -50,8 +56,8 @@ export function CategoryEditor({
 
   const save = () => {
     const res = category
-      ? updateCategory(db, category.id, { name, icon, color, taxLine, hidden })
-      : createCategory(db, { type, name, icon, color, taxLine });
+      ? updateCategory(db, category.id, { name, icon, color, taxLine, hidden, mtdCategory: mtd, vehicleRunningCost: type === 'expense' && running })
+      : createCategory(db, { type, name, icon, color, taxLine, mtdCategory: mtd, vehicleRunningCost: type === 'expense' && running });
     if (!res.ok) {
       setError(ERR[res.error]());
       return;
@@ -191,6 +197,7 @@ export function CategoryEditor({
                   accessibilityState={{ selected: on }}
                   onPress={() => {
                     setTaxLine(l);
+                    if (!mtdTouched) setMtd(mtdCategoryFor(region, l, type));
                     setLinesOpen(false);
                   }}
                   style={({ pressed }) => [
@@ -208,6 +215,65 @@ export function CategoryEditor({
           </View>
         ) : null}
       </View>
+
+      {region === 'UK' ? (
+        <View style={{ gap: 6 }}>
+          <Txt v="caption" c="textSecondary" style={{ fontFamily: fonts.bold }}>
+            {t('settingsV2.mtdCategory')}
+          </Txt>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${t('settingsV2.mtdCategory')}, ${mtd ? hmrcLabel(mtd) : t('settingsV2.mtdNone')}`}
+            accessibilityState={{ expanded: mtdOpen }}
+            onPress={() => setMtdOpen((o) => !o)}
+            style={[styles.select, { backgroundColor: colors.surface, borderColor: colors.lineStrong }]}>
+            <Txt v="small" style={{ flex: 1, fontFamily: fonts.bold }} numberOfLines={2}>
+              {mtd ? hmrcLabel(mtd) : t('settingsV2.mtdNone')}
+            </Txt>
+            {mtdOpen ? <ChevronUp size={18} color={colors.textTertiary} /> : <ChevronDown size={18} color={colors.textTertiary} />}
+          </Pressable>
+          {mtdOpen ? (
+            <View style={[styles.lines, { borderColor: colors.line }]}>
+              {[...hmrcCategoriesFor(type), null].map((m, i) => {
+                const on = m === mtd;
+                return (
+                  <Pressable
+                    key={m ?? 'none'}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: on }}
+                    onPress={() => {
+                      setMtd(m);
+                      setMtdTouched(true);
+                      setMtdOpen(false);
+                    }}
+                    style={({ pressed }) => [
+                      styles.line,
+                      i > 0 && { borderTopWidth: 1, borderTopColor: colors.line },
+                      pressed && { backgroundColor: colors.surfaceAlt },
+                    ]}>
+                    <Txt v="small" style={{ flex: 1, fontFamily: on ? fonts.bold : fonts.regular }}>
+                      {m ? hmrcLabel(m) : t('settingsV2.mtdNone')}
+                    </Txt>
+                    {on ? <Check size={18} color={colors.primaryText} strokeWidth={2.4} /> : null}
+                  </Pressable>
+                );
+              })}
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+
+      {type === 'expense' ? (
+        <View style={styles.hideRow}>
+          <View style={{ flex: 1 }}>
+            <Txt>{t('vehicle.runningCost')}</Txt>
+            <Txt v="caption" c="textTertiary" style={{ fontFamily: fonts.medium }}>
+              {t('vehicle.runningCostHint')}
+            </Txt>
+          </View>
+          <Toggle value={running} onChange={setRunning} label={t('vehicle.runningCost')} />
+        </View>
+      ) : null}
 
       {category ? (
         <View style={styles.hideRow}>

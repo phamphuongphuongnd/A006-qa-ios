@@ -295,6 +295,8 @@ export default function EntriesScreen() {
               { on: filter.scope === 'work', el: <Chip key="work" label={t('entries.work')} size="s" state={filter.scope === 'work' ? 'on' : 'default'} onPress={() => set({ scope: filter.scope === 'work' ? null : 'work' })} /> },
               { on: filter.scope === 'personal', el: <Chip key="personal" label={t('entries.personal')} size="s" state={filter.scope === 'personal' ? 'on' : 'default'} onPress={() => set({ scope: filter.scope === 'personal' ? null : 'personal' })} /> },
               { on: filter.withReceipt, el: <Chip key="receipt" label={t('entries.withReceipt')} size="s" state={filter.withReceipt ? 'on' : 'default'} onPress={() => set({ withReceipt: !filter.withReceipt })} /> },
+              { on: filter.recurring, el: <Chip key="recurring" label={t('homeV2.filterRecurring')} size="s" state={filter.recurring ? 'on' : 'default'} onPress={() => set({ recurring: !filter.recurring })} /> },
+              { on: filter.autoSorted, el: <Chip key="auto" label={t('homeV2.filterAutoSorted')} size="s" state={filter.autoSorted ? 'on' : 'default'} onPress={() => set({ autoSorted: !filter.autoSorted })} /> },
               { on: filter.date !== 'any' || !!filter.period, el: <FilterChip key="date" label={dateLabelText} on={filter.date !== 'any' || !!filter.period} drop onPress={() => setSheet('date')} /> },
               { on: !!category, el: <FilterChip key="category" label={category?.name ?? t('entries.category')} on={!!category} drop onPress={() => setSheet('category')} /> },
             ]

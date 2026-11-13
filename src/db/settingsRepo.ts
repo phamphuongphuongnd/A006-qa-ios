@@ -56,6 +56,8 @@ export interface AppSettings {
   mtdPeriod: 'standard' | 'calendar';
   /** S-07g: an NFC tag was written on this phone. */
   nfcTagWritten: boolean;
+  /** Home alert cards hidden with ✕ until this time (7 days), by alert id (features/home/alerts.ts). */
+  alertSnoozedUntil: Partial<Record<string, number>>;
 }
 
 export type MergeStopMinutes = 10 | 20 | 45;
@@ -97,6 +99,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   freeagentClaimant: '',
   mtdPeriod: 'standard',
   nfcTagWritten: false,
+  alertSnoozedUntil: {},
 };
 
 export function getSettings(db: AppDb): AppSettings {

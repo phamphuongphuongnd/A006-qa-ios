@@ -19,6 +19,11 @@ export const FREE_PHOTOS_PER_MONTH = 20;
  * App Store Connect — both stores must use this exact id (or change it here).
  */
 export const PRO_PRODUCT_ID = 'sundaysort_pro_annual';
+/**
+ * Price shown before the store has answered (onboarding S-01e, offline). Placeholder price (PLAN-v2 Q16) — the
+ * purchase screen (S5) shows the store's localised price once expo-iap has loaded the product.
+ */
+export const PRO_FALLBACK_PRICE: Record<'UK' | 'US', string> = { UK: '£24.99', US: '$31.99' };
 
 /** What a "PRO" lock / S-19 sheet is about (sheet subtitle). */
 export type ProFeature = 'auto_trips' | 'rules' | 'recurring' | 'ocr' | 'suggestions' | 'tax_files' | 'photos';

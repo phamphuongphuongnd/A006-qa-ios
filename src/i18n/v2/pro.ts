@@ -28,6 +28,18 @@ export const pro = {
   trialUsed: "You've already used your free trial.",
   ended: 'Automatic trips, rules and Pro files are paused. Everything you recorded is still here.',
   promise: 'No ads · Your data is never locked or deleted · Cancel anytime',
+  /** S-01e Free & Pro (X6: limits said plainly at install). */
+  onboarding: {
+    title: 'Free forever.\nPro when you want it.',
+    free: 'Free',
+    pro: 'Pro',
+    perYear: '{price}/yr',
+    freeItems: 'Quick logging|Sunday sorting|Start/stop trips|20 receipt photos a month|Nightly backup|Reports in the app|Raw CSV export',
+    proItems: 'Automatic trips|Auto-sort rules & suggestions|Receipt reading|Recurring entries|Unlimited photos|Tax-year PDF, MTD and FreeAgent files',
+    promise: 'No ads. No account. Your data is never locked or deleted if you stop paying.',
+    continueFree: 'Continue free',
+    seePro: 'See Pro',
+  },
   photos: {
     left: '{left} of {limit} free photos left this month',
     none: "No free photos left this month · Your entry is still saved",

@@ -12,7 +12,7 @@ import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, useTheme } from '@/theme';
 import { Button, Txt } from '@/ui';
 
-/** S-01c Your categories — read-only preview of the region's defaults. */
+/** S-01d Your categories — read-only preview of the region's defaults. */
 export default function CategoriesStep() {
   const { colors } = useTheme();
   const { settings } = useSettings();
@@ -50,7 +50,7 @@ export default function CategoriesStep() {
   );
 
   return (
-    <OnboardingPage step={2} bottom={<Button label={t('onboarding.looksGood')} full onPress={() => router.push('/onboarding/reminder')} />}>
+    <OnboardingPage step={4} bottom={<Button label={t('onboarding.looksGood')} full onPress={() => router.push('/onboarding/free-pro')} />}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 14, paddingBottom: 20, gap: 16 }}>
         <View style={{ gap: 8 }}>
           <Txt v="h1" accessibilityRole="header">

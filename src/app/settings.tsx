@@ -8,12 +8,17 @@ import { useEffect, useState } from 'react';
 import { Linking, Platform, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { count } from 'drizzle-orm';
+
 import { listCategories } from '@/db/categoriesRepo';
 import { db } from '@/db/client';
 import { convertAllTo, countNotIn, entryCount } from '@/db/entriesRepo';
+import { recurring, rules } from '@/db/schema';
 import type { AppSettings } from '@/db/settingsRepo';
+import { changeVehicleCostMethod } from '@/db/vehicleCostsRepo';
+import { VEHICLE_COST_METHODS } from '@/domain/vehicleCosts';
 import { currencySymbol, parseRate } from '@/domain/money';
-import { currencyOf, type Region, type Scope } from '@/domain/types';
+import { currencyOf, type Region, type Scope, type VehicleCostMethod } from '@/domain/types';
 import { deleteAllReceiptFiles } from '@/features/backup/backupFile';
 import { wipeAllData } from '@/features/backup/dataStore';
 import { stopOrphanRecording } from '@/features/trips/controller';
@@ -24,12 +29,14 @@ import { cancelSortReminders, requestNotifications } from '@/features/settings/n
 import { backupDue, daysSince, timeLabel, WEEKDAYS } from '@/features/settings/reminder';
 import { GroupLabel, NavHeader, NavRow, OptionSheet, Pill, type Option } from '@/features/settings/ui';
 import { t } from '@/i18n';
+import { ProCard } from '@/features/settings/ProCard';
+import { usePro } from '@/state/pro';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, useTheme } from '@/theme';
-import { Button, Dialog, Field, Group, Segmented, Sheet, Toggle, Txt, useSnackbar } from '@/ui';
+import { Badge, Button, Dialog, Field, Group, Segmented, Sheet, Toggle, Txt, useSnackbar } from '@/ui';
 
-type Picker = 'region' | 'scope' | 'unit' | 'day' | 'lockAfter' | null;
+type Picker = 'region' | 'scope' | 'unit' | 'day' | 'lockAfter' | 'vehicle' | null;
 
 const LOCK_AFTER: Option<AppSettings['lockAfterMs']>[] = [
   { value: 0, label: 'Immediately' },
@@ -63,6 +70,26 @@ export default function SettingsScreen() {
   const [canLock, setCanLock] = useState<boolean | null>(null);
 
   const categoryCount = useLive(() => listCategories(db).length, [], ['categories']);
+  const counts = useLive(
+    () => ({
+      rules: db.select({ n: count() }).from(rules).get()?.n ?? 0,
+      recurring: db.select({ n: count() }).from(recurring).get()?.n ?? 0,
+    }),
+    [],
+    ['rules', 'recurring'],
+  );
+  const { pro } = usePro();
+  const proLock = pro ? undefined : (
+    <View style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'center' }}>
+      <Badge kind="pro" label={t('pro.badge')} />
+    </View>
+  );
+  const [vehicleAsk, setVehicleAsk] = useState<VehicleCostMethod | null>(null);
+  const pickVehicle = (to: VehicleCostMethod, confirmed = false) => {
+    const res = changeVehicleCostMethod(db, to, { confirmed });
+    if (res.status === 'needs_confirm') setTimeout(() => setVehicleAsk(to), Platform.OS === 'ios' ? 400 : 0);
+    else if (res.status === 'saved') update({ vehicleCostMethod: to });
+  };
   const hasData = useLive(() => entryCount(db) > 0, [], ['entries']);
 
   useEffect(() => {
@@ -142,11 +169,14 @@ export default function SettingsScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
       <NavHeader title={t('screens.settings')} />
       <ScrollView contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: insets.bottom + 32, gap: 8 }}>
-        <GroupLabel first>{t('settings.regionTax')}</GroupLabel>
+        <ProCard />
+
+        <GroupLabel>{t('settings.regionTax')}</GroupLabel>
         <Group>
           <NavRow title={t('settings.region')} value={t(`settings.${region}`)} onPress={() => setPicker('region')} />
           <NavRow title={t('settings.currency')} value={region === 'UK' ? t('settings.currencyGBP') : t('settings.currencyUSD')} />
           <NavRow title={t('settings.taxYear')} value={region === 'UK' ? t('settings.taxYearUK') : t('settings.taxYearUS')} />
+          <NavRow title={t('vehicle.title')} value={t(`vehicle.method.${settings.vehicleCostMethod}`)} onPress={() => setPicker('vehicle')} />
           <NavRow
             title={t('settings.mileageRates')}
             value={currentRatesText(settings.mileageRates[region], region === 'UK' ? 'GBP' : 'USD')}
@@ -172,15 +202,31 @@ export default function SettingsScreen() {
           />
         </Group>
 
-        <GroupLabel>{t('settings.sundaySort')}</GroupLabel>
+        <GroupLabel>{t('settingsV2.trips')}</GroupLabel>
         <Group>
+          <NavRow title={t('settingsV2.autoTrips')} right={proLock} value={pro ? (settings.autoTrips ? t('settingsV2.on') : t('settingsV2.off')) : undefined} onPress={() => router.push('/trip/auto')} />
+          {Platform.OS === 'android' ? (
+            <NavRow title={t('settingsV2.nfcTag')} value={settings.nfcTagWritten ? t('settingsV2.nfcReady') : t('settingsV2.nfcNotSet')} onPress={() => router.push('/trip/nfc')} />
+          ) : (
+            <NavRow title={t('settingsV2.nfcTag')} onPress={() => router.push('/trip/nfc')} />
+          )}
+          <NavRow title={t('settingsV2.workHours')} value={settings.workHours.on ? t('settingsV2.on') : t('settingsV2.off')} onPress={() => router.push('/trip/work-hours')} />
+        </Group>
+
+        <GroupLabel>{t('settingsV2.sorting')}</GroupLabel>
+        <Group>
+          <NavRow title={t('settingsV2.rules')} right={proLock} value={pro ? String(counts.rules) : undefined} onPress={() => router.push('/rules')} />
+          <NavRow title={t('settingsV2.recurring')} right={proLock} value={pro ? String(counts.recurring) : undefined} onPress={() => router.push('/recurring')} />
+          <NavRow icon={TagIcon} title={t('settings.categories')} value={String(categoryCount)} onPress={() => router.push('/categories')} />
+        </Group>
+
+        {/* S4 moves the weekly reminder into S-20 (Notifications) and removes these three rows. */}
+        <GroupLabel>{t('settingsV2.notifications')}</GroupLabel>
+        <Group>
+          <NavRow title={t('settingsV2.notificationsRow')} value={r.on ? `${WEEKDAYS[r.weekday].slice(0, 3)} ${timeLabel(r.hour, r.minute)}` : t('settingsV2.remindersOff')} onPress={() => router.push('/notifications')} />
           <NavRow title={t('settings.weeklyReminder')} right={<Toggle value={r.on} onChange={setReminderOn} label={t('settings.weeklyReminder')} />} />
           {r.on ? <NavRow title={t('settings.day')} value={WEEKDAYS[r.weekday]} onPress={() => setPicker('day')} /> : null}
           {r.on ? <NavRow title={t('settings.time')} value={timeLabel(r.hour, r.minute)} onPress={openTime} /> : null}
-        </Group>
-
-        <Group style={{ marginTop: 10 }}>
-          <NavRow icon={TagIcon} title={t('settings.categories')} value={String(categoryCount)} onPress={() => router.push('/categories')} />
         </Group>
 
         <GroupLabel>{t('settings.security')}</GroupLabel>
@@ -281,6 +327,30 @@ export default function SettingsScreen() {
           }
         }}
         onClose={() => setPicker(null)}
+      />
+      <OptionSheet<VehicleCostMethod>
+        visible={picker === 'vehicle'}
+        title={t('vehicle.title')}
+        options={VEHICLE_COST_METHODS.map((m) => ({ value: m, label: t(`vehicle.method.${m}`), sub: t(`vehicle.methodHint.${m}`) }))}
+        value={settings.vehicleCostMethod}
+        onPick={(v) => pickVehicle(v)}
+        onClose={() => setPicker(null)}
+      />
+      <Dialog
+        visible={vehicleAsk !== null}
+        title={t('vehicle.changeTitle')}
+        body={region === 'US' ? t('vehicle.changeBodyUS') : t('vehicle.changeBody')}
+        onClose={() => setVehicleAsk(null)}
+        actions={[
+          { label: t('settings.cancel'), onPress: () => setVehicleAsk(null) },
+          {
+            label: t('vehicle.change'),
+            onPress: () => {
+              if (vehicleAsk) pickVehicle(vehicleAsk, true);
+              setVehicleAsk(null);
+            },
+          },
+        ]}
       />
       <OptionSheet<Scope>
         visible={picker === 'scope'}

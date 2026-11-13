@@ -30,7 +30,7 @@ export default function RegionStep() {
 
   return (
     <OnboardingPage
-      step={1}
+      step={2}
       bottom={
         <Button
           label={t('common.continue')}
@@ -39,7 +39,7 @@ export default function RegionStep() {
           onPress={() => {
             if (!pick) return;
             setRegion(pick);
-            router.push('/onboarding/categories');
+            router.push('/onboarding/vehicle');
           }}
         />
       }>

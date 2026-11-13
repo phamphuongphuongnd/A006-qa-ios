@@ -6,7 +6,7 @@ import type { CategoryRow } from '@/db/schema';
 import type { Currency } from '@/domain/types';
 import { t } from '@/i18n';
 import { useTheme } from '@/theme';
-import { Avatar, Dot, ListRow, SelectCircle, Tag, Txt } from '@/ui';
+import { Avatar, Badge, Dot, ListRow, SelectCircle, Tag, Txt } from '@/ui';
 
 import { signedAmount, timeLabel, weekdayTime } from './format';
 import { categoryIcon } from './icons';
@@ -61,6 +61,7 @@ export function EntryRow({
         subtitle={`${weekdayTime(entry.occurredAt)} · ${scopeLabel}`}
         right={
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <SourceBadge entry={entry} />
             {entry.receiptCount > 0 ? <Paperclip size={18} color={colors.textSecondary} /> : null}
             {!category ? <Dot /> : null}
             <Txt v="amount" c={amountColor} size={17}>
@@ -91,7 +92,13 @@ export function EntryRow({
               </Txt>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 {personal ? <Tag kind="personal" label={t('common.personal')} /> : null}
+                <SourceBadge entry={entry} />
                 {entry.receiptCount > 0 ? <Paperclip size={16} color={colors.textSecondary} /> : null}
+                {entry.receiptCount > 1 ? (
+                  <Txt v="caption" c="textSecondary">
+                    {t('homeV2.photoCount', { count: entry.receiptCount })}
+                  </Txt>
+                ) : null}
               </View>
             </View>
           }
@@ -99,4 +106,11 @@ export function EntryRow({
       </View>
     </View>
   );
+}
+
+/** "Recurring" (made by a template) / "Auto" (sorted by a rule) label, F-04. */
+function SourceBadge({ entry }: { entry: { recurringId?: string | null; ruleId?: string | null } }) {
+  if (entry.recurringId) return <Badge kind="recurring" label={t('homeV2.labelRecurring')} />;
+  if (entry.ruleId) return <Badge kind="auto" label={t('homeV2.labelAuto')} />;
+  return null;
 }

@@ -1,12 +1,15 @@
 import { totalsFor, unsortedCount } from '@/db/entriesRepo';
+import { getProStatus } from '@/db/proRepo';
 import { getSettings } from '@/db/settingsRepo';
 import { getActiveTrip, mileageTotals } from '@/db/tripsRepo';
 import type { AppDb } from '@/db/types';
 import { milesToMeters } from '@/domain/mileage';
 import { formatMoney } from '@/domain/money';
+import { hasPro } from '@/domain/pro';
 import { currencyOf } from '@/domain/types';
 import { weekLabel, weekOf } from '@/domain/week';
 import { formatDistance } from '@/features/trips/format';
+import { autoTripState } from '@/features/trips/autoState';
 import { t } from '@/i18n';
 
 /** Everything a home-screen widget shows, already formatted (shared by Android and iOS). */
@@ -23,6 +26,9 @@ export interface WidgetSnapshot {
   weekLine: string;
   trip: 'none' | 'running' | 'paused';
   tripDistance: string;
+  /** Bản 2: medium widget line "Auto trips on" (green dot) / "Auto trips paused" (orange); hidden when 'off'. */
+  auto: 'off' | 'on' | 'paused';
+  autoText: string;
 }
 
 export const EMPTY_SNAPSHOT: WidgetSnapshot = {
@@ -35,6 +41,8 @@ export const EMPTY_SNAPSHOT: WidgetSnapshot = {
   weekLine: t('widget.setup'),
   trip: 'none',
   tripDistance: '',
+  auto: 'off',
+  autoText: '',
 };
 
 /** This week (Mon–Sun) net (work entries, like Home), unsorted count over all weeks (same as the Sort badge), running trip. */
@@ -56,6 +64,7 @@ export function widgetSnapshot(db: AppDb, now = Date.now()): WidgetSnapshot {
       distance,
     });
     const trip = getActiveTrip(db);
+    const auto = autoTripState(s, hasPro(getProStatus(db, now)));
     const toSortText = toSort > 0 ? t('widget.toSort', { count: toSort > 99 ? '99+' : toSort }) : t('widget.allSorted');
     return {
       ready: true,
@@ -67,6 +76,8 @@ export function widgetSnapshot(db: AppDb, now = Date.now()): WidgetSnapshot {
       weekLine: `${t('widget.weekNet', { amount: netText })} · ${toSortText}`,
       trip: trip ? (trip.status === 'paused' ? 'paused' : 'running') : 'none',
       tripDistance: trip ? formatDistance(trip.distanceM, s.distanceUnit) : '',
+      auto,
+      autoText: auto === 'on' ? t('widget.autoOn') : auto === 'paused' ? t('widget.autoPaused') : '',
     };
   } catch {
     return EMPTY_SNAPSHOT;

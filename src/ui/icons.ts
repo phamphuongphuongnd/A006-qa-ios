@@ -74,6 +74,7 @@ export { default as SkipForward } from 'lucide-react-native/icons/skip-forward';
 export { default as Smartphone } from 'lucide-react-native/icons/smartphone';
 export { default as Split } from 'lucide-react-native/icons/split';
 export { default as Square } from 'lucide-react-native/icons/square';
+export { default as Sun } from 'lucide-react-native/icons/sun';
 export { default as SquareParking } from 'lucide-react-native/icons/square-letter-p';
 export { default as Star } from 'lucide-react-native/icons/star';
 export { default as Tag } from 'lucide-react-native/icons/tag';

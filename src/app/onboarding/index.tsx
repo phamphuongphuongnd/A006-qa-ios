@@ -28,7 +28,7 @@ export default function Welcome() {
         </View>
       </ScrollView>
       <View style={{ paddingHorizontal: GUTTER, paddingBottom: Math.max(insets.bottom, 16) + 20, paddingTop: 12, gap: 20 }}>
-        <StepDots step={1} total={4} />
+        <StepDots step={1} />
         <Button label={t('onboarding.getStarted')} full onPress={() => router.push('/onboarding/region')} />
       </View>
     </View>

@@ -1,8 +1,10 @@
 import { autoTrip } from './v2/autoTrip';
 import { backupAuto, recurringV2 } from './v2/backupAuto';
+import { homeV2 } from './v2/home';
 import { mtd } from './v2/mtd';
 import { ocr } from './v2/ocr';
 import { pro } from './v2/pro';
+import { settingsV2 } from './v2/settings';
 import { sortV2 } from './v2/sortV2';
 import { vehicle } from './v2/vehicle';
 
@@ -407,6 +409,8 @@ export const en = {
     net: 'Net',
     detail: 'In {income} · Out {expense} · {distance}',
     setup: 'Open Sunday Sort to set up',
+    autoOn: 'Auto trips on',
+    autoPaused: 'Auto trips paused',
   },
   reports: {
     title: 'Reports',
@@ -509,10 +513,10 @@ export const en = {
   disclaimer: {
     title: 'Not tax advice',
     heading: 'Records, not advice',
-    p1: "Sunday Sort helps you keep records. It doesn't tell you what you can claim, and it doesn't file taxes for you.",
+    p1: "Sunday Sort helps you keep records. It doesn't tell you what you can claim, and it doesn't file taxes for you. Sunday Sort isn't MTD software and doesn't send anything to HMRC or the IRS.",
     p2: 'Category and tax-form-line names are labels to help you and your accountant. Mileage amounts are estimates using standard rates you can edit.',
     check: 'Check HMRC / IRS guidance or ask an accountant.',
-    body: "Sunday Sort helps you keep records. It doesn't tell you what you can claim, and it doesn't file taxes for you. Category and tax-form-line names are labels to help you and your accountant. Mileage amounts are estimates using standard rates you can edit. Check HMRC / IRS guidance or ask an accountant.",
+    body: "Sunday Sort helps you keep records. It doesn't tell you what you can claim, and it doesn't file taxes for you. Sunday Sort isn't MTD software and doesn't send anything to HMRC or the IRS. Category and tax-form-line names are labels to help you and your accountant. Mileage amounts are estimates using standard rates you can edit. Check HMRC / IRS guidance or ask an accountant.",
   },
   settings: {
     back: 'Back',
@@ -637,4 +641,6 @@ export const en = {
   backupAuto,
   recurring: recurringV2,
   mtd,
+  homeV2,
+  settingsV2,
 } as const;

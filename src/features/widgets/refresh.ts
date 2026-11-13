@@ -24,6 +24,8 @@ export function iosPayload(s: WidgetSnapshot): Record<string, string | number> {
     weekLine: s.weekLine,
     trip: s.trip,
     tripDistance: s.tripDistance,
+    auto: s.auto,
+    autoText: s.autoText,
     updatedAt: Date.now(),
   };
 }
