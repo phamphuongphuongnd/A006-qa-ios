@@ -2,7 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { ChevronDown, Plus } from '@/ui/icons';
 import { Zap } from '@/features/rules/icons';
 import { createElement, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Keyboard, Pressable, View } from 'react-native';
 
 import { listCategories } from '@/db/categoriesRepo';
 import { db } from '@/db/client';
@@ -32,16 +32,18 @@ const ERR: Record<RuleError | 'duplicate', TKey> = {
 /**
  * S-18 Auto-sort rules (F-09, Pro). One switch per rule; tap → edit sheet; "+ Add rule".
  * Free / Pro ended: the list stays visible, switches locked, "Rules are paused" + See Pro (rules and data are kept).
- * Param `edit=<ruleId>` opens that rule's sheet (from S-06d "Edit rule").
+ * Param `id=<ruleId>` (S-05 "Edit rule", S-06d) opens that rule's sheet; `edit=` is the same.
  */
 export default function RulesScreen() {
-  const params = useLocalSearchParams<{ edit?: string }>();
+  const params = useLocalSearchParams<{ id?: string; edit?: string }>();
   const { colors } = useTheme();
   const { pro, status } = usePro();
   const snack = useSnackbar();
   const rules = useLive(() => listRules(db), [], ['rules', 'entries', 'categories']);
   const [editing, setEditing] = useState<{ rule: RuleRow | null; n: number } | null>(() => {
-    const r = params.edit ? getRule(db, params.edit) : undefined;
+    // A deleted rule just shows the list.
+    const id = params.id ?? params.edit;
+    const r = id ? getRule(db, id) : undefined;
     return r ? { rule: r, n: 0 } : null;
   });
 
@@ -182,7 +184,27 @@ function RuleSheet({
 
   const box = { backgroundColor: colors.surfaceAlt, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 10, gap: 2 };
   return (
-    <Sheet visible={visible} onClose={onClose} title={rule ? t('sortV2.editRuleTitle') : t('sortV2.newRule')}>
+    <Sheet
+      visible={visible}
+      onClose={onClose}
+      title={rule ? t('sortV2.editRuleTitle') : t('sortV2.newRule')}
+      footer={
+        <View style={{ gap: 4, paddingTop: 12 }}>
+          <Button label={t('sortV2.saveRule')} full onPress={save} />
+          {rule ? (
+            <Button
+              label={t('sortV2.deleteRule')}
+              variant="text"
+              full
+              onPress={() => {
+                const row = deleteRule(db, rule.id);
+                onClose();
+                if (row) onDeleted(row);
+              }}
+            />
+          ) : null}
+        </View>
+      }>
       <Field
         label={t('sortV2.whenSays')}
         value={text}
@@ -242,7 +264,11 @@ function RuleSheet({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${t('sortV2.sortAs')}, ${cat?.name ?? t('sortV2.pickCategory')}`}
-        onPress={() => setPicking(true)}
+        onPress={() => {
+          // Otherwise Android gives focus back to the text field when the picker closes and the keyboard hides Save.
+          Keyboard.dismiss();
+          setPicking(true);
+        }}
         style={[box, { flexDirection: 'row', alignItems: 'center', minHeight: 64 }, error === 'no_category' && { borderWidth: 2, borderColor: colors.error }]}>
         <View style={{ flex: 1, gap: 2 }}>
           <Txt v="caption" c="textSecondary">
@@ -270,19 +296,6 @@ function RuleSheet({
           { value: 'personal', label: t('common.personal') },
         ]}
       />
-      <Button label={t('sortV2.saveRule')} full onPress={save} />
-      {rule ? (
-        <Button
-          label={t('sortV2.deleteRule')}
-          variant="text"
-          full
-          onPress={() => {
-            const row = deleteRule(db, rule.id);
-            onClose();
-            if (row) onDeleted(row);
-          }}
-        />
-      ) : null}
       <CategorySheet
         visible={picking}
         onClose={() => setPicking(false)}

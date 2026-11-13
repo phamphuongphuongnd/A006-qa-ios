@@ -1,4 +1,4 @@
-import { Briefcase, CheckCircle2, ChevronDown, Combine, Pencil, Plus, SkipForward, Split, User, X } from '@/ui/icons';
+import { Briefcase, CheckCircle2, ChevronDown, Combine, Pencil, Plus, SkipForward, Split, User, X, type LucideIcon } from '@/ui/icons';
 import { Zap } from '@/features/rules/icons';
 import { useRef, useState } from 'react';
 import { Animated, Image, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
@@ -173,11 +173,11 @@ export function SortEntryCard({
           {mode === 'view' ? (
             <>
               <Divider />
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-                <Button label={t('sortV2.edit')} icon={Pencil} variant="text" size="sm" onPress={() => setMode('edit')} />
-                <Button label={t('sort.split')} icon={Split} variant="text" size="sm" onPress={() => setMode('split')} />
-                <Button label={t('sortV2.merge')} icon={Combine} variant="text" size="sm" onPress={onMerge} />
-                <Button label={t('sort.skip')} icon={SkipForward} variant="text" size="sm" onPress={skip} />
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <CardAction label={t('sortV2.edit')} icon={Pencil} onPress={() => setMode('edit')} />
+                <CardAction label={t('sort.split')} icon={Split} onPress={() => setMode('split')} />
+                <CardAction label={t('sortV2.merge')} icon={Combine} onPress={onMerge} />
+                <CardAction label={t('sort.skip')} icon={SkipForward} onPress={skip} />
               </View>
             </>
           ) : null}
@@ -394,6 +394,24 @@ function SplitPanel({
   );
 }
 
+/** Small text action under the card ("Edit · Split · Merge · Skip"): four fit on a 360dp phone. */
+function CardAction({ label, icon: Icon, onPress }: { label: string; icon: LucideIcon; onPress: () => void }) {
+  const { colors } = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      hitSlop={4}
+      style={({ pressed }) => [styles.action, { opacity: pressed ? 0.6 : 1 }]}>
+      <Icon size={18} color={colors.text} />
+      <Txt numberOfLines={1} maxFontSizeMultiplier={1.3} style={{ fontSize: 15, fontFamily: fonts.semibold, flexShrink: 1 }}>
+        {label}
+      </Txt>
+    </Pressable>
+  );
+}
+
 /** Compact W | P switch for a split part. */
 function ScopePill({ value, onChange, label }: { value: Scope; onChange: (s: Scope) => void; label: string }) {
   const { colors } = useTheme();
@@ -431,9 +449,10 @@ const styles = StyleSheet.create({
   more: { height: 44, borderRadius: 22, paddingHorizontal: 16, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   panel: { borderRadius: radius.card, padding: 14, gap: 10 },
   box: { borderRadius: 12, paddingHorizontal: 14, paddingVertical: 8, gap: 2 },
-  partAmount: { flex: 1, borderRadius: 14, paddingHorizontal: 12, justifyContent: 'center', minWidth: 72 },
-  partCat: { flex: 1.3, minHeight: 48, borderRadius: 24, borderWidth: 1.5, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
+  partAmount: { width: 92, borderRadius: 14, paddingHorizontal: 12, justifyContent: 'center' },
+  partCat: { flex: 1, minWidth: 0, minHeight: 48, borderRadius: 24, borderWidth: 1.5, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
   pill: { flexDirection: 'row', borderRadius: 24, padding: 3, gap: 2 },
   pillOpt: { width: 40, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
+  action: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 4, flexShrink: 1 },
   left: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, borderRadius: 12, paddingHorizontal: 14, minHeight: 48 },
 });

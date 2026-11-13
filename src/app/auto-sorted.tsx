@@ -147,7 +147,7 @@ export default function AutoSortedScreen() {
                 <>
                   <Button label={t('sortV2.undoAll')} icon={RotateCcw} variant="text" size="sm" onPress={() => undoAll(g.ruleId!)} />
                   {data.rules.some((r) => r.id === g.ruleId) ? (
-                    <Button label={t('sortV2.editRule')} variant="text" size="sm" onPress={() => router.push(`/rules?edit=${g.ruleId}`)} />
+                    <Button label={t('sortV2.editRule')} variant="text" size="sm" onPress={() => router.push(`/rules?id=${g.ruleId}`)} />
                   ) : null}
                 </>
               ) : (

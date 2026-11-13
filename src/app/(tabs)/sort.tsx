@@ -36,11 +36,13 @@ export default function SortScreen() {
   const [weekSheet, setWeekSheet] = useState(false);
   const [mergeFor, setMergeFor] = useState<string | null>(null);
   // Offer waiting for an answer; `thenDone` = the week was finished by the sort that triggered it.
-  const [offer, setOffer] = useState<{ offer: RuleOffer; thenDone: number | null } | null>(null);
+  const [pendingOffer, setOffer] = useState<{ offer: RuleOffer; entryId: string; thenDone: number | null } | null>(null);
   const actions = useEntryActions();
   const snack = useSnackbar();
   const s = useSortWeek(chosen, skipped);
   const top = s.queue[0];
+  // "Undo" on the sort that triggered the offer puts the entry back in the queue: the offer goes away with it.
+  const offer = pendingOffer && !s.queue.some((i) => i.key === pendingOffer.entryId) ? pendingOffer : null;
 
   const header = (
     <View style={[styles.top, { paddingTop: insets.top + 14, paddingHorizontal: GUTTER }]}>
@@ -132,7 +134,7 @@ export default function SortScreen() {
     actions.sortOne(id, categoryId, name, scope);
     unskip(top);
     const o = ruleOfferAfterSort(db, id);
-    if (o) setOffer({ offer: o, thenDone: isLast ? week.start : null });
+    if (o) setOffer({ offer: o, entryId: id, thenDone: isLast ? week.start : null });
     else if (isLast) finish();
   };
 
