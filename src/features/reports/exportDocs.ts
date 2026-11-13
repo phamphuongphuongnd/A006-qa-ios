@@ -4,21 +4,60 @@ import { formatMoney, toDecimalString } from '@/domain/money';
 import type { Report } from '@/domain/report';
 import type { Currency, EntryType, Minor, Scope, TripScope } from '@/domain/types';
 
+import type { MtdSummaryRow } from './mtdFiles';
 import type { MonthPoint } from './series';
 
-export type ExportKind = 'entriesCsv' | 'totalsCsv' | 'mileageCsv' | 'pdf' | 'receiptsZip';
-export const EXPORT_KINDS: ExportKind[] = ['entriesCsv', 'totalsCsv', 'mileageCsv', 'pdf', 'receiptsZip'];
-/** Mockup default selection. */
-export const DEFAULT_EXPORT: ExportKind[] = ['entriesCsv', 'totalsCsv', 'pdf'];
+export type ExportKind =
+  | 'entriesCsv'
+  | 'mileageCsv'
+  | 'pdf'
+  | 'totalsCsv'
+  | 'mtdSummary'
+  | 'mtdRecords'
+  | 'mtdXlsx'
+  | 'freeagent'
+  | 'receiptsZip';
+/** S-10 order (mockup "Pro, every file type"). */
+export const EXPORT_KINDS: ExportKind[] = ['entriesCsv', 'mileageCsv', 'pdf', 'totalsCsv', 'mtdSummary', 'mtdRecords', 'mtdXlsx', 'freeagent', 'receiptsZip'];
+/** Raw data — always free, also after Pro ends (product.md §6). */
+export const FREE_KINDS: ExportKind[] = ['entriesCsv', 'mileageCsv'];
+/** UK only: MTD files follow HMRC categories; FreeAgent is a UK product. */
+export const MTD_KINDS: ExportKind[] = ['mtdSummary', 'mtdRecords', 'mtdXlsx', 'freeagent'];
 
-/** Default ticks for a period: the mileage log too when the period has trips, so it isn't forgotten (B-35). */
-export function defaultExportKinds(hasTrips: boolean): ExportKind[] {
-  return hasTrips ? EXPORT_KINDS.filter((k) => k === 'mileageCsv' || DEFAULT_EXPORT.includes(k)) : DEFAULT_EXPORT;
+export const isProKind = (k: ExportKind) => !FREE_KINDS.includes(k);
+/** Files offered for a region (US: no MTD / FreeAgent). */
+export const kindsFor = (region: 'UK' | 'US'): ExportKind[] => EXPORT_KINDS.filter((k) => region === 'UK' || !MTD_KINDS.includes(k));
+
+/**
+ * Default ticks: the raw entries file, the mileage log when the period has trips (B-35); with Pro also the PDF and,
+ * in the UK, the MTD summary.
+ */
+export function defaultExportKinds(hasTrips: boolean, opts: { pro?: boolean; region?: 'UK' | 'US' } = {}): ExportKind[] {
+  const out: ExportKind[] = ['entriesCsv'];
+  if (hasTrips) out.push('mileageCsv');
+  if (opts.pro) {
+    out.push('pdf');
+    if ((opts.region ?? 'UK') === 'UK') out.push('mtdSummary');
+  }
+  return EXPORT_KINDS.filter((k) => out.includes(k));
 }
 
-export function exportFileName(kind: ExportKind, fileStem: string): string {
-  const base = `SundaySort-${{ entriesCsv: 'entries', totalsCsv: 'totals', mileageCsv: 'mileage', pdf: 'report', receiptsZip: 'receipts' }[kind]}-${fileStem}`;
-  return `${base}.${kind === 'pdf' ? 'pdf' : kind === 'receiptsZip' ? 'zip' : 'csv'}`;
+const FILE_PART: Record<ExportKind, string> = {
+  entriesCsv: 'entries',
+  mileageCsv: 'mileage',
+  pdf: 'report',
+  totalsCsv: 'totals',
+  mtdSummary: 'MTD-summary',
+  mtdRecords: 'MTD-records',
+  mtdXlsx: 'MTD',
+  freeagent: 'FreeAgent',
+  receiptsZip: 'receipts',
+};
+const EXT: Partial<Record<ExportKind, string>> = { pdf: 'pdf', receiptsZip: 'zip', mtdXlsx: 'xlsx' };
+
+/** "SundaySort-entries-2026-27.csv"; `part` names one of several files of a kind ("expenses", "mileage-2"). */
+export function exportFileName(kind: ExportKind, fileStem: string, part?: string): string {
+  return `SundaySort-${FILE_PART[kind]}${part ? `-${part}` : ''}-${fileStem}.${EXT[kind] ?? 'csv'}`;
 }
 
 /** Several files are shared as one ZIP (the share sheet takes one file). */
@@ -68,8 +107,15 @@ export interface PdfInput {
   report: Report;
   months: MonthPoint[];
   includePersonal: boolean;
+  /** Mileage-rate method: miles + allowance. null under actual costs or with no work miles. */
   mileage: { workMiles: number; estimateMinor: Minor; ratesNote: string } | null;
-  trips: { startedAt: number; miles: number; scope: TripScope; purpose: string; source: 'gps' | 'manual' }[];
+  /** Actual-costs method: "Business use 87% · 30,450 of 35,000 mi". */
+  businessUse?: { percent: number; workMiles: number; totalMiles: number } | null;
+  /** One line on the vehicle cost method (§5.3). */
+  vehicleNote?: string | null;
+  /** UK: totals by HMRC category for this period. */
+  mtdRows?: MtdSummaryRow[] | null;
+  trips: { startedAt: number; miles: number; scope: TripScope; purpose: string; source: string; edited?: boolean }[];
   entries: { occurredAt: number; type: EntryType; amountMinor: Minor; categoryName: string | null; scope: Scope; note: string }[];
   generatedAt: number;
 }
@@ -105,9 +151,21 @@ export function reportHtml(p: PdfInput): string {
       : '',
     `<h2>Income by category</h2><table>${head(['Category', 'Total'])}${byCat('income') || row(['—', m(0)])}</table>`,
     `<h2>Expenses by category</h2><table>${head(['Category', 'Total'])}${byCat('expense') || row(['—', m(0)])}</table>`,
+    r.coveredByCategory.length
+      ? `<h2>Covered by mileage rate</h2><table>${head(['Category', 'Not added'])}${r.coveredByCategory
+          .map((c) => row([e(c.name), m(c.totalMinor)]))
+          .join('')}${row(['Total', m(r.coveredMinor)], 'total')}</table><p class="note">Your mileage claim already includes fuel, repairs, insurance and road tax. Parking, tolls and congestion charges are added on top.</p>`
+      : '',
     `<h2>By tax form line</h2><table>${head(['Line', 'Type', 'Total'])}${r.byTaxLine
       .map((l) => row([e(l.taxLine), typeLabel(l.type), m(l.totalMinor)]))
       .join('')}</table>`,
+    p.mtdRows
+      ? `<h2>MTD categories</h2><table>${head(['HMRC category', 'Type', 'Total'])}${p.mtdRows
+          .filter((x) => x.totalMinor !== 0)
+          .map((x) => row([e(x.label), typeLabel(x.type), m(x.totalMinor)]))
+          .join('') || row(['—', '', m(0)])}</table>`
+      : '',
+    p.vehicleNote ? `<h2>Vehicle costs</h2><p>${e(p.vehicleNote)}</p>` : '',
     p.months.length
       ? `<h2>By month</h2><table>${head(['Month', 'Income', 'Expenses', 'Net'])}${p.months
           .map((x) => row([e(monthLabel(x)), m(x.incomeMinor), m(x.expenseMinor), m(x.incomeMinor - x.expenseMinor)]))
@@ -115,12 +173,16 @@ export function reportHtml(p: PdfInput): string {
       : '',
     p.mileage
       ? `<h2>Mileage</h2><p>${formatDistanceNumber(p.mileage.workMiles)} business miles · ≈ ${m(p.mileage.estimateMinor)} ${e(p.mileage.ratesNote)}</p><p class="note">Estimate only — not tax advice.</p>`
-      : '',
+      : p.businessUse
+        ? `<h2>Mileage</h2><p>Business use ${p.businessUse.percent}% · ${formatDistanceNumber(p.businessUse.workMiles)} of ${formatDistanceNumber(p.businessUse.totalMiles)} mi</p><p class="note">Your accountant applies the business-use share.</p>`
+        : '',
     p.trips.length
       ? `<h2>Mileage log</h2><table class="trips">${head(['Date', 'Miles', 'Work/Personal', 'Purpose', 'Source'])}${[...p.trips]
           // Oldest first, like the entries table below.
           .sort((a, b) => a.startedAt - b.startedAt)
-          .map((t) => row([isoDate(t.startedAt), formatDistanceNumber(t.miles, 1), scopeLabel(t.scope), e(t.purpose), t.source === 'gps' ? 'GPS' : 'Manual']))
+          .map((t) =>
+            row([isoDate(t.startedAt), formatDistanceNumber(t.miles, 1), scopeLabel(t.scope), e(t.purpose), `${e(t.source)}${t.edited ? ' · Edited' : ''}`]),
+          )
           .join('')}</table>`
       : '',
     `<h2>Entries</h2><table class="entries">${head(['Date', 'Type', 'Amount', 'Category', 'Work/Personal', 'Note'])}${p.entries

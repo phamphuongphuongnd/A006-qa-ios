@@ -25,7 +25,7 @@ export default function ExportScreen() {
   const mode: PeriodMode = PERIOD_MODES.includes(p.mode as PeriodMode) ? (p.mode as PeriodMode) : 'year';
   const year = Number(p.year) || taxYearOf(Number(p.start) || new Date().getTime(), region).startYear;
   const custom = mode === 'custom' && Number(p.start) && Number(p.end) ? { start: Number(p.start), end: Number(p.end) } : undefined;
-  const initial = periodFor(region, year, custom ? 'custom' : mode === 'custom' ? 'year' : mode, custom);
+  const initial = periodFor(region, year, custom ? 'custom' : mode === 'custom' ? 'year' : mode, custom, { mtd: settings.mtdPeriod });
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>

@@ -1,5 +1,5 @@
 import { toDecimalString } from './money';
-import type { Currency, EntryType, Minor, Scope, TripScope } from './types';
+import type { Currency, EntrySource, EntryType, Minor, Scope, TripScope, TripStartedBy } from './types';
 
 /** RFC 4180 field; also neutralises spreadsheet formula injection (=, +, -, @ at start). */
 export function csvField(value: string | number | boolean | null | undefined): string {
@@ -25,6 +25,12 @@ const isoTime = (at: number) => {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
+/** DD/MM/YYYY — UK spreadsheets, MTDsorted and FreeAgent imports (FreeAgent requires it). */
+export const ukDate = (at: number) => {
+  const d = new Date(at);
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+};
+
 export interface CsvEntry {
   id: string;
   occurredAt: number;
@@ -33,14 +39,37 @@ export interface CsvEntry {
   currency: Currency;
   categoryName: string | null;
   taxLine: string | null;
+  /** UK: HMRC category label ("Car, van and travel expenses"); null for the US or Unsorted. */
+  mtdCategory?: string | null;
   scope: Scope;
   note: string;
   receiptCount: number;
+  /** 'recurring' entries were made by a Recurring template. */
+  source?: EntrySource;
+  /** Sorted by a Rule (label "Auto"). */
+  autoSorted?: boolean;
 }
 
+/** F-15 "CSV – all entries" (free, raw): every column the driver may need, one row per entry, oldest first. */
 export function entriesCsv(entries: CsvEntry[]): string {
   const rows = [
-    csvRow(['date', 'time', 'type', 'amount', 'currency', 'category', 'tax_line', 'work_personal', 'note', 'has_receipt', 'entry_id']),
+    csvRow([
+      'date',
+      'time',
+      'type',
+      'amount',
+      'currency',
+      'category',
+      'tax_line',
+      'mtd_category',
+      'work_personal',
+      'note',
+      'receipts',
+      'source',
+      'auto_sorted',
+      'recurring',
+      'entry_id',
+    ]),
     ...[...entries]
       .sort((a, b) => a.occurredAt - b.occurredAt)
       .map((e) =>
@@ -52,9 +81,13 @@ export function entriesCsv(entries: CsvEntry[]): string {
           e.currency,
           e.categoryName ?? 'Unsorted',
           e.taxLine ?? '',
+          e.mtdCategory ?? '',
           e.scope,
           e.note,
-          e.receiptCount > 0 ? 'yes' : 'no',
+          e.receiptCount,
+          e.source ?? 'manual',
+          e.autoSorted ? 'yes' : 'no',
+          e.source === 'recurring' ? 'yes' : 'no',
           e.id,
         ]),
       ),
@@ -76,22 +109,50 @@ export function totalsCsv(totals: CsvTotal[], currency: Currency, periodLabel: s
   ]);
 }
 
+/** Where a trip came from in exports: GPS Start/Stop, automatic, NFC tag or typed in. */
+export type TripSourceLabel = 'GPS' | 'auto' | 'NFC' | 'manual';
+export const tripSourceLabel = (t: { source: 'gps' | 'manual'; startedBy?: TripStartedBy | null }): TripSourceLabel =>
+  t.source === 'manual' ? 'manual' : t.startedBy === 'auto' ? 'auto' : t.startedBy === 'nfc' ? 'NFC' : 'GPS';
+
 export interface CsvTrip {
   startedAt: number;
+  /** null for manual trips (a date only). */
+  endedAt?: number | null;
   miles: number;
   /** Raw export: an automatic trip still waiting in the Sort queue exports as "unsorted". */
   scope: TripScope;
   purpose: string;
   source: 'gps' | 'manual';
+  startedBy?: TripStartedBy | null;
+  /** Times or distance changed by hand (Q19). */
+  edited?: boolean;
+  /** Recorded distance before the first hand edit. */
+  originalMiles?: number | null;
   odoStart: number | null;
   odoEnd: number | null;
 }
 
+/** F-15 "CSV – mileage log" (free, raw). */
 export function mileageCsv(trips: CsvTrip[]): string {
   return csvDocument([
-    csvRow(['date', 'miles', 'work_personal', 'purpose', 'source', 'odometer_start', 'odometer_end']),
+    csvRow(['date', 'start', 'end', 'miles', 'work_personal', 'purpose', 'source', 'edited', 'original_miles', 'odometer_start', 'odometer_end']),
     ...[...trips]
       .sort((a, b) => a.startedAt - b.startedAt)
-      .map((t) => csvRow([isoDate(t.startedAt), t.miles.toFixed(1), t.scope, t.purpose, t.source, t.odoStart, t.odoEnd])),
+      .map((t) => {
+        const gps = t.source === 'gps';
+        return csvRow([
+          isoDate(t.startedAt),
+          gps ? isoTime(t.startedAt) : '',
+          gps && t.endedAt ? isoTime(t.endedAt) : '',
+          t.miles.toFixed(1),
+          t.scope,
+          t.purpose,
+          tripSourceLabel(t),
+          t.edited ? 'yes' : 'no',
+          t.edited && t.originalMiles != null ? t.originalMiles.toFixed(1) : '',
+          t.odoStart,
+          t.odoEnd,
+        ]);
+      }),
   ]);
 }

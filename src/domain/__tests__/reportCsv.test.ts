@@ -52,14 +52,36 @@ describe('csv', () => {
       { id: 'b', occurredAt: at(2026, 11, 10), type: 'income', amountMinor: 62000, currency: 'GBP', categoryName: 'Delivery income', taxLine: 'SA103: Turnover', scope: 'work', note: 'DPD weekly payout', receiptCount: 0 },
       { id: 'a', occurredAt: at(2026, 11, 9), type: 'expense', amountMinor: 7240, currency: 'GBP', categoryName: null, taxLine: null, scope: 'work', note: 'Shell M62', receiptCount: 1 },
     ]);
-    expect(doc.startsWith('﻿date,time,type,amount')).toBe(true);
+    expect(
+      doc.startsWith('﻿date,time,type,amount,currency,category,tax_line,mtd_category,work_personal,note,receipts,source,auto_sorted,recurring,entry_id'),
+    ).toBe(true);
     const lines = doc.trim().split('\r\n');
     expect(lines).toHaveLength(3);
-    expect(lines[1]).toBe('2026-11-09,12:00,expense,72.40,GBP,Unsorted,,work,Shell M62,yes,a');
+    expect(lines[1]).toBe('2026-11-09,12:00,expense,72.40,GBP,Unsorted,,,work,Shell M62,1,manual,no,no,a');
+  });
+  it('marks recurring and auto-sorted entries and the MTD category (F-15)', () => {
+    const doc = entriesCsv([
+      { id: 'r', occurredAt: at(2026, 11, 1), type: 'expense', amountMinor: 1500, currency: 'GBP', categoryName: 'Phone & data', taxLine: 'SA103: Phone, fax, stationery and other office costs', mtdCategory: 'Administrative costs', scope: 'work', note: '', receiptCount: 2, source: 'recurring', autoSorted: true },
+    ]);
+    expect(doc.trim().split('\r\n')[1]).toBe(
+      '2026-11-01,12:00,expense,15.00,GBP,Phone & data,"SA103: Phone, fax, stationery and other office costs",Administrative costs,work,,2,recurring,yes,yes,r',
+    );
   });
   it('builds the mileage log', () => {
     const doc = mileageCsv([{ startedAt: at(2026, 11, 10), miles: 128.44, scope: 'work', purpose: 'Route DLS4', source: 'gps', odoStart: null, odoEnd: null }]);
-    expect(doc.trim().split('\r\n')[1]).toBe('2026-11-10,128.4,work,Route DLS4,gps,,');
+    expect(doc.trim().split('\r\n')[0]).toBe('date,start,end,miles,work_personal,purpose,source,edited,original_miles,odometer_start,odometer_end');
+    expect(doc.trim().split('\r\n')[1]).toBe('2026-11-10,12:00,,128.4,work,Route DLS4,GPS,no,,,');
+  });
+  it('mileage log: automatic / NFC trips, edited times and manual odometer trips', () => {
+    const doc = mileageCsv([
+      { startedAt: new Date(2026, 10, 11, 7).getTime(), endedAt: new Date(2026, 10, 11, 11).getTime(), miles: 40, scope: 'unsorted', purpose: '', source: 'gps', startedBy: 'auto', edited: true, originalMiles: 42.34, odoStart: null, odoEnd: null },
+      { startedAt: new Date(2026, 10, 12, 8).getTime(), endedAt: new Date(2026, 10, 12, 9).getTime(), miles: 10, scope: 'work', purpose: '', source: 'gps', startedBy: 'nfc', odoStart: null, odoEnd: null },
+      { startedAt: at(2026, 11, 13), miles: 25, scope: 'work', purpose: 'Depot', source: 'manual', odoStart: 1000, odoEnd: 1025 },
+    ]);
+    const l = doc.trim().split('\r\n');
+    expect(l[1]).toBe('2026-11-11,07:00,11:00,40.0,unsorted,,auto,yes,42.3,,');
+    expect(l[2]).toBe('2026-11-12,08:00,09:00,10.0,work,,NFC,no,,,');
+    expect(l[3]).toBe('2026-11-13,,,25.0,work,Depot,manual,no,,1000,1025');
   });
   // Step 4 · TC-154
   it('builds the totals-by-category file, one row per category with its tax line', () => {

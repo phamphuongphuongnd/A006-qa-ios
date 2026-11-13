@@ -169,7 +169,8 @@ describe('export documents', () => {
 
 describe('export defaults (B-35)', () => {
   it('ticks the mileage log only when the period has trips, in list order', () => {
-    expect(defaultExportKinds(false)).toEqual(['entriesCsv', 'totalsCsv', 'pdf']);
-    expect(defaultExportKinds(true)).toEqual(['entriesCsv', 'totalsCsv', 'mileageCsv', 'pdf']);
+    expect(defaultExportKinds(false)).toEqual(['entriesCsv']);
+    expect(defaultExportKinds(true)).toEqual(['entriesCsv', 'mileageCsv']);
+    expect(defaultExportKinds(true, { pro: true, region: 'UK' })).toEqual(['entriesCsv', 'mileageCsv', 'pdf', 'mtdSummary']);
   });
 });

@@ -1,35 +1,79 @@
 import { router } from '@/services/router';
 import * as Sharing from 'expo-sharing';
-import { Check, ChevronDown, ChevronUp, Download, Info, X } from '@/ui/icons';
+import { Check, ChevronDown, ChevronUp, Download, FileText, Info, Lock, X } from '@/ui/icons';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { db } from '@/db/client';
-import { unsortedCount } from '@/db/entriesRepo';
-import { listTrips } from '@/db/tripsRepo';
+import { listEntries, unsortedCount } from '@/db/entriesRepo';
 import type { Region } from '@/domain/types';
+import { openPro } from '@/features/pro/openPro';
 import { withLockSuspended } from '@/features/settings/lockState';
 import { t } from '@/i18n';
+import { usePro } from '@/state/pro';
 import { useSettings } from '@/state/settings';
 import { fonts, radius, useTheme } from '@/theme';
-import { Button, Dialog, IconButton, Toggle, Txt } from '@/ui';
+import { Badge, Button, Chip, ChipRow, Dialog, Field, IconButton, Sheet, Toggle, Txt } from '@/ui';
 
 import { buildExport, ExportCancelled, NothingToExport } from './buildExport';
-import { defaultExportKinds, EXPORT_KINDS, type ExportKind } from './exportDocs';
+import { defaultExportKinds, FREE_KINDS, isProKind, kindsFor, MTD_KINDS, type ExportKind } from './exportDocs';
+import {
+  DEFAULT_FREEAGENT_VEHICLE,
+  FREEAGENT_ENGINE_TYPES,
+  fixEngineSize,
+  freeAgentEngineSizes,
+  type FreeAgentEngineType,
+  type FreeAgentVehicle,
+} from './mtdFiles';
 import { periodFor, type PeriodMode, type ReportPeriod } from './period';
+import { finishedTrips } from './queries';
 
-const KIND_LABEL: Record<ExportKind, () => string> = {
-  entriesCsv: () => t('export.entriesCsv'),
-  totalsCsv: () => t('export.totalsCsv'),
-  mileageCsv: () => t('export.mileageCsv'),
-  pdf: () => t('export.pdf'),
-  receiptsZip: () => t('export.receiptsZip'),
+const LABEL: Record<ExportKind, () => string> = {
+  entriesCsv: () => t('mtd.export.entriesCsv'),
+  mileageCsv: () => t('mtd.export.mileageCsv'),
+  pdf: () => t('mtd.export.pdf'),
+  totalsCsv: () => t('mtd.export.totalsCsv'),
+  mtdSummary: () => t('mtd.export.mtdSummary'),
+  mtdRecords: () => t('mtd.export.mtdRecords'),
+  mtdXlsx: () => t('mtd.export.mtdXlsx'),
+  freeagent: () => t('mtd.export.freeagent'),
+  receiptsZip: () => t('mtd.export.receiptsZip'),
 };
 
+function subtitle(k: ExportKind, region: Region, opts: { pro: boolean; photos: number }): string {
+  switch (k) {
+    case 'entriesCsv':
+      return opts.pro ? t('mtd.export.rawSub') : t('mtd.export.entriesCsvSub');
+    case 'mileageCsv':
+      return opts.pro ? t('mtd.export.rawSub') : t('mtd.export.mileageCsvSub');
+    case 'pdf':
+      return region === 'UK' ? t('mtd.export.pdfSub') : t('mtd.export.pdfSubUS');
+    case 'totalsCsv':
+      return region === 'UK' ? t('mtd.export.totalsSubUK') : t('mtd.export.totalsSubUS');
+    case 'mtdSummary':
+      return t('mtd.export.mtdSummarySub');
+    case 'mtdRecords':
+      return t('mtd.export.mtdRecordsSub');
+    case 'mtdXlsx':
+      return t('mtd.export.mtdXlsxSub');
+    case 'freeagent':
+      return t('mtd.export.freeagentSub');
+    case 'receiptsZip':
+      if (!opts.pro) return t('mtd.export.receiptsSub');
+      return opts.photos === 1 ? t('mtd.export.receiptsOne') : t('mtd.export.receiptsN', { count: opts.photos });
+  }
+}
+
+const savedVehicle = (v: { engineType: string; engineSize: string } | null): FreeAgentVehicle | null =>
+  v && FREEAGENT_ENGINE_TYPES.includes(v.engineType as FreeAgentEngineType)
+    ? fixEngineSize({ engineType: v.engineType as FreeAgentEngineType, engineSize: v.engineSize })
+    : null;
+
 /**
- * S-10 Export: period, file checklist, "Include personal entries", MTD note (UK), unsorted warning, progress, share.
- * Used inside a bottom sheet on Reports and as the /export screen from Settings.
+ * S-10 Export: period, files (raw CSVs free; PDF / tax-line totals / MTD / FreeAgent / photos Pro — locked rows open
+ * S-19), "Include personal entries", unsorted handling (MTD: "Leave them out" / "Sort now"), FreeAgent name once,
+ * progress, share. Inside a bottom sheet on Reports and as the /export screen from Settings.
  * `onClose(message)` closes the host; a message is shown as a snackbar once the sheet is gone.
  */
 export function ExportPanel({
@@ -44,36 +88,74 @@ export function ExportPanel({
   showHeader?: boolean;
 }) {
   const { colors } = useTheme();
-  const { settings } = useSettings();
+  const { settings, update } = useSettings();
+  const { pro } = usePro();
   const [period, setPeriod] = useState(initial);
   const [periodOpen, setPeriodOpen] = useState(false);
-  const defaultsFor = (p: ReportPeriod) => defaultExportKinds(listTrips(db, p).length > 0);
+  const offered = kindsFor(region);
+  const defaultsFor = (p: ReportPeriod) => defaultExportKinds(finishedTrips(db, p).length > 0, { pro, region });
   const [kinds, setKinds] = useState<ExportKind[]>(() => defaultsFor(initial));
   // Until the user ticks a box, the defaults follow the chosen period (mileage log on when it has trips).
   const kindsTouched = useRef(false);
   const [includePersonal, setIncludePersonal] = useState(false);
-  const [unsortedAsk, setUnsortedAsk] = useState<number | null>(null);
+  const [ask, setAsk] = useState<{ kind: 'mtd' | 'plain'; count: number } | null>(null);
+  /** "Leave them out" pressed for this period. */
+  const [leftOutFor, setLeftOutFor] = useState<string | null>(null);
+  const [freeagentAsk, setFreeagentAsk] = useState(false);
   const [busy, setBusy] = useState(false);
   const cancelled = useRef(false);
 
-  const options = periodOptions(initial, region);
+  const chosen = kinds.filter((k) => offered.includes(k) && (pro || !isProKind(k)));
+  const wantsMtd = chosen.some((k) => MTD_KINDS.includes(k));
+  const unsorted = unsortedCount(db, period);
+  const periodKey = `${period.start}-${period.end}`;
+  const showMtdCard = wantsMtd && unsorted > 0 && leftOutFor !== periodKey;
+  const photos = pro && offered.includes('receiptsZip') ? countPhotos(period) : 0;
+  const options = periodOptions(initial, region, settings.mtdPeriod);
+
   const toggle = (k: ExportKind) => {
+    if (!pro && isProKind(k)) {
+      onClose();
+      openPro('tax_files');
+      return;
+    }
     kindsTouched.current = true;
-    setKinds((ks) => (ks.includes(k) ? ks.filter((x) => x !== k) : EXPORT_KINDS.filter((x) => x === k || ks.includes(x))));
+    setKinds((ks) => (ks.includes(k) ? ks.filter((x) => x !== k) : offered.filter((x) => x === k || ks.includes(x))));
+  };
+
+  const sortNow = () => {
+    setAsk(null);
+    onClose();
+    router.push('/sort');
   };
 
   const start = () => {
-    const n = unsortedCount(db, period);
-    if (n > 0) setUnsortedAsk(n);
+    if (unsorted > 0 && wantsMtd && leftOutFor !== periodKey) setAsk({ kind: 'mtd', count: unsorted });
+    else if (unsorted > 0 && !wantsMtd) setAsk({ kind: 'plain', count: unsorted });
+    else afterUnsorted();
+  };
+
+  const afterUnsorted = () => {
+    setAsk(null);
+    if (chosen.includes('freeagent') && (!settings.freeagentClaimant.trim() || !savedVehicle(settings.freeagentVehicle))) setFreeagentAsk(true);
     else run();
   };
 
-  const run = async () => {
-    setUnsortedAsk(null);
+  const run = async (freeagent?: { claimant: string; vehicle: FreeAgentVehicle }) => {
+    setFreeagentAsk(false);
     cancelled.current = false;
     setBusy(true);
     try {
-      const out = await buildExport({ period, kinds, includePersonal, region, settings, isCancelled: () => cancelled.current });
+      const out = await buildExport({
+        period,
+        kinds: chosen,
+        includePersonal,
+        region,
+        settings,
+        pro,
+        freeagent: freeagent ?? { claimant: settings.freeagentClaimant, vehicle: savedVehicle(settings.freeagentVehicle) },
+        isCancelled: () => cancelled.current,
+      });
       if (cancelled.current) return;
       if (!(await Sharing.isAvailableAsync())) {
         onClose({ message: t('export.shareUnavailable'), error: true });
@@ -100,7 +182,7 @@ export function ExportPanel({
           {t('export.preparing')}
         </Txt>
         <Txt v="small" c="textSecondary" center>
-          {kinds.map((k) => KIND_LABEL[k]()).join(' · ')}
+          {chosen.map((k) => LABEL[k]()).join(' · ')}
         </Txt>
         <Button
           label={t('export.cancel')}
@@ -115,6 +197,46 @@ export function ExportPanel({
     );
   }
 
+  const row = (k: ExportKind, i: number) => {
+    const locked = !pro && isProKind(k);
+    const on = !locked && chosen.includes(k);
+    return (
+      <Pressable
+        key={k}
+        accessibilityRole={locked ? 'button' : 'checkbox'}
+        accessibilityState={locked ? undefined : { checked: on }}
+        accessibilityLabel={`${LABEL[k]()}, ${subtitle(k, region, { pro, photos })}${locked ? `, ${t('pro.badge')}` : ''}`}
+        onPress={() => toggle(k)}
+        style={({ pressed }) => [
+          styles.row,
+          i > 0 && { borderTopWidth: 1, borderTopColor: colors.line },
+          pressed && { backgroundColor: colors.surfaceAlt },
+        ]}>
+        {locked ? (
+          <View style={[styles.box, { backgroundColor: colors.surfaceAlt }]}>
+            <Lock size={16} color={colors.textSecondary} strokeWidth={2.2} />
+          </View>
+        ) : (
+          <View style={[styles.box, on ? { backgroundColor: colors.primary } : { borderWidth: 2, borderColor: colors.lineStrong }]}>
+            {on ? <Check size={16} color={colors.onPrimary} strokeWidth={3} /> : null}
+          </View>
+        )}
+        <View style={{ flex: 1, gap: 2 }}>
+          <Txt style={{ fontFamily: on ? fonts.bold : fonts.semibold }} c={locked ? 'textSecondary' : 'text'}>
+            {LABEL[k]()}
+          </Txt>
+          <Txt v="caption" c="textTertiary">
+            {subtitle(k, region, { pro, photos })}
+          </Txt>
+        </View>
+        {locked ? <Badge kind="pro" label={t('pro.badge')} /> : null}
+      </Pressable>
+    );
+  };
+
+  const freeKinds = offered.filter((k) => FREE_KINDS.includes(k));
+  const proKinds = offered.filter((k) => isProKind(k));
+
   return (
     <View style={{ gap: 12 }}>
       {showHeader ? (
@@ -127,17 +249,19 @@ export function ExportPanel({
       ) : null}
 
       <View style={{ gap: 6 }}>
-        <Txt v="caption" c="textSecondary" style={{ fontFamily: fonts.bold }}>
-          {t('export.period')}
-        </Txt>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${t('export.period')}, ${period.label}`}
+          accessibilityLabel={`${t('export.period')}, ${period.exportLabel}`}
           accessibilityState={{ expanded: periodOpen }}
           onPress={() => setPeriodOpen((o) => !o)}
-          style={[styles.select, { backgroundColor: colors.surface, borderColor: colors.lineStrong }]}>
-          <Txt style={{ flex: 1, fontFamily: fonts.bold }}>{period.label}</Txt>
-          {periodOpen ? <ChevronUp size={18} color={colors.textTertiary} /> : <ChevronDown size={18} color={colors.textTertiary} />}
+          style={[styles.select, { backgroundColor: colors.surfaceAlt }]}>
+          <View style={{ flex: 1 }}>
+            <Txt v="caption" c="textSecondary" style={{ fontFamily: fonts.bold }}>
+              {t('export.period')}
+            </Txt>
+            <Txt>{period.exportLabel}</Txt>
+          </View>
+          {periodOpen ? <ChevronUp size={20} color={colors.textSecondary} /> : <ChevronDown size={20} color={colors.textSecondary} />}
         </Pressable>
         {periodOpen ? (
           <View style={[styles.list, { borderColor: colors.line }]}>
@@ -176,37 +300,33 @@ export function ExportPanel({
         ) : null}
       </View>
 
-      <Txt v="caption" c="textSecondary" style={{ fontFamily: fonts.bold }}>
-        {t('export.files')}
-      </Txt>
-      <View style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.line }]}>
-        {EXPORT_KINDS.map((k, i) => {
-          const on = kinds.includes(k);
-          return (
-            <Pressable
-              key={k}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: on }}
-              onPress={() => toggle(k)}
-              style={({ pressed }) => [
-                styles.row,
-                i > 0 && { borderTopWidth: 1, borderTopColor: colors.line },
-                pressed && { backgroundColor: colors.surfaceAlt },
-              ]}>
-              <View
-                style={[
-                  styles.box,
-                  on ? { backgroundColor: colors.primary } : { borderWidth: 2, borderColor: colors.lineStrong },
-                ]}>
-                {on ? <Check size={16} color={colors.onPrimary} strokeWidth={3} /> : null}
-              </View>
-              <Txt style={{ flex: 1, fontFamily: on ? fonts.bold : fonts.regular }}>{KIND_LABEL[k]()}</Txt>
-            </Pressable>
-          );
-        })}
-      </View>
+      {showMtdCard ? (
+        <View style={[styles.warn, { backgroundColor: colors.warnSoft }]} accessibilityRole="alert">
+          <Txt v="h3">{mtdTitle(unsorted, period)}</Txt>
+          <Txt c="textSecondary">{t('mtd.export.unsortedMtdBody')}</Txt>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+            <Button label={t('mtd.export.sortNow')} size="sm" onPress={sortNow} />
+            <Button label={t('mtd.export.leaveOut')} size="sm" variant="text" onPress={() => setLeftOutFor(periodKey)} />
+          </View>
+        </View>
+      ) : null}
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 48, gap: 12 }}>
+      {pro ? (
+        <View style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.line }]}>{offered.map(row)}</View>
+      ) : (
+        <>
+          <Txt v="overline" c="textSecondary">
+            {t('mtd.export.free')}
+          </Txt>
+          <View style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.line }]}>{freeKinds.map(row)}</View>
+          <Txt v="overline" c="textSecondary">
+            {t('mtd.export.pro')}
+          </Txt>
+          <View style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.line }]}>{proKinds.map(row)}</View>
+        </>
+      )}
+
+      <View style={[styles.toggle, { backgroundColor: colors.surface, borderColor: colors.line }]}>
         <Txt style={{ flex: 1 }}>{t('export.includePersonal')}</Txt>
         <Toggle value={includePersonal} onChange={setIncludePersonal} label={t('export.includePersonal')} />
       </View>
@@ -215,50 +335,153 @@ export function ExportPanel({
         <View style={[styles.note, { backgroundColor: colors.surfaceAlt }]}>
           <Info size={20} color={colors.textSecondary} />
           <Txt v="caption" c="textSecondary" style={{ flex: 1, fontFamily: fonts.medium }}>
-            {t('export.mtdNote')}
+            {t('mtd.export.mtdNote')}
           </Txt>
         </View>
       ) : null}
 
-      <Button label={t('export.export')} icon={Download} full disabled={kinds.length === 0} onPress={start} />
-      {kinds.length === 0 ? (
+      <Button
+        label={chosen.length === 1 ? t('mtd.export.exportOne') : t('mtd.export.exportN', { count: chosen.length })}
+        icon={Download}
+        full
+        disabled={chosen.length === 0}
+        onPress={start}
+      />
+      {chosen.length === 0 ? (
         <Txt v="small" c="textSecondary" center>
           {t('export.pickOne')}
         </Txt>
       ) : null}
 
       <Dialog
-        visible={unsortedAsk !== null}
-        title={unsortedAsk === 1 ? t('export.unsortedTitleOne') : t('export.unsortedTitle', { count: unsortedAsk ?? 0 })}
-        body={t('export.unsortedBody')}
-        onClose={() => setUnsortedAsk(null)}
-        actions={[
-          { label: t('export.exportAnyway'), onPress: run },
-          {
-            label: t('export.sortFirst'),
-            variant: 'sun',
-            onPress: () => {
-              setUnsortedAsk(null);
-              onClose();
-              router.push('/sort');
-            },
-          },
-        ]}
+        visible={ask !== null}
+        title={
+          ask?.kind === 'mtd'
+            ? mtdTitle(ask.count, period)
+            : ask?.count === 1
+              ? t('export.unsortedTitleOne')
+              : t('export.unsortedTitle', { count: ask?.count ?? 0 })
+        }
+        body={ask?.kind === 'mtd' ? t('mtd.export.unsortedMtdBody') : t('export.unsortedBody')}
+        onClose={() => setAsk(null)}
+        actions={
+          ask?.kind === 'mtd'
+            ? [
+                {
+                  label: t('mtd.export.leaveOut'),
+                  onPress: () => {
+                    setLeftOutFor(periodKey);
+                    afterUnsorted();
+                  },
+                },
+                { label: t('mtd.export.sortNow'), variant: 'sun', onPress: sortNow },
+              ]
+            : [
+                { label: t('export.exportAnyway'), onPress: afterUnsorted },
+                { label: t('export.sortFirst'), variant: 'sun', onPress: sortNow },
+              ]
+        }
       />
+      {freeagentAsk ? (
+        <FreeAgentSheet
+          initialName={settings.freeagentClaimant}
+          initialVehicle={savedVehicle(settings.freeagentVehicle) ?? DEFAULT_FREEAGENT_VEHICLE}
+          onClose={() => setFreeagentAsk(false)}
+          onDone={(claimant, vehicle) => {
+            update({ freeagentClaimant: claimant, freeagentVehicle: vehicle });
+            run({ claimant, vehicle });
+          }}
+        />
+      ) : null}
     </View>
   );
 }
 
-/** The incoming period, the whole tax year and its quarters, plus the previous tax year. */
-function periodOptions(initial: ReportPeriod, region: Region): ReportPeriod[] {
+const mtdTitle = (count: number, p: ReportPeriod) => {
+  const name = p.mode === 'year' ? p.year.label : p.mode === 'custom' ? p.label : p.mode.toUpperCase();
+  return count === 1 ? t('mtd.export.unsortedMtdTitleOne', { period: name }) : t('mtd.export.unsortedMtdTitle', { count, period: name });
+};
+
+function countPhotos(p: ReportPeriod): number {
+  return listEntries(db, { period: p, withReceipt: true }).reduce((n, e) => n + e.receiptCount, 0);
+}
+
+/** "Your name in FreeAgent" (asked once, saved) + the van's engine for FreeAgent's mileage file. */
+function FreeAgentSheet({
+  initialName,
+  initialVehicle,
+  onClose,
+  onDone,
+}: {
+  initialName: string;
+  initialVehicle: FreeAgentVehicle;
+  onClose: () => void;
+  onDone: (claimant: string, vehicle: FreeAgentVehicle) => void;
+}) {
+  const { colors } = useTheme();
+  const [name, setName] = useState(initialName);
+  const [vehicle, setVehicle] = useState(initialVehicle);
+  return (
+    <Sheet
+      visible
+      onClose={onClose}
+      footer={<Button label={t('mtd.export.freeagentContinue')} full disabled={!name.trim()} onPress={() => onDone(name.trim(), vehicle)} />}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <View style={[styles.faIcon, { backgroundColor: colors.surfaceAlt }]}>
+          <FileText size={22} color={colors.text} />
+        </View>
+        <Txt v="h2" accessibilityRole="header">
+          {t('mtd.export.freeagentTitle')}
+        </Txt>
+      </View>
+      <Field
+        label={t('mtd.export.freeagentName')}
+        value={name}
+        onChangeText={setName}
+        autoCapitalize="words"
+        autoCorrect={false}
+        autoComplete="name"
+        textContentType="name"
+        returnKeyType="done"
+      />
+      <Txt v="small" c="textSecondary">
+        {t('mtd.export.freeagentNameHint')}
+      </Txt>
+      <Txt v="caption" c="textSecondary" style={{ fontFamily: fonts.bold }}>
+        {t('mtd.export.freeagentEngine')}
+      </Txt>
+      <ChipRow>
+        {FREEAGENT_ENGINE_TYPES.map((e) => (
+          <Chip key={e} size="s" label={e} state={vehicle.engineType === e ? 'on' : 'default'} onPress={() => setVehicle(fixEngineSize({ ...vehicle, engineType: e }))} />
+        ))}
+      </ChipRow>
+      {freeAgentEngineSizes(vehicle.engineType).length > 1 ? (
+        <>
+          <Txt v="caption" c="textSecondary" style={{ fontFamily: fonts.bold }}>
+            {t('mtd.export.freeagentEngineSize')}
+          </Txt>
+          <ChipRow>
+            {freeAgentEngineSizes(vehicle.engineType).map((s) => (
+              <Chip key={s} size="s" label={s} state={vehicle.engineSize === s ? 'on' : 'default'} onPress={() => setVehicle({ ...vehicle, engineSize: s })} />
+            ))}
+          </ChipRow>
+        </>
+      ) : null}
+      <Txt v="small" c="textSecondary">
+        {t('mtd.export.freeagentSaved')}
+      </Txt>
+    </Sheet>
+  );
+}
+
+/** The incoming period, the whole tax year and its quarters (MTD periods as chosen), plus the previous tax year. */
+function periodOptions(initial: ReportPeriod, region: Region, mtd: 'standard' | 'calendar'): ReportPeriod[] {
   const y = initial.year.startYear;
+  const opts = { mtd: initial.mtd ?? mtd, ytd: initial.ytd };
   const modes: PeriodMode[] = ['year', 'q1', 'q2', 'q3', 'q4'];
-  const list = [
-    ...(initial.mode === 'custom' ? [initial] : []),
-    ...modes.map((m) => periodFor(region, y, m)),
-    periodFor(region, y - 1, 'year'),
-  ];
-  return list;
+  const list = modes.map((m) => periodFor(region, y, m, undefined, opts));
+  const same = (a: ReportPeriod) => a.start === initial.start && a.end === initial.end;
+  return [...(list.some(same) ? [] : [initial]), ...list, periodFor(region, y - 1, 'year')];
 }
 
 /** Yellow progress ring with a page in the middle (mockup S-10 "Preparing your files…"). */
@@ -297,11 +520,14 @@ function Spinner() {
 }
 
 const styles = StyleSheet.create({
-  select: { minHeight: 48, borderRadius: radius.input, borderWidth: 1.5, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  select: { minHeight: 60, borderRadius: radius.input, paddingHorizontal: 16, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 10 },
   list: { borderWidth: 1, borderRadius: radius.input, overflow: 'hidden' },
   opt: { minHeight: 48, paddingHorizontal: 14, paddingVertical: 6, flexDirection: 'row', alignItems: 'center', gap: 10 },
   group: { borderRadius: radius.card, borderWidth: 1, overflow: 'hidden' },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 52, paddingHorizontal: 16 },
-  box: { width: 24, height: 24, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 60, paddingHorizontal: 16, paddingVertical: 8 },
+  box: { width: 26, height: 26, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },
+  toggle: { flexDirection: 'row', alignItems: 'center', minHeight: 56, gap: 12, borderRadius: radius.card, borderWidth: 1, paddingHorizontal: 16 },
   note: { borderRadius: 16, padding: 12, flexDirection: 'row', gap: 10 },
+  warn: { borderRadius: 16, padding: 16, gap: 6 },
+  faIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
 });

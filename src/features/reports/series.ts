@@ -1,5 +1,6 @@
 import { formatRate, mileageEstimateByDate, periodsIn, type RateTier } from '@/domain/mileage';
-import type { EntryType, Minor, Period, Scope } from '@/domain/types';
+import { taxYearOf } from '@/domain/taxYear';
+import type { EntryType, Minor, Period, Region, Scope } from '@/domain/types';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -49,6 +50,32 @@ export function monthlySeries(
 export function periodMileageEstimate(yearTrips: { at: number; miles: number }[], start: number, end: number, rates: RateTier[]): Minor {
   const upTo = (t: number) => mileageEstimateByDate(yearTrips.filter((x) => x.at < t), rates);
   return upTo(end) - upTo(start);
+}
+
+/**
+ * Mileage estimate for any range, which may cross a tax-year boundary (MTD calendar periods start on 1 April, five
+ * days before the UK tax year). Each tax-year piece is priced with that year's tier count. `trips` = work trips
+ * covering every tax year the range touches.
+ */
+export function rangeMileageEstimate(trips: { at: number; miles: number }[], start: number, end: number, rates: RateTier[], region: Region): Minor {
+  let total = 0;
+  for (let from = start; from < end; ) {
+    const y = taxYearOf(from, region);
+    const to = Math.min(end, y.end);
+    total += periodMileageEstimate(
+      trips.filter((t) => t.at >= y.start && t.at < y.end),
+      from,
+      to,
+      rates,
+    );
+    from = to;
+  }
+  return total;
+}
+
+/** The [start, end) to load trips for so `rangeMileageEstimate` can count tiers from each tax year's start. */
+export function mileageWindow(start: number, end: number, region: Region): Period {
+  return { start: Math.min(start, taxYearOf(start, region).start), end };
 }
 
 /** Rates in force during [start, end): "45p / 25p" (UK) · "$0.725 → $0.76" (US, rate changed mid-period). */

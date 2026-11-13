@@ -52,6 +52,8 @@ export interface AppSettings {
   notify: { tripAuto: boolean; missedTrip: boolean; proRenewal: boolean; trialEnding: boolean };
   /** FreeAgent mileage CSV "Claimant" column. */
   freeagentClaimant: string;
+  /** FreeAgent mileage CSV engine_type / engine_size (required for "Car"); asked with the claimant name. S5. */
+  freeagentVehicle: { engineType: string; engineSize: string } | null;
   /** X3: MTD quarters by standard (6 Apr) or calendar (1 Apr) periods. */
   mtdPeriod: 'standard' | 'calendar';
   /** S-07g: an NFC tag was written on this phone. */
@@ -97,6 +99,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   dailyNudge: { on: false, hour: 19, minute: 0, days: [1, 2, 3, 4, 5, 6] },
   notify: { tripAuto: true, missedTrip: true, proRenewal: true, trialEnding: true },
   freeagentClaimant: '',
+  freeagentVehicle: null,
   mtdPeriod: 'standard',
   nfcTagWritten: false,
   alertSnoozedUntil: {},
