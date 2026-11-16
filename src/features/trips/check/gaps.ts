@@ -11,6 +11,13 @@ import { haversine, metersToMiles, milesToMeters } from '@/domain/mileage';
 export const GAP_MIN_MILES = 1;
 /** Only trips from the last 30 days are compared. */
 export const GAP_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+/**
+ * A gap that would need more than this straight-line speed between the two trips was not driven (GPS jump, mock
+ * location, a flight): not offered.
+ */
+export const GAP_MAX_SPEED_MPH = 100;
+/** Nor is a straight line this long (another vehicle, a flight, mixed-up locations). */
+export const GAP_MAX_MILES = 500;
 /** Roads are longer than a straight line: estimate = straight line × 1.25. */
 export const GAP_ROAD_FACTOR = 1.25;
 
@@ -66,7 +73,10 @@ export function findGaps(trips: TripEnds[], answered: ReadonlySet<string>, now: 
     const key = gapKey(prev.id, next.id);
     if (answered.has(key)) continue;
     const straightM = haversine(prev.last, next.first);
-    if (metersToMiles(straightM) < GAP_MIN_MILES) continue;
+    const miles = metersToMiles(straightM);
+    if (miles < GAP_MIN_MILES || miles > GAP_MAX_MILES) continue;
+    const hours = Math.max(next.startedAt - prev.endedAt, 60_000) / 3_600_000;
+    if (miles / hours > GAP_MAX_SPEED_MPH) continue;
     out.push({
       key,
       prevId: prev.id,

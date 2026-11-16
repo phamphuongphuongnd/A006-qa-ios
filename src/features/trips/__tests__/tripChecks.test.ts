@@ -252,3 +252,23 @@ describe('Missing trip distance (Pro + network)', () => {
     expect(gapsToRoute(gaps, noRoad, true, true)).toEqual([]);
   });
 });
+
+describe('Missing trip sanity', () => {
+  it('skips gaps nobody could have driven in the time between the trips (> 100 mph straight line)', () => {
+    const a = ends('a', NOW - DAY, P(53.8), P(53.81));
+    // ~5,700 mi away 28 min later (mock location / GPS jump).
+    const far = { ...ends('b', a.endedAt + 28 * MIN, { lat: 21.03, lng: 105.85 }, { lat: 21.04, lng: 105.85 }) };
+    expect(findGaps([a, far], new Set(), NOW)).toHaveLength(0);
+    // 7 mi in 30 min is fine.
+    const near = ends('c', a.endedAt + 30 * MIN, P(53.91), P(53.95));
+    expect(findGaps([a, near], new Set(), NOW)).toHaveLength(1);
+  });
+});
+
+describe('Missing trip sanity (distance)', () => {
+  it('skips straight lines over 500 mi even days apart', () => {
+    const a = ends('a', NOW - 10 * DAY, P(53.8), P(53.81));
+    const far = ends('b', NOW - 3 * DAY, { lat: 21.03, lng: 105.85 }, { lat: 21.04, lng: 105.85 });
+    expect(findGaps([a, far], new Set(), NOW)).toHaveLength(0);
+  });
+});

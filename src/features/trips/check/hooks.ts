@@ -10,7 +10,9 @@ import { useLive } from '@/state/useLive';
 
 import { drivingRoute, hasRouteService } from '../route/ors';
 import { SAME_PLACE_M } from '../route/places';
-import { formatClock } from '../format';
+import { weekdayTime } from '@/features/entries/format';
+
+import { formatClock, sameDay } from '../format';
 import { fetchGapRoutes, gapDistance, gapsToRoute, type TripGap } from './gaps';
 import { odometerDue } from './odometer';
 import { acceptedReadingId, firstTripAt, gapRoutes, missingTrips, readingChecks, saveGapRoute, type ReadingCheck } from './repo';
@@ -60,7 +62,11 @@ export function useGapLabels(gaps: TripGap[]): Map<string, { from: string; to: s
   'use no memo';
   const rows = useLive(() => (gaps.length ? db.select().from(places).all() : []), [gaps.length > 0], ['places']);
   const out = new Map<string, { from: string; to: string }>();
-  for (const g of gaps) out.set(g.key, { from: placeNear(rows, g.fromAt) ?? formatClock(g.from), to: placeNear(rows, g.toAt) ?? formatClock(g.to) });
+  for (const g of gaps) {
+    // Across days the clock alone reads backwards ("06:52 → 05:52"): add the weekday.
+    const when = sameDay(g.from, g.to) ? formatClock : weekdayTime;
+    out.set(g.key, { from: placeNear(rows, g.fromAt) ?? when(g.from), to: placeNear(rows, g.toAt) ?? when(g.to) });
+  }
   return out;
 }
 

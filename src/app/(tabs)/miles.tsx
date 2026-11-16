@@ -17,7 +17,8 @@ import { autoTripState } from '@/features/trips/autoState';
 import { useGapDistances, useGapLabels, useMissingTrips, useReadingChecks } from '@/features/trips/check/hooks';
 import { interleaveMonth } from '@/features/trips/check/listRows';
 import { GapRow, OdometerRow } from '@/features/trips/check/rows';
-import { formatClock, formatDay, formatDistance, groupByMonth, type DistanceUnit } from '@/features/trips/format';
+import { formatClock, formatDay, formatDistance, groupByMonth, sameDay, type DistanceUnit } from '@/features/trips/format';
+import { weekdayTime } from '@/features/entries/format';
 import { sweepThumbs } from '@/features/trips/map/thumbs';
 import { TripThumb } from '@/features/trips/map/TripThumb';
 import { TripSwipeRow } from '@/features/trips/TripSwipeRow';
@@ -363,14 +364,19 @@ function TripRowView({ trip, unit, divider }: { trip: TripRow; unit: DistanceUni
         : trip.startedBy === 'nfc'
           ? t('autoTrip.nfc')
           : t('autoTrip.gps');
+  // An estimated gap trip may end on a later day: "06:52–Tue 05:52".
   const times =
-    (gps || estimated) && trip.endedAt && trip.endedAt !== trip.startedAt ? `${formatClock(trip.startedAt)}–${formatClock(trip.endedAt)}` : '';
+    (gps || estimated) && trip.endedAt && trip.endedAt !== trip.startedAt
+      ? `${formatClock(trip.startedAt)}–${sameDay(trip.startedAt, trip.endedAt) ? formatClock(trip.endedAt) : weekdayTime(trip.endedAt)}`
+      : '';
   const sub = [times, ab ?? how, ab && trip.roundTrip ? t('autoTrip.route.roundTag') : '', trip.purpose].filter(Boolean).join(' · ');
   const scopeLabel = trip.scope === 'unsorted' ? t('autoTrip.unsorted') : personal ? t('common.personal') : t('common.work');
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${title}. ${sub}. ${scopeLabel}${trip.edited ? `. ${t('miles.edited')}` : ''}${estimated ? `. ${t('tripCheck.estimated')}` : ''}. ${t('autoTrip.swipeHint')}`}
+      accessibilityLabel={[title, sub, scopeLabel, trip.edited ? t('miles.edited') : '', estimated ? t('tripCheck.estimated') : '', t('autoTrip.swipeHint')]
+        .filter(Boolean)
+        .join('. ')}
       onPress={() => router.push(`/trip/${trip.id}`)}
       style={({ pressed }) => [styles.li, divider && { borderTopWidth: 1, borderTopColor: colors.line }, pressed && { opacity: 0.7 }]}>
       {gps ? (
