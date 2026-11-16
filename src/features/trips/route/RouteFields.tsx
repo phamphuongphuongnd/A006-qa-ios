@@ -48,7 +48,7 @@ export function RouteFields({
   const [focus, setFocus] = useState<End | null>(null);
   const [found, setFound] = useState<{ q: string; hits: PlaceHit[] }>({ q: '', hits: [] });
   const [locating, setLocating] = useState(false);
-  const [priced, setPriced] = useState<{ key: string; line: [number, number][] | null; noRoute: boolean } | null>(null);
+  const [priced, setPriced] = useState<{ key: string; meters: number | null; line: [number, number][] | null; noRoute: boolean } | null>(null);
   const [locationError, setLocationError] = useState(false);
   const [frequent] = useState(() => listPlaces(db));
 
@@ -93,12 +93,12 @@ export function RouteFields({
     drivingRoute(value.from, value.to)
       .then((res) => {
         if (!alive) return;
-        setPriced({ key, line: res.line, noRoute: false });
+        setPriced({ key, meters: res.meters, line: res.line, noRoute: false });
         setRoute((r) => (routeKey(r) === key ? { ...r, meters: res.meters } : r));
       })
       .catch((e) => {
         if (!alive) return;
-        if (e instanceof OrsError && e.kind === 'no_route') setPriced({ key, line: null, noRoute: true });
+        if (e instanceof OrsError && e.kind === 'no_route') setPriced({ key, meters: null, line: null, noRoute: true });
         else onOffline();
       });
     return () => {
@@ -108,7 +108,11 @@ export function RouteFields({
   }, [routing, key]);
 
   const pick = (end: End, p: RoutePlace) => {
-    setRoute((r) => ({ ...r, [end]: { label: p.label, lat: p.lat, lng: p.lng }, meters: null }));
+    setRoute((r) => {
+      const next = { ...r, [end]: { label: p.label, lat: p.lat, lng: p.lng }, meters: null };
+      // The same pair as the last answer (picked again) keeps its distance — no second call.
+      return priced && routeKey(next) === priced.key ? { ...next, meters: priced.meters } : next;
+    });
     setText((x) => ({ ...x, [end]: '' }));
     setFocus(null);
   };
