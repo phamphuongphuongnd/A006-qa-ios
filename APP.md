@@ -3,7 +3,7 @@
 > Brief tĩnh của app. **≤ 60 dòng, không ghi lịch sử** (lịch sử ở git + `memory/sessions/`).
 > Tiến độ: `CHECKLIST.md` · Tính năng: `product.md` · Test: `TESTCASES.md` · Lỗi: `BUGS.md`.
 
-**Đang ở:** bản 2 (`PLAN-v2.md`): P0–P4 xong — 5 nhánh S1–S5 ghép `dev` `9b58632` (375 test) → **P5 Ghép & kiểm** (TESTCASES, Pro trên máy, chạy xe thật, iOS EAS, TalkBack) + việc mới A→B/Mapbox; Bước 3 còn treo: widget iOS (EAS) (2026-11-16)
+**Đang ở:** bản 2 (`PLAN-v2.md`): P0–P4 xong, đã ghép S1b/S1c → **P5 Ghép & kiểm** `dev` `3e6f45e` (421 test): còn 50 case ⏳, lỗi B-41/42/43 chưa sửa, widget iOS chờ Appetize (build `ios-simulator-preview` afa5a63e), TalkBack + chạy xe cần Phương → rồi P6 (2026-11-16)
 
 ## Brief
 - **Mã app / thư mục:** `A006-sundaysort` → `apps/A006-sundaysort/`
