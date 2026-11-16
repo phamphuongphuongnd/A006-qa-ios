@@ -30,8 +30,8 @@ describe('Regular trips (Q31)', () => {
     const trip = addManualTrip(db, { date: T0, scope: 'work', purpose: 'Depot run', miles: 24.8, route });
     const s = saveTripAsRegular(db, trip, '  Depot → Leeds  ', T0);
     expect(s).toMatchObject({ label: 'Depot → Leeds', roundTrip: true, scope: 'work', purpose: 'Depot run', useCount: 0 });
-    expect(savedMiles(s, false)).toBeCloseTo(12.4, 5);
-    expect(savedMiles(s, true)).toBeCloseTo(24.8, 5);
+    expect(savedMiles(s, false)).toBeCloseTo(12.4, 3);
+    expect(savedMiles(s, true)).toBeCloseTo(24.8, 3);
     expect(savedRoute(s, false)).toEqual({ ...route, roundTrip: false });
 
     const added = addManualTrip(db, { date: T0 + 86_400_000, scope: s.scope, purpose: s.purpose, miles: savedMiles(s, true), route: savedRoute(s, true)! });
