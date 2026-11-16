@@ -63,6 +63,16 @@ A period inside a Trip where the vehicle is not moving (a drop, a red light, que
 A part of a Trip re-scoped as Personal after the fact (a detour to or from a Stop), or skipped live with Personal stop.
 _Avoid_: personal trip, exclusion
 
+**Missing trip**:
+A gap of 1 mi or more between where one GPS Trip ended and where the next one started; the app offers to add it as an
+estimated Trip.
+_Avoid_: ghost trip (that means a Trip the driver never made), gap fill
+
+**Odometer check**:
+A periodic odometer reading compared with the miles logged since the previous reading, to catch miles the app missed or
+added.
+_Avoid_: odometer trip (an odometer trip is a manual Trip entered from start/end readings)
+
 **Vehicle cost method**:
 The driver's choice of claiming vehicle costs by the mileage rate or by actual costs; it decides which vehicle Entries
 count towards totals.

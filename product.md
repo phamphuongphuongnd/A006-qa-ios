@@ -173,6 +173,7 @@ hiện: "Estimate only — not tax advice."
 | Chuyến tự động (cảm biến, Bluetooth van, cắm sạc), gộp chuyến ca | — | Có |
 | Tách Personal segment sau chuyến, sửa giờ chuyến, vuốt Work/Personal | Có | Có |
 | Báo khi nghi sót (quên Stop, GPS im, ngày làm không có chuyến) | Có | Có |
+| **[Mới]** Phát hiện chuyến bị sót giữa 2 chuyến (Q26) + đối chiếu đồng hồ dặm (Q27) | Có — ước tính chim bay × 1,25 | Có — có mạng thì quãng đường thật (openrouteservice) |
 | Nhắc Chủ nhật, nhắc ghi hằng ngày | Có | Có |
 | Sao lưu tay + **tự động mỗi đêm** | Có | Có |
 | Báo cáo xem trong app (năm, quý, theo ô thuế, dặm) | Có | Có |
@@ -265,6 +266,11 @@ Bố cục trên xuống:
    - **[Mới]** "Automatic trips were paused by your phone" · "Samsung battery saving stopped Sunday Sort. Fix it in 1 minute."
      · "Fix now" (→ S-07f) / "Later".
    - **[Mới]** "No trips on Tue or Wed" · "You logged entries but no miles. Forgot to start a trip?" · "Add miles" / "Not driving".
+   - **[Mới] (Q26)** "2 possible missing trips this week" · "≈ 14 mi between your trips wasn't recorded." · "Review" (→ Miles,
+     cuộn tới dòng "Missing trip?") / "Later".
+   - **[Mới] (Q27)** "114 mi not logged" · "Odometer +520 mi since 1 Oct · App 406 mi." · "Add missing miles" (→ S-08) /
+     "That's fine". Thừa: "The app logged more than your odometer" · "Check for trips you didn't drive." · "Review trips".
+     Đến hạn nhập: "Time for an odometer check" · "Takes 10 seconds." · "Enter reading" (→ S-08b) / "Later".
    - **[Mới]** "Backups are failing" · "We couldn't write to your backup folder 3 nights in a row." · "Check backup".
    - **[Mới]** "Pro renews on 6 Apr for £24.99" · "Cancel anytime before then in Google Play." · "Manage subscription" / "OK".
    - Banner sao lưu cũ: chỉ khi chưa bật sao lưu tự động và > 30 ngày chưa sao lưu: "Last backup 34 days ago" · "Turn on
@@ -384,6 +390,18 @@ nút đáy "Accept all suggestions (12)" (Pro; hỏi "Apply suggested categories
 "Add trip" · công tắc "Odometer" | "Distance" · "Start reading"/"End reading" → "= 128 mi" hoặc "Miles" · "Date" · "Work /
 Personal" · "Purpose" ("e.g. Amazon route DLS4") · "Save trip". Lỗi: End < Start → "End reading must be higher than start";
 > 1.000 dặm → "That's a long trip — 1,240 mi. Save anyway?".
+**[Mới]** Mở từ "Missing trip?" (Q26): điền sẵn ngày, giờ (từ lúc chuyến trước dừng → lúc chuyến sau bắt đầu), "Distance"
+≈ số dặm ước tính, scope Unsorted, dòng phụ "Estimated from the gap between two trips" → lưu `source = gap`. Mở từ đối chiếu
+đồng hồ (Q27): "Distance" = số dặm thiếu, ngày = ngày nhập đồng hồ, scope Unsorted, dòng phụ "Missing from odometer check".
+
+**S-08b Odometer check** **[Mới]** (Q27, miễn phí; sheet, dùng lại ô số + nút ảnh của S-03/S-08 — không cần mockup mới)
+- "Odometer reading" (số, bàn phím số) · "Add photo" (tuỳ chọn, **không** tính vào 20 ảnh/tháng) · "Save".
+- Lần đầu: "Starting point saved. We'll compare next time." Từ lần 2: so mức tăng đồng hồ với tổng dặm app ghi (Work +
+  Personal + Unsorted, mọi nguồn) giữa 2 lần nhập; lệch ≥ **max(10 mi, 5%)** → kết quả trên sheet + thẻ Home (F-03);
+  khớp → "Matches your trips ✓ (406 mi)".
+- Lỗi: nhỏ hơn lần trước → "That's lower than your last reading (48,210)." · "Save anyway" (đổi xe / thay đồng hồ → mốc mới).
+- Nhắc: Settings → Trips → "Odometer check" Off / Weekly (thứ Hai) / **Monthly (ngày 1, mặc định)**; UK nhắc thêm 6/4.
+  Thông báo im lặng "Odometer check" · "Enter your reading to catch missed miles." + thẻ Home.
 
 ### F-12 · Chuyến GPS: tay, NFC và tự động — S-07a…S-07g **[Đổi lớn]**
 
@@ -411,6 +429,11 @@ Personal" · "Purpose" ("e.g. Amazon route DLS4") · "Save trip". Lỗi: End < S
 - Hệ thống chặn dò tự động (Samsung tối ưu pin, thu quyền) → thông báo + thẻ Home "Automatic trips were paused by your phone".
 - ≥ 2 ngày có ghi khoản tiền mà không có chuyến (hoặc ngày làm theo giờ làm) → **chỉ thẻ trên Home**, không thông báo đẩy.
 - App tự dừng ghi (pin, quyền) → lần mở sau: thẻ "Your trip stopped recording at 14:05" (như bản 1).
+- **[Mới] Missing trip (Q26):** 2 chuyến liền nhau có toạ độ (gps/auto/nfc; chuyến nhập tay bỏ qua), trong 30 ngày gần nhất,
+  điểm cuối chuyến trước → điểm đầu chuyến sau **≥ 1 mi** chim bay → khoảng trống. Ước tính **chim bay × 1,25**; Pro + có
+  mạng → quãng đường thật qua openrouteservice (hàm A→B). Hiện dòng ở Miles (F-13) + thẻ Home (F-03); không thông báo đẩy.
+  "Not a trip" → nhớ cặp chuyến đó, không hiện lại.
+- **[Mới] Odometer check (Q27):** nhập số đồng hồ định kỳ (S-08b) → lệch với tổng dặm app ghi ≥ max(10 mi, 5%) → thẻ Home.
 
 **S-07a Location permission explainer** (2 bước): "Track business miles with GPS" · "Sunday Sort records your route only while
 a trip is running." · "Location stays on your phone." · "Allow location" / "Not now"; bước 2 Android "To keep recording with the
@@ -469,6 +492,10 @@ Bỏ qua bước nào → trạng thái cam "Automatic trips may miss drives" + 
 - Danh sách theo tháng: "Tue 10 Nov · 07:02–11:48 · 42.3 mi · Auto · Work" + nhãn "Unsorted" vàng / "Edited" / "GPS" /
   "Manual" / "NFC". **Vuốt phải = Work, vuốt trái = Personal** **[Mới]**, nền xanh dương / xám tím, snackbar "Marked as
   personal" + "Undo". Chạm → S-07c.
+- **[Mới] (Q26)** Dòng nét đứt giữa 2 chuyến: "Missing trip? ≈ 6.2 mi · Depot → Tesco Extra" · "Add" (→ S-08 điền sẵn) /
+  "Not a trip". Chuyến đã thêm từ khoảng trống mang nhãn "Estimated".
+- **[Mới] (Q27)** Dòng mốc (không vuốt): "Odometer 48,210 · 1 Nov" + "✓ matches" hoặc "114 mi not logged". "⋯" thêm
+  "Odometer check" → S-08b.
 - Rỗng: "No trips yet" · "Start a trip, turn on automatic trips, or add miles from your odometer."
 
 ### F-14 · Báo cáo — S-09 **[Đổi]**
@@ -491,7 +518,7 @@ Bỏ qua bước nào → trạng thái cam "Automatic trips may miss drives" + 
 - "Period" (theo Reports, đổi được; UK có Standard/Calendar).
 - **Miễn phí:** "CSV – all entries" (date, type, amount, currency, category, tax_line, mtd_category, work_personal, note,
   receipts, source, auto_sorted, recurring, entry_id) · "CSV – mileage log" (date, start, end, miles, work_personal, purpose,
-  source GPS/auto/manual/NFC, edited, original_miles).
+  source GPS/auto/manual/NFC/gap, edited, estimated, original_miles).
 - **Pro** (thẻ có nhãn "PRO"; bản free chạm → S-19):
   - "PDF report" (tổng + ô thuế + MTD category + theo tháng + nhật ký dặm + danh sách khoản; ghi cách tính xe; footer
     "Generated by Sunday Sort · Not tax advice").
@@ -576,7 +603,8 @@ Như bản 1: "App lock" · "Lock after" (Immediately / After 1 minute / After 5
   **[Mới]** (Mileage rate / Actual costs / Not sure yet) · "Mileage rates" (sửa từng kỳ, "Reset to default"; UK hiện kỳ
   "From 6 Apr 2026: 55p / 25p").
 - **Logging:** "Default for new entries" · "Keep adding after save" · "Distance unit".
-- **Trips** **[Mới]:** "Automatic trips" → S-07d · "NFC tag" → S-07g · "Work hours".
+- **Trips** **[Mới]:** "Automatic trips" → S-07d · "NFC tag" → S-07g · "Work hours" · "Odometer check" (Off / Weekly /
+  Monthly, mặc định Monthly — Q27).
 - **Sorting** **[Mới]:** "Auto-sort rules" → S-18 · "Recurring entries" → S-17 · "Categories" → S-11.
 - **Notifications** → S-20.
 - **Security:** "App lock" · "Lock after".
@@ -596,7 +624,7 @@ Như bản 1, thêm câu: "Sunday Sort isn't MTD software and doesn't send anyth
   `ocr_merchant`, `ocr_date` (tuỳ chọn).
 - **Receipt**: nhiều ảnh / khoản (đã có), + `ocr_text` (tuỳ chọn, xoá được).
 - **Category**: + `mtd_category` (UK), `vehicle_running_cost` (bool).
-- **Trip**: + `source` (gps/auto/manual/nfc), `edited`, `original_started_at`, `original_ended_at`, `original_distance_m`,
+- **Trip**: + `source` (gps/auto/manual/nfc/**gap**), `edited`, `original_started_at`, `original_ended_at`, `original_distance_m`,
   `scope` cho phép `unsorted`, `classified_by` (bluetooth/route/work_hours/user).
 - **TripStop** **[Mới]**: trip_id, started_at, ended_at, lat, lng (để chạm tách đoạn).
 - **TripSegment** **[Mới]**: trip_id, from_ts, to_ts, distance_m, scope (Personal segment).
@@ -604,12 +632,14 @@ Như bản 1, thêm câu: "Sunday Sort isn't MTD software and doesn't send anyth
 - **RuleOffer** **[Mới]**: merchant_key, declined_until.
 - **Recurring** **[Mới]**: id, type, amount_minor, note, category_id, scope, freq, day, starts_on, ends_on, paused, next_on.
 - **KnownRoute** **[Mới]**: vùng đầu–cuối đã xếp ≥ 3 lần, scope (cho tự gắn chuyến).
+- **OdometerReading** **[Mới, Q27]**: id, read_at, value, photo_uri (tuỳ chọn).
+- **TripGapDismissal** **[Mới, Q26]**: prev_trip_id, next_trip_id ("Not a trip"). Khoảng trống tính lúc xem, không lưu.
 - **ProState** **[Mới]**: trial_started_at, trial_ends_at, entitlement (none/trial/active/expired), expires_at, product_id,
   last_verified_at.
 - **Free photo allowance**: tính từ Receipt theo tháng (không cần bảng).
 - **Settings**: + vehicle_cost_method, merge_stop_minutes, work_hours, auto_trips, van_bt_device, start_on_charge,
   backup_folder_uri, backup_nightly, backup_fail_count, daily_nudge (on, time, days), freeagent_claimant, mtd_period
-  (standard/calendar), nfc_tag_written.
+  (standard/calendar), nfc_tag_written, **odometer_check** (off/weekly/monthly, mặc định monthly).
 - Tuần = T2 00:00 → CN 23:59 giờ máy. Năm thuế UK: ngày 5/4 thuộc năm cũ. Tiền số nguyên.
 
 ---
@@ -648,7 +678,7 @@ giá "$31.99 / year".
 | Mã | Màn | Trạng thái cần vẽ | Sáng/Tối |
 |---|---|---|---|
 | S-01a–f | Onboarding: Welcome, Region, Vehicle costs (+ sheet giải thích), Categories, Free & Pro, Reminder | — | sáng |
-| S-02 | Home | có dữ liệu · rỗng · đang chạy chuyến (Auto) · tự động bật chờ · từng thẻ cảnh báo (5 loại) · Trial | sáng + tối |
+| S-02 | Home | có dữ liệu · rỗng · đang chạy chuyến (Auto) · tự động bật chờ · từng thẻ cảnh báo (5 loại; **[Mới]** + Missing trips, Odometer — dùng thẻ cảnh báo có sẵn, không vẽ thêm) · Trial | sáng + tối |
 | S-03 | Quick capture | trống · đã gõ + 2 ảnh + ghi chú · máy tính "12.50+4.20" · OCR tự điền · chip "Receipt says" · hết ảnh free · Income | sáng + tối |
 | S-04 | Entries | danh sách (nhãn Auto/Recurring) · chọn nhiều · lọc rỗng | sáng |
 | S-05 | Entry detail | thường · có OCR + luật · xem ảnh toàn màn | sáng |
@@ -656,7 +686,7 @@ giá "$31.99 / year".
 | S-06a | Sort List view | Pro + Free | sáng |
 | S-06c | Week sorted | có auto-sorted + recurring | sáng |
 | S-06d | Auto-sorted review | — | sáng |
-| S-07 | Miles | có dữ liệu + thanh 10.000 dặm · vuốt Work/Personal · rỗng · quyền bị từ chối · Actual costs | sáng + tối |
+| S-07 | Miles | có dữ liệu + thanh 10.000 dặm · vuốt Work/Personal · rỗng · quyền bị từ chối · Actual costs · **[Mới]** dòng "Missing trip?" + dòng mốc đồng hồ (ghép từ dòng chuyến có sẵn, không vẽ thêm) | sáng + tối |
 | S-07a | Location explainer (2 bước) | — | sáng |
 | S-07b | Active trip + sheet End trip | tay · Auto | sáng + tối |
 | S-07c | Trip detail | có điểm dừng · sheet điểm dừng · đoạn Personal · sửa giờ + nhãn Edited | sáng + tối |
@@ -664,7 +694,8 @@ giá "$31.99 / year".
 | S-07e | Automatic trips setup (4 bước) | — | sáng |
 | S-07f | Battery tips (Samsung) | — | sáng |
 | S-07g | NFC tag | Android ghi thẻ · thành công · iOS Phím tắt | sáng |
-| S-08 | Add trip (manual) | — | sáng |
+| S-08 | Add trip (manual) | **[Mới]** điền sẵn từ Missing trip / Odometer | sáng |
+| S-08b | Odometer check **[Mới]** | lần đầu · khớp · thiếu dặm · thừa dặm (sheet ghép từ ô số + nút ảnh có sẵn, không vẽ thêm) | sáng |
 | S-09 | Reports | năm · quý MTD cộng dồn · Mileage rate (nhóm "Covered") · Actual costs · Not sure · tab MTD categories | sáng + tối |
 | S-10 | Export | free (thẻ Pro khoá) · Pro đủ 8 loại · cảnh báo Unsorted MTD · ô tên FreeAgent · đang tạo | sáng |
 | S-11 | Categories + sheet sửa | có MTD category + Vehicle running cost | sáng |

@@ -28,6 +28,8 @@
 | Q23 | TalkBack | P5: Claude soạn kịch bản ~10 phút qua 6 màn chính, **Phương nghe trên A13**, báo chỗ đọc sai |
 | Q24 | Cách tính xe (X2) | Cài đặt "Vehicle costs: Mileage rate / Actual costs" — **miễn phí** |
 | Q25 | A→B + bản đồ thật (2026-11-16) | **A→B (Pro)** qua **openrouteservice** gói miễn phí (directions + geocode/autocomplete; khoá `EXPO_PUBLIC_ORS_KEY` trong `.env`, Phương tạo) + **bản đồ thật miễn phí** **MapLibre** (`@maplibre/maplibre-react-native`) + **OpenFreeMap** (style `https://tiles.openfreemap.org/styles/liberty`, không khoá) ở S-07b, S-07c, Miles, A→B; thiếu mạng / khoá → hình phác hoạ. **Không Mapbox.** Privacy: địa chỉ A→B gửi openrouteservice, ảnh nền tải từ OpenFreeMap (không gửi tuyến GPS). Làm ở phiên **S1b**, migration `0002` |
+| Q26 | Phát hiện chuyến bị sót giữa 2 chuyến (2026-11-16) | **Miễn phí.** 2 chuyến liền nhau có toạ độ (gps/auto/nfc), 30 ngày gần nhất: điểm cuối chuyến trước → điểm đầu chuyến sau **≥ 1 mi** chim bay → dòng "Missing trip?" ở Miles + thẻ Home; ước tính **chim bay × 1,25** ("≈ estimated"), Pro + có mạng → quãng đường thật qua openrouteservice (hàm A→B). "Add" → S-08 điền sẵn (Unsorted, `source = gap`, nhãn "Estimated"); "Not a trip" → không hiện lại. Lý do: đánh giá 6 tháng gần nhất (2.526 cái, 16/11) — lời chê kỹ thuật số 1 của đối thủ là sót chuyến **âm thầm**. Dùng thẻ/sheet có sẵn mockup v2. Làm ở **S1b** |
+| Q27 | Đối chiếu đồng hồ dặm (2026-11-16) | **Miễn phí.** Settings → Trips → "Odometer check" Off / Weekly / **Monthly (mặc định)** + nhắc 6/4; nhập số đồng hồ (+ ảnh tuỳ chọn, không tính 20 ảnh/tháng); so mức tăng đồng hồ với tổng dặm app ghi giữa 2 lần nhập: thiếu hoặc thừa ≥ **max(10 mi, 5%)** → thẻ Home ("114 mi not logged" → "Add missing miles" / "That's fine"; thừa → "Review trips"). Dùng thẻ/sheet có sẵn mockup v2. Làm ở **S1b** |
 
 **Miễn phí / Pro** (Phương "No preference" → chốt theo mục 7 + đánh giá đối thủ):
 - **Miễn phí:** ghi nhanh · phân loại Chủ nhật bằng tay · Start/Stop tay · ảnh hoá đơn có giới hạn (số chốt ở P1) · báo khi
@@ -61,7 +63,7 @@
 | **P2 Mockup Hi-Fi** | ✅ **Xong 2026-11-13** (Phương) | Gửi product.md v2 cho Claude Design → vẽ Hi-Fi toàn bộ app → export HTML + tokens vào `design/` | `design/` v2 | Phương báo xong |
 | **P3 Nền chung** | Điều phối (tuần tự) | Cài **mọi** thư viện native mới, kể cả mua trong app (phiên con không cài); schema + migration (luật phân loại, khoản lặp lại, đoạn chuyến, cấu hình sao lưu, kết quả OCR, quyền Pro); **hàm chung kiểm Pro + dùng thử 7 ngày**; kiểu dữ liệu chung; khoá i18n; **UI kit + token + các màn không thuộc S1–S5 theo mockup v2**; **ô cài đặt "Vehicle costs" (Q24)**; **trang onboarding nói rõ giới hạn bản miễn phí (X6, nội dung do S5)**; **nội dung widget bản 2**; dev build chạy A13 | Commit `dev` | ✅ **Xong 2026-11-13** (`0665bf3`, `078ac63`) |
 | **P4 Song song** | 5 phiên con | Bảng dưới; mỗi phiên 1 worktree, nhánh riêng, báo về điều phối bằng SendMessage | 5 nhánh | ✅ **Xong 2026-11-16**: ghép `dev` @ `9b58632`, 375 test — xem "P4 — kết quả" |
-| **P5 Ghép & kiểm** | Điều phối | Gộp 5 nhánh vào `dev`; thêm TESTCASES cho tính năng mới; chạy toàn bộ; **chạy xe thật** cho chuyến tự động (nhiều điểm dừng, đèn đỏ, đi bộ, ngồi nhà); **build + thử widget iOS trên EAS** (treo từ Bước 3); **TalkBack theo kịch bản, Phương nghe (Q23)** | BUGS.md | Chạy hết case |
+| **P5 Ghép & kiểm** | Điều phối | Gộp 5 nhánh vào `dev`; thêm TESTCASES cho tính năng mới; chạy toàn bộ; **chạy xe thật** cho chuyến tự động (nhiều điểm dừng, đèn đỏ, đi bộ, ngồi nhà; **tắt app giữa ca → thấy "Missing trip" (Q26); nhập 2 mốc đồng hồ → thấy thẻ thiếu dặm (Q27)**; TESTCASES cho Q26/Q27); **build + thử widget iOS trên EAS** (treo từ Bước 3); **TalkBack theo kịch bản, Phương nghe (Q23)** | BUGS.md | Chạy hết case |
 | **P6 Sửa lỗi → store** | Điều phối (+ phiên con nếu nhiều lỗi) | Sửa BUGS → Bước 6: giả lập người dùng, store listing (nhấn: UK, không tài khoản, không ngân hàng, ghi không danh mục, tự động không sót âm thầm; **tiêu đề / mô tả ngắn dẫn bằng "receipt", kèm "mileage", "self assessment"** — K8), privacy, khoá ký (Phương tạo), AAB + iOS, nộp | Bản nộp store | CHECKLIST Bước 6 |
 
 ## P4 — 5 phiên song song (không 2 phiên cùng sửa 1 file)
@@ -88,7 +90,8 @@
   (Undo snackbar đã thành nút riêng, giữ 10 s khi bật trình đọc màn hình).
 - **Mới — Q25 (Phương chốt 2026-11-16):** A→B (Pro) qua openrouteservice + bản đồ thật MapLibre / OpenFreeMap → phiên **S1b**.
   `@maplibre/maplibre-react-native` 11.5.1 + plugin `app.json` đã cài trên `dev` (cần prebuild + build lại dev client);
-  migration của S1b = **`0002`** (cột from/to Trip + bảng `places`). ⚠️ `plugins/withReleasePermissions.js` gỡ INTERNET ở bản
+  migration của S1b = **`0002`** (cột from/to Trip + bảng `places` + **`odometer_reading`**, **`trip_gap_dismissal`**).
+  **S1b làm thêm Q26 (Missing trip) + Q27 (Odometer check)** — cùng chạm `miles.tsx` / dữ liệu chuyến nên không tách phiên. ⚠️ `plugins/withReleasePermissions.js` gỡ INTERNET ở bản
   release + product.md / privacy hứa "không mạng, dữ liệu không rời máy" → S1b phải giữ INTERNET ở release và sửa product.md
   (§0, §11, F-12/F-13 phác hoạ → bản đồ); P6 sửa privacy policy + Data safety.
 

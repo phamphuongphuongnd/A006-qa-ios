@@ -17,7 +17,7 @@
   danh mục SA103, dặm 55p/25p từ 6/4/2026) hoặc US ($, năm dương lịch, danh mục Schedule C, IRS rate). Đổi được trong Settings.
 - **Thị trường:** UK + Mỹ ngang nhau.
 - **Khác đối thủ ở đâu:** ghi nhanh không danh mục + phân loại tuần là bước chính + sửa/gộp/tách trên 1 màn;
-  không tài khoản, không kết nối ngân hàng, dữ liệu không rời máy; chuyến tự động [Pro] + Start/Stop/NFC, luôn báo khi ngừng ghi (không sót âm thầm);
+  không tài khoản, không kết nối ngân hàng, dữ liệu không rời máy; chuyến tự động [Pro] + Start/Stop/NFC, luôn báo khi ngừng ghi (không sót âm thầm) + phát hiện chuyến sót + đối chiếu đồng hồ (miễn phí);
   miễn phí, không thu phí âm thầm.
 - **Cố ý không làm:** không tư vấn khoản nào được trừ thuế; không nộp thuế/MTD thay (chỉ xuất CSV quý + năm cho
   phần mềm cầu nối/kế toán, ghi rõ "not MTD software").
