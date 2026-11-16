@@ -362,8 +362,8 @@
 | TC-337 | F-21 Q24 | Đổi Vehicle costs giữa năm | Hỏi lại, báo cáo đổi theo | T proAndVehicle + E | ⏳ |
 | TC-338 | F-22 | S-16 | Thêm câu "isn't MTD software and doesn't send anything to HMRC or the IRS." | E | ⏳ |
 | TC-339 | F-20 | Widget 4×2 khi tự động bật | Dòng "Auto trips on" / "paused" | T data + E | ⏳ |
-| TC-340 | F-20 | Widget iOS nhỏ + vừa | Build EAS chạy, nội dung như Android | EAS | ⏳ |
-| TC-341 | iOS | Build iOS EAS | MapLibre, backup-folder, trip-detect, receipt-ocr biên dịch | EAS | ⏳ |
+| TC-340 | F-20 | Widget iOS nhỏ + vừa | Build EAS chạy, nội dung như Android | EAS | ⏭ build xong nhưng chưa chạy được: không Mac → cần Phương chọn: Appetize.io (tải file simulator, chạy trên web, Phương tạo tài khoản) hoặc Apple Developer (£79/năm) + iPhone để build máy thật |
+| TC-341 | iOS | Build iOS EAS | MapLibre, backup-folder, trip-detect, receipt-ocr biên dịch | EAS | ✅ EAS build `ios-simulator` eaee4e9a (16/11 13:51) finished: app + widget extension + module tự viết + MapLibre biên dịch. Bản này không có khoá ORS (.env không lên EAS) → A → B ẩn |
 | TC-342 | Dữ liệu | Migration 0001–0003 | Chạy trên DB bản 1 có dữ liệu | T migrationV2 + E | ⏳ |
 | TC-343 | Quyền | Manifest release | Giữ INTERNET, BILLING, NFC, ACTIVITY_RECOGNITION…; không quyền thừa | E | ⏳ |
 | TC-344 | TalkBack | Kịch bản Q23 qua 6 màn | Đọc đúng nhãn | P | ⏳ |
