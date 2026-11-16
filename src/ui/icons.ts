@@ -92,6 +92,5 @@ export { default as Upload } from 'lucide-react-native/icons/upload';
 export { default as User } from 'lucide-react-native/icons/user';
 export { default as Utensils } from 'lucide-react-native/icons/utensils';
 export { default as Wrench } from 'lucide-react-native/icons/wrench';
-export { default as Zap } from 'lucide-react-native/icons/zap';
 export { default as X } from 'lucide-react-native/icons/x';
 export { default as Zap } from 'lucide-react-native/icons/zap';

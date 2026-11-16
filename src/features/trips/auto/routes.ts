@@ -1,14 +1,24 @@
-// Seam to S2's known routes (P1-2): `src/features/rules/knownRoutes.ts` lives on branch s2-sort.
-// TODO(merge S2): replace both bodies with calls to knownRouteScope / recordKnownRoute from '@/features/rules/knownRoutes'.
+// Known routes (P1-2) live in S2's `src/features/rules/knownRoutes.ts`; trips call them through here.
 import type { AppDb } from '@/db/types';
 import type { Scope } from '@/domain/types';
+import { knownRouteScope, recordKnownRoute } from '@/features/rules/knownRoutes';
 
 import type { LatLng } from './classify';
 
 /** Scope of a known route between these ends (≥ 3 sorts the same way), or null. */
-export function routeScopeFor(_db: AppDb, _start: LatLng, _end: LatLng): Scope | null {
-  return null;
+export function routeScopeFor(db: AppDb, start: LatLng, end: LatLng): Scope | null {
+  try {
+    return knownRouteScope(db, start, end);
+  } catch {
+    return null;
+  }
 }
 
 /** The driver sorted this trip by hand (Miles swipe, Trip detail, End sheet): teach the known routes. */
-export function recordRoute(_db: AppDb, _tripId: string, _scope: Scope): void {}
+export function recordRoute(db: AppDb, tripId: string, scope: Scope): void {
+  try {
+    recordKnownRoute(db, tripId, scope);
+  } catch {
+    // Learning a route never blocks sorting the trip.
+  }
+}
