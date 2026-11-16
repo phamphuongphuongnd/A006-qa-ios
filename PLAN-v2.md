@@ -27,6 +27,8 @@
 | Q22 | Nhắc ghi hằng ngày | **Có**: 1 thông báo cuối ca nếu hôm đó chưa ghi khoản nào; **mặc định tắt** — miễn phí |
 | Q23 | TalkBack | P5: Claude soạn kịch bản ~10 phút qua 6 màn chính, **Phương nghe trên A13**, báo chỗ đọc sai |
 | Q24 | Cách tính xe (X2) | Cài đặt "Vehicle costs: Mileage rate / Actual costs" — **miễn phí** |
+| Q25 | A→B + bản đồ thật (2026-11-16) | **A→B tự tính dặm, chỉ Pro**: tìm địa chỉ + tính đường qua **openrouteservice** gói miễn phí (khoá `EXPO_PUBLIC_ORS_KEY` trong `.env`, Phương tạo; vượt hạn mức → "enter miles instead"), khứ hồi ×2, chỗ hay đi, vị trí hiện tại làm A. **Bản đồ thật miễn phí cho mọi người**: **MapLibre + OpenFreeMap** (không khoá) ở S-07b, S-07c, Miles, A→B; mất mạng / dịch vụ ngừng → hình phác hoạ. **Không Mapbox.** Hệ quả: release phải giữ quyền INTERNET; privacy / Data safety sửa ở P6 (địa chỉ A→B gửi openrouteservice, ảnh nền tải từ OpenFreeMap, tuyến GPS không gửi). Làm ở phiên **S1b**; migration 0002 |
+| Q25 | A→B + bản đồ thật (2026-11-16) | **A→B (Pro)** qua **openrouteservice** gói miễn phí (directions + geocode/autocomplete; khoá `EXPO_PUBLIC_ORS_KEY` trong `.env`, Phương tạo) + **bản đồ thật miễn phí** **MapLibre** (`@maplibre/maplibre-react-native`) + **OpenFreeMap** (style `https://tiles.openfreemap.org/styles/liberty`, không khoá) ở S-07b, S-07c, Miles, A→B; thiếu mạng / khoá → hình phác hoạ. **Không Mapbox.** Privacy: địa chỉ A→B gửi openrouteservice, ảnh nền tải từ OpenFreeMap (không gửi tuyến GPS). Làm ở phiên **S1b**, migration `0002` |
 
 **Miễn phí / Pro** (Phương "No preference" → chốt theo mục 7 + đánh giá đối thủ):
 - **Miễn phí:** ghi nhanh · phân loại Chủ nhật bằng tay · Start/Stop tay · ảnh hoá đơn có giới hạn (số chốt ở P1) · báo khi
@@ -85,9 +87,11 @@
   sau 20' đứng yên; BOOT_COMPLETED (khởi động lại máy); NFC (A13 không có NFC); mua thật (chờ sản phẩm `sundaysort_pro_annual`);
   iOS (EAS: widget, backup-folder, trip-detect); nhập file vào MTDsorted / FreeAgent thật; TESTCASES tính năng mới; TalkBack
   (Undo snackbar đã thành nút riêng, giữ 10 s khi bật trình đọc màn hình).
-- **Mới (Phương chốt 2026-11-16 ở phiên khác):** A→B tự tính dặm (Pro) + bản đồ thật Mapbox — kế hoạch
-  `C:/Users/Admin/.claude/plans/a006-cho-l-m-ph-t-polymorphic-music.md`; migration kế tiếp `0002`; chưa cài `@rnmapbox/maps`;
-  ⚠️ `plugins/withReleasePermissions.js` gỡ INTERNET ở bản release + product/privacy hứa "không mạng" → phải sửa cùng.
+- **Mới — Q25 (Phương chốt 2026-11-16):** A→B (Pro) qua openrouteservice + bản đồ thật MapLibre / OpenFreeMap → phiên **S1b**.
+  `@maplibre/maplibre-react-native` 11.5.1 + plugin `app.json` đã cài trên `dev` (cần prebuild + build lại dev client);
+  migration của S1b = **`0002`** (cột from/to Trip + bảng `places`). ⚠️ `plugins/withReleasePermissions.js` gỡ INTERNET ở bản
+  release + product.md / privacy hứa "không mạng, dữ liệu không rời máy" → S1b phải giữ INTERNET ở release và sửa product.md
+  (§0, §11, F-12/F-13 phác hoạ → bản đồ); P6 sửa privacy policy + Data safety.
 
 ## Rủi ro kỹ thuật (grill ở P1, kiểm ở P3)
 - Tự viết module dò chuyến: thử nhiều trên xe thật; Samsung tắt app nền → hướng dẫn tắt tối ưu pin trong app.
