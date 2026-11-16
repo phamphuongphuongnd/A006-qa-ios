@@ -146,3 +146,17 @@
 - [x] **B-46** 🟠 Settings trong app không đọc lại khi tác vụ nền / sao lưu đêm ghi vào DB → S-12 vẫn báo "Last 3 backups failed ·
   not reachable" sau khi sao lưu đã thành công (tới khi mở lại app) — case TC-321 — sửa: `SettingsProvider` đọc lại settings khi
   bảng `settings` đổi (`useTablesVersion`) — thử A13: chạy sao lưu khi đang ở S-12 → "Nightly backup on · Last: today 15:38"
+- [x] **B-47** 🟡 Reports → tab "MTD categories": khoản chưa phân loại hiện 2 dòng cùng tên "Unsorted" (thu £620.00, chi £420.67),
+  tab SA103 thì ghi "Unsorted income" / "Unsorted expenses" — case TC-309 — sửa: `mtdRowLabel` (`src/domain/report.ts`) dùng
+  `unsortedLine` + test `reportLabels.test.ts` — thử A13: "Unsorted income £620.00" / "Unsorted expenses £420.67"
+- [x] **B-48** 🟠 Miles khi chọn Actual costs vẫn hiện "≈ £4,774.11 at HMRC rates" — product.md §5.3 / F-13: ẩn tiền theo dặm,
+  hiện "Business use 89%" (chuỗi `vehicle.businessUse` có sẵn nhưng Miles không dùng) — case TC-298 — sửa: thẻ tổng Miles theo
+  `vehicleTreatment().showsBusinessUse` → "Business use N%" · "W of T mi" + thanh xanh (mockup 06-miles); `Progress` thêm
+  `tone="ok"` (Reports dùng chung) — thử A13: Actual costs → "Business use 87% · 8,680 of 9,998 mi", không còn số tiền
+- [x] **B-49** 🟠 Miles thiếu dòng "10,000 mi at 55p reached on 14 Aug · now 25p" + thanh tiến độ khi vượt 10.000 dặm (F-13,
+  mockup "miles-10-000-mi-reached") — case TC-297 — sửa: `tierThresholdReached` (`src/domain/mileage.ts`, đếm cộng dồn theo ngày
+  như ước tính) + dòng màu vàng dưới ước tính + test `mileageRates.test.ts` "tierThresholdReached" — thử A13 (chuyến tay tạm
+  1,400 mi, đã xoá): "≈ £5,520.05 at HMRC rates (55p / 25p)" + thanh đầy + "10,000 mi at 55p reached on 16 Nov · now 25p"
+- [ ] **B-50** 🟡 (đề xuất, chờ Phương) Bật rồi tắt chuyến bằng NFC / `sundaysort://trip/toggle` mà xe không chạy → lưu chuyến
+  "0.0 mi · NFC · Work" trong Miles (chạm nhầm 2 lần là có rác) — case TC-293 — đề xuất: tắt chuyến < 0.1 mi thì bỏ, snackbar
+  "Trip under 0.1 mi — not saved".

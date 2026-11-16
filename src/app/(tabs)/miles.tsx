@@ -8,17 +8,18 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { db } from '@/db/client';
 import type { TripRow } from '@/db/schema';
 import { businessTripMiles, listTrips, mileageTotals, routeTitle } from '@/db/tripsRepo';
-import { formatRate, mileageEstimateByDate, periodsIn } from '@/domain/mileage';
+import { formatDistanceNumber, formatRate, mileageEstimateByDate, periodsIn, tierThresholdReached } from '@/domain/mileage';
 import { formatMoney } from '@/domain/money';
 import { taxYearFor, taxYearOf } from '@/domain/taxYear';
 import { currencyOf, type Region, type Scope } from '@/domain/types';
+import { businessUse, vehicleTreatment } from '@/domain/vehicleCosts';
 import { setTripScope, restoreTripScope } from '@/features/trips/auto/repo';
 import { autoTripState } from '@/features/trips/autoState';
 import { useGapDistances, useGapLabels, useMissingTrips, useReadingChecks } from '@/features/trips/check/hooks';
 import { interleaveMonth } from '@/features/trips/check/listRows';
 import { GapRow, OdometerRow } from '@/features/trips/check/rows';
-import { formatClock, formatDay, formatDistance, groupByMonth, sameDay, type DistanceUnit } from '@/features/trips/format';
-import { weekdayTime } from '@/features/entries/format';
+import { distanceValue, formatClock, formatDay, formatDistance, groupByMonth, sameDay, type DistanceUnit } from '@/features/trips/format';
+import { dayMonth, weekdayTime } from '@/features/entries/format';
 import { sweepThumbs } from '@/features/trips/map/thumbs';
 import { TripThumb } from '@/features/trips/map/TripThumb';
 import { TripSwipeRow } from '@/features/trips/TripSwipeRow';
@@ -31,7 +32,7 @@ import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, useTheme } from '@/theme';
-import { Badge, Button, Card, Chip, ChipRow, Divider, IconButton, Screen, Sheet, StatusDot, Tag, Txt, useSnackbar } from '@/ui';
+import { Badge, Button, Card, Chip, ChipRow, Divider, IconButton, Progress, Screen, Sheet, StatusDot, Tag, Txt, useSnackbar } from '@/ui';
 
 /** S-07 Miles: tax-year totals + estimate, running trip, trips by month. */
 /** Trip rows drawn per step while scrolling Miles. */
@@ -123,6 +124,17 @@ export default function MilesScreen() {
   const estimate = mileageEstimateByDate(business, rates);
   const shownRates = [...new Set(periodsIn(rates, year.start, year.end).flatMap((p) => p.tiers.map((x) => formatRate(x.minorPerMile, currencyOf(region)))))];
   const rateText = region === 'UK' ? t('miles.hmrcRates', { rates: shownRates.join(' / ') }) : t('miles.irsRate', { rate: shownRates.join(' / ') });
+  // F-13: Mileage rate → "10,000 mi at 55p reached on 14 Aug · now 25p" (B-49); Actual costs → "Business use N%" (B-48).
+  const reached = tierThresholdReached(business, rates);
+  const reachedText = reached
+    ? t('miles.thresholdReached', {
+        limit: formatDistanceNumber(reached.limitMiles, 0),
+        from: formatRate(reached.fromMinor, currencyOf(region)),
+        date: dayMonth(reached.at),
+        to: formatRate(reached.toMinor, currencyOf(region)),
+      })
+    : null;
+  const use = vehicleTreatment(settings.vehicleCostMethod).showsBusinessUse ? (businessUse(totals.work, totals.work + totals.personal) ?? { share: 0, percent: 0 }) : null;
   const empty = trips.length === 0;
   // Trip rows are drawn in steps of ROWS_STEP as the list scrolls (a year can hold hundreds); month totals use all trips.
   const [shown, setShown] = useState({ year: startYear, n: ROWS_STEP });
@@ -185,7 +197,16 @@ export default function MilesScreen() {
 
       {!empty ? (
         <>
-          <TotalsCard work={totals.work} personal={totals.personal} unit={unit} estimate={estimate} region={region} rateText={rateText} />
+          <TotalsCard
+            work={totals.work}
+            personal={totals.personal}
+            unit={unit}
+            estimate={estimate}
+            region={region}
+            rateText={rateText}
+            reachedText={reachedText}
+            use={use}
+          />
           <ActionButtons />
           {months.map((m) => (
             <View key={m.key} style={{ gap: 10 }}>
@@ -306,6 +327,8 @@ function TotalsCard({
   estimate,
   region,
   rateText,
+  reachedText,
+  use,
 }: {
   work: number;
   personal: number;
@@ -313,7 +336,12 @@ function TotalsCard({
   estimate: number;
   region: Region;
   rateText: string;
+  /** Mileage rate past the first tier: "10,000 mi at 55p reached on 14 Aug · now 25p". */
+  reachedText: string | null;
+  /** Actual costs: business share of all miles; the money estimate is hidden (§5.3). */
+  use: { share: number; percent: number } | null;
 }) {
+  const { colors } = useTheme();
   const toM = (mi: number) => mi * 1609.344;
   return (
     <Card style={{ gap: 10 }}>
@@ -330,12 +358,39 @@ function TotalsCard({
         </Txt>
       </View>
       <Divider />
-      <Txt v="body" style={{ fontFamily: fonts.bold }}>
-        {t('miles.estimateAmount', { amount: formatMoney(estimate, currencyOf(region)) })}{' '}
-        <Txt v="body" c="textSecondary" style={{ fontFamily: fonts.medium }}>
-          {t('miles.estimateAt', { rates: rateText })}
-        </Txt>
-      </Txt>
+      {use ? (
+        <>
+          <View
+            accessible
+            accessibilityLabel={t('mtd.reports.businessUseA11y', { percent: use.percent })}
+            style={[styles.flex, { justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }]}>
+            <Txt v="body" style={{ fontFamily: fonts.bold }}>
+              {t('miles.businessUse', { percent: use.percent })}
+            </Txt>
+            <Txt v="body" c="textSecondary">
+              {t('miles.businessUseOf', { work: formatDistanceNumber(distanceValue(toM(work), unit), 0), total: formatDistance(toM(work + personal), unit, 0) })}
+            </Txt>
+          </View>
+          <Progress value={use.share} tone="ok" />
+        </>
+      ) : (
+        <>
+          <Txt v="body" style={{ fontFamily: fonts.bold }}>
+            {t('miles.estimateAmount', { amount: formatMoney(estimate, currencyOf(region)) })}{' '}
+            <Txt v="body" c="textSecondary" style={{ fontFamily: fonts.medium }}>
+              {t('miles.estimateAt', { rates: rateText })}
+            </Txt>
+          </Txt>
+          {reachedText ? (
+            <>
+              <Progress value={1} />
+              <Txt v="small" style={{ fontFamily: fonts.semibold, color: colors.sunText }}>
+                {reachedText}
+              </Txt>
+            </>
+          ) : null}
+        </>
+      )}
       <Txt v="caption" c="textTertiary">
         {t('common.estimateOnly')}
       </Txt>

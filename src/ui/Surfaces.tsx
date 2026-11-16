@@ -70,7 +70,7 @@ export function Dot({ color }: { color?: string }) {
 }
 
 /** `.prog` — yellow progress bar (0..1). */
-export function Progress({ value }: { value: number }) {
+export function Progress({ value, tone = 'sun' }: { value: number; tone?: 'sun' | 'ok' }) {
   const { colors } = useTheme();
   const v = Math.max(0, Math.min(1, value));
   return (
@@ -78,7 +78,7 @@ export function Progress({ value }: { value: number }) {
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max: 100, now: Math.round(v * 100) }}
       style={{ height: 10, borderRadius: 5, backgroundColor: colors.surfaceAlt, overflow: 'hidden' }}>
-      <View style={{ width: `${v * 100}%`, height: '100%', borderRadius: 5, backgroundColor: colors.sun }} />
+      <View style={{ width: `${v * 100}%`, height: '100%', borderRadius: 5, backgroundColor: tone === 'ok' ? colors.income : colors.sun }} />
     </View>
   );
 }

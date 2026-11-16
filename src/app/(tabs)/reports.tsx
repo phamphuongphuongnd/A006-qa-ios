@@ -8,8 +8,7 @@ import { db } from '@/db/client';
 import { entryCount } from '@/db/entriesRepo';
 import { changeVehicleCostMethod } from '@/db/vehicleCostsRepo';
 import { formatMoney } from '@/domain/money';
-import { hmrcLabel } from '@/domain/mtd';
-import { MILEAGE_ID, UNSORTED_NAME } from '@/domain/report';
+import { MILEAGE_ID, mtdRowLabel, UNSORTED_NAME } from '@/domain/report';
 import { taxYearOf } from '@/domain/taxYear';
 import type { Period, Region, VehicleCostMethod } from '@/domain/types';
 import { CategoryBars, MonthlyLines, type Bar } from '@/features/reports/charts';
@@ -390,7 +389,7 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
                 <LineRow
                   key={`${m.type}:${m.mtdCategory ?? '-'}`}
                   first={i === 0}
-                  label={m.mtdCategory ? hmrcLabel(m.mtdCategory) : UNSORTED_NAME}
+                  label={mtdRowLabel(m)}
                   income={m.type === 'income'}
                   value={formatMoney(m.totalMinor, currency)}
                 />
@@ -419,7 +418,7 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
                 {businessUse.percent}%
               </Txt>
               <Txt c="textSecondary">{t('mtd.reports.businessUse', { work: dist(trips.workMiles), total: dist(totalMiles) })}</Txt>
-              <Progress value={businessUse.share} />
+              <Progress value={businessUse.share} tone="ok" />
             </>
           ) : (
             <Txt c="textSecondary">{t('mtd.reports.noMiles')}</Txt>

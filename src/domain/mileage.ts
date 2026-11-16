@@ -250,6 +250,28 @@ export function mileageEstimateByDate(trips: { at: number; miles: number }[], ra
   return Math.round(total);
 }
 
+/**
+ * The day this tax year's business miles passed the first tier's limit (UK 10,000 mi), counting cumulative miles in
+ * date order like `mileageEstimateByDate` — for the Miles line "10,000 mi at 55p reached on 14 Aug · now 25p" (B-49).
+ * Null while under the limit or when the rates have a single tier (US).
+ */
+export function tierThresholdReached(
+  trips: { at: number; miles: number }[],
+  rates: RateTier[],
+): { at: number; limitMiles: number; fromMinor: number; toMinor: number } | null {
+  const sorted = trips.filter((t) => t.miles > 0).sort((a, b) => a.at - b.at);
+  let used = 0;
+  for (const t of sorted) {
+    const tiers = ratesOn(rates, t.at);
+    const first = tiers[0];
+    if (first && first.upToMiles !== null && tiers[1] && used < first.upToMiles && used + t.miles >= first.upToMiles) {
+      return { at: t.at, limitMiles: first.upToMiles, fromMinor: first.minorPerMile, toMinor: tiers[1].minorPerMile };
+    }
+    used += t.miles;
+  }
+  return null;
+}
+
 /** Rate periods overlapping [start, end) — what the estimate line should name. */
 export function periodsIn(rates: RateTier[], start: number, end: number): RatePeriod[] {
   const periods = ratePeriods(rates);

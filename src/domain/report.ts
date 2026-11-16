@@ -1,4 +1,4 @@
-import { defaultMtdCategory, type HmrcCategory } from './mtd';
+import { defaultMtdCategory, hmrcLabel, type HmrcCategory } from './mtd';
 import { inPeriod } from './taxYear';
 import type { EntryType, Minor, Period, Region, Scope, VehicleCostMethod } from './types';
 import { vehicleTreatment } from './vehicleCosts';
@@ -77,6 +77,10 @@ export const MILEAGE_TAX_LINE: Record<Region, string> = {
 
 /** Tax-form line label for entries not sorted yet: "Unsorted income" / "Unsorted expenses". */
 export const unsortedLine = (type: EntryType) => (type === 'income' ? 'Unsorted income' : 'Unsorted expenses');
+
+/** Reports "MTD categories" row label; unsorted income and expenses are named apart like on the SA103 tab (B-47). */
+export const mtdRowLabel = (m: { mtdCategory: HmrcCategory | null; type: EntryType }) =>
+  m.mtdCategory ? hmrcLabel(m.mtdCategory) : unsortedLine(m.type);
 
 /** HMRC category of a category: its own MTD category, else the default of its tax line (UK lines only). */
 export const mtdOf = (c: Pick<ReportCategory, 'mtdCategory' | 'taxLine'>, type: EntryType): HmrcCategory | null =>

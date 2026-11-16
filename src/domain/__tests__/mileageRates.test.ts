@@ -10,6 +10,7 @@ import {
   periodsIn,
   ratePeriods,
   ratesOn,
+  tierThresholdReached,
   toLocalDate,
   validatePeriods,
   type RateTier,
@@ -152,5 +153,21 @@ describe('validatePeriods', () => {
       ]),
     ).toBe('date_duplicate');
     expect(validatePeriods([])).toBe('rate_invalid');
+  });
+});
+
+// B-49 · TC-297: Miles "10,000 mi at 55p reached on … · now 25p".
+describe('tierThresholdReached', () => {
+  it('is the day cumulative business miles passed 10,000, in date order', () => {
+    const trips = [
+      { at: day(2026, 12, 1), miles: 500 },
+      { at: day(2026, 8, 14), miles: 300 },
+      { at: day(2026, 5, 1), miles: 9800 },
+    ];
+    expect(tierThresholdReached(trips, DEFAULT_RATES.UK)).toEqual({ at: day(2026, 8, 14), limitMiles: 10_000, fromMinor: 55, toMinor: 25 });
+  });
+  it('null under the limit and for single-tier rates (US)', () => {
+    expect(tierThresholdReached([{ at: day(2026, 5, 1), miles: 9999 }], DEFAULT_RATES.UK)).toBeNull();
+    expect(tierThresholdReached([{ at: day(2026, 5, 1), miles: 20_000 }], DEFAULT_RATES.US)).toBeNull();
   });
 });
