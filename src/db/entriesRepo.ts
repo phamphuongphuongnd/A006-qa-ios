@@ -26,6 +26,8 @@ export interface NewEntry {
   ocrAmountMinor?: Minor | null;
   ocrMerchant?: string | null;
   ocrDate?: number | null;
+  /** Q28: Parking & tolls typed on this trip. */
+  tripId?: string | null;
 }
 
 export function createEntry(db: AppDb, input: NewEntry, now = Date.now()): EntryRow {
@@ -53,6 +55,8 @@ export function createEntry(db: AppDb, input: NewEntry, now = Date.now()): Entry
     ocrAmountMinor: input.ocrAmountMinor ?? null,
     ocrMerchant: input.ocrMerchant ?? null,
     ocrDate: input.ocrDate ?? null,
+    tripId: input.tripId ?? null,
+    exportedAt: null,
   } satisfies EntryRow;
   db.transaction((tx) => {
     tx.insert(entries).values(row).run();
@@ -271,6 +275,7 @@ const LIST_COLUMNS = sql.raw(
   "entries"."source" AS source, "entries"."rule_id" AS ruleId, "entries"."recurring_id" AS recurringId,
   "entries"."auto_reviewed_at" AS autoReviewedAt, "entries"."ocr_amount_minor" AS ocrAmountMinor,
   "entries"."ocr_merchant" AS ocrMerchant, "entries"."ocr_date" AS ocrDate,
+  "entries"."trip_id" AS tripId, "entries"."exported_at" AS exportedAt,
   (SELECT COUNT(*) FROM "receipts" WHERE "receipts"."entry_id" = "entries"."id") AS receiptCount`,
 );
 

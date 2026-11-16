@@ -9,6 +9,7 @@ import type {
   ProStateRow,
   ReceiptRow,
   RecurringRow,
+  SavedTripRow,
   RuleOfferRow,
   RuleRow,
   TripGapDismissalRow,
@@ -55,6 +56,8 @@ export interface BackupTables {
   /** Q26 "Not a trip" answers + Q27 odometer readings (absent from older files → []). */
   tripGapDismissals: TripGapDismissalRow[];
   odometerReadings: OdometerReadingRow[];
+  /** Q31 regular trips (absent from older files → []). Recently deleted (Q30) is never backed up. */
+  savedTrips: SavedTripRow[];
 }
 
 /** Tables a version-1 backup does not have. */
@@ -69,6 +72,7 @@ export const V2_TABLES = [
   'places',
   'tripGapDismissals',
   'odometerReadings',
+  'savedTrips',
 ] as const;
 
 export interface BackupCounts {
@@ -255,6 +259,7 @@ const ROW_CHECKS: Record<keyof BackupTables, (r: Record<string, unknown>) => boo
   tripGapDismissals: (r) => isStr(r.prevTripId) && isStr(r.nextTripId),
   odometerReadings: (r) =>
     isStr(r.id) && isInt(r.readAt) && isNum(r.value) && (r.photoPath === null || r.photoPath === undefined || (isStr(r.photoPath) && isSafePhotoName(r.photoPath as string))),
+  savedTrips: (r) => isStr(r.id) && isStr(r.label) && isNum(r.distanceM),
 };
 
 /** Format → version → shape. Order matters: an unknown file is "not a backup", a future one is "newer". */

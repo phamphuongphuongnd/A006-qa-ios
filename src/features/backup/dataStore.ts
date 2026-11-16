@@ -9,7 +9,9 @@ import {
   recurring,
   ruleOffers,
   rules,
+  savedTrips,
   settings,
+  trash,
   tripGapDismissals,
   tripPoints,
   trips,
@@ -41,6 +43,7 @@ export function snapshotTables(db: AppDb): BackupTables {
     places: db.select().from(places).all(),
     tripGapDismissals: db.select().from(tripGapDismissals).all(),
     odometerReadings: db.select().from(odometerReadings).all(),
+    savedTrips: db.select().from(savedTrips).all(),
     proState: db.select().from(proState).all(),
   };
 }
@@ -62,6 +65,9 @@ function clearAll(tx: AppDb) {
   tx.delete(places).run();
   tx.delete(tripGapDismissals).run();
   tx.delete(odometerReadings).run();
+  tx.delete(savedTrips).run();
+  // Recently deleted (Q30) points at receipt files of the old data: a restore / Delete all data empties it.
+  tx.delete(trash).run();
   tx.delete(receipts).run();
   tx.delete(entries).run();
   tx.delete(rules).run();
@@ -117,6 +123,7 @@ export function replaceAllData(db: AppDb, t: BackupTables, backupCreatedAt?: num
     insertChunks(t.places ?? [], (p) => d.insert(places).values(p).run());
     insertChunks(t.tripGapDismissals ?? [], (p) => d.insert(tripGapDismissals).values(p).run());
     insertChunks(t.odometerReadings ?? [], (p) => d.insert(odometerReadings).values(p).run());
+    insertChunks(t.savedTrips ?? [], (p) => d.insert(savedTrips).values(p).run());
     if (!d.select().from(proState).get()) insertChunks(t.proState ?? [], (p) => d.insert(proState).values(p).run());
     insertChunks(t.settings, (p) => d.insert(settings).values(p).run());
     if (backupCreatedAt !== undefined) {
