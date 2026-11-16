@@ -1,0 +1,73 @@
+import { useState } from 'react';
+
+import { db } from '@/db/client';
+import type { TripRow } from '@/db/schema';
+import { deleteTrip, updateManualTrip } from '@/db/tripsRepo';
+import { pickerScope } from '@/domain/types';
+import { distanceValue, type DistanceUnit } from '@/features/trips/format';
+import { ModalHeader } from '@/features/trips/ModalHeader';
+import { TripForm } from '@/features/trips/TripForm';
+import { refreshWidgets } from '@/features/widgets/refresh';
+import { t } from '@/i18n';
+import { Dialog, IconButton, useSnackbar } from '@/ui';
+import { Trash2, X } from '@/ui/icons';
+
+const trim = (n: number) => String(Math.round(n * 10) / 10);
+
+/** Edit a manual (odometer / typed distance) trip — S-08 form, as in bản 1. GPS trips use Trip detail (S-07c). */
+export function ManualTripEdit({ trip, unit, close }: { trip: TripRow; unit: DistanceUnit; close: () => void }) {
+  const snack = useSnackbar();
+  const [askDelete, setAskDelete] = useState(false);
+  const odo = trip.odoStart !== null && trip.odoEnd !== null && unit === 'mi';
+
+  return (
+    <TripForm
+      header={
+        <ModalHeader
+          icon={X}
+          iconLabel={t('trip.close')}
+          onIcon={close}
+          title={t('trip.editTitle')}
+          right={<IconButton icon={Trash2} label={t('trip.deleteTrip')} color="error" onPress={() => setAskDelete(true)} />}
+        />
+      }
+      unit={unit}
+      submitLabel={t('common.save')}
+      initial={{
+        mode: odo ? 'odometer' : 'distance',
+        start: odo ? trim(trip.odoStart!) : '',
+        end: odo ? trim(trip.odoEnd!) : '',
+        distance: trim(distanceValue(trip.distanceM, unit)),
+        date: trip.startedAt,
+        scope: pickerScope(trip.scope),
+        purpose: trip.purpose,
+      }}
+      onSubmit={(r) => {
+        updateManualTrip(db, trip.id, r);
+        refreshWidgets().catch(() => {});
+        snack({ message: t('trip.updated') });
+        close();
+      }}>
+      <Dialog
+        visible={askDelete}
+        title={t('trip.deleteConfirm')}
+        body={t('trip.deleteBody')}
+        onClose={() => setAskDelete(false)}
+        actions={[
+          { label: t('common.cancel'), onPress: () => setAskDelete(false) },
+          {
+            label: t('common.delete'),
+            variant: 'danger',
+            onPress: () => {
+              setAskDelete(false);
+              deleteTrip(db, trip.id);
+              refreshWidgets().catch(() => {});
+              snack({ message: t('trip.deleted') });
+              close();
+            },
+          },
+        ]}
+      />
+    </TripForm>
+  );
+}

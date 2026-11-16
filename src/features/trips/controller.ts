@@ -2,6 +2,7 @@
  * Trip lifecycle: repository writes + GPS recording + notifications + widget refresh, in one place.
  * Screens (Active trip, Home card, Miles) call these instead of the repository directly.
  */
+import { eq } from 'drizzle-orm';
 import * as Location from 'expo-location';
 import { Linking, Platform } from 'react-native';
 
@@ -19,10 +20,14 @@ import {
   startTrip,
   updateTrip,
 } from '@/db/tripsRepo';
-import type { Scope } from '@/domain/types';
+import { trips } from '@/db/schema';
+import type { Scope, TripStartedBy } from '@/domain/types';
 import { t } from '@/i18n';
 import { refreshWidgets } from '@/features/widgets/refresh';
 
+import { STILL_NOTIFY_MS } from './auto/engine';
+import { rebuildStops, setTripScope } from './auto/repo';
+import { syncTripActive } from './auto/sync';
 import './backgroundTask';
 import { NOTIF_COLOR, TRIP_TASK } from './constants';
 import { formatDistance } from './format';
@@ -76,22 +81,32 @@ async function stopRecording() {
   }
 }
 
-/** Starts a GPS trip (or returns the one already running). Throws if recording can't start. */
-export async function startGpsTrip(): Promise<TripRow> {
+/**
+ * Starts a GPS trip (or returns the one already running). Throws if recording can't start.
+ * Automatic trips (S1) pass `startedBy: 'auto'`, a back-dated `at` and start Unsorted; NFC taps pass 'nfc'.
+ */
+export async function startGpsTrip(opts: { startedBy?: TripStartedBy; at?: number; askNotifications?: boolean } = {}): Promise<TripRow> {
   const existing = getActiveTrip(db);
   if (existing) return existing;
-  await ensureNotificationPermission();
-  const trip = startTrip(db, 'work');
+  const startedBy = opts.startedBy ?? 'user';
+  if (opts.askNotifications !== false) await ensureNotificationPermission();
+  const trip = startTrip(db, 'work', opts.at ?? Date.now(), startedBy);
+  if (startedBy === 'auto') {
+    // Work / Personal is decided when it ends (P1-2).
+    db.update(trips).set({ scope: 'unsorted' }).where(eq(trips.id, trip.id)).run();
+  }
   try {
     await beginRecording();
   } catch (e) {
     deleteTrip(db, trip.id);
     throw e;
   }
-  await showTripNotification(trip, distanceText(trip), true);
-  await scheduleLongTripReminder(trip);
+  const row = getTrip(db, trip.id) ?? trip;
+  await showTripNotification(row, distanceText(row), true);
+  await scheduleLongTripReminder(row);
+  syncTripActive();
   refreshWidgets().catch(() => {});
-  return trip;
+  return row;
 }
 
 export async function pauseActiveTrip() {
@@ -119,23 +134,34 @@ export async function resumeActiveTrip() {
   refreshWidgets().catch(() => {});
 }
 
-/** Ends the active trip; it is saved immediately (the sheet then edits scope / purpose). */
-export async function endActiveTrip(): Promise<TripRow | undefined> {
+/**
+ * Ends the active trip; it is saved immediately (the sheet then edits scope / purpose).
+ * `at`: end time when it is not now ("Still on a trip?" → End trip ends when the vehicle stopped).
+ */
+export async function endActiveTrip(at?: number): Promise<TripRow | undefined> {
   const trip = getActiveTrip(db);
   if (!trip) {
     // "End trip" on a notification whose trip is gone (restore / delete all): still clear GPS + notifications (B-18).
     await stopOrphanRecording();
     return undefined;
   }
-  const done = endTrip(db, trip.id);
+  // Not moved for ≥ 45 min ("Still on a trip?" → End trip): the trip ends when the vehicle stopped (F-12).
+  const now = Date.now();
+  const lastMove = Math.max(trip.lastPointAt ?? trip.startedAt, trip.startedAt);
+  const endAt = at ?? (trip.status === 'running' && now - lastMove >= STILL_NOTIFY_MS ? lastMove : now);
+  const done = endTrip(db, trip.id, endAt);
   await stopRecording();
   await clearTripNotification();
   await cancelLongTripReminder();
+  syncTripActive();
+  if (done) rebuildStops(db, done.id);
   refreshWidgets().catch(() => {});
   return done;
 }
 
 export function saveEndedTrip(id: string, scope: Scope, purpose: string) {
+  const t = getTrip(db, id);
+  if (t && t.scope !== scope) setTripScope(db, id, scope);
   updateTrip(db, id, { scope, purpose });
 }
 
@@ -146,6 +172,7 @@ export async function discardTrip(id: string) {
     await stopRecording();
     await clearTripNotification();
     await cancelLongTripReminder();
+    syncTripActive();
   }
   refreshWidgets().catch(() => {});
 }
@@ -186,6 +213,7 @@ export async function detectInterruptedTrip(): Promise<boolean> {
     return false;
   }
   markInterrupted(db, trip.id);
+  syncTripActive();
   await stopRecording();
   await clearTripNotification();
   await cancelLongTripReminder();

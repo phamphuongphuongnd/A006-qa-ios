@@ -7,7 +7,7 @@ import { acknowledgeInterrupted } from '@/db/tripsRepo';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { fonts, useTheme } from '@/theme';
-import { Button, Card, Txt } from '@/ui';
+import { Badge, Button, Card, Txt } from '@/ui';
 
 import { formatClock, formatDistance, formatDuration } from './format';
 import { useActiveTrip, useInterruptedTrip } from './hooks';
@@ -41,6 +41,7 @@ export function ActiveTripCard() {
           <View style={styles.flex}>
             <View style={styles.recDot} />
             <Text style={[styles.caps, { color: '#FFFFFF' }]}>{t('trip.runningCaps')}</Text>
+            {trip.startedBy === 'auto' ? <Badge kind="auto" label={t('autoTrip.auto')} /> : null}
           </View>
         )}
         {!paused ? (

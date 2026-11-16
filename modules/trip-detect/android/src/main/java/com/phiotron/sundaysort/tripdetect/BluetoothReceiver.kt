@@ -28,5 +28,10 @@ class BluetoothReceiver : BroadcastReceiver() {
       null
     }
     EventLog.add(context, kind, mapOf("address" to device?.address, "name" to name))
+    val van = AutoConfig.vanAddress(context)
+    if (kind == "bt_connected" && van != null && van.equals(device?.address, ignoreCase = true)) {
+      if (AutoConfig.tripActive(context)) AutoConfig.kick(context, "bluetooth", foreground = false)
+      else if (AutoConfig.enabled(context)) AutoConfig.kick(context, "bluetooth", foreground = true)
+    }
   }
 }

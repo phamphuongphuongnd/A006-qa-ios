@@ -22,6 +22,7 @@ import {
 } from '@/features/trips/controller';
 import { distanceValue, formatClock, formatDay, formatDistance, formatDuration } from '@/features/trips/format';
 import { useActiveTrip } from '@/features/trips/hooks';
+import { setTripScope } from '@/features/trips/auto/repo';
 import { ModalHeader } from '@/features/trips/ModalHeader';
 import { wasBackgroundStepShown } from '@/features/trips/permissionState';
 import { RouteSketch } from '@/features/trips/RouteSketch';
@@ -30,7 +31,7 @@ import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, useTheme } from '@/theme';
-import { Button, Card, Chip, ChipRow, Dialog, EmptyState, Field, Segmented, Sheet, Txt, useSnackbar } from '@/ui';
+import { Badge, Button, Card, Chip, ChipRow, Dialog, EmptyState, Field, Segmented, Sheet, Txt, useSnackbar } from '@/ui';
 
 type Action = 'pause' | 'resume' | 'end';
 
@@ -229,6 +230,18 @@ export default function ActiveTripScreen() {
           <Txt v="caption" c="textTertiary">
             {t('trip.started', { time: formatClock(trip.startedAt) })}
           </Txt>
+        ) : null}
+        {trip.startedBy === 'auto' ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Badge kind="auto" label={t('autoTrip.auto')} />
+            {trip.scope !== 'personal' ? (
+              <Button label={t('autoTrip.markPersonalNow')} variant="text" size="sm" onPress={() => setTripScope(db, trip.id, 'personal')} />
+            ) : (
+              <Txt v="small" c="textSecondary">
+                {t('autoTrip.markedPersonalNow')}
+              </Txt>
+            )}
+          </View>
         ) : null}
       </View>
       <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: GUTTER, paddingTop: 12, paddingBottom: Math.max(insets.bottom, 16) + 16 }}>

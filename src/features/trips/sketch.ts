@@ -36,23 +36,8 @@ export function sketchRoute(points: SketchPoint[], w: number, h: number, pad = 2
   const step = Math.ceil(good.length / MAX_POINTS);
   const pts = step <= 1 ? good : good.filter((p, i) => i % step === 0 || p.segmentStart || i === good.length - 1);
 
-  const meanLat = pts.reduce((s, p) => s + p.lat, 0) / pts.length;
-  const k = Math.cos((meanLat * Math.PI) / 180);
-  const raw = pts.map((p) => ({ x: p.lng * k, y: -p.lat }));
-  const xs = raw.map((p) => p.x);
-  const ys = raw.map((p) => p.y);
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
-  const spanX = maxX - minX;
-  const spanY = maxY - minY;
-  const innerW = Math.max(1, w - pad * 2);
-  const innerH = Math.max(1, h - pad * 2);
-  const scale = spanX === 0 && spanY === 0 ? 0 : Math.min(spanX ? innerW / spanX : Infinity, spanY ? innerH / spanY : Infinity);
-  const offX = (w - spanX * scale) / 2;
-  const offY = (h - spanY * scale) / 2;
-  const xy = raw.map((p) => ({ x: r1(offX + (p.x - minX) * scale), y: r1(offY + (p.y - minY) * scale) }));
+  const fit = fitBox(pts, w, h, pad);
+  const xy = pts.map(fit);
 
   const segs: XY[][] = [];
   pts.forEach((p, i) => {
@@ -68,6 +53,29 @@ export function sketchRoute(points: SketchPoint[], w: number, h: number, pad = 2
     gaps.push(`M${a.x} ${a.y} L${b.x} ${b.y}`);
   }
   return { segments: segs.map(toPath), gaps, start: xy[0], end: xy[xy.length - 1] };
+}
+
+/**
+ * Equirectangular projection fitting `points` into a w×h box with `pad` around (keeps the route's shape).
+ * Returns lat/lng → screen x/y; also used for things drawn on top of the route (Stops on S-07c).
+ */
+export function fitBox(points: { lat: number; lng: number }[], w: number, h: number, pad: number): (p: { lat: number; lng: number }) => XY {
+  const meanLat = points.length ? points.reduce((s, p) => s + p.lat, 0) / points.length : 0;
+  const k = Math.cos((meanLat * Math.PI) / 180);
+  const xs = points.map((p) => p.lng * k);
+  const ys = points.map((p) => -p.lat);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  const spanX = maxX - minX;
+  const spanY = maxY - minY;
+  const innerW = Math.max(1, w - pad * 2);
+  const innerH = Math.max(1, h - pad * 2);
+  const scale = spanX === 0 && spanY === 0 ? 0 : Math.min(spanX ? innerW / spanX : Infinity, spanY ? innerH / spanY : Infinity);
+  const offX = (w - spanX * scale) / 2;
+  const offY = (h - spanY * scale) / 2;
+  return (p) => ({ x: r1(offX + (p.lng * k - minX) * scale), y: r1(offY + (-p.lat - minY) * scale) });
 }
 
 export type GpsQuality = 'good' | 'weak' | 'searching';
