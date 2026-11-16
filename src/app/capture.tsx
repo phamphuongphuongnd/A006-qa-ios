@@ -223,7 +223,7 @@ export default function CaptureScreen() {
       actionLabel: t('common.undo'),
       onAction: () => {
         // "Saved · Fuel (auto-sorted)" + Undo takes back the sorting, not the entry (F-02).
-        if (auto && !photoFailed) return undoAfterSave(db, row.id);
+        if (auto && !photoFailed) return undoAfterSave(db, row.id, auto.previousScope);
         const { orphaned } = deleteEntries(db, [row.id]);
         deleteReceiptFiles(orphaned);
       },

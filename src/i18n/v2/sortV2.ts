@@ -42,7 +42,6 @@ export const sortV2 = {
   always: 'Always',
   ruleSaved: 'Rule saved · {name} → {category}',
   // Saved-time auto sort (S3 shows it after capture)
-  autoSortedAs: 'Saved · auto-sorted as {name}',
 
   // S-06a
   choose: 'Choose',

@@ -1,6 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { ChevronDown, RotateCcw } from '@/ui/icons';
-import { Repeat, Zap } from '@/features/rules/icons';
+import { ChevronDown, RotateCcw , Repeat, Zap } from '@/ui/icons';
 import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 

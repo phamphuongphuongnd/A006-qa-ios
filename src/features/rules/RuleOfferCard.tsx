@@ -1,4 +1,4 @@
-import { Zap } from '@/features/rules/icons';
+import { Zap } from '@/ui/icons';
 import { View } from 'react-native';
 
 import { t } from '@/i18n';

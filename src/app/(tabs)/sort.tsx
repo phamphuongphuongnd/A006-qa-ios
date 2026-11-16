@@ -1,6 +1,5 @@
 import { router } from '@/services/router';
-import { List } from '@/ui/icons';
-import { Zap } from '@/features/rules/icons';
+import { List , Zap } from '@/ui/icons';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

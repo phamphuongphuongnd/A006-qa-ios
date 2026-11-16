@@ -54,6 +54,7 @@ describe('parseReceipt — real A13 read of the Shell photo', () => {
   // Lines and boxes as ML Kit returned them on the Galaxy A13 (y centre, x left); total figure read as "£72.4O" / "£72.4".
   const at = (text: string, y: number, x: number): RawLine => ({ text, box: { x, y: y - 0.012, w: 0.25, h: 0.024 } });
   const raw: RawOcr = {
+    text: '',
     lines: [
       at('M62 J25 BRIGHOUSE', 0.35, 0.3),
       at('SHELL', 0.41, 0.23),

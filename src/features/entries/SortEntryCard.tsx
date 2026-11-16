@@ -1,5 +1,5 @@
 import { Briefcase, CheckCircle2, ChevronDown, Combine, Pencil, Plus, SkipForward, Split, User, X, type LucideIcon } from '@/ui/icons';
-import { Zap } from '@/features/rules/icons';
+import { Zap } from '@/ui/icons';
 import { useRef, useState } from 'react';
 import { Animated, Image, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 

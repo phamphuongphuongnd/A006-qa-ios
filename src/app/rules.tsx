@@ -1,6 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { ChevronDown, Plus } from '@/ui/icons';
-import { Zap } from '@/features/rules/icons';
+import { ChevronDown, Plus , Zap } from '@/ui/icons';
 import { createElement, useState } from 'react';
 import { Keyboard, Pressable, View } from 'react-native';
 

@@ -1,7 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { router } from '@/services/router';
-import { CloudUpload } from '@/ui/icons';
-import { Zap } from '@/features/rules/icons';
+import { CloudUpload , Zap } from '@/ui/icons';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
