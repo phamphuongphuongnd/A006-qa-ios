@@ -59,6 +59,7 @@ export function SortTripCard({
             <MapPin size={18} color={colors.text} />
             <Txt style={{ fontSize: 15, fontFamily: fonts.bold }}>{t('sortV2.trip')}</Txt>
             {trip.startedBy === 'auto' ? <Badge kind="auto" label={t('sortV2.autoLabel')} /> : null}
+            {trip.source === 'gap' ? <Badge kind="neutral" label={t('tripCheck.estimated')} /> : null}
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
             <Txt v="amount" style={{ fontSize: 44, lineHeight: 50 }}>

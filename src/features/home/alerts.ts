@@ -3,7 +3,18 @@
  * feature only says whether its alert is due (signals from features/trips, features/backup, features/pro); Home
  * picks and draws the card (features/home/HomeAlert.tsx).
  */
-export const HOME_ALERT_ORDER = ['tripStopped', 'autoPaused', 'noTrips', 'backupFailing', 'proRenews', 'oldBackup'] as const;
+export const HOME_ALERT_ORDER = [
+  'tripStopped',
+  'autoPaused',
+  'noTrips',
+  // S1c: Missing trips (Q26), odometer off by the threshold (Q27), odometer reading due (Q27).
+  'missingTrips',
+  'odometer',
+  'odometerDue',
+  'backupFailing',
+  'proRenews',
+  'oldBackup',
+] as const;
 export type HomeAlertId = (typeof HOME_ALERT_ORDER)[number];
 
 /** ✕ hides a card for 7 days (not the first one: a stopped trip must be answered). */

@@ -10,12 +10,16 @@ import { openManageSubscription } from '@/features/pro/manage';
 import { useProRenewalSignal } from '@/features/pro/homeAlerts';
 import { dismissNoTrips, useTripAlertSignals } from '@/features/trips/homeAlerts';
 import { InterruptedTripCard } from '@/features/trips/TripCards';
+import { recentGaps } from '@/features/trips/check/gaps';
+import { useGapDistances, useMissingTrips, useOdometerSignal } from '@/features/trips/check/hooks';
+import { acceptReading } from '@/features/trips/check/repo';
+import { formatDistance } from '@/features/trips/format';
 import { t } from '@/i18n';
 import { router } from '@/services/router';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { AlertCard } from '@/ui';
-import { CalendarClock, CloudUpload, MapPin, ShieldAlert } from '@/ui/icons';
+import { CalendarClock, CloudUpload, Gauge, MapPin, ShieldAlert } from '@/ui/icons';
 
 import { ALERT_SNOOZE_MS, joinDays, pickHomeAlert, type HomeAlertId } from './alerts';
 
@@ -27,12 +31,21 @@ export function HomeAlert({ now }: { now: number }) {
   const renewal = useProRenewalSignal(now);
   const count = useLive(() => entryCount(db), [], ['entries']);
   const backup = backupAlertSignals(settings, count, now);
+  const gaps = recentGaps(useMissingTrips(), now);
+  const gapDist = useGapDistances(gaps);
+  const gapMeters = gaps.reduce((sum, g) => sum + (gapDist.get(g.key)?.meters ?? g.estimateM), 0);
+  const odo = useOdometerSignal(now);
+  const unit = settings.distanceUnit;
+  const dist0 = (miles: number) => formatDistance(miles * 1609.344, unit, 0);
 
   const id = pickHomeAlert(
     {
       tripStopped: trip.tripStopped,
       autoPaused: trip.autoPaused,
       noTrips: trip.noTripsDays.length > 0,
+      missingTrips: gaps.length > 0,
+      odometer: odo?.kind === 'missing' || odo?.kind === 'over',
+      odometerDue: odo?.kind === 'due',
       backupFailing: backup.failing,
       proRenews: renewal.due,
       // Its own snooze key (bản 1 banner), checked inside showBackupBanner.
@@ -74,6 +87,72 @@ export function HomeAlert({ now }: { now: number }) {
           secondary={t('homeV2.alert.notDriving')}
           onSecondary={() => dismissNoTrips(trip.noTripsDays)}
           onClose={() => hide('noTrips')}
+        />
+      );
+    case 'missingTrips':
+      return (
+        <AlertCard
+          tone="warn"
+          icon={MapPin}
+          title={gaps.length === 1 ? t('tripCheck.homeGapsTitleOne') : t('tripCheck.homeGapsTitle', { count: gaps.length })}
+          body={t('tripCheck.homeGapsBody', { distance: formatDistance(gapMeters, unit) })}
+          action={t('tripCheck.review')}
+          onAction={() => router.navigate({ pathname: '/miles', params: { review: 'gaps' } })}
+          secondary={t('tripCheck.later')}
+          onSecondary={() => hide('missingTrips')}
+          onClose={() => hide('missingTrips')}
+        />
+      );
+    case 'odometer': {
+      if (!odo || (odo.kind !== 'missing' && odo.kind !== 'over')) return null;
+      const r = odo.check.result;
+      const prev = odo.check.prev;
+      const compare =
+        r.kind === 'missing' && prev ? t('tripCheck.odoCompare', { odo: dist0(r.odoMiles), date: dayMonth(prev.readAt), app: dist0(r.appMiles) }) : '';
+      const reading = odo.check.reading;
+      return r.kind === 'missing' ? (
+        <AlertCard
+          tone="warn"
+          icon={Gauge}
+          title={t('tripCheck.odoMissingTitle', { distance: dist0(r.diffMiles) })}
+          body={compare}
+          action={t('tripCheck.addMissing')}
+          onAction={() =>
+            router.push({
+              pathname: '/trip/new',
+              params: { odoMiles: String(Math.round(r.diffMiles * 10) / 10), date: String(reading.readAt - 60_000) },
+            })
+          }
+          secondary={t('tripCheck.thatsFine')}
+          onSecondary={() => acceptReading(db, reading.id)}
+          onClose={() => hide('odometer')}
+        />
+      ) : (
+        <AlertCard
+          tone="warn"
+          icon={Gauge}
+          title={t('tripCheck.odoOverTitle')}
+          body={t('tripCheck.odoOverBody')}
+          action={t('tripCheck.reviewTrips')}
+          onAction={() => router.navigate('/miles')}
+          secondary={t('tripCheck.thatsFine')}
+          onSecondary={() => acceptReading(db, reading.id)}
+          onClose={() => hide('odometer')}
+        />
+      );
+    }
+    case 'odometerDue':
+      return (
+        <AlertCard
+          tone="info"
+          icon={Gauge}
+          title={t('tripCheck.odoDueTitle')}
+          body={t('tripCheck.odoDueBody')}
+          action={t('tripCheck.enterReading')}
+          onAction={() => router.push('/trip/odometer')}
+          secondary={t('tripCheck.later')}
+          onSecondary={() => hide('odometerDue')}
+          onClose={() => hide('odometerDue')}
         />
       );
     case 'backupFailing':

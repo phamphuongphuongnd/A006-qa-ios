@@ -35,7 +35,7 @@ import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, useTheme } from '@/theme';
 import { Badge, Dialog, Field, Group, Segmented, Sheet, Toggle, Txt } from '@/ui';
 
-type Picker = 'region' | 'scope' | 'unit' | 'lockAfter' | 'vehicle' | null;
+type Picker = 'region' | 'scope' | 'unit' | 'lockAfter' | 'vehicle' | 'odometer' | null;
 
 const LOCK_AFTER: Option<AppSettings['lockAfterMs']>[] = [
   { value: 0, label: 'Immediately' },
@@ -185,6 +185,7 @@ export default function SettingsScreen() {
             <NavRow title={t('settingsV2.nfcTag')} onPress={() => router.push('/trip/nfc')} />
           )}
           <NavRow title={t('settingsV2.workHours')} value={settings.workHours.on ? t('settingsV2.on') : t('settingsV2.off')} onPress={() => router.push('/trip/work-hours')} />
+          <NavRow title={t('tripCheck.setting')} value={t(`tripCheck.${settings.odometerCheck}`)} onPress={() => setPicker('odometer')} />
         </Group>
 
         <GroupLabel>{t('settingsV2.sorting')}</GroupLabel>
@@ -342,6 +343,18 @@ export default function SettingsScreen() {
         ]}
         value={settings.distanceUnit}
         onPick={(v) => update({ distanceUnit: v })}
+        onClose={() => setPicker(null)}
+      />
+      <OptionSheet<AppSettings['odometerCheck']>
+        visible={picker === 'odometer'}
+        title={t('tripCheck.setting')}
+        options={[
+          { value: 'off', label: t('tripCheck.off') },
+          { value: 'weekly', label: t('tripCheck.weekly'), sub: region === 'UK' ? t('tripCheck.weeklySubUK') : t('tripCheck.weeklySub') },
+          { value: 'monthly', label: t('tripCheck.monthly'), sub: region === 'UK' ? t('tripCheck.monthlySubUK') : t('tripCheck.monthlySub') },
+        ]}
+        value={settings.odometerCheck}
+        onPick={(v) => update({ odometerCheck: v })}
         onClose={() => setPicker(null)}
       />
       <OptionSheet<AppSettings['lockAfterMs']>

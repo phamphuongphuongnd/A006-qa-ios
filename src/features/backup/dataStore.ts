@@ -2,6 +2,7 @@ import {
   categories,
   entries,
   knownRoutes,
+  odometerReadings,
   places,
   proState,
   receipts,
@@ -9,6 +10,7 @@ import {
   ruleOffers,
   rules,
   settings,
+  tripGapDismissals,
   tripPoints,
   trips,
   tripSegments,
@@ -37,6 +39,8 @@ export function snapshotTables(db: AppDb): BackupTables {
     recurring: db.select().from(recurring).all(),
     knownRoutes: db.select().from(knownRoutes).all(),
     places: db.select().from(places).all(),
+    tripGapDismissals: db.select().from(tripGapDismissals).all(),
+    odometerReadings: db.select().from(odometerReadings).all(),
     proState: db.select().from(proState).all(),
   };
 }
@@ -56,6 +60,8 @@ function clearAll(tx: AppDb) {
   tx.delete(trips).run();
   tx.delete(knownRoutes).run();
   tx.delete(places).run();
+  tx.delete(tripGapDismissals).run();
+  tx.delete(odometerReadings).run();
   tx.delete(receipts).run();
   tx.delete(entries).run();
   tx.delete(rules).run();
@@ -109,6 +115,8 @@ export function replaceAllData(db: AppDb, t: BackupTables, backupCreatedAt?: num
     insertChunks(t.recurring ?? [], (p) => d.insert(recurring).values(p).run());
     insertChunks(t.knownRoutes ?? [], (p) => d.insert(knownRoutes).values(p).run());
     insertChunks(t.places ?? [], (p) => d.insert(places).values(p).run());
+    insertChunks(t.tripGapDismissals ?? [], (p) => d.insert(tripGapDismissals).values(p).run());
+    insertChunks(t.odometerReadings ?? [], (p) => d.insert(odometerReadings).values(p).run());
     if (!d.select().from(proState).get()) insertChunks(t.proState ?? [], (p) => d.insert(proState).values(p).run());
     insertChunks(t.settings, (p) => d.insert(settings).values(p).run());
     if (backupCreatedAt !== undefined) {
@@ -133,5 +141,7 @@ export function wipeAllData(db: AppDb): string[] {
   return [...new Set(paths)];
 }
 
-/** File names referenced by receipt rows (what a backup must carry). */
-export const referencedPhotos = (t: Pick<BackupTables, 'receipts'>) => [...new Set(t.receipts.map((r) => r.filePath))];
+/** File names referenced by receipt rows and odometer readings (what a backup must carry). */
+export const referencedPhotos = (t: Pick<BackupTables, 'receipts'> & Partial<Pick<BackupTables, 'odometerReadings'>>) => [
+  ...new Set([...t.receipts.map((r) => r.filePath), ...(t.odometerReadings ?? []).flatMap((r) => (r.photoPath ? [r.photoPath] : []))]),
+];

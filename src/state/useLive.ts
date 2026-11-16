@@ -18,7 +18,10 @@ export type LiveTable =
   | 'rule_offers'
   | 'recurring'
   | 'known_routes'
-  | 'pro_state';
+  | 'pro_state'
+  | 'places'
+  | 'trip_gap_dismissals'
+  | 'odometer_readings';
 
 const versions = new Map<string, number>();
 const subs = new Map<string, Set<() => void>>();

@@ -7,6 +7,7 @@ import { unsortedCount } from '@/db/entriesRepo';
 import { entries } from '@/db/schema';
 import { getSettings } from '@/db/settingsRepo';
 import type { AppDb } from '@/db/types';
+import { nextOdometerReminder } from '@/features/trips/check/odometer';
 import { t } from '@/i18n';
 
 import { nextReminderAt, nudgeDays, nudgeTimes, reminderContent, startOfDay, type NudgeTime, type ReminderTime } from './reminder';
@@ -14,6 +15,9 @@ import { nextReminderAt, nudgeDays, nudgeTimes, reminderContent, startOfDay, typ
 export const SORT_CHANNEL = 'weekly-sort';
 export const NUDGE_CHANNEL = 'daily-nudge';
 export const BACKUP_CHANNEL = 'backup';
+export const ODOMETER_CHANNEL = 'odometer-check';
+const ODOMETER_ID = 'odometer-check-0';
+export const ODOMETER_URL = '/trip/odometer';
 /** Weeks scheduled ahead. The nightly background task and every app start move the window on, so it never runs out. */
 const WEEKS_AHEAD = 4;
 const NUDGE_DAYS_AHEAD = 7;
@@ -99,9 +103,29 @@ export async function scheduleDailyNudge(n: NudgeTime, days: number[], loggedTod
   }
 }
 
+/** Q27: one quiet "Odometer check" reminder at 09:00 on the next Monday / 1st (UK also 6 April); none when off. */
+export async function scheduleOdometerReminder(cadence: 'off' | 'weekly' | 'monthly', region: 'UK' | 'US', now = Date.now()) {
+  await cancelIds([ODOMETER_ID]);
+  const at = nextOdometerReminder(cadence, region, now);
+  if (at === null || !(await notificationsAllowed())) return;
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync(ODOMETER_CHANNEL, {
+      name: t('tripCheck.channel'),
+      description: t('tripCheck.channelDesc'),
+      importance: AndroidImportance.LOW,
+    });
+  }
+  await Notifications.scheduleNotificationAsync({
+    identifier: ODOMETER_ID,
+    content: { title: t('tripCheck.notifTitle'), body: t('tripCheck.notifBody'), data: { url: ODOMETER_URL }, sound: false },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at, channelId: ODOMETER_CHANNEL },
+  });
+}
+
 /** "Delete all data": nothing scheduled may outlive the data. */
 export async function cancelAllReminders() {
   await cancelSortReminders();
+  await cancelIds([ODOMETER_ID]);
   await cancelIds(Array.from({ length: NUDGE_DAYS_AHEAD }, (_, i) => nudgeId(i)));
   await Notifications.dismissNotificationAsync(BACKUP_TAP_ID).catch(() => {});
 }
@@ -124,6 +148,7 @@ export async function syncReminders(db: AppDb, now = Date.now()) {
   if (!s.onboarded) return cancelAllReminders();
   await scheduleSortReminders(s.reminder, unsortedCount(db), now);
   await scheduleDailyNudge(s.dailyNudge, nudgeDays(s.dailyNudge, s.workHours), loggedToday(db, now), now);
+  await scheduleOdometerReminder(s.odometerCheck, s.region ?? 'UK', now);
 }
 
 /** F-17 "Tap to finish last night's backup" (posted by the nightly task when the backup failed in the background). */

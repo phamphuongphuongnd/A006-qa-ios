@@ -19,6 +19,12 @@ export const currencyOf = (region: Region): Currency => (region === 'UK' ? 'GBP'
 /** A Trip may wait in the Sort queue (P1-2): automatic trips the app could not classify for sure. */
 export type TripScope = Scope | 'unsorted';
 
+/**
+ * Where a Trip came from: recorded by GPS, typed in (odometer / distance / A → B), or added as an estimate for miles the
+ * app missed — a Missing trip between two GPS trips (Q26) or miles missing from an Odometer check (Q27). Label "Estimated".
+ */
+export type TripSource = 'gps' | 'manual' | 'gap';
+
 /** How a GPS trip was started. Manual (odometer / distance) trips have none. */
 export type TripStartedBy = 'user' | 'auto' | 'nfc';
 

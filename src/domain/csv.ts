@@ -1,5 +1,5 @@
 import { toDecimalString } from './money';
-import type { Currency, EntrySource, EntryType, Minor, Scope, TripScope, TripStartedBy } from './types';
+import type { Currency, EntrySource, EntryType, Minor, Scope, TripScope, TripSource, TripStartedBy } from './types';
 
 /** RFC 4180 field; also neutralises spreadsheet formula injection (=, +, -, @ at start). */
 export function csvField(value: string | number | boolean | null | undefined): string {
@@ -109,10 +109,10 @@ export function totalsCsv(totals: CsvTotal[], currency: Currency, periodLabel: s
   ]);
 }
 
-/** Where a trip came from in exports: GPS Start/Stop, automatic, NFC tag or typed in. */
-export type TripSourceLabel = 'GPS' | 'auto' | 'NFC' | 'manual';
-export const tripSourceLabel = (t: { source: 'gps' | 'manual'; startedBy?: TripStartedBy | null }): TripSourceLabel =>
-  t.source === 'manual' ? 'manual' : t.startedBy === 'auto' ? 'auto' : t.startedBy === 'nfc' ? 'NFC' : 'GPS';
+/** Where a trip came from in exports: GPS Start/Stop, automatic, NFC tag, typed in, or estimated for missed miles (Q26/Q27). */
+export type TripSourceLabel = 'GPS' | 'auto' | 'NFC' | 'manual' | 'gap';
+export const tripSourceLabel = (t: { source: TripSource; startedBy?: TripStartedBy | null }): TripSourceLabel =>
+  t.source === 'manual' ? 'manual' : t.source === 'gap' ? 'gap' : t.startedBy === 'auto' ? 'auto' : t.startedBy === 'nfc' ? 'NFC' : 'GPS';
 
 export interface CsvTrip {
   startedAt: number;
@@ -122,7 +122,7 @@ export interface CsvTrip {
   /** Raw export: an automatic trip still waiting in the Sort queue exports as "unsorted". */
   scope: TripScope;
   purpose: string;
-  source: 'gps' | 'manual';
+  source: TripSource;
   startedBy?: TripStartedBy | null;
   /** Times or distance changed by hand (Q19). */
   edited?: boolean;

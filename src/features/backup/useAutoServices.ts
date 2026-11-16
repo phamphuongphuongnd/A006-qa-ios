@@ -7,7 +7,7 @@ import { getSettings } from '@/db/settingsRepo';
 import { syncProNotices } from '@/features/pro/notices';
 import { refreshProFromStore } from '@/features/pro/store';
 import { generateDueRecurring } from '@/features/recurring/repo';
-import { BACKUP_TAP_URL, ensureSortChannel, NUDGE_URL, SORT_URL, syncReminders } from '@/features/settings/notifications';
+import { BACKUP_TAP_URL, ensureSortChannel, NUDGE_URL, ODOMETER_URL, SORT_URL, syncReminders } from '@/features/settings/notifications';
 import { router } from '@/services/router';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
@@ -18,7 +18,7 @@ import { registerNightlyTask } from './nightlyTask';
 
 const HOUR = 3_600_000;
 /** Notifications this hook opens (other sessions' notifications route themselves). */
-const OWN_URLS: string[] = [SORT_URL, NUDGE_URL, BACKUP_TAP_URL, '/pro'];
+const OWN_URLS: string[] = [SORT_URL, NUDGE_URL, BACKUP_TAP_URL, '/pro', ODOMETER_URL];
 
 /** Foreground catch-up: recurring entries, and a nightly backup the background task missed for > 26 h (iOS mostly). */
 function catchUp() {
@@ -44,7 +44,7 @@ export function useAutoServices() {
   // Any change to entries may change "unsorted" and "logged today".
   const entriesVersion = useLive(() => Date.now(), [], ['entries']);
   const { reminder: r, dailyNudge: n, workHours: w } = settings;
-  const key = JSON.stringify([r, n, w.on, w.days, settings.onboarded, settings.notify]);
+  const key = JSON.stringify([r, n, w.on, w.days, settings.onboarded, settings.notify, settings.odometerCheck, settings.region]);
 
   useEffect(() => {
     ensureSortChannel().catch(() => {});

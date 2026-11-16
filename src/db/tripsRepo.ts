@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 
 import { isStationaryFix, metersToMiles, milesToMeters, trackDistance, TRIP_REMINDER_MS } from '@/domain/mileage';
-import type { Period, Scope, TripStartedBy } from '@/domain/types';
+import type { Period, Scope, TripScope, TripStartedBy } from '@/domain/types';
 
 import { tripPoints, trips, type TripRow } from './schema';
 import { newId, type AppDb } from './types';
@@ -166,8 +166,13 @@ export const routeTitle = (t: Pick<TripRow, 'fromLabel' | 'toLabel'>) => (t.from
 
 export interface ManualTrip {
   date: number;
-  scope: Scope;
+  /** 'unsorted' for estimated trips (Missing trip / odometer check) until the driver chooses. */
+  scope: TripScope;
   purpose: string;
+  /** 'gap' = estimated trip (Q26 Missing trip, Q27 odometer check), label "Estimated". Default 'manual'. */
+  source?: 'manual' | 'gap';
+  /** Estimated trips between two GPS trips keep the gap's end time (default: same as `date`). */
+  endedAt?: number;
   miles?: number;
   odoStart?: number;
   odoEnd?: number;
@@ -180,10 +185,10 @@ export function addManualTrip(db: AppDb, t: ManualTrip): TripRow {
   if (!(miles > 0)) throw new Error('trip distance must be positive');
   const row: TripRow = {
     id: newId(),
-    source: 'manual',
+    source: t.source ?? 'manual',
     status: 'done',
     startedAt: t.date,
-    endedAt: t.date,
+    endedAt: t.endedAt ?? t.date,
     distanceM: milesToMeters(miles),
     odoStart: t.odoStart ?? null,
     odoEnd: t.odoEnd ?? null,
@@ -277,7 +282,7 @@ export function updateManualTrip(db: AppDb, id: string, t: ManualTrip) {
   db.update(trips)
     .set({
       startedAt: t.date,
-      endedAt: t.date,
+      endedAt: t.endedAt ?? t.date,
       distanceM: milesToMeters(miles),
       odoStart: t.odoStart ?? null,
       odoEnd: t.odoEnd ?? null,
@@ -285,7 +290,7 @@ export function updateManualTrip(db: AppDb, id: string, t: ManualTrip) {
       purpose: t.purpose.trim(),
       ...(t.route !== undefined ? routeCols(t.route) : {}),
     })
-    .where(and(eq(trips.id, id), eq(trips.source, 'manual')))
+    .where(and(eq(trips.id, id), inArray(trips.source, ['manual', 'gap'])))
     .run();
 }
 

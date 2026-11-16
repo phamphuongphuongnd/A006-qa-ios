@@ -10,6 +10,7 @@ import type {
   Scope,
   TripClassifiedBy,
   TripScope,
+  TripSource,
   TripStartedBy,
 } from '@/domain/types';
 
@@ -89,7 +90,7 @@ export const trips = sqliteTable(
   'trips',
   {
     id: text('id').primaryKey(),
-    source: text('source').$type<'gps' | 'manual'>().notNull(),
+    source: text('source').$type<TripSource>().notNull(),
     status: text('status').$type<TripStatus>().notNull(),
     startedAt: integer('started_at').notNull(),
     endedAt: integer('ended_at'),
@@ -258,6 +259,30 @@ export const places = sqliteTable('places', {
   lastUsedAt: integer('last_used_at').notNull(),
 });
 
+/** "Not a trip" (or "Add") answered for the gap between these two GPS trips (Q26): that Missing trip is not shown again. */
+export const tripGapDismissals = sqliteTable('trip_gap_dismissals', {
+  prevTripId: text('prev_trip_id').notNull(),
+  nextTripId: text('next_trip_id').primaryKey(),
+  /** 'dismissed' = "Not a trip"; 'added' = an estimated trip was saved for it. */
+  answer: text('answer').$type<'dismissed' | 'added'>().notNull().default('dismissed'),
+  createdAt: integer('created_at').notNull(),
+});
+
+/** Odometer check (Q27): a reading of the vehicle's odometer, compared with the miles logged since the previous one. */
+export const odometerReadings = sqliteTable(
+  'odometer_readings',
+  {
+    id: text('id').primaryKey(),
+    readAt: integer('read_at').notNull(),
+    value: real('value').notNull(),
+    /** Unit the driver typed the reading in (Settings → Distance unit at the time). */
+    unit: text('unit').$type<'mi' | 'km'>().notNull().default('mi'),
+    /** Optional photo of the dashboard: file name in the receipts folder (not a receipt; not counted in the allowance). */
+    photoPath: text('photo_path'),
+  },
+  (t) => [index('odometer_readings_read_idx').on(t.readAt)],
+);
+
 /** Key → JSON value. See `settings` repository for the typed shape. */
 export const settings = sqliteTable('settings', {
   key: text('key').primaryKey(),
@@ -277,3 +302,5 @@ export type RecurringRow = typeof recurring.$inferSelect;
 export type KnownRouteRow = typeof knownRoutes.$inferSelect;
 export type ProStateRow = typeof proState.$inferSelect;
 export type PlaceRow = typeof places.$inferSelect;
+export type TripGapDismissalRow = typeof tripGapDismissals.$inferSelect;
+export type OdometerReadingRow = typeof odometerReadings.$inferSelect;

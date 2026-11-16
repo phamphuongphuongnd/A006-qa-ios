@@ -1,7 +1,8 @@
 import { router } from '@/services/router';
 import { ChevronDown, ChevronRight, Flag, Gauge, LocateFixed, MapPin, MoreHorizontal, Plus, Smartphone, Truck } from '@/ui/icons';
-import { useEffect, useMemo, useState } from 'react';
-import { Linking, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { Fragment, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
+import { Linking, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { db } from '@/db/client';
@@ -13,6 +14,9 @@ import { taxYearFor, taxYearOf } from '@/domain/taxYear';
 import { currencyOf, type Region, type Scope } from '@/domain/types';
 import { setTripScope, restoreTripScope } from '@/features/trips/auto/repo';
 import { autoTripState } from '@/features/trips/autoState';
+import { useGapDistances, useGapLabels, useMissingTrips, useReadingChecks } from '@/features/trips/check/hooks';
+import { interleaveMonth } from '@/features/trips/check/listRows';
+import { GapRow, OdometerRow } from '@/features/trips/check/rows';
 import { formatClock, formatDay, formatDistance, groupByMonth, type DistanceUnit } from '@/features/trips/format';
 import { sweepThumbs } from '@/features/trips/map/thumbs';
 import { TripThumb } from '@/features/trips/map/TripThumb';
@@ -78,6 +82,27 @@ export default function MilesScreen() {
     [allTrips, year.start, year.end],
   );
   const totals = useLive(() => mileageTotals(db, year), [year.start, year.end], ['trips']);
+  // Q26 Missing trips (last 30 days) + Q27 odometer readings, drawn inside the month lists.
+  const gaps = useMissingTrips();
+  const gapDist = useGapDistances(gaps);
+  const gapLabels = useGapLabels(gaps);
+  const odoChecks = useReadingChecks();
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
+  const firstGapRef = useRef<ComponentRef<typeof View>>(null);
+  const { review } = useLocalSearchParams<{ review?: string }>();
+  // "Review" on the Home card: scroll to the first Missing trip row once the list is drawn.
+  useEffect(() => {
+    if (review !== 'gaps' || gaps.length === 0) return;
+    const timer = setTimeout(() => {
+      const sv = scrollRef.current;
+      const row = firstGapRef.current;
+      const inner = sv?.getInnerViewRef();
+      if (!sv || !row || !inner) return;
+      row.measureLayout(inner, (_x, y) => sv.scrollTo({ y: Math.max(0, y - 120), animated: true }));
+      router.setParams({ review: undefined });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [review, gaps.length]);
   const business = useLive(() => businessTripMiles(db, year), [year.start, year.end], ['trips']);
   const years = useMemo(() => {
     const set = new Set<number>([currentYear, startYear]);
@@ -138,6 +163,7 @@ export default function MilesScreen() {
       }
       contentStyle={empty ? { flexGrow: 1 } : undefined}
       fab={<CaptureFab />}
+      scrollRef={scrollRef}
       onEndReached={showMore}>
       <InterruptedTripCard />
       {denied ? <DeniedCard onAllow={onAllow} /> : null}
@@ -175,10 +201,24 @@ export default function MilesScreen() {
                 </Txt>
               </View>
               <Card style={{ paddingVertical: 0, paddingHorizontal: 14 }}>
-                {m.rows.map((trip, i) => (
-                  <TripSwipeRow key={trip.id} onScope={(sc) => onScope(trip, sc)}>
-                    <TripRowView trip={trip} unit={unit} divider={i > 0} />
-                  </TripSwipeRow>
+                {interleaveMonth(m.key, m.rows, m.rows.length === m.items.length, gaps, odoChecks).map((it, i) => (
+                  <Fragment key={it.key}>
+                    {it.kind === 'trip' ? (
+                      <TripSwipeRow onScope={(sc) => onScope(it.trip, sc)}>
+                        <TripRowView trip={it.trip} unit={unit} divider={i > 0} />
+                      </TripSwipeRow>
+                    ) : it.kind === 'gap' ? (
+                      <GapRow
+                        ref={it.gap.key === gaps[0]?.key ? firstGapRef : undefined}
+                        gap={it.gap}
+                        distance={gapDist.get(it.gap.key) ?? { meters: it.gap.estimateM, routed: false }}
+                        labels={gapLabels.get(it.gap.key) ?? { from: '', to: '' }}
+                        unit={unit}
+                      />
+                    ) : (
+                      <OdometerRow reading={it.odo.reading} result={it.odo.result} unit={unit} divider={i > 0} />
+                    )}
+                  </Fragment>
                 ))}
               </Card>
             </View>
@@ -214,6 +254,15 @@ export default function MilesScreen() {
           onPress={() => {
             setMenu(false);
             router.push('/trip/nfc');
+          }}
+        />
+        <Divider />
+        <MenuRow
+          icon={Gauge}
+          label={t('tripCheck.odoTitle')}
+          onPress={() => {
+            setMenu(false);
+            router.push('/trip/odometer');
           }}
         />
       </Sheet>
@@ -302,22 +351,26 @@ function TripRowView({ trip, unit, divider }: { trip: TripRow; unit: DistanceUni
   const bg = trip.scope === 'unsorted' ? colors.sunSoft : personal ? colors.personalSoft : gps ? colors.workSoft : colors.surfaceAlt;
   const title = t('miles.rowLabel', { date: formatDay(trip.startedAt), distance: formatDistance(trip.distanceM, unit) });
   const ab = routeTitle(trip);
+  const estimated = trip.source === 'gap';
   const how = ab
     ? t('autoTrip.route.mode')
-    : !gps
+    : estimated
+      ? ''
+      : !gps
       ? t('autoTrip.manual')
       : trip.startedBy === 'auto'
         ? t('autoTrip.auto')
         : trip.startedBy === 'nfc'
           ? t('autoTrip.nfc')
           : t('autoTrip.gps');
-  const times = gps && trip.endedAt ? `${formatClock(trip.startedAt)}–${formatClock(trip.endedAt)}` : '';
+  const times =
+    (gps || estimated) && trip.endedAt && trip.endedAt !== trip.startedAt ? `${formatClock(trip.startedAt)}–${formatClock(trip.endedAt)}` : '';
   const sub = [times, ab ?? how, ab && trip.roundTrip ? t('autoTrip.route.roundTag') : '', trip.purpose].filter(Boolean).join(' · ');
   const scopeLabel = trip.scope === 'unsorted' ? t('autoTrip.unsorted') : personal ? t('common.personal') : t('common.work');
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${title}. ${sub}. ${scopeLabel}${trip.edited ? `. ${t('miles.edited')}` : ''}. ${t('autoTrip.swipeHint')}`}
+      accessibilityLabel={`${title}. ${sub}. ${scopeLabel}${trip.edited ? `. ${t('miles.edited')}` : ''}${estimated ? `. ${t('tripCheck.estimated')}` : ''}. ${t('autoTrip.swipeHint')}`}
       onPress={() => router.push(`/trip/${trip.id}`)}
       style={({ pressed }) => [styles.li, divider && { borderTopWidth: 1, borderTopColor: colors.line }, pressed && { opacity: 0.7 }]}>
       {gps ? (
@@ -343,6 +396,7 @@ function TripRowView({ trip, unit, divider }: { trip: TripRow; unit: DistanceUni
             {sub}
           </Txt>
           {trip.edited ? <Badge kind="neutral" label={t('miles.edited')} /> : null}
+          {estimated ? <Badge kind="neutral" label={t('tripCheck.estimated')} /> : null}
         </View>
       </View>
       {trip.scope === 'unsorted' ? <Badge kind="unsorted" label={scopeLabel} /> : <Tag kind={personal ? 'personal' : 'work'} label={scopeLabel} />}

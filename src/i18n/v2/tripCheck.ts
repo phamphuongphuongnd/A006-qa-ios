@@ -1,0 +1,82 @@
+/** S1c: Missing trip (Q26) + Odometer check (Q27) — Miles rows, Home cards, S-08 / S-08b, Settings → Trips. */
+export const tripCheck = {
+  // ---- Missing trip ----
+  gapTitle: 'Missing trip?',
+  /** "≈ 6.2 mi · Depot → Tesco Extra" */
+  gapEstimate: '≈ {distance}',
+  gapRouted: '{distance} · driving route',
+  gapEstimatedTag: 'estimated',
+  gapBetween: '{from} → {to}',
+  gapA11y: 'Missing trip? About {distance} between {from} and {to} was not recorded.',
+  add: 'Add',
+  notATrip: 'Not a trip',
+  notATripDone: 'Gap hidden',
+  undo: 'Undo',
+  estimated: 'Estimated',
+  /** S-08 prefilled from a gap / an odometer check. */
+  gapHint: 'Estimated from the gap between two trips',
+  odoHint: 'Missing from odometer check',
+  gapAddTitle: 'Add missing trip',
+
+  homeGapsTitleOne: '1 possible missing trip this week',
+  homeGapsTitle: '{count} possible missing trips this week',
+  homeGapsBody: "≈ {distance} between your trips wasn't recorded.",
+  review: 'Review',
+  later: 'Later',
+
+  // ---- Odometer check ----
+  odoTitle: 'Odometer check',
+  odoReading: 'Odometer reading',
+  odoReadingIn: 'Odometer reading ({unit})',
+  odoPlaceholder: 'e.g. 48,210',
+  addPhoto: 'Add photo',
+  photoAdded: 'Photo added',
+  removePhoto: 'Remove photo',
+  photoFree: "Doesn't count towards your monthly photos.",
+  save: 'Save',
+  done: 'Done',
+  odoIntro: 'Compare your odometer with the miles Sunday Sort logged — catches trips that were missed.',
+  odoLast: 'Last reading {value} · {date}',
+  odoInvalid: 'Enter the number on your odometer',
+  odoLowerTitle: "That's lower than your last reading ({value}).",
+  odoLowerBody: 'New vehicle or new odometer? Saving starts a new comparison from this reading.',
+  saveAnyway: 'Save anyway',
+  cancel: 'Cancel',
+  odoStart: "Starting point saved. We'll compare next time.",
+  odoMatch: 'Matches your trips ✓ ({distance})',
+  odoMissingTitle: '{distance} not logged',
+  odoOverTitle: 'The app logged more than your odometer',
+  odoOverBody: "Check for trips you didn't drive.",
+  /** "Odometer +520 mi since 1 Oct · App 406 mi." */
+  odoCompare: 'Odometer +{odo} since {date} · App {app}.',
+  addMissing: 'Add missing miles',
+  thatsFine: "That's fine",
+  reviewTrips: 'Review trips',
+  odoDueTitle: 'Time for an odometer check',
+  odoDueBody: 'Takes 10 seconds.',
+  enterReading: 'Enter reading',
+  /** Miles marker row: "Odometer 48,210 · 1 Nov" */
+  odoRow: 'Odometer {value} · {date}',
+  odoRowMatch: '✓ matches',
+  odoRowStart: 'Starting point',
+  odoRowMissing: '{distance} not logged',
+  odoRowOver: '{distance} more than odometer',
+  deleteReading: 'Delete reading',
+  readingDeleted: 'Reading deleted',
+
+  // Settings → Trips
+  setting: 'Odometer check',
+  off: 'Off',
+  weekly: 'Weekly',
+  monthly: 'Monthly',
+  weeklySub: 'Every Monday',
+  monthlySub: 'On the 1st',
+  monthlySubUK: 'On the 1st and 6 April',
+  weeklySubUK: 'Every Monday and 6 April',
+
+  // Reminder notification (silent)
+  notifTitle: 'Odometer check',
+  notifBody: 'Enter your reading to catch missed miles.',
+  channel: 'Odometer check',
+  channelDesc: 'A quiet reminder to enter your odometer reading.',
+} as const;

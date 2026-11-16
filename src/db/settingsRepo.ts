@@ -60,6 +60,8 @@ export interface AppSettings {
   mtdPeriod: 'standard' | 'calendar';
   /** S-07g: an NFC tag was written on this phone. */
   nfcTagWritten: boolean;
+  /** Q27 Odometer check reminder: off / every Monday / the 1st of the month (UK: + 6 April). */
+  odometerCheck: 'off' | 'weekly' | 'monthly';
   /** Home alert cards hidden with ✕ until this time (7 days), by alert id (features/home/alerts.ts). */
   alertSnoozedUntil: Partial<Record<string, number>>;
 }
@@ -105,6 +107,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   freeagentVehicle: null,
   mtdPeriod: 'standard',
   nfcTagWritten: false,
+  odometerCheck: 'monthly',
   alertSnoozedUntil: {},
 };
 

@@ -1,6 +1,6 @@
 import type { RoutePlace, TripRoute } from '@/db/tripsRepo';
 import { haversine, metersToMiles, odometerMiles } from '@/domain/mileage';
-import type { Scope } from '@/domain/types';
+import type { TripScope } from '@/domain/types';
 import { t } from '@/i18n';
 
 import { inputToMiles, parseNumberInput, type DistanceUnit } from './format';
@@ -30,14 +30,15 @@ export interface TripFormValues {
   end: string;
   distance: string;
   date: number;
-  scope: Scope;
+  /** 'unsorted' only for estimated trips (Missing trip / odometer check) until the driver picks a side. */
+  scope: TripScope;
   purpose: string;
   route?: RouteFormState;
 }
 
 export interface TripFormResult {
   date: number;
-  scope: Scope;
+  scope: TripScope;
   purpose: string;
   miles: number;
   odoStart?: number;

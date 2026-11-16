@@ -6,7 +6,9 @@ import { useState } from 'react';
 import { db } from '@/db/client';
 import { addManualTrip } from '@/db/tripsRepo';
 import { openPro } from '@/features/pro/openPro';
-import { formatDistance } from '@/features/trips/format';
+import { answerGap } from '@/features/trips/check/repo';
+import { distanceValue, formatDistance } from '@/features/trips/format';
+import { milesToMeters } from '@/domain/mileage';
 import { ModalHeader } from '@/features/trips/ModalHeader';
 import { rememberRoute } from '@/features/trips/route/places';
 import { useRouteOption } from '@/features/trips/route/useRouteOption';
@@ -16,14 +18,27 @@ import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { useSnackbar } from '@/ui';
 
-/** S-08 Add trip (manual). Optional `?date=<ms>` (from "Add missing miles"). */
+const num = (s: string | undefined) => (s !== undefined && s !== '' && Number.isFinite(Number(s)) ? Number(s) : null);
+
+/**
+ * S-08 Add trip (manual). Optional `?date=<ms>` (from "Add missing miles"). Estimated trips (saved with source = gap,
+ * Unsorted, label "Estimated"): `?gap=<prevId>><nextId>&gapMiles=&from=&to=` from a Missing trip row (Q26), or
+ * `?odoMiles=&date=` from an odometer check (Q27).
+ */
 export default function NewTripScreen() {
-  const { date } = useLocalSearchParams<{ date?: string }>();
+  const p = useLocalSearchParams<{ date?: string; gap?: string; gapMiles?: string; from?: string; to?: string; odoMiles?: string }>();
   const { settings } = useSettings();
   const snack = useSnackbar();
   const unit = settings.distanceUnit;
   const route = useRouteOption();
-  const [initialDate] = useState(() => (date && Number.isFinite(Number(date)) ? Number(date) : Date.now()));
+  const gapFrom = num(p.from);
+  const gapTo = num(p.to);
+  const [prevId, nextId] = (p.gap ?? '').split('>');
+  const gap = p.gap && prevId && nextId && gapFrom !== null && gapTo !== null ? { prevId, nextId, from: gapFrom, to: gapTo } : null;
+  const estMiles = gap ? num(p.gapMiles) : num(p.odoMiles);
+  const estimated = gap !== null || estMiles !== null;
+  const [initialDate] = useState(() => gap?.from ?? num(p.date) ?? Date.now());
+  const trim1 = (n: number) => String(Math.round(n * 10) / 10);
   const close = () => (router.canGoBack() ? router.back() : router.replace('/miles'));
 
   return (
@@ -34,9 +49,21 @@ export default function NewTripScreen() {
         route={route}
         region={settings.region ?? 'UK'}
         onRouteLocked={() => openPro('route_miles')}
-        initial={{ mode: 'odometer', start: '', end: '', distance: '', date: initialDate, scope: 'work', purpose: '' }}
+        hint={gap ? t('tripCheck.gapHint') : estimated ? t('tripCheck.odoHint') : undefined}
+        initial={{
+          mode: estimated ? 'distance' : 'odometer',
+          start: '',
+          end: '',
+          distance: estMiles !== null ? trim1(distanceValue(milesToMeters(estMiles), unit)) : '',
+          date: initialDate,
+          scope: estimated ? 'unsorted' : 'work',
+          purpose: '',
+        }}
         onSubmit={(r) => {
-          const row = addManualTrip(db, r);
+          // A gap trip keeps the gap's times (shifted with the day if the driver changed the date).
+          const extra = estimated && !r.route ? { source: 'gap' as const, ...(gap ? { endedAt: r.date + (gap.to - gap.from) } : {}) } : {};
+          const row = addManualTrip(db, { ...r, ...extra });
+          if (gap) answerGap(db, gap.prevId, gap.nextId, 'added');
           if (r.route) rememberRoute(db, r.route);
           refreshWidgets().catch(() => {});
           snack({ message: t('trip.saved', { distance: formatDistance(row.distanceM, unit) }) });

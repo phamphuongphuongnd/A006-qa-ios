@@ -8,7 +8,7 @@ import { t } from '@/i18n';
 import { fonts, radius, useTheme } from '@/theme';
 import { Button, Card, Dialog, Field, Screen, Segmented, Sheet, Txt } from '@/ui';
 
-import type { Region } from '@/domain/types';
+import type { Region, TripScope } from '@/domain/types';
 
 import { formatDay, formatDistance, sameDay, type DistanceUnit } from './format';
 import { RouteFields } from './route/RouteFields';
@@ -36,6 +36,7 @@ export function TripForm({
   route = 'hidden',
   region = 'UK',
   onRouteLocked,
+  hint,
 }: {
   header: React.ReactNode;
   initial: TripFormValues;
@@ -48,6 +49,8 @@ export function TripForm({
   route?: RouteOption;
   region?: Region;
   onRouteLocked?: () => void;
+  /** Small line at the top, e.g. "Estimated from the gap between two trips" (Q26 / Q27 prefill). */
+  hint?: string;
 }) {
   const { colors, dark } = useTheme();
   const [v, setV] = useState<TripFormValues>(initial);
@@ -96,6 +99,11 @@ export function TripForm({
   return (
     <Screen header={header} avoidKeyboard bottomInset bottom={<Button label={submitLabel} full onPress={submit} style={{ flex: 1 }} />}>
       <View style={{ gap: 16 }}>
+      {hint ? (
+        <Txt v="small" c="textSecondary" style={{ fontFamily: fonts.semibold }}>
+          {hint}
+        </Txt>
+      ) : null}
       {!gpsOnly ? (
         <Segmented
           accessibilityLabel={t('trip.addTitle')}
@@ -215,7 +223,7 @@ export function TripForm({
         <Txt v="caption" c="textSecondary" style={{ fontFamily: fonts.bold }}>
           {t('trip.scope')}
         </Txt>
-        <Segmented
+        <Segmented<TripScope>
           accessibilityLabel={t('trip.scope')}
           value={v.scope}
           onChange={(scope) => set({ scope })}

@@ -51,11 +51,15 @@ export function ManualTripEdit({ trip, unit, close }: { trip: TripRow; unit: Dis
         end: odo ? trim(trip.odoEnd!) : '',
         distance: trim(distanceValue(trip.distanceM, unit)),
         date: trip.startedAt,
-        scope: pickerScope(trip.scope),
+        // Estimated trips may still be Unsorted; typed-in trips always have a side.
+        scope: trip.source === 'gap' ? trip.scope : pickerScope(trip.scope),
         purpose: trip.purpose,
       }}
+      hint={trip.source === 'gap' ? t('tripCheck.estimated') : undefined}
       onSubmit={(r) => {
-        updateManualTrip(db, trip.id, r);
+        // Estimated gap trips keep their span (moved with the day).
+        const span = trip.source === 'gap' && trip.endedAt !== null ? trip.endedAt - trip.startedAt : 0;
+        updateManualTrip(db, trip.id, span > 0 ? { ...r, endedAt: r.date + span } : r);
         const before = tripRoute(trip);
         if (r.route && (!before || before.from.label !== r.route.from.label || before.to.label !== r.route.to.label)) rememberRoute(db, r.route);
         refreshWidgets().catch(() => {});

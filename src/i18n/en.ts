@@ -6,6 +6,7 @@ import { ocr } from './v2/ocr';
 import { pro } from './v2/pro';
 import { settingsV2 } from './v2/settings';
 import { sortV2 } from './v2/sortV2';
+import { tripCheck } from './v2/tripCheck';
 import { vehicle } from './v2/vehicle';
 
 /**
@@ -643,4 +644,5 @@ export const en = {
   mtd,
   homeV2,
   settingsV2,
+  tripCheck,
 } as const;

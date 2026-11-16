@@ -4,12 +4,14 @@ import type {
   CategoryRow,
   EntryRow,
   KnownRouteRow,
+  OdometerReadingRow,
   PlaceRow,
   ProStateRow,
   ReceiptRow,
   RecurringRow,
   RuleOfferRow,
   RuleRow,
+  TripGapDismissalRow,
   TripPointRow,
   TripRow,
   TripSegmentRow,
@@ -50,10 +52,24 @@ export interface BackupTables {
   proState: ProStateRow[];
   /** Q25 A → B frequent places (absent from older files → []). */
   places: PlaceRow[];
+  /** Q26 "Not a trip" answers + Q27 odometer readings (absent from older files → []). */
+  tripGapDismissals: TripGapDismissalRow[];
+  odometerReadings: OdometerReadingRow[];
 }
 
 /** Tables a version-1 backup does not have. */
-export const V2_TABLES = ['tripStops', 'tripSegments', 'rules', 'ruleOffers', 'recurring', 'knownRoutes', 'proState', 'places'] as const;
+export const V2_TABLES = [
+  'tripStops',
+  'tripSegments',
+  'rules',
+  'ruleOffers',
+  'recurring',
+  'knownRoutes',
+  'proState',
+  'places',
+  'tripGapDismissals',
+  'odometerReadings',
+] as const;
 
 export interface BackupCounts {
   entries: number;
@@ -236,6 +252,9 @@ const ROW_CHECKS: Record<keyof BackupTables, (r: Record<string, unknown>) => boo
   knownRoutes: (r) => isStr(r.id) && isNum(r.startLat) && isNum(r.startLng) && isNum(r.endLat) && isNum(r.endLng),
   proState: (r) => isStr(r.id),
   places: (r) => isStr(r.id) && isStr(r.label) && isNum(r.lat) && isNum(r.lng),
+  tripGapDismissals: (r) => isStr(r.prevTripId) && isStr(r.nextTripId),
+  odometerReadings: (r) =>
+    isStr(r.id) && isInt(r.readAt) && isNum(r.value) && (r.photoPath === null || r.photoPath === undefined || (isStr(r.photoPath) && isSafePhotoName(r.photoPath as string))),
 };
 
 /** Format → version → shape. Order matters: an unknown file is "not a backup", a future one is "newer". */

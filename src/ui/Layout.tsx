@@ -1,6 +1,6 @@
 import type { LucideIcon } from '@/ui/icons';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useRef, type ComponentRef, type ReactNode } from 'react';
+import { useCallback, useRef, type ComponentRef, type ReactNode, type Ref } from 'react';
 import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -28,6 +28,7 @@ export function Screen({
   fab,
   onEndReached,
   avoidKeyboard = false,
+  scrollRef,
 }: {
   title?: string;
   subtitle?: string;
@@ -47,6 +48,8 @@ export function Screen({
   onEndReached?: () => void;
   /** Shrink above the on-screen keyboard so the `bottom` bar (e.g. Save) stays visible while typing (B-36). */
   avoidKeyboard?: boolean;
+  /** The ScrollView (e.g. Miles scrolls to a row opened from a Home card). */
+  scrollRef?: Ref<ComponentRef<typeof ScrollView>>;
 }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -79,6 +82,7 @@ export function Screen({
       <View style={{ flex: 1 }}>
         {scroll ? (
           <ScrollView
+            ref={scrollRef}
             style={{ flex: 1 }}
             contentContainerStyle={body}
             keyboardShouldPersistTaps="handled"
