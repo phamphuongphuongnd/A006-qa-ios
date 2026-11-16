@@ -124,6 +124,14 @@ function Navigator({ onboarded }: { onboarded: boolean }) {
           <Stack.Screen name="disclaimer" />
           <Stack.Screen name="locked" options={{ gestureEnabled: false }} />
           <Stack.Screen name="dev/gallery" />
+          {/* B-37: every route must be declared inside a guard — an undeclared route stays reachable before onboarding,
+              and a fresh install lands on the first one (dev/ocr) instead of S-01a. */}
+          <Stack.Screen name="dev/ocr" />
+          <Stack.Screen name="dev/probe" />
+          <Stack.Screen name="mileage-rates" />
+          <Stack.Screen name="trip/odometer" />
+          <Stack.Screen name="trip/setup" />
+          <Stack.Screen name="trip/toggle" />
         </Stack.Protected>
         <Stack.Protected guard={!onboarded}>
           <Stack.Screen name="onboarding" />

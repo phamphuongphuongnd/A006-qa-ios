@@ -109,3 +109,18 @@
   gửi nhật ký dặm cho kế toán. Sửa: tự tick khi kỳ có chuyến. — sửa: `defaultExportKinds` theo kỳ có chuyến — thử A13: Export năm 2026 tự tick mileage log
 - [x] **B-36** 🟡 (góp ý, Phương duyệt 2026-11-13) Màn sửa khoản (S-05) và Add trip (S-08): khi bàn phím mở, nút "Save changes" /
   "Save trip" bị che, phải ẩn bàn phím mới thấy. Sửa: nút lưu nổi ngay trên bàn phím như màn Ghi nhanh. — sửa: Screen `avoidKeyboard` + nút lưu ở thanh đáy (Add/Edit trip), KeyboardAvoidingView ở S-05 — thử A13: Save trip / Save changes nổi trên bàn phím, lưu được khi bàn phím mở
+
+## Bản 2 — P5 Ghép & kiểm (2026-11-16, `dev` sau `d3df44e`; Galaxy A13 dev build S1b + Metro `dev`, trình giả lập cho cài mới)
+
+- [x] **B-37** 🔴 Cài mới không vào onboarding: mở app lần đầu rơi vào màn dev "OCR probe" (bản release: các route bản 2 không
+  khai trong `Stack.Protected` — `dev/ocr`, `dev/probe`, `mileage-rates`, `trip/odometer`, `trip/setup`, `trip/toggle` — nên trước
+  onboarding vẫn mở được và router chọn route đầu tiên) — case TC-217 — tái hiện: trình giả lập cài mới APK dev → mở app → "OCR
+  probe". — sửa: khai đủ 6 route trong nhóm `guard={onboarded}` + test `src/state/__tests__/routesDeclared.test.ts` (mọi route
+  phải được khai) — thử trình giả lập: cài mới → S-01a "Log it in 10 seconds…"
+- [ ] **B-38** 🟡 Sort → Split tại chỗ: khi gõ số tiền một phần, bàn phím che dòng "Left to assign" và nút "Split & sort" — phải
+  ẩn bàn phím mới biết còn thiếu / thừa bao nhiêu (giống B-36) — case TC-242 — tái hiện: A13 → Sort → thẻ Shell M62 → Split →
+  chạm ô Part 1 → gõ 41.20.
+- [ ] **B-39** 🟡 S-01b: thẻ United Kingdom ghi "£ · Tax year 6 Apr – 5 Apr · Self Assessment (SA103)"; product.md v2 F-01 ghi
+  "Self Assessment & MTD" — case TC-218 — tái hiện: cài mới → Get started.
+- [ ] **B-40** 🟠 CSV "mileage log" chưa có cột From / To / Round trip cho chuyến A → B (Q25) → kế toán không thấy chuyến đi đâu
+  (HMRC cần mục đích + nơi đến) — case TC-270 — `src/domain/csv.ts` `mileageCsv` (TODO P5); thêm cả cột `estimated` theo F-15.

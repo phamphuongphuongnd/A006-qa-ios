@@ -12,7 +12,7 @@ import { useLive } from './useLive';
 export function usePro(): { status: ProStatus; pro: boolean } {
   'use no memo';
   const now = useNow(60_000);
-  const row = useLive(() => getProState(db), [], ['pro_state']);
+  const row = useLive(() => getProState(db), [], ['pro_state', 'settings']);
   const status = proStatus(row, now);
   return { status, pro: hasPro(status) };
 }

@@ -1,13 +1,39 @@
-import { and, countDistinct, gte, lt } from 'drizzle-orm';
+import { and, countDistinct, eq, gte, lt } from 'drizzle-orm';
 
 import { monthOf, proStatus, trialWindow, type ProStatus } from '@/domain/pro';
 
-import { proState, receipts, type ProStateRow } from './schema';
+import { proState, receipts, settings, type ProStateRow } from './schema';
 import type { AppDb } from './types';
 
 const ID = 'pro';
 
-export const getProState = (db: AppDb): ProStateRow | null => db.select().from(proState).get() ?? null;
+/**
+ * Dev builds only (P5): pretend Pro without touching the one-time trial on a real phone — toggled from /dev/probe,
+ * stored in settings key `dev.fakePro` ('trial' | 'pro' | 'expired'). Read by screens and background code alike.
+ * Release builds never read the key.
+ */
+export const DEV_FAKE_PRO_KEY = 'dev.fakePro';
+export type DevFakePro = 'trial' | 'pro' | 'expired';
+
+function devFakePro(db: AppDb, real: ProStateRow | null): ProStateRow | null {
+  if (!__DEV__) return real;
+  const mode = db.select().from(settings).where(eq(settings.key, DEV_FAKE_PRO_KEY)).get()?.value as DevFakePro | undefined;
+  if (!mode) return real;
+  const now = Date.now();
+  const day = 24 * 60 * 60 * 1000;
+  const base = real ?? ({ id: ID, entitlement: 'none', trialStartedAt: null, trialEndsAt: null, expiresAt: null, autoRenewing: null } as ProStateRow);
+  if (mode === 'pro') return { ...base, entitlement: 'active', expiresAt: now + 30 * day, autoRenewing: true };
+  if (mode === 'trial') return { ...base, entitlement: 'none', trialStartedAt: now - day, trialEndsAt: now + 6 * day };
+  return { ...base, entitlement: 'none', trialStartedAt: now - 8 * day, trialEndsAt: now - day };
+}
+
+export const getProState = (db: AppDb): ProStateRow | null => devFakePro(db, db.select().from(proState).get() ?? null);
+
+export function setDevFakePro(db: AppDb, mode: DevFakePro | null) {
+  if (!__DEV__) return;
+  if (!mode) db.delete(settings).where(eq(settings.key, DEV_FAKE_PRO_KEY)).run();
+  else db.insert(settings).values({ key: DEV_FAKE_PRO_KEY, value: mode }).onConflictDoUpdate({ target: settings.key, set: { value: mode } }).run();
+}
 
 export const getProStatus = (db: AppDb, now = Date.now()): ProStatus => proStatus(getProState(db), now);
 

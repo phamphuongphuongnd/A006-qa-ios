@@ -6,9 +6,11 @@ import { useState } from 'react';
 import { PermissionsAndroid, ScrollView } from 'react-native';
 
 import { db } from '@/db/client';
+import { setDevFakePro } from '@/db/proRepo';
 import { getSettings, updateSettings } from '@/db/settingsRepo';
 import { PROBE_TASK, writeProbeFile } from '@/dev/probeTask';
 import { router } from '@/services/router';
+import { usePro } from '@/state/pro';
 import { useSettings } from '@/state/settings';
 import { Button, Screen, Txt } from '@/ui';
 
@@ -21,6 +23,7 @@ import { TripDetect } from '../../../modules/trip-detect';
 export default function Probe() {
   const [log, setLog] = useState<string[]>([]);
   const { settings, update } = useSettings();
+  const { status: proNow } = usePro();
   if (!__DEV__) return <Redirect href="/" />;
   const say = (s: string) => {
     console.log(`[probe] ${s}`);
@@ -39,6 +42,12 @@ export default function Probe() {
     <Screen>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 8 }}>
         <Txt v="h2">P3 probe</Txt>
+        {/* P5: test Pro-only flows on the A13 without using its one-time trial. */}
+        <Txt v="small">Pro now: {proNow.kind}</Txt>
+        <Button label="Pretend Pro (dev): trial" variant="outline" onPress={() => setDevFakePro(db, 'trial')} />
+        <Button label="Pretend Pro (dev): subscribed" variant="outline" onPress={() => setDevFakePro(db, 'pro')} />
+        <Button label="Pretend Pro (dev): expired" variant="outline" onPress={() => setDevFakePro(db, 'expired')} />
+        <Button label="Pretend Pro (dev): off (real state)" variant="outline" onPress={() => setDevFakePro(db, null)} />
         {/* Walk the v2 onboarding again on a phone with data: keeps entries, region and settings. */}
         <Button label="Replay onboarding (keeps data)" variant="outline" onPress={() => {
             update({ onboarded: false });

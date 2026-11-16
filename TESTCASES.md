@@ -229,7 +229,9 @@
 ## Bản 2 — P5 Ghép & kiểm (2026-11-16, `dev` `d3df44e`)
 
 > Sinh từ `product.md` v2 + mục "Để P5" của `PLAN-v2.md`. A13 đã rút → **E** = thử trên trình giả lập Android
-> `Medium_Phone_API_37.0` (x86_64, Play Store, dev build S1c + Metro `dev`); GPS giả bằng `adb emu geo fix` / chuỗi điểm.
+> `Medium_Phone_API_37.0` — **Phương đổi ý 2026-11-16: thử trên Galaxy A13 (M)**, trình giả lập chỉ dùng cho cài mới (onboarding).
+> A13 đang có dùng thử Pro thật (bắt đầu 16/11 12:41, hết 23/11) → luồng Pro thử trực tiếp; ca "hết hạn" dùng công tắc
+> `sundaysort://dev/probe` → "Pretend Pro (dev)" (chỉ bản dev, khoá settings `dev.fakePro`).
 > **EAS** = build iOS trên EAS. **P** = cần Phương / máy thật (chạy xe thật, NFC thật, TalkBack nghe thật, mua thật).
 > Trên trình giả lập dùng thử 7 ngày được bấm thật (không phải máy Phương) → thử được các luồng Pro.
 > File test mới: `calc` `fill` `parseReceipt` `match` `rulesDb` `recurring` `nightly` `mtd` `purchase` `proAndVehicle`
@@ -237,9 +239,9 @@
 
 | Mã | Tính năng | Trường hợp | Kết quả mong đợi | Cách | Kết quả |
 |---|---|---|---|---|---|
-| TC-217 | F-01 | S-01c cài mới (UK) | 3 thẻ Mileage rate (55p/25p) / Actual costs / Not sure yet (chọn sẵn); "What's the difference?" → sheet 4 dòng + "Estimate only — not tax advice." | E | ⏳ |
-| TC-218 | F-01 | S-01e Free & Pro | 2 cột Free / "Pro · £24.99/year", dòng "No ads. No account…", "Continue free" → S-01f; "See Pro" → S-19, không tự bắt đầu dùng thử | E | ⏳ |
-| TC-219 | F-01 | S-01c vùng US | Chữ "IRS standard rate per mile…" | E | ⏳ |
+| TC-217 | F-01 | S-01c cài mới (UK) | 3 thẻ Mileage rate (55p/25p) / Actual costs / Not sure yet (chọn sẵn); "What's the difference?" → sheet 4 dòng + "Estimate only — not tax advice." | E | ✅ E (cài mới UK): 3 thẻ, "Not sure yet" chọn sẵn, sheet 4 dòng + "Estimate only — not tax advice." |
+| TC-218 | F-01 | S-01e Free & Pro | 2 cột Free / "Pro · £24.99/year", dòng "No ads. No account…", "Continue free" → S-01f; "See Pro" → S-19, không tự bắt đầu dùng thử | E | ✅ E: 2 cột + dòng cam kết; "See Pro" → S-19 (Try / Subscribe), không tự bắt đầu dùng thử. 🟡 S-01b UK ghi "Self Assessment (SA103)" thay vì "Self Assessment & MTD" (B-39) |
+| TC-219 | F-01 | S-01c vùng US | Chữ "IRS standard rate per mile…" | E | ✅ E: "IRS standard rate per mile. Gas, repairs and insurance are included." |
 | TC-220 | F-02 Q20 | Máy tính "12.50+4.20" | Biểu thức nhỏ + "= £16.70"; Save lưu 16.70 | T calc + E | ⏳ |
 | TC-221 | F-02 Q20 | Biểu thức lỗi ("12+", ÷0) | Số mờ + "Check the sum", Save mờ | T calc + E | ⏳ |
 | TC-222 | F-02 Q21 | Nhiều ảnh | Ảnh nhỏ có ✕, nút "+ Photo", tối đa 3 ảnh/khoản | E | ⏳ |
@@ -249,37 +251,37 @@
 | TC-226 | F-02 P1-12 | OCR khi đã gõ số khác | Chip "Receipt says £… · Use" | T fill + E | ⏳ |
 | TC-227 | F-02 P1-12 | OCR không đọc được / bản free | Không hiện gì thêm; free không đọc, không chào bán | T fill + E | ⏳ |
 | TC-228 | F-02 P1-10 | Lưu khoản khớp luật [Pro] | Snackbar "Saved · Fuel (auto-sorted)" + Undo; khoản có nhãn "Auto", không vào hàng chờ | T rulesDb + E | ⏳ |
-| TC-229 | F-03 | Huy hiệu header | "Trial · N days left" khi dùng thử, "PRO" khi đã mua, không có khi free | T purchase + E | ⏳ |
-| TC-230 | F-03 Q2 | ≥ 2 ngày có khoản mà không chuyến | Thẻ "No trips on Tue or Wed" · "Add miles" / "Not driving"; không thông báo đẩy | T alerts + E | ⏳ |
-| TC-231 | F-03 | Hệ thống chặn dò tự động | Thẻ "Automatic trips were paused by your phone" · "Fix now" → S-07f | T alerts | ⏳ |
-| TC-232 | F-03 P1-7 | Sao lưu đêm lỗi 3 lần liền | Thẻ "Backups are failing" · "Check backup" | T nightly, alerts | ⏳ |
-| TC-233 | F-03 P1-11 | 7 ngày trước gia hạn | Thẻ "Pro renews on … for £24.99" · "Manage subscription" / "OK" | T alerts, purchase | ⏳ |
-| TC-234 | F-03 | Banner sao lưu cũ | Chỉ khi chưa bật sao lưu tự động và > 30 ngày | T alerts | ⏳ |
+| TC-229 | F-03 | Huy hiệu header | "Trial · N days left" khi dùng thử, "PRO" khi đã mua, không có khi free | T purchase + E | ✅ M: "Trial · 7 days left" ở header Home |
+| TC-230 | F-03 Q2 | ≥ 2 ngày có khoản mà không chuyến | Thẻ "No trips on Tue or Wed" · "Add miles" / "Not driving"; không thông báo đẩy | T alerts + E | ✅ M: "No trips on Mon, Wed or Thu" · Add miles / Not driving |
+| TC-231 | F-03 | Hệ thống chặn dò tự động | Thẻ "Automatic trips were paused by your phone" · "Fix now" → S-07f | T alerts | ✅ T (jest 414 xanh 16/11) |
+| TC-232 | F-03 P1-7 | Sao lưu đêm lỗi 3 lần liền | Thẻ "Backups are failing" · "Check backup" | T nightly, alerts | ✅ T (jest 414 xanh 16/11) |
+| TC-233 | F-03 P1-11 | 7 ngày trước gia hạn | Thẻ "Pro renews on … for £24.99" · "Manage subscription" / "OK" | T alerts, purchase | ✅ T (jest 414 xanh 16/11) |
+| TC-234 | F-03 | Banner sao lưu cũ | Chỉ khi chưa bật sao lưu tự động và > 30 ngày | T alerts | ✅ T (jest 414 xanh 16/11) |
 | TC-235 | F-03 | Thẻ To sort (Pro) | Dòng phụ "N auto-sorted this week" | E | ⏳ |
 | TC-236 | F-03 | Thẻ chuyến khi tự động bật | Chấm xanh "Automatic trips on" · "Starts when you drive" · "Start now" | E | ⏳ |
 | TC-237 | F-03 | Recent | Nhãn nhỏ "Recurring" / "Auto" | E | ⏳ |
 | TC-238 | F-06 | Thẻ Sort bản free | "Most used" + 3 chip + "More…" | T suggest + E | ⏳ |
-| TC-239 | F-06 | Thẻ Sort Pro | "Suggested" ≤ 3 chip, chip đầu viền vàng | T suggest + E | ⏳ |
-| TC-240 | F-06 Q5 | Edit tại chỗ | Thẻ mở form gọn (số tiền có máy tính, ghi chú, ngày) → "Done", không rời màn Sort | E | ⏳ |
+| TC-239 | F-06 | Thẻ Sort Pro | "Suggested" ≤ 3 chip, chip đầu viền vàng | T suggest + E | ✅ M: "SUGGESTED" Fuel / Parking… / Van repairs… + More… |
+| TC-240 | F-06 Q5 | Edit tại chỗ | Thẻ mở form gọn (số tiền có máy tính, ghi chú, ngày) → "Done", không rời màn Sort | E | ✅ M: thẻ mở "Edit" Amount / Note / Date + Done, không rời Sort |
 | TC-241 | F-06 Q5 | Split tại chỗ | 2 phần chia đôi; "Left to assign £0.00" xanh; "Split & sort" chỉ sáng khi đủ; phần có danh mục xong, phần không quay lại hàng chờ; ảnh theo mọi phần | T logic + E | ⏳ |
-| TC-242 | F-06 Q5 | Split lệch tiền / nhiều phần | "£5.00 left" / "£5.00 over" cam; "+ Add part" tối đa 10 | E | ⏳ |
+| TC-242 | F-06 Q5 | Split lệch tiền / nhiều phần | "£5.00 left" / "£5.00 over" cam; "+ Add part" tối đa 10 | E | ❌ B-38 M: "£5.00 over" + "Split & sort" mờ đúng, nhưng khi gõ số phần, bàn phím che dòng "Left to assign" và nút |
 | TC-243 | F-06 Q5 | Merge tại chỗ | Sheet "Merge with…" khoản cùng loại ±1 ngày → "Merge N entries into one £…?" → thẻ mới vẫn ở hàng chờ; Undo | T logic + E | ⏳ |
 | TC-244 | F-06 P1-2 | Thẻ chuyến Unsorted | "Work" / "Personal" = xong; "Split trip" → S-07c | E | ⏳ |
 | TC-245 | F-06 P1-10 | Xếp cùng nơi bán 3 lần liền | Thẻ "Always sort 'X' as …?" → "Always" tạo luật (thấy ở S-18) | T rulesDb + E | ⏳ |
-| TC-246 | F-06 P1-10 | "Not now" ở đề nghị luật | Không hỏi lại nơi bán đó 30 ngày | T rulesDb | ⏳ |
+| TC-246 | F-06 P1-10 | "Not now" ở đề nghị luật | Không hỏi lại nơi bán đó 30 ngày | T rulesDb | ✅ T (jest 414 xanh 16/11) |
 | TC-247 | F-06 | "N auto-sorted · Review" → S-06d | Nhóm "Shell → Fuel · N entries", đổi chip từng dòng, "Undo all from this rule", "Edit rule" | E | ⏳ |
 | TC-248 | F-06 | S-06a List view Pro | Chip gợi ý mỗi dòng; "Accept all suggestions (N)" hỏi lại rồi áp | E | ⏳ |
 | TC-249 | F-06 P1-9 | S-06c Done | "N auto-sorted · N recurring entries added" | E | ⏳ |
-| TC-250 | F-07 | Số tiền là tín hiệu | Cùng số tiền ±2% với khoản đã xếp gần đây được gợi ý dù ghi chú khác | T suggest | ⏳ |
-| TC-251 | F-07 | Khớp luật | Nơi bán không phân biệt hoa thường + loại + khoảng số tiền | T match, rulesDb | ⏳ |
-| TC-252 | F-07 P1-2 | Chuyến chắc chắn | Bluetooth van / tuyến quen ≥ 70% ×3 / trong giờ làm → Work; ngoài giờ → Personal; còn lại Unsorted | T autoEngine, autoRepo | ⏳ |
+| TC-250 | F-07 | Số tiền là tín hiệu | Cùng số tiền ±2% với khoản đã xếp gần đây được gợi ý dù ghi chú khác | T suggest | ✅ T (jest 414 xanh 16/11) |
+| TC-251 | F-07 | Khớp luật | Nơi bán không phân biệt hoa thường + loại + khoảng số tiền | T match, rulesDb | ✅ T (jest 414 xanh 16/11) |
+| TC-252 | F-07 P1-2 | Chuyến chắc chắn | Bluetooth van / tuyến quen ≥ 70% ×3 / trong giờ làm → Work; ngoài giờ → Personal; còn lại Unsorted | T autoEngine, autoRepo | ✅ T (jest 414 xanh 16/11) |
 | TC-253 | F-08 | Danh mục UK | Dòng phụ "MTD: …"; sheet có "MTD category" + "Vehicle running cost" | E | ⏳ |
 | TC-254 | F-09 | S-18 Pro | "Shell → Fuel · Work · N entries" + công tắc từng luật | E | ⏳ |
 | TC-255 | F-09 | Thêm / sửa / xoá luật | "+ Add rule" sheet đủ ô; "Delete rule"; rỗng "No rules yet" | E | ⏳ |
 | TC-256 | F-09 | S-18 bản free | Xem được, công tắc mờ + "PRO" | E | ⏳ |
 | TC-257 | F-10 | Tạo khoản lặp lại | "Van lease · £289.00 · Monthly on the 1st · Next 1 Dec" | T recurring + E | ⏳ |
 | TC-258 | F-10 P1-9 | Đến hạn (ép job nền) | Tự tạo khoản đã phân loại, nhãn "Recurring", không vào hàng chờ, không thông báo | T recurring + E | ⏳ |
-| TC-259 | F-10 | Weekly / Every 4 weeks / Yearly / ngày 31 / Ends | Ngày tạo đúng, dừng sau Ends | T recurring | ⏳ |
+| TC-259 | F-10 | Weekly / Every 4 weeks / Yearly / ngày 31 / Ends | Ngày tạo đúng, dừng sau Ends | T recurring | ✅ T (jest 414 xanh 16/11) |
 | TC-260 | F-10 | Pause / Delete / sửa mẫu | Pause ngừng tạo; sửa mẫu không đổi khoản cũ | T recurring + E | ⏳ |
 | TC-261 | F-10 | S-05 "⋯ → Make recurring" | Mở S-17 điền sẵn từ khoản | E | ⏳ |
 | TC-262 | F-11 Q25 | A → B bản free | "A → B · PRO" → S-19 "Miles from A to B are a Pro feature" | E | ⏳ |
@@ -290,7 +292,7 @@
 | TC-267 | F-11 Q25 | Current location (geo fix UK) | Ô From = tên địa chỉ gần nhất | E | ⏳ |
 | TC-268 | F-11 Q25 | Lỗi mạng / cùng chỗ / không có đường | "No internet — enter miles instead" + chuyển Distance · "From and To are the same place" · "Couldn't find a driving route…" | T routeMap + E | ⏳ |
 | TC-269 | F-11 Q25 | Lưu + sửa lại chuyến A → B | Miles "A → B · Round trip"; sửa mở đúng A → B, không gọi lại dịch vụ | E | ⏳ |
-| TC-270 | F-15 Q25 | CSV mileage log chuyến A → B | Có cột from / to / round_trip | T csv | ⏳ |
+| TC-270 | F-15 Q25 | CSV mileage log chuyến A → B | Có cột from / to / round_trip | T csv | ❌ B-40 T: `mileageCsv` chưa có cột from / to / round_trip (TODO P5 trong csv.ts) |
 | TC-271 | F-11 Q25 | Build không có khoá ORS | Ẩn A → B | T routeMap | ⏳ |
 | TC-272 | F-12 Q25 | S-07b bản đồ live (GPS giả) | Đường vẽ dần, chấm vàng vị trí, camera theo tuyến | E | ⏳ |
 | TC-273 | F-12 Q25 | S-07c bản đồ | Chấm xanh lá đầu, ghim đỏ cuối, điểm dừng đánh số, "© OpenStreetMap · OpenFreeMap", kéo/phóng | E | ⏳ |
@@ -302,12 +304,12 @@
 | TC-279 | F-12 | S-07e chuỗi quyền | 4 bước, mỗi bước 1 nút; bỏ bước → cam "Automatic trips may miss drives" + "Finish setup" | E | ⏳ |
 | TC-280 | F-12 | S-07d cài đặt | Van Bluetooth, Start when charging, Merge stops 10/20/45, Work hours, trạng thái | E | ⏳ |
 | TC-281 | F-12 P1-1 | Tự bắt đầu khi lái | Chuyến nhãn "Auto", thông báo "Trip started automatically", điểm đầu lùi về lúc xe chạy | T autoEngine + E | ⏳ |
-| TC-282 | F-12 P1-1 | Dừng < 20 phút / ngắt Bluetooth | Vẫn 1 chuyến ca | T autoEngine | ⏳ |
+| TC-282 | F-12 P1-1 | Dừng < 20 phút / ngắt Bluetooth | Vẫn 1 chuyến ca | T autoEngine | ✅ T (jest 414 xanh 16/11) |
 | TC-283 | F-12 P1-1 | Không lái ≥ 20 phút | Chuyến đóng, giờ kết thúc = lúc xe dừng; thông báo "Trip saved · x mi · …" | T autoEngine + E | ⏳ |
-| TC-284 | F-12 P1-3 | Work hours bật | Chuyến ngoài giờ ghi Personal | T autoEngine | ⏳ |
+| TC-284 | F-12 P1-3 | Work hours bật | Chuyến ngoài giờ ghi Personal | T autoEngine | ✅ T (jest 414 xanh 16/11) |
 | TC-285 | F-12 | Bấm Start khi tự động bật | Chuyến tay, tự động không chen | T autoEngine + E | ⏳ |
-| TC-286 | F-12 Q2 | Chuyến tay đứng yên ≥ 45 phút | "Still on a trip?" · "End trip" (lùi giờ) / "Keep going" | T autoEngine, longTripReminder | ⏳ |
-| TC-287 | F-12 Q2 | Mất vị trí ≥ 10 phút khi đang chạy | "Trip isn't recording" | T autoEngine | ⏳ |
+| TC-286 | F-12 Q2 | Chuyến tay đứng yên ≥ 45 phút | "Still on a trip?" · "End trip" (lùi giờ) / "Keep going" | T autoEngine, longTripReminder | ✅ T (jest 414 xanh 16/11) |
+| TC-287 | F-12 Q2 | Mất vị trí ≥ 10 phút khi đang chạy | "Trip isn't recording" | T autoEngine | ✅ T (jest 414 xanh 16/11) |
 | TC-288 | F-12 F-18 | Hết Pro / dùng thử khi tự động đang bật | Tự động tắt, báo ngay, về Start/Stop tay | T proAndVehicle + E | ⏳ |
 | TC-289 | F-12 | Khởi động lại máy (BOOT_COMPLETED) | Dò tự động đăng ký lại | E | ⏳ |
 | TC-290 | F-12 Q6 | S-07c tách Personal segment | Chạm điểm dừng → 3 lựa chọn; "Work x mi · Personal y mi"; Undo | T tripsX + E | ⏳ |
@@ -333,8 +335,8 @@
 | TC-310 | F-14 P1-6 | Vehicle costs "Not sure yet" | Thẻ cam "Choose how you claim your vehicle" | E | ⏳ |
 | TC-311 | F-15 | Export bản free | PDF / totals / MTD / FreeAgent / ZIP có "PRO" → S-19; 2 CSV thô mở | E | ⏳ |
 | TC-312 | F-15 | CSV all entries | Cột mtd_category, source, auto_sorted, recurring, entry_id | T csv | ⏳ |
-| TC-313 | F-15 X3 | MTD summary CSV | 15 HMRC category, Disallowable 0, cộng dồn, dòng kỳ | T mtd | ⏳ |
-| TC-314 | F-15 | MTD records CSV | Cột MTDsorted | T mtd | ⏳ |
+| TC-313 | F-15 X3 | MTD summary CSV | 15 HMRC category, Disallowable 0, cộng dồn, dòng kỳ | T mtd | ✅ T (jest 414 xanh 16/11) |
+| TC-314 | F-15 | MTD records CSV | Cột MTDsorted | T mtd | ✅ T (jest 414 xanh 16/11) |
 | TC-315 | F-15 | MTD .xlsx | Sheet Income / Expenses / Summary | T mtd + E | ⏳ |
 | TC-316 | F-15 | FreeAgent CSV | 2 file; hỏi "Your name in FreeAgent" lần đầu; van = Car | T mtd + E | ⏳ |
 | TC-317 | F-15 Q3 | Unsorted trước khi xuất MTD | "N entries in Q… have no category" · "Sort now" / "Leave them out" (ghi số trong file tóm tắt) | T mtd + E | ⏳ |
@@ -342,14 +344,14 @@
 | TC-319 | F-15 F-22 | Ghi chú "isn't MTD software" | Ở S-10 (UK) và S-16 | E | ⏳ |
 | TC-320 | F-16 Q10 | Chọn thư mục sao lưu | Trình chọn hệ thống → "Back up every night" bật sẵn | E | ⏳ |
 | TC-321 | F-16 P1-7 | Ép job đêm | Ghi file khi có đổi; không đổi thì không ghi; giữ 7 bản | T nightly + E | ⏳ |
-| TC-322 | F-16 P1-7 | Lỗi 3 đêm | Thẻ Home; > 24 giờ chưa chạy cũng đếm lỗi | T nightly | ⏳ |
+| TC-322 | F-16 P1-7 | Lỗi 3 đêm | Thẻ Home; > 24 giờ chưa chạy cũng đếm lỗi | T nightly | ✅ T (jest 414 xanh 16/11) |
 | TC-323 | F-16 | Khôi phục từ thư mục sao lưu | Danh sách bản "Tue 10 Nov · N entries · N photos" → Replace | E | ⏳ |
-| TC-324 | F-16 | Mất quyền thư mục | "We can't reach your backup folder. Choose it again." | T nightly | ⏳ |
+| TC-324 | F-16 | Mất quyền thư mục | "We can't reach your backup folder. Choose it again." | T nightly | ✅ T (jest 414 xanh 16/11) |
 | TC-325 | F-16 | Nhắc 30 ngày | Chỉ hiện khi tắt sao lưu tự động | E | ⏳ |
-| TC-326 | F-16 | File sao lưu bản 1 / pro_state | Khôi phục được; không đè pro_state | T backup, migrationV2 | ⏳ |
+| TC-326 | F-16 | File sao lưu bản 1 / pro_state | Khôi phục được; không đè pro_state | T backup, migrationV2 | ✅ T (jest 414 xanh 16/11) |
 | TC-327 | F-17 | S-20 Notifications | Công tắc từng loại + giờ | E | ⏳ |
 | TC-328 | F-17 Q22 | Nhắc ghi hằng ngày | Mặc định tắt; bật → 19:00 chỉ khi hôm đó chưa ghi | T reminders + E | ⏳ |
-| TC-329 | F-17 | Sắp hết dùng thử | Ngày 6: "Your Pro trial ends tomorrow…" | T reminders, purchase | ⏳ |
+| TC-329 | F-17 | Sắp hết dùng thử | Ngày 6: "Your Pro trial ends tomorrow…" | T reminders, purchase | ✅ T (jest 414 xanh 16/11) |
 | TC-330 | F-17 | Nhắc Chủ nhật | Không tự tắt sau 4 tuần | T reminders | ⏳ |
 | TC-331 | F-18 | S-19 theo ngữ cảnh | Phụ đề đúng tính năng; 6 lợi ích; giá "£24.99 / year · About 48p a week…" | E | ⏳ |
 | TC-332 | F-18 P1-5 | "Try Pro free for 7 days" | Trial bắt đầu, "Trial · 7 days left", nút dùng thử không hiện lại | T purchase + E | ⏳ |
