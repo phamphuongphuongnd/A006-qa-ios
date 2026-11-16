@@ -57,9 +57,9 @@
 |---|---|---|---|---|
 | **P0 Nghiên cứu nốt** | Điều phối | ✅ **Xong 2026-11-13** → `research.md` §6–8. Reddit + dùng thử app + Facebook: bỏ / không xem được (Phương chốt); mẫu MTDsorted + FreeAgent đã đọc; giá Q16 đã chốt | `research.md` | ✅ |
 | **P1 product.md v2** | Điều phối | ✅ **Xong 2026-11-13**: grill P1-1…P1-12 (bảng trên) → `product.md` v2 viết lại toàn bộ (§6 Free/Pro, §10 danh sách màn) + `CONTEXT.md` thuật ngữ; **Phương đã duyệt** | `product.md` v2 | ✅ |
-| **P2 Mockup Hi-Fi** | **Phương** (đang làm, 2026-11-13) | Gửi product.md v2 cho Claude Design → vẽ Hi-Fi toàn bộ app → export HTML + tokens vào `design/` | `design/` v2 | Phương báo xong |
-| **P3 Nền chung** | Điều phối (tuần tự) | Cài **mọi** thư viện native mới, kể cả mua trong app (phiên con không cài); schema + migration (luật phân loại, khoản lặp lại, đoạn chuyến, cấu hình sao lưu, kết quả OCR, quyền Pro); **hàm chung kiểm Pro + dùng thử 7 ngày**; kiểu dữ liệu chung; khoá i18n; **UI kit + token + các màn không thuộc S1–S5 theo mockup v2**; **ô cài đặt "Vehicle costs" (Q24)**; **trang onboarding nói rõ giới hạn bản miễn phí (X6, nội dung do S5)**; **nội dung widget bản 2**; dev build chạy A13 | Commit `dev` | Test + lint + tsc xanh, A13 mở được |
-| **P4 Song song** | 5 phiên con | Bảng dưới; mỗi phiên 1 worktree, nhánh riêng, báo về điều phối bằng SendMessage | 5 nhánh | Test xanh + thử A13 + báo xong |
+| **P2 Mockup Hi-Fi** | ✅ **Xong 2026-11-13** (Phương) | Gửi product.md v2 cho Claude Design → vẽ Hi-Fi toàn bộ app → export HTML + tokens vào `design/` | `design/` v2 | Phương báo xong |
+| **P3 Nền chung** | Điều phối (tuần tự) | Cài **mọi** thư viện native mới, kể cả mua trong app (phiên con không cài); schema + migration (luật phân loại, khoản lặp lại, đoạn chuyến, cấu hình sao lưu, kết quả OCR, quyền Pro); **hàm chung kiểm Pro + dùng thử 7 ngày**; kiểu dữ liệu chung; khoá i18n; **UI kit + token + các màn không thuộc S1–S5 theo mockup v2**; **ô cài đặt "Vehicle costs" (Q24)**; **trang onboarding nói rõ giới hạn bản miễn phí (X6, nội dung do S5)**; **nội dung widget bản 2**; dev build chạy A13 | Commit `dev` | ✅ **Xong 2026-11-13** (`0665bf3`, `078ac63`) |
+| **P4 Song song** | 5 phiên con | Bảng dưới; mỗi phiên 1 worktree, nhánh riêng, báo về điều phối bằng SendMessage | 5 nhánh | ✅ **Xong 2026-11-16**: ghép `dev` @ `9b58632`, 375 test — xem "P4 — kết quả" |
 | **P5 Ghép & kiểm** | Điều phối | Gộp 5 nhánh vào `dev`; thêm TESTCASES cho tính năng mới; chạy toàn bộ; **chạy xe thật** cho chuyến tự động (nhiều điểm dừng, đèn đỏ, đi bộ, ngồi nhà); **build + thử widget iOS trên EAS** (treo từ Bước 3); **TalkBack theo kịch bản, Phương nghe (Q23)** | BUGS.md | Chạy hết case |
 | **P6 Sửa lỗi → store** | Điều phối (+ phiên con nếu nhiều lỗi) | Sửa BUGS → Bước 6: giả lập người dùng, store listing (nhấn: UK, không tài khoản, không ngân hàng, ghi không danh mục, tự động không sót âm thầm; **tiêu đề / mô tả ngắn dẫn bằng "receipt", kèm "mileage", "self assessment"** — K8), privacy, khoá ký (Phương tạo), AAB + iOS, nộp | Bản nộp store | CHECKLIST Bước 6 |
 
@@ -71,6 +71,23 @@
 | **S3 Đọc hoá đơn** | OCR trên máy → tự điền số tiền / nơi bán / ngày; đưa dữ liệu cho gợi ý qua giao diện chung từ P3 (không sửa `suggest.ts`); giới hạn ảnh miễn phí; **máy tính trong ô số tiền (Q20)**; **nhiều ảnh lúc ghi nhanh (Q21)** | `modules/receipt-ocr/`, `src/features/ocr/`, `src/app/capture.tsx`, `src/app/entry/[id].tsx` |
 | **S4 Sao lưu & lặp lại** | Sao lưu tự động vào thư mục đã chọn; khoản lặp lại; nhắc tuần không tắt sau 4 tuần; **nhắc ghi hằng ngày, mặc định tắt (Q22)** | `src/features/backup/`, `src/features/recurring/`, `src/features/settings/notifications.ts`, `src/app/backup.tsx` |
 | **S5 Báo cáo, Xuất MTD, Pro** | CSV đúng mẫu bridging + FreeAgent, **tổng cộng dồn từ đầu năm theo danh mục HMRC, kỳ chuẩn / theo lịch (X3)**; xử lý Unsorted trước khi xuất quý; màn mua Pro, khôi phục mua, dùng thử 7 ngày; **báo cáo + xuất theo cách tính xe (X2/Q24)**: theo dặm → chi phí chạy xe (xăng, sửa xe, bảo hiểm, thuế xe, thuê xe) không cộng vào ô thuế, ghi chú rõ; đỗ xe / cầu đường / congestion luôn cộng; theo chi phí thật → ẩn tiền theo dặm, hiện tỷ lệ dặm công việc / tổng dặm; **nội dung nói rõ giới hạn bản miễn phí (X6)** | `src/features/reports/buildExport.ts`, `src/domain/csv.ts`, `src/features/reports/ExportPanel.tsx`, `src/app/(tabs)/reports.tsx`, `src/features/reports/series.ts`, `src/features/reports/useReport.ts`, `src/features/pro/`, `src/app/pro.tsx` |
+
+## P4 — kết quả (2026-11-16)
+- Ghép `dev` `9b58632` (đã push): S5 `1712459`, S4 `431a9ef`, S3 `cc7fba8`, S2 `b5b9309`, S1 `0a3e0ba`; điều phối nối S1↔S2 tuyến quen
+  (`trips/auto/routes.ts` → `rules/knownRoutes.ts`), S3→S2 luật lúc lưu (`ocr/rulesHook.ts` → `applyRulesOnSave`), S4↔S5
+  (`syncProNotices` trong task đêm + S-20, `refreshProFromStore` lúc mở app). Bàn giao từng phiên:
+  `side-session-notes/local_e1e02b93-41f5-44db-a7b2-f83cc14de3e9/P4-S*-handover.md`.
+- Đã thử A13 trên bản ghép: Home, Sort (Free) + Undo, List view, Rules (khoá), Miles, Reports theo cách tính xe, Entries,
+  S-19 (không bấm mua / dùng thử), S-12, S-17, S-20, máy tính ô số tiền, OCR Shell £72.40 (sửa lỗi đọc nhầm SUBTOTAL);
+  S1 thử S-07c/d/e/f, giả lập lái xe → chuyến Auto, vuốt Miles, đăng ký lại sau cài đè. Máy đang cài **dev build của S1** (native mới).
+- **Để P5:** luồng chỉ Pro chưa thử trên máy (Suggested, "Always" tạo luật, Auto-sorted review, khoản lặp lại tạo đúng hạn,
+  OCR tự điền ở S-03) — dùng thử 7 ngày chỉ 1 lần trên máy Phương → cần Pro giả cho bản dev hoặc máy khác; tự kết thúc chuyến
+  sau 20' đứng yên; BOOT_COMPLETED (khởi động lại máy); NFC (A13 không có NFC); mua thật (chờ sản phẩm `sundaysort_pro_annual`);
+  iOS (EAS: widget, backup-folder, trip-detect); nhập file vào MTDsorted / FreeAgent thật; TESTCASES tính năng mới; TalkBack
+  (Undo snackbar đã thành nút riêng, giữ 10 s khi bật trình đọc màn hình).
+- **Mới (Phương chốt 2026-11-16 ở phiên khác):** A→B tự tính dặm (Pro) + bản đồ thật Mapbox — kế hoạch
+  `C:/Users/Admin/.claude/plans/a006-cho-l-m-ph-t-polymorphic-music.md`; migration kế tiếp `0002`; chưa cài `@rnmapbox/maps`;
+  ⚠️ `plugins/withReleasePermissions.js` gỡ INTERNET ở bản release + product/privacy hứa "không mạng" → phải sửa cùng.
 
 ## Rủi ro kỹ thuật (grill ở P1, kiểm ở P3)
 - Tự viết module dò chuyến: thử nhiều trên xe thật; Samsung tắt app nền → hướng dẫn tắt tối ưu pin trong app.

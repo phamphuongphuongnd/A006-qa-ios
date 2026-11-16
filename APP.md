@@ -3,7 +3,7 @@
 > Brief tĩnh của app. **≤ 60 dòng, không ghi lịch sử** (lịch sử ở git + `memory/sessions/`).
 > Tiến độ: `CHECKLIST.md` · Tính năng: `product.md` · Test: `TESTCASES.md` · Lỗi: `BUGS.md`.
 
-**Đang ở:** bản 2 (`PLAN-v2.md`): P0–P2 xong (mockup v2 ở `design/`), P3 nền dữ liệu + native + token/UI kit xong → còn P3 UI (onboarding, Home, Settings, widget v2) rồi mở S1–S5; Bước 3 còn treo: widget iOS (EAS) (2026-11-13)
+**Đang ở:** bản 2 (`PLAN-v2.md`): P0–P4 xong — 5 nhánh S1–S5 ghép `dev` `9b58632` (375 test) → **P5 Ghép & kiểm** (TESTCASES, Pro trên máy, chạy xe thật, iOS EAS, TalkBack) + việc mới A→B/Mapbox; Bước 3 còn treo: widget iOS (EAS) (2026-11-16)
 
 ## Brief
 - **Mã app / thư mục:** `A006-sundaysort` → `apps/A006-sundaysort/`
