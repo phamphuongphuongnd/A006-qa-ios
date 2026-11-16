@@ -124,3 +124,23 @@
   "Self Assessment & MTD" — case TC-218 — tái hiện: cài mới → Get started. — sửa: `onboarding.regionUKSub` (dùng chung S-01b + Settings Region) + test `src/i18n/__tests__/copyV2.test.ts`
 - [x] **B-40** 🟠 CSV "mileage log" chưa có cột From / To / Round trip cho chuyến A → B (Q25) → kế toán không thấy chuyến đi đâu
   (HMRC cần mục đích + nơi đến) — case TC-270 — `src/domain/csv.ts` `mileageCsv` (TODO P5); thêm cả cột `estimated` theo F-15. — sửa: cột `from`, `to`, `round_trip` (trống với chuyến không phải A → B) + `estimated` (yes khi source = gap); `buildExport` truyền nhãn — test `reportCsv.test.ts` "A → B trips carry from / to / round trip"
+- [ ] **B-41** 🟠 S-17 Recurring: lưu được mẫu khi chưa chọn danh mục → khoản tạo ra "Unsorted", vào hàng chờ Sort (trái với
+  "Created already sorted… never wait in the Sort queue"); danh sách hiện "Recurring entries · £289.00" khi không có ghi chú
+  (nên lấy tên danh mục) — case TC-257 — tái hiện: Settings → Recurring entries → Add → gõ 289.00 → Save (chưa chọn Category).
+- [ ] **B-42** 🟡 Số ít/số nhiều: "Apply suggested categories to 1 entries?", "1 auto-sorted · 1 recurring entries added" (S-06c),
+  snackbar "Sorted 1 entries" — case TC-248, TC-249 — tái hiện: tuần chỉ còn 1 khoản → List view → Accept all.
+- [ ] **B-43** 🟡 Thẻ Sort: khi chip gợi ý xuống 3 hàng (hoặc thẻ chuyến có hình tuyến), hàng "Edit · Split · Merge · Skip" /
+  "Split trip · Skip" nằm dưới mép thẻ, phải cuộn trong thẻ mới thấy, không có dấu hiệu cuộn — case TC-244 — tái hiện: A13
+  (cỡ chữ 0.8) → Sort tuần 9–15 Nov → thẻ "EE phone £15.00" (Phone & data / Van repairs & servicing / Fuel / More…).
+  Đề xuất: ghim hàng hành động ở đáy thẻ, ngoài vùng cuộn.
+- [x] **B-44** 🟡 Backup & restore: ô "Backup folder" hiện "acc=6;doc=encoded=…" (mã tài liệu Google Drive) thay vì tên thư mục —
+  case TC-320 — sửa: `folderLabel` bỏ tên dạng mã → "Google Drive"; nhãn đã lưu được làm sạch khi hiển thị (`shownFolderLabel`,
+  `src/features/backup/folderLabel.ts`) + test `folderLabel.test.ts` — thử A13: "Backup folder · Google Drive"
+- [x] **B-45** 🔴 Sao lưu đêm vào Google Drive luôn lỗi "We can't reach your backup folder" và "Restore from backup" báo
+  "No backups in this folder yet": trên Drive `File.name` (expo-file-system) = mã tài liệu, không phải tên file → không tìm thấy
+  file vừa ghi ("copy did not land"), không nhận ra bản sao lưu cũ, không dọn được bản thứ 8 — case TC-321, TC-323 — sửa:
+  `androidPort` lấy tên thật từ `Directory.info().files` (DISPLAY_NAME, cùng thứ tự `list()`) — thử A13 (nút dev "Port put test"):
+  put / list / remove ok; sao lưu thật 15:34 + 15:38 vào Drive; danh sách khôi phục hiện "Mon 16 Nov · 15:38 · 239 entries · 13 photos"
+- [x] **B-46** 🟠 Settings trong app không đọc lại khi tác vụ nền / sao lưu đêm ghi vào DB → S-12 vẫn báo "Last 3 backups failed ·
+  not reachable" sau khi sao lưu đã thành công (tới khi mở lại app) — case TC-321 — sửa: `SettingsProvider` đọc lại settings khi
+  bảng `settings` đổi (`useTablesVersion`) — thử A13: chạy sao lưu khi đang ở S-12 → "Nightly backup on · Last: today 15:38"

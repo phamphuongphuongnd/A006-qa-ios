@@ -9,6 +9,7 @@ import { withLockSuspended } from '@/features/settings/lockState';
 import { createBackupFile } from './backupFile';
 import type { BackupTables } from './pack';
 import { runNightlyBackup, type BackupFolderPort, type FolderEntry, type MadeFile, type RunResult } from './nightly';
+import { folderLabel } from './folderLabel';
 
 /** Device side of nightly backup: the picked folder (Android SAF / iOS bookmark) and the ZIP in the app cache. */
 
@@ -22,13 +23,19 @@ function androidPort(uri: string): BackupFolderPort {
     if (!d.exists) throw new Error('folder gone');
     return d;
   };
-  const child = (name: string) => dir().list().find((f): f is File => f instanceof File && f.name === name) ?? null;
+  // B-45: on Google Drive a child's uri ends in its document id ("acc=6;doc=encoded=…"), so `File.name` isn't the
+  // file name. `info().files` holds the real display names, read from the same child listing as `list()`.
+  const children = (): { file: File; name: string }[] => {
+    const d = dir();
+    const items = d.list();
+    const names = d.info().files ?? [];
+    const sameOrder = names.length === items.length;
+    return items.flatMap((f, i) => (f instanceof File ? [{ file: f, name: sameOrder ? names[i] : f.name }] : []));
+  };
+  const child = (name: string) => children().find((c) => c.name === name)?.file ?? null;
   return {
     async list() {
-      return dir()
-        .list()
-        .filter((f): f is File => f instanceof File)
-        .map((f): FolderEntry => ({ name: f.name, size: f.size ?? 0, uri: f.uri }));
+      return children().map(({ file, name }): FolderEntry => ({ name, size: file.size ?? 0, uri: file.uri }));
     },
     async put(localUri, name) {
       const old = child(name);
@@ -99,17 +106,8 @@ export function folderPort(folder: Folder | null): BackupFolderPort | null {
   return androidPort(folder.uri);
 }
 
-/** "Google Drive / Sunday Sort", "This phone / Backups", "iCloud Drive / Sunday Sort". */
-export function folderLabel(uri: string, name: string | null): string {
-  const n = name ? decodeURIComponent(name) : '';
-  let where = '';
-  if (uri.includes('com.google.android.apps.docs')) where = 'Google Drive';
-  else if (uri.includes('com.android.externalstorage')) where = 'This phone';
-  else if (uri.includes('com~apple~CloudDocs') || uri.includes('Mobile%20Documents') || uri.includes('Mobile Documents'))
-    where = 'iCloud Drive';
-  else if (Platform.OS === 'ios') where = 'On My iPhone';
-  return where && n ? `${where} / ${n}` : n || where || 'Backup folder';
-}
+export { folderLabel, shownFolderLabel } from './folderLabel';
+
 
 /** System folder picker. null when cancelled. */
 export async function pickBackupFolder(): Promise<Folder | null> {

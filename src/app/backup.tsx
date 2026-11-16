@@ -2,12 +2,12 @@ import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
 import { useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { backupPlan, createBackupFile, restoreFromBackup } from '@/features/backup/backupFile';
-import { folderPort, folderReachable, pickBackupFolder, runNightlyNow, saveFolder } from '@/features/backup/folder';
+import { folderPort, folderReachable, pickBackupFolder, runNightlyNow, saveFolder, shownFolderLabel } from '@/features/backup/folder';
 import { countsLabel, itemSub, listDate, shortDate, whenLabel } from '@/features/backup/labels';
 import { backupFailures, listFolderBackups, type BackupListItem, type RunResult } from '@/features/backup/nightly';
 import { BACKUP_FAILS_FOR_ALERT } from '@/features/backup/homeAlerts';
@@ -55,7 +55,8 @@ export default function BackupScreen() {
   const [reach, setReach] = useState<{ uri: string; ok: boolean } | null>(null);
   const cancelled = useRef(false);
 
-  const folder = settings.backupFolder;
+  const saved = settings.backupFolder;
+  const folder = useMemo(() => (saved ? { ...saved, label: shownFolderLabel(saved) } : null), [saved]);
   const nightly = settings.backupNightly && !!folder;
   const now = useNow(60_000);
   const fails = backupFailures(settings, now);

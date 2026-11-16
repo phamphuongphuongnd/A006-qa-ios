@@ -1,5 +1,5 @@
 import * as BackgroundTask from 'expo-background-task';
-import { Directory } from 'expo-file-system';
+import { Directory, File, Paths } from 'expo-file-system';
 import * as Location from 'expo-location';
 import { Redirect } from 'expo-router';
 import { useState } from 'react';
@@ -9,6 +9,8 @@ import { db } from '@/db/client';
 import { setDevFakePro } from '@/db/proRepo';
 import { getSettings, updateSettings } from '@/db/settingsRepo';
 import { PROBE_TASK, writeProbeFile } from '@/dev/probeTask';
+import { folderPort } from '@/features/backup/folder';
+import { deleteTestTrips, seedTestTrips } from '@/dev/seedTrips';
 import { router } from '@/services/router';
 import { usePro } from '@/state/pro';
 import { useSettings } from '@/state/settings';
@@ -48,6 +50,8 @@ export default function Probe() {
         <Button label="Pretend Pro (dev): subscribed" variant="outline" onPress={() => setDevFakePro(db, 'pro')} />
         <Button label="Pretend Pro (dev): expired" variant="outline" onPress={() => setDevFakePro(db, 'expired')} />
         <Button label="Pretend Pro (dev): off (real state)" variant="outline" onPress={() => setDevFakePro(db, null)} />
+        <Button label="Seed ZZ test trips (100+ mi, auto unsorted)" variant="outline" onPress={run('seed trips', () => seedTestTrips(db))} />
+        <Button label="Delete ZZ test trips" variant="outline" onPress={run('delete trips', () => deleteTestTrips(db))} />
         {/* Walk the v2 onboarding again on a phone with data: keeps entries, region and settings. */}
         <Button label="Replay onboarding (keeps data)" variant="outline" onPress={() => {
             update({ onboarded: false });
@@ -65,6 +69,31 @@ export default function Probe() {
           })}
         />
         <Button label="Write now (foreground)" onPress={run('write fg', () => writeProbeFile('foreground'))} />
+        <Button
+          label="Port put test (B-45)"
+          onPress={run('port', async () => {
+            const port = folderPort(getSettings(db).backupFolder);
+            if (!port) return 'no folder';
+            const names = (await port.list()).map((f) => f.name);
+            const src = new File(Paths.cache, 'ZZ-port-test.txt');
+            src.write('port test ' + new Date().toISOString());
+            try {
+              await port.put(src.uri, 'ZZ-port-test.txt');
+            } catch (e) {
+              return { names, put: String(e) };
+            }
+            const before = (await port.list()).filter((f) => f.name === 'ZZ-port-test.txt').length;
+            let rm = 'ok';
+            try {
+              await port.remove('ZZ-port-test.txt');
+            } catch (e) {
+              rm = String(e);
+            }
+            await new Promise((r) => setTimeout(r, 1500));
+            const after = (await port.list()).filter((f) => f.name === 'ZZ-port-test.txt').length;
+            return { put: 'ok', before, rm, after };
+          })}
+        />
         <Button label="Register background task" onPress={run('register', () => BackgroundTask.registerTaskAsync(PROBE_TASK, { minimumInterval: 15 }))} />
         <Button label="Unregister background task" onPress={run('unregister', () => BackgroundTask.unregisterTaskAsync(PROBE_TASK))} />
         <Button label="Background status" onPress={run('status', () => BackgroundTask.getStatusAsync())} />
