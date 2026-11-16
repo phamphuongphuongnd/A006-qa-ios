@@ -5,6 +5,10 @@ export const METERS_PER_MILE = 1609.344;
 export const metersToMiles = (m: number) => m / METERS_PER_MILE;
 export const milesToMeters = (mi: number) => Math.round(mi * METERS_PER_MILE);
 
+/** B-50: a trip ended from an NFC tag / `sundaysort://trip/toggle` under 0.1 mi is not kept (a double tap, no drive). */
+export const MIN_KEPT_TRIP_M = 0.1 * METERS_PER_MILE;
+export const tooShortToKeep = (distanceM: number) => !(distanceM >= MIN_KEPT_TRIP_M);
+
 export interface RateTier {
   /** Miles covered by this tier within one tax year; null = no limit. */
   upToMiles: number | null;

@@ -157,13 +157,16 @@
   mockup "miles-10-000-mi-reached") — case TC-297 — sửa: `tierThresholdReached` (`src/domain/mileage.ts`, đếm cộng dồn theo ngày
   như ước tính) + dòng màu vàng dưới ước tính + test `mileageRates.test.ts` "tierThresholdReached" — thử A13 (chuyến tay tạm
   1,400 mi, đã xoá): "≈ £5,520.05 at HMRC rates (55p / 25p)" + thanh đầy + "10,000 mi at 55p reached on 16 Nov · now 25p"
-- [ ] **B-50** 🟡 (đề xuất, chờ Phương) Bật rồi tắt chuyến bằng NFC / `sundaysort://trip/toggle` mà xe không chạy → lưu chuyến
+- [x] **B-50** 🟡 Bật rồi tắt chuyến bằng NFC / `sundaysort://trip/toggle` mà xe không chạy → lưu chuyến
   "0.0 mi · NFC · Work" trong Miles (chạm nhầm 2 lần là có rác) — case TC-293 — đề xuất: tắt chuyến < 0.1 mi thì bỏ, snackbar
-  "Trip under 0.1 mi — not saved".
+  "Trip under 0.1 mi — not saved". — Phương duyệt 2026-11-16 — sửa: `tooShortToKeep` / `MIN_KEPT_TRIP_M` (`src/domain/mileage.ts`),
+  `trip/toggle` bỏ chuyến < 0.1 mi bằng `discardTrip` + snackbar `autoTrip.nfcTooShort` + test `mileageRates.test.ts` "tooShortToKeep"
+  — thử A13: toggle bật → tắt ngay → "Trip under 0.1 mi — not saved", Miles không có chuyến mới
 - [ ] **B-51** 🟠 Hao pin: trên A13 (app dev, tiến trình chạy từ 12:19) luồng chính chạy 100% CPU (38 phút CPU), GC ~23 MB mỗi
   2,3 giây; nút Export trên Reports không phản hồi. simpleperf: vòng lặp `IntentModule.waitForActivityAndGetInitialURL` →
   `onHostResume` → `addLifecycleEventListener` (RN 0.88.1 `Linking.getInitialURL()` khi `currentActivity` = null mà context đang
   RESUMED → mỗi lần resume lại chờ tiếp, không bao giờ dừng). Mở app mới, Back rồi mở lại bằng deep link, Reload dev đều
   không tái hiện — chưa rõ bước kích hoạt (nghi: tác vụ nền / widget khởi động JS khi chưa có Activity). Đề xuất P6:
   patch-package `IntentModule.kt` — trong `onHostResume` nếu Activity vẫn null thì `resolve(null)` thay vì chờ lại; build
-  native mới, để máy chạy nền qua đêm rồi đo `top -H`.
+  native mới, để máy chạy nền qua đêm rồi đo `top -H`. **P6:** `android/` cục bộ sinh ngày 13/11 (manifest release cũ còn gỡ
+  INTERNET) → trước khi build native / release cục bộ chạy `npx expo prebuild --clean` (EAS tự prebuild).

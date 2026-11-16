@@ -6,12 +6,14 @@ import {
   LEGACY_UK_RATES,
   mileageEstimate,
   mileageEstimateByDate,
+  MIN_KEPT_TRIP_M,
   parseLocalDate,
   periodsIn,
   ratePeriods,
   ratesOn,
   tierThresholdReached,
   toLocalDate,
+  tooShortToKeep,
   validatePeriods,
   type RateTier,
 } from '../mileage';
@@ -169,5 +171,17 @@ describe('tierThresholdReached', () => {
   it('null under the limit and for single-tier rates (US)', () => {
     expect(tierThresholdReached([{ at: day(2026, 5, 1), miles: 9999 }], DEFAULT_RATES.UK)).toBeNull();
     expect(tierThresholdReached([{ at: day(2026, 5, 1), miles: 20_000 }], DEFAULT_RATES.US)).toBeNull();
+  });
+});
+
+// B-50 · TC-293: NFC / toggle trips under 0.1 mi are not kept.
+describe('tooShortToKeep', () => {
+  it('drops trips under 0.1 mi, keeps 0.1 mi and over', () => {
+    expect(MIN_KEPT_TRIP_M).toBeCloseTo(160.9344);
+    expect(tooShortToKeep(0)).toBe(true);
+    expect(tooShortToKeep(160)).toBe(true);
+    expect(tooShortToKeep(161)).toBe(false);
+    expect(tooShortToKeep(32_000)).toBe(false);
+    expect(tooShortToKeep(Number.NaN)).toBe(true);
   });
 });

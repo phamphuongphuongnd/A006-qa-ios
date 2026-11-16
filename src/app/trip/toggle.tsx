@@ -5,7 +5,8 @@ import { View } from 'react-native';
 import { db } from '@/db/client';
 import { getSettings } from '@/db/settingsRepo';
 import { getActiveTrip } from '@/db/tripsRepo';
-import { endActiveTrip, startBlocker, startGpsTrip } from '@/features/trips/controller';
+import { MIN_KEPT_TRIP_M, tooShortToKeep } from '@/domain/mileage';
+import { discardTrip, endActiveTrip, startBlocker, startGpsTrip } from '@/features/trips/controller';
 import { formatDistance } from '@/features/trips/format';
 import { t } from '@/i18n';
 import { router } from '@/services/router';
@@ -24,7 +25,12 @@ export default function TripToggleLink() {
       try {
         if (active) {
           const trip = await endActiveTrip();
-          if (trip) snack({ message: t('autoTrip.nfcSaved', { distance: formatDistance(trip.distanceM, getSettings(db).distanceUnit) }) });
+          const unit = getSettings(db).distanceUnit;
+          if (trip && tooShortToKeep(trip.distanceM)) {
+            // B-50: started and ended without driving (double tap on the tag) — don't leave a 0.0 mi trip in Miles.
+            await discardTrip(trip.id);
+            snack({ message: t('autoTrip.nfcTooShort', { distance: formatDistance(MIN_KEPT_TRIP_M, unit, 1) }) });
+          } else if (trip) snack({ message: t('autoTrip.nfcSaved', { distance: formatDistance(trip.distanceM, unit) }) });
         } else if ((await startBlocker()) === null) {
           await startGpsTrip({ startedBy: 'nfc' });
           snack({ message: t('autoTrip.nfcStarted') });

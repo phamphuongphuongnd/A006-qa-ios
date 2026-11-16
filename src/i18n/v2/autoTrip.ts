@@ -118,6 +118,7 @@ export const autoTrip = {
   nfcCopy: 'Copy link',
   nfcStarted: 'Trip started',
   nfcSaved: 'Trip saved · {distance}',
+  nfcTooShort: 'Trip under {distance} — not saved',
   // Miles / S-07c
   menu: 'More',
   markedWork: 'Marked as work',

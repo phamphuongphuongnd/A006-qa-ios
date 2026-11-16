@@ -52,6 +52,14 @@ export default function Probe() {
         <Button label="Pretend Pro (dev): off (real state)" variant="outline" onPress={() => setDevFakePro(db, null)} />
         <Button label="Seed ZZ test trips (100+ mi, auto unsorted)" variant="outline" onPress={run('seed trips', () => seedTestTrips(db))} />
         <Button label="Delete ZZ test trips" variant="outline" onPress={run('delete trips', () => deleteTestTrips(db))} />
+        {/* TC-316: export asks "Your name in FreeAgent" again (clears the saved claimant + engine). */}
+        <Button
+          label="Reset FreeAgent name (dev)"
+          variant="outline"
+          onPress={run('reset freeagent', () => {
+            updateSettings(db, { freeagentClaimant: '', freeagentVehicle: null });
+          })}
+        />
         {/* Walk the v2 onboarding again on a phone with data: keeps entries, region and settings. */}
         <Button label="Replay onboarding (keeps data)" variant="outline" onPress={() => {
             update({ onboarded: false });

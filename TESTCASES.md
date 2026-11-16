@@ -315,7 +315,7 @@
 | TC-290 | F-12 Q6 | S-07c tách Personal segment | Chạm điểm dừng → 3 lựa chọn; "Work x mi · Personal y mi"; Undo | T tripsX + E | ✅ T tripsX + routeMap ("splits Work / Personal runs…"). ⏭ M: chuyến thử không có điểm dừng → checklist chạy xe |
 | TC-291 | F-12 Q19 | Sửa giờ / dặm chuyến GPS | Nhãn "Edited" ở S-07c, Miles, CSV; "Recorded: …" giữ số gốc | T tripsX + E | ✅ M: sửa dặm chuyến Auto 14.6 → 15.0 → nhãn "Edited" + "Recorded: 12:00–12:18 · 14.6 mi"; CSV T reportCsv ("edited times") |
 | TC-292 | F-12 Q18 | S-07g máy không NFC | "This phone doesn't support NFC tags." | E | ✅ M: A13 không có NFC (`pm list features`) → S-07g "This phone doesn't support NFC tags." |
-| TC-293 | F-12 Q18 | Deep link `sundaysort://trip/toggle` (thay chạm thẻ) | Chưa chạy → bắt đầu chuyến NFC; đang chạy → kết thúc + thông báo | E | ✅ M: chưa chạy → snackbar "Trip started" + thẻ "Trip running"; lần 2 → "Trip saved · 0.0 mi". 🟡 B-50 chuyến 0.0 mi vẫn lưu (đề xuất) |
+| TC-293 | F-12 Q18 | Deep link `sundaysort://trip/toggle` (thay chạm thẻ) | Chưa chạy → bắt đầu chuyến NFC; đang chạy → kết thúc + thông báo | E | ✅ M: chưa chạy → snackbar "Trip started" + thẻ "Trip running"; lần 2 → "Trip saved · 0.0 mi". 🟡 B-50 chuyến 0.0 mi vẫn lưu → đã sửa (P5-3): "Trip under 0.1 mi — not saved" |
 | TC-294 | F-12 Q18 | Chạm thẻ NFC thật / iOS Phím tắt | Bật/tắt chuyến, rung | P | ⏳ |
 | TC-295 | F-19 | Toggle chuyến khi app khoá | Chuyến bật/tắt, không mở nội dung | E | ⏳ |
 | TC-296 | F-13 | Vuốt Miles | Phải = Work, trái = Personal, "Marked as personal" + Undo | E | ✅ M: vuốt trái → "Personal" + "Marked as personal" · Undo (Undo trả Work); vuốt phải → Work |
@@ -377,19 +377,19 @@
 
 | # | Mục | Việc | Kỳ vọng | Cách | Kết quả |
 |---|---|---|---|---|---|
-| TC-350 | Q30 | Xoá 1 khoản có 2 ảnh, đợi hết Undo | Khoản ở S-21 "27 days left"…; ảnh vẫn còn trong thư mục | T + M | ⏳ |
-| TC-351 | Q30 | Restore từ S-21 | Khoản về đúng chỗ, đủ ảnh, danh mục, phạm vi; biến khỏi S-21 | T + M | ⏳ |
-| TC-352 | Q30 | Xoá chuyến GPS rồi Restore | Chuyến về đủ điểm GPS, điểm dừng, đoạn Personal | T + M | ⏳ |
-| TC-353 | Q30 | Mục quá 30 ngày | Tác vụ đêm / mở app xoá hẳn + xoá ảnh không còn dùng | T | ⏳ |
-| TC-354 | Q30 | Delete now · Empty · "Delete all data" | Xoá hẳn đúng mục; Delete all data làm rỗng S-21 | T + M | ⏳ |
-| TC-355 | Q30 | Sao lưu rồi khôi phục | File sao lưu không chứa thùng rác; khôi phục không lỗi | T | ⏳ |
-| TC-356 | Q28 | End trip nhập "3.50" | 1 khoản Parking £3.50 gắn chuyến, phạm vi theo chuyến, không vào hàng chờ | T + M | ⏳ |
-| TC-357 | Q28 | Sửa số trên S-07c / xoá số | Khoản cập nhật / vào Recently deleted; Miles hiện "+ £3.50 parking & tolls" | T + M | ⏳ |
-| TC-358 | Q28 | Xoá chuyến có khoản gắn | Hỏi "Delete both" / "Keep the expense", làm đúng lựa chọn | M | ⏳ |
-| TC-359 | Q28 | Báo cáo Mileage rate | Parking cộng ngoài mức dặm, không trùng | T | ⏳ |
-| TC-360 | Q31 | Save as a regular trip từ S-07c | Có trong Settings → Regular trips; chip ở S-08 | T + M | ⏳ |
-| TC-361 | Q31 | Chạm chip + Round trip | S-08 điền sẵn dặm × 2, from/to, phạm vi, ngày hôm nay; use_count +1 | T + M | ⏳ |
-| TC-362 | Q31 | Free dùng chip có from/to | Không đòi Pro (chỉ tính tuyến mới mới cần Pro) | M | ⏳ |
-| TC-363 | Q29 | Xuất CSV quý | Khoản + chuyến trong kỳ có nhãn "Exported"; ngoài kỳ thì không | T + M | ⏳ |
-| TC-364 | Q29 | Sửa khoản đã xuất | Dòng "Already in your export of …"; S-10 "1 change since your last export" | T + M | ⏳ |
-| TC-365 | Dữ liệu | Migration 0004 trên DB đang dùng + khôi phục sao lưu cũ | Chạy không mất dữ liệu | T + M | ⏳ |
+| TC-350 | Q30 | Xoá 1 khoản có 2 ảnh, đợi hết Undo | Khoản ở S-21 "27 days left"…; ảnh vẫn còn trong thư mục | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
+| TC-351 | Q30 | Restore từ S-21 | Khoản về đúng chỗ, đủ ảnh, danh mục, phạm vi; biến khỏi S-21 | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
+| TC-352 | Q30 | Xoá chuyến GPS rồi Restore | Chuyến về đủ điểm GPS, điểm dừng, đoạn Personal | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
+| TC-353 | Q30 | Mục quá 30 ngày | Tác vụ đêm / mở app xoá hẳn + xoá ảnh không còn dùng | T | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
+| TC-354 | Q30 | Delete now · Empty · "Delete all data" | Xoá hẳn đúng mục; Delete all data làm rỗng S-21 | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
+| TC-355 | Q30 | Sao lưu rồi khôi phục | File sao lưu không chứa thùng rác; khôi phục không lỗi | T | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
+| TC-356 | Q28 | End trip nhập "3.50" | 1 khoản Parking £3.50 gắn chuyến, phạm vi theo chuyến, không vào hàng chờ | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
+| TC-357 | Q28 | Sửa số trên S-07c / xoá số | Khoản cập nhật / vào Recently deleted; Miles hiện "+ £3.50 parking & tolls" | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
+| TC-358 | Q28 | Xoá chuyến có khoản gắn | Hỏi "Delete both" / "Keep the expense", làm đúng lựa chọn | M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
+| TC-359 | Q28 | Báo cáo Mileage rate | Parking cộng ngoài mức dặm, không trùng | T | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
+| TC-360 | Q31 | Save as a regular trip từ S-07c | Có trong Settings → Regular trips; chip ở S-08 | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
+| TC-361 | Q31 | Chạm chip + Round trip | S-08 điền sẵn dặm × 2, from/to, phạm vi, ngày hôm nay; use_count +1 | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
+| TC-362 | Q31 | Free dùng chip có from/to | Không đòi Pro (chỉ tính tuyến mới mới cần Pro) | M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
+| TC-363 | Q29 | Xuất CSV quý | Khoản + chuyến trong kỳ có nhãn "Exported"; ngoài kỳ thì không | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
+| TC-364 | Q29 | Sửa khoản đã xuất | Dòng "Already in your export of …"; S-10 "1 change since your last export" | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
+| TC-365 | Dữ liệu | Migration 0004 trên DB đang dùng + khôi phục sao lưu cũ | Chạy không mất dữ liệu | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
