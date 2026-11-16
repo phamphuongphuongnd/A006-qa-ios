@@ -27,6 +27,7 @@ import { authenticate, deviceCanLock } from '@/features/settings/LockedView';
 import { cancelSortReminders } from '@/features/settings/notifications';
 import { backupDue, daysSince, timeLabel, WEEKDAYS } from '@/features/settings/reminder';
 import { GroupLabel, NavHeader, NavRow, OptionSheet, Pill, type Option } from '@/features/settings/ui';
+import { listSavedTrips } from '@/features/savedTrips/repo';
 import { trashCount } from '@/features/trash/repo';
 import { t, tn } from '@/i18n';
 import { ProCard } from '@/features/settings/ProCard';
@@ -90,6 +91,7 @@ export default function SettingsScreen() {
   };
   const hasData = useLive(() => entryCount(db) > 0, [], ['entries']);
   const trashItems = useLive(() => trashCount(db), [], ['trash']);
+  const regularCount = useLive(() => listSavedTrips(db).length, [], ['saved_trips']);
 
   useEffect(() => {
     let live = true;
@@ -188,6 +190,7 @@ export default function SettingsScreen() {
           )}
           <NavRow title={t('settingsV2.workHours')} value={settings.workHours.on ? t('settingsV2.on') : t('settingsV2.off')} onPress={() => router.push('/trip/work-hours')} />
           <NavRow title={t('tripCheck.setting')} value={t(`tripCheck.${settings.odometerCheck}`)} onPress={() => setPicker('odometer')} />
+          <NavRow title={t('s6.regularTrips')} value={regularCount > 0 ? String(regularCount) : undefined} onPress={() => router.push('/regular-trips')} />
         </Group>
 
         <GroupLabel>{t('settingsV2.sorting')}</GroupLabel>

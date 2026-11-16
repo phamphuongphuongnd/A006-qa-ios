@@ -11,6 +11,7 @@ import { deleteTripToTrash } from '@/features/trips/deleteTrip';
 import { TripDeleteDialog } from '@/features/trips/detail/TripDeleteDialog';
 import { parkingNoteFor, setTripParking, tripParkingMinor } from '@/features/trips/parking';
 import { ParkingField } from '@/features/trips/ParkingField';
+import { SaveRegularSheet } from '@/features/savedTrips/ui';
 import { ModalHeader } from '@/features/trips/ModalHeader';
 import { rememberRoute } from '@/features/trips/route/places';
 import { routeFormOf, useRouteOption } from '@/features/trips/route/useRouteOption';
@@ -18,8 +19,8 @@ import { useSettings } from '@/state/settings';
 import { TripForm } from '@/features/trips/TripForm';
 import { refreshWidgets } from '@/features/widgets/refresh';
 import { t } from '@/i18n';
-import { IconButton, useSnackbar } from '@/ui';
-import { Trash2, X } from '@/ui/icons';
+import { Button, IconButton, useSnackbar } from '@/ui';
+import { Repeat, Trash2, X } from '@/ui/icons';
 
 const trim = (n: number) => String(Math.round(n * 10) / 10);
 
@@ -35,6 +36,7 @@ export function ManualTripEdit({ trip, unit, close }: { trip: TripRow; unit: Dis
   const currency = currencyOf(settings.region ?? 'UK');
   const [parkingSaved] = useState(() => tripParkingMinor(db, trip.id));
   const parking = useAmountExpr(parkingSaved);
+  const [saveRegular, setSaveRegular] = useState(false);
 
   return (
     <TripForm
@@ -64,7 +66,12 @@ export function ManualTripEdit({ trip, unit, close }: { trip: TripRow; unit: Dis
         purpose: trip.purpose,
       }}
       hint={trip.source === 'gap' ? t('tripCheck.estimated') : undefined}
-      extra={<ParkingField amount={parking} currency={currency} />}
+      extra={
+        <>
+          <ParkingField amount={parking} currency={currency} />
+          <Button label={t('s6.saveRegular')} icon={Repeat} variant="outline" full onPress={() => setSaveRegular(true)} />
+        </>
+      }
       onSubmit={(r) => {
         // Estimated gap trips keep their span (moved with the day).
         const span = trip.source === 'gap' && trip.endedAt !== null ? trip.endedAt - trip.startedAt : 0;
@@ -77,6 +84,18 @@ export function ManualTripEdit({ trip, unit, close }: { trip: TripRow; unit: Dis
         snack({ message: t('trip.updated') });
         close();
       }}>
+      {saveRegular ? (
+        <SaveRegularSheet
+          trip={trip}
+          unit={unit}
+          visible
+          onClose={() => setSaveRegular(false)}
+          onSaved={() => {
+            setSaveRegular(false);
+            snack({ message: t('s6.regularSaved') });
+          }}
+        />
+      ) : null}
       <TripDeleteDialog
         visible={askDelete}
         parkingMinor={parkingSaved}

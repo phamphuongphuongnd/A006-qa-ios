@@ -115,6 +115,7 @@ function Navigator({ onboarded }: { onboarded: boolean }) {
           <Stack.Screen name="auto-sorted" />
           <Stack.Screen name="recurring" />
           <Stack.Screen name="recently-deleted" />
+          <Stack.Screen name="regular-trips" />
           <Stack.Screen name="notifications" />
           {/* S-19 (onboarding S-01e opens the same screen as onboarding/pro). */}
           <Stack.Screen name="pro" />

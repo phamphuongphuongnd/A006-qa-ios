@@ -28,6 +28,7 @@ import { ManualTripEdit } from '@/features/trips/detail/ManualTripEdit';
 import { TripDeleteDialog } from '@/features/trips/detail/TripDeleteDialog';
 import { parkingNoteFor, setTripParking, tripParkingMinor } from '@/features/trips/parking';
 import { ParkingField } from '@/features/trips/ParkingField';
+import { SaveRegularSheet } from '@/features/savedTrips/ui';
 import { TimeWheel } from '@/features/trips/detail/TimeWheel';
 import { TripDetailSketch } from '@/features/trips/detail/TripDetailSketch';
 import { TripMap } from '@/features/trips/map/TripMap';
@@ -40,7 +41,7 @@ import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { useTheme } from '@/theme';
 import { Badge, Button, Card, Divider, EmptyState, Field, IconButton, Screen, Segmented, Sheet, Txt, useSnackbar } from '@/ui';
-import { ChevronLeft, ChevronRight, Home, Pencil, Split, Trash2 } from '@/ui/icons';
+import { ChevronLeft, ChevronRight, Home, Pencil, Repeat, Split, Trash2 } from '@/ui/icons';
 
 const trim = (n: number) => String(Math.round(n * 10) / 10);
 const minuteOfDay = (at: number) => {
@@ -96,6 +97,7 @@ function TripDetail({ trip, close }: { trip: TripRow; close: () => void }) {
   const [edit, setEdit] = useState<EditKind | null>(null);
   const [askDelete, setAskDelete] = useState(false);
   const [purpose, setPurpose] = useState(trip.purpose);
+  const [saveRegular, setSaveRegular] = useState(false);
   const currency = currencyOf(settings.region ?? 'UK');
   const parkingSaved = useLive(() => tripParkingMinor(db, trip.id), [trip.id], ['entries']);
   const parking = useAmountExpr(parkingSaved);
@@ -353,6 +355,19 @@ function TripDetail({ trip, close }: { trip: TripRow; close: () => void }) {
       />
 
       <ParkingField amount={parking} currency={currency} onDone={saveParking} />
+      <Button label={t('s6.saveRegular')} icon={Repeat} variant="outline" full onPress={() => setSaveRegular(true)} />
+      {saveRegular ? (
+        <SaveRegularSheet
+          trip={trip}
+          unit={unit}
+          visible
+          onClose={() => setSaveRegular(false)}
+          onSaved={() => {
+            setSaveRegular(false);
+            snack({ message: t('s6.regularSaved'), above: 'none' });
+          }}
+        />
+      ) : null}
 
       {/* Stop sheet */}
       <Sheet visible={stop !== null} onClose={() => setStopIdx(null)} scroll={false}>

@@ -37,6 +37,7 @@ export function TripForm({
   region = 'UK',
   onRouteLocked,
   hint,
+  top,
 }: {
   header: React.ReactNode;
   initial: TripFormValues;
@@ -51,6 +52,8 @@ export function TripForm({
   onRouteLocked?: () => void;
   /** Small line at the top, e.g. "Estimated from the gap between two trips" (Q26 / Q27 prefill). */
   hint?: string;
+  /** Above the mode switch, e.g. the Regular trips chips (Q31). */
+  top?: React.ReactNode;
 }) {
   const { colors, dark } = useTheme();
   const [v, setV] = useState<TripFormValues>(initial);
@@ -99,6 +102,7 @@ export function TripForm({
   return (
     <Screen header={header} avoidKeyboard bottomInset bottom={<Button label={submitLabel} full onPress={submit} style={{ flex: 1 }} />}>
       <View style={{ gap: 16 }}>
+      {top}
       {hint ? (
         <Txt v="small" c="textSecondary" style={{ fontFamily: fonts.semibold }}>
           {hint}
