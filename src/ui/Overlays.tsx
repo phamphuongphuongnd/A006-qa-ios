@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fonts, radius, useTheme } from '@/theme';
@@ -39,6 +39,13 @@ export function SnackbarProvider({ children }: { children: ReactNode }) {
   const [fabTop, setFabTop] = useState<number | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const current = useRef<(SnackOptions & { id: number }) | null>(null);
+  const screenReader = useRef(false);
+
+  useEffect(() => {
+    AccessibilityInfo.isScreenReaderEnabled().then((on) => (screenReader.current = on)).catch(() => {});
+    const sub = AccessibilityInfo.addEventListener('screenReaderChanged', (on) => (screenReader.current = on));
+    return () => sub.remove();
+  }, []);
 
   const close = useCallback((acted: boolean) => {
     if (timer.current) clearTimeout(timer.current);
@@ -54,7 +61,9 @@ export function SnackbarProvider({ children }: { children: ReactNode }) {
       const s = { ...o, id: Date.now() };
       current.current = s;
       setSnack(s);
-      timer.current = setTimeout(() => close(false), o.duration ?? (o.actionLabel ? 5000 : 3000));
+      // TalkBack / VoiceOver needs time to reach "Undo" by swiping: keep action snackbars up longer then.
+      const base = o.duration ?? (o.actionLabel ? 5000 : 3000);
+      timer.current = setTimeout(() => close(false), o.actionLabel && screenReader.current ? Math.max(base, 10000) : base);
     },
     [close],
   );
@@ -91,15 +100,14 @@ function SnackView({ s, fabClearance, onAction }: { s: SnackOptions; fabClearanc
     <View
       pointerEvents="box-none"
       style={[StyleSheet.absoluteFill, { justifyContent: 'flex-end', paddingHorizontal: 12, paddingBottom: bottom }]}>
+      {/* No role on the row: an Android "alert" container swallows its children, so TalkBack couldn't focus Undo. */}
       <View
-        accessibilityLiveRegion="polite"
-        accessibilityRole="alert"
         style={[styles.snack, { backgroundColor: s.tone === 'error' ? colors.error : colors.snackbar }]}>
-        <Text maxFontSizeMultiplier={1.6} style={{ flex: 1, color: s.tone === 'error' ? colors.onError : colors.onSnackbar, fontSize: 15, fontFamily: fonts.semibold }}>
+        <Text accessibilityLiveRegion="polite" accessibilityRole="alert" maxFontSizeMultiplier={1.6} style={{ flex: 1, color: s.tone === 'error' ? colors.onError : colors.onSnackbar, fontSize: 15, fontFamily: fonts.semibold }}>
           {s.message}
         </Text>
         {s.actionLabel ? (
-          <Pressable accessibilityRole="button" onPress={onAction} hitSlop={8} style={styles.snackBtn}>
+          <Pressable accessible accessibilityRole="button" accessibilityLabel={s.actionLabel} onPress={onAction} hitSlop={8} style={styles.snackBtn}>
             <Text style={{ color: colors.snackbarAction, fontSize: 15, fontFamily: fonts.extrabold }}>{s.actionLabel}</Text>
           </Pressable>
         ) : null}
