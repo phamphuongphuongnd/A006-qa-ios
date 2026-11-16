@@ -170,3 +170,9 @@
   patch-package `IntentModule.kt` — trong `onHostResume` nếu Activity vẫn null thì `resolve(null)` thay vì chờ lại; build
   native mới, để máy chạy nền qua đêm rồi đo `top -H`. **P6:** `android/` cục bộ sinh ngày 13/11 (manifest release cũ còn gỡ
   INTERNET) → trước khi build native / release cục bộ chạy `npx expo prebuild --clean` (EAS tự prebuild).
+- [ ] **B-52** 🟠 Chữ 200% (font_scale 2.0, Phương bật) — case TC-345 — S-19, S-07d, S-08b, Backup, thẻ Sort (hàng hành động
+  ghim đáy, B-43) đạt. Sai: (1) 🟠 Miles: tiêu đề "Miles · Tax year 2026/27 ⌄" đẩy nút ⋯ "More" ra ngoài mép phải (còn 14 px)
+  → không mở được menu Automatic trips / NFC tag / Odometer check; (2) 🟡 Miles: dòng chuyến cắt "Fri 13 Nov ·.." mất số dặm;
+  (3) 🟡 A → B: chip nơi hay đến "Wakefield Westgate Railwa…" tràn quá mép phải, công tắc "Odometer | Distance | A → B" ép
+  sát; (4) 🟡 Sort → Split: nút danh mục từng phần còn "Choo.." (mất chữ "Choose"). Ảnh bằng chứng: thư mục scratchpad P5-3
+  (tc345/miles.png, ab.png, split.png).
