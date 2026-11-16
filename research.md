@@ -8,7 +8,7 @@
   Mỗi app: đếm theo chủ đề trên toàn bộ + đọc nguyên văn mọi đánh giá 2023–2026 và mẫu từng nhóm.
 - gov.uk (MTD for Income Tax – digital records, ngưỡng), Monzo / FreeAgent (MTD miễn phí), trang các hãng bridging software.
 - **Chưa đọc:** 5 luồng Reddit trong file ý tưởng (reddit.com bị chặn với trình duyệt của Claude) → P0 đọc bằng Claude in Chrome.
-- **Chưa dùng thử app đối thủ** → P0 trên trình giả lập `Medium_Phone_API_37.0` (Phương đăng nhập Google / đăng ký app).
+- **Dùng thử thật 2026-11-16** → §9 (Cash Book trên giả lập; MileIQ, Everlance qua web; Hurdlr chặn ngoài Mỹ/Canada).
 
 ## 2. Đối thủ được khen (4–5★) — A006 đã bằng chưa
 | Được khen | Ai | A006 |
@@ -36,7 +36,7 @@
 | Khoá / xoá dữ liệu khi hết lượt miễn phí | ✅ không — **phải giữ khi thêm Pro** |
 | Thông báo quá nhiều | ✅ 1 nhắc/tuần |
 | Không sửa được giờ chuyến | 🟡 chuyến GPS không sửa giờ |
-| Xin thêm (Cash Book): khoản lặp lại, máy tính trong ô số tiền, nhắc ghi hằng ngày, nhiều ảnh/khoản | ❌ chưa có |
+| Xin thêm (Cash Book): khoản lặp lại, máy tính trong ô số tiền, nhắc ghi hằng ngày, nhiều ảnh/khoản (thử thật §9: Cash Book nay đã có máy tính + nhiều ảnh) | ❌ chưa có |
 
 **Kết luận:** người dùng muốn tự động (khen số 1) nhưng tự động sai mà không báo là chê số 1–2. Cần cùng lúc:
 không phải nhớ · không sót âm thầm · biết ngay khi app ngừng ghi · sửa/gộp/tách nhanh · không bao giờ mất dữ liệu.
@@ -117,6 +117,82 @@ Start/Stop + báo cáo) → không quảng bá Start/Stop và xuất file miễn
 → **Gợi ý S5 (grill ở P1):** (1) map danh mục A006 → 15 danh mục HMRC + cột Disallowable; (2) xuất "MTD summary" cộng dồn
 theo kỳ Standard / Calendar (đúng bố cục Summary MTDsorted); (3) xuất sổ chi tiết theo cột MTDsorted (CSV, cân nhắc .xlsx đúng
 mẫu → cần thư viện ở P3); (4) FreeAgent: Expenses CSV + Mileage CSV (người dùng nhập tên claimant 1 lần; van → "Car").
+
+## 9. Thử thật 5 app (2026-11-16)
+**Cách thử:** giả lập `Medium_Phone_API_37.0` + tài khoản Google VN của Phương. Play VN: **Hurdlr, MileIQ "not available in
+your country"**, **Everlance (Early Access) "device isn't compatible"**, Cash Book cài được → Cash Book thử trên giả lập; MileIQ +
+Everlance thử **bản web** bằng tài khoản Phương tạo (thiếu giao diện điện thoại + tự ghi chuyến); **Hurdlr web cũng chặn**
+("only available in the United States and Canada") → chỉ xem được onboarding; Self Employed (iOS) chỉ xem App Store + website.
+Ghi chú thô từng màn: scratchpad phiên (không lưu repo).
+
+**Cash Book** (Android, không tài khoản)
+- Mở là dùng: 1 hộp "How to use" + OK, không xin quyền. Home: thẻ "Turn On Backup" (Drive) ghim đầu tới khi bật · lọc
+  All/Daily/Weekly/Monthly/Yearly · bảng Date | Cash In | Cash Out + **số dư chạy** mỗi dòng · 2 nút to xanh/đỏ sát đáy ·
+  dải tổng · **banner quảng cáo mọi màn** + Play bật sheet khuyến mãi đè app.
+- Ghi khoản: ngày ‹ › + giờ · ô số tiền **có nút máy tính** (bàn phím + − × ÷ %, kết quả sống "16.70" trên "12.50+4.20") ·
+  Notes có **mic** · Add Bills: Camera / Gallery (**chọn nhiều**) / **PDF** · Add Items (tên, SL, đơn vị, đơn giá) · danh mục
+  **ẩn trong menu ⋮**, ô gõ tự do · "Save and continue" để ghi liên tiếp. **Không OCR** (đính ảnh hoá đơn mẫu, số tiền không đổi).
+- Chạm khoản → sửa tại chỗ + **Copy** (nhân bản) + Delete → **"Deleted Transactions"** khôi phục được. Nhiều sổ (Accounts),
+  chuyển giữa sổ, lịch, ghi chú, vân tay/mật khẩu, gợi ý ghi chú cũ, tự gửi sao kê email, Print, Report → PDF/Excel đi thẳng bảng chia sẻ.
+- Giá (Play VN, chỉ để **bỏ quảng cáo**, mọi tính năng miễn phí): **trọn đời 250.000₫** · năm 80.000₫ (thử 5 ngày) · tháng
+  8.000₫ (thử 3 ngày) · mỗi gói có bản **"Manual renewal" (không tự gia hạn)** · nút "Cancel Subscription" ngay trang giá ·
+  "xem 1 video → bỏ quảng cáo 7 ngày".
+- → Sửa §3: "xin thêm máy tính trong ô số tiền, nhiều ảnh/khoản" là đánh giá cũ — **bản hiện tại đã có**.
+
+**MileIQ** (web dashboard, gói Free)
+- Sau đăng ký: "You're almost there!" 3 bước (tải app qua QR/SMS → đăng nhập → chuyến đầu). Web không tự ghi.
+- Drives: thanh tổng **Distance · Unclassified · Personal · Business** (tiền) · tab có số đếm · "N matching • **0 reported**" ·
+  nhóm theo ngày, dòng = mục đích · địa chỉ đi → đến · dặm · giờ · tiền · chọn nhiều · Trash.
+- Thêm chuyến tay: hỏi **Business/Personal trước** → mục đích IRS (Customer Visit, Errand/Supplies…; thêm được) → ô địa chỉ
+  **autocomplete Google** (địa chỉ UK được) → **tự tính tuyến**: Leeds Station → Bradford Interchange = 10,9 mi, $8.28
+  (0,76 $/mi) · tab 2: Distance (sửa) · **Parking · Tolls** · Notes → giá trị dòng = dặm + đỗ xe ($11.78). Panel chi tiết:
+  bản đồ tuyến, Report · **Duplicate** · Move to trash.
+- Reports: lọc kỳ / loại / xe → thẻ tổng → tên báo cáo, người nộp, khách, dự án, mức, **"Mark drives as reported"** (bật sẵn)
+  → gửi **email** (hoặc Concur, kèm bản QuickBooks). Web không tải file thẳng.
+- Subscription: **"39 drives left this month"** đầu trang · free **40 chuyến/tháng** · **$139.99/năm** · $13.99/tháng ·
+  bán bằng "stay IRS compliant", "average user deducts $6,500".
+- Settings: Mileage rates (mi/km, mức IRS 2026, sửa được) · **Auto-classification: Frequent Drives (bật sẵn) + Work Hours
+  trong giờ → Business / ngoài giờ → Personal** · Custom purposes · **Named locations** · **Vehicle & odometer (số đồng hồ
+  theo từng năm)** · email tuần (thứ Hai) + cuối tháng **bật sẵn**, email quảng cáo cũng **bật sẵn**.
+
+**Everlance** (web dashboard, gói Basic)
+- Home: Trips + Transactions overview ("Connect your bank or credit card…") · **"30 free trips left this month"** · chat hỗ trợ
+  góc phải mọi màn.
+- New Trip: Miles to · bản đồ + **Edit route / Calculate route / Round trip** · mục đích **mặc định Personal** · giờ từ–đến ·
+  note, tags, xe, **ảnh**. New Expense / **Revenue**: số tiền to + "Add receipt" · Merchant · ngày · **38 danh mục Mỹ** dài
+  (Gasoline… Snacks for Clients (50%), Section 179…) · tags.
+- Data exports: **Excel / CSV / PDF**, lọc ngày / mục đích / tags, thêm người nhận, file có hạn tải; loại **Tax report**.
+- Settings: Purposes (Self-Employed/Employee + nghề) · **Tax Center** (Revenue, Work Expenses, Mileage Deduction, Taxable
+  income) · **Transaction Rules** ("Field contains …" AND … → Purpose + Notes) · Tracker (bật/tắt tự dò, **Auto Classify trips
+  as …**) · **Favorite Trips** · **Favorite Places** · Vehicles · **Work Hours (khoá Premium)** · Import History.
+- Gói: **Basic** = 30 chuyến tự động/tháng + chuyến/chi phí tay không giới hạn · **Starter $89.99/năm** ($7.50/th): tự động
+  không giới hạn, **PDF reports**, Work hours · **Professional $119.99/năm**: + card sync, 1099 tax filing, audit protection ·
+  thử 7 ngày · "luôn truy cập dữ liệu" · **gói năm không hoàn tiền**.
+
+**Hurdlr** — chỉ onboarding web: chọn ngành (Driver…) → chọn sàn (Uber, Lyft, **Amazon Flex**, Doordash…, chọn nhiều) →
+email + mật khẩu ("Final Step!"); khẩu hiệu "Unlimited Auto Mileage Tracking". Chặn ngoài Mỹ/Canada ngay khi bấm DONE.
+
+**Self Employed: Income & Tax** (iOS, 1 người làm, 4 đánh giá 5★, "Data Not Collected") — chỉ xem store/website
+- Pay stub PDF, thu/chi, tips, sổ séc nhiều tài khoản, **khoản lặp lại** (thẻ riêng, ngày 1–31, khoản $0 cho hoá đơn đổi số,
+  "biến khoản thành lặp lại 1 chạm"), thuế ước tính quý, nhiều doanh nghiệp, lưu trữ cuối năm, iCloud. Dặm: **GPS chỉ ghi giữa
+  Start–Stop ("No continuous location monitoring")**, Apple Watch bắt đầu chuyến, CarPlay. Giao diện tối, kính mờ.
+- Giá **$4.99/th · $49.99/năm · trọn đời $149.99**; người cài trước khi có gói giữ miễn phí. Khen: "không bị khoá sau paywall".
+
+**So với A006 bản 2**
+| Thấy ở đối thủ | A006 bản 2 |
+|---|---|
+| Đếm ngược lượt free ngay đầu màn (MileIQ "39 drives left", Everlance "30 free trips left") | ✅ 20 ảnh/tháng hiện đếm ngược |
+| Máy tính trong ô số tiền, nhiều ảnh/khoản, ghi liên tiếp (Cash Book) | ✅ Q20, Q21 (ghi liên tiếp: chưa rõ) |
+| Nhân bản khoản / chuyến (Cash Book Copy, MileIQ Duplicate) | ✅ Duplicate trong ⋯ |
+| Luật theo nơi bán (Everlance Rules), nơi quen / giờ làm (MileIQ, Everlance) | ✅ P1-2, P1-3, P1-10 — A006 hỏi 1 chạm, họ bắt tự đặt luật |
+| Đồng hồ dặm (MileIQ: 1 số/năm) | ✅ Q27 mạnh hơn (đối chiếu định kỳ, báo thiếu dặm) |
+| Thêm chuyến tay bằng địa chỉ + tự tính tuyến (MileIQ, Everlance) | ✅ Q25 A→B (Pro, S1b) |
+| **Đỗ xe / cầu đường gắn ngay vào chuyến** (MileIQ) | ❌ phải ghi khoản riêng |
+| **Đánh dấu "đã báo cáo / đã xuất"** (MileIQ) | ❌ |
+| **Thùng rác khôi phục khoản đã xoá** (Cash Book, MileIQ Trash) | 🟡 chỉ Undo vài giây |
+| **Chuyến hay đi / khứ hồi 1 chạm** (Everlance Favorite Trips, Round trip) | 🟡 có tuyến quen, chưa có "thêm lại chuyến hay đi" |
+| Gói trọn đời / gia hạn tay (Cash Book, Self Employed); 2 người dùng Driversnote đòi mua 1 lần (K5) | ❌ Q16 chỉ gói năm |
+| Quảng cáo, email quảng cáo bật sẵn, danh mục Mỹ dài 38 mục, mục đích mặc định Personal | ✅ A006 tránh được cả 4 |
 
 ## Nguồn
 - gov.uk: [Tăng mức dặm 17/6/2026](https://www.gov.uk/government/publications/increase-to-approved-mileage-allowance-payments-amaps-and-self-employed-simplified-mileage-rates) ·

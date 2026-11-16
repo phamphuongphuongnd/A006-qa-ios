@@ -23,7 +23,7 @@ bản đồ tải từ OpenFreeMap; địa chỉ gõ ở chuyến A → B gửi 
 
 ---
 
-## 1. Đối thủ (cập nhật 2026-11-13, nguồn `research.md`)
+## 1. Đối thủ (cập nhật 2026-11-16, nguồn `research.md` §2–3, thử thật §9)
 
 | Chức năng | Driversnote (UK #1) | MileIQ | Everlance | Hurdlr | Cash Book | **Sunday Sort** |
 |---|---|---|---|---|---|---|
@@ -33,14 +33,14 @@ bản đồ tải từ OpenFreeMap; địa chỉ gõ ở chuyến A → B gửi 
 | Start/Stop tay | Có | Không | Có | Có (free) | — | **Có, miễn phí** |
 | Bật chuyến không chạm máy | iBeacon (mua thêm) | Không | Không | Bluetooth | — | **Bluetooth van, cắm sạc, thẻ NFC** |
 | Vuốt phân loại chuyến | Có | Có | Có | Có (Speed Tagging) | — | **Có** + Personal segment sau chuyến |
-| Luật tự phân loại / học nơi quen | Không | Nơi quen | Nơi quen | Có (AI) | Không | **Có [Pro]**, hỏi 1 chạm trước khi áp |
+| Luật tự phân loại / học nơi quen | Không | Nơi quen + giờ làm | Nơi quen + luật tự đặt (giờ làm trả phí) | Có (AI) | Không | **Có [Pro]**, hỏi 1 chạm trước khi áp |
 | Đọc hoá đơn (OCR) | Không | Không | Có | Có | Không | **Có [Pro], chạy trên máy** |
-| Sửa / gộp / tách khoản | — | Gộp chuyến | Sửa | Sửa, gộp chuyến | Sửa | **Sửa + gộp + tách ngay trên thẻ** |
+| Sửa / gộp / tách khoản | — | Gộp, nhân bản chuyến | Sửa | Sửa, gộp chuyến | Sửa, nhân bản, thùng rác | **Sửa + gộp + tách ngay trên thẻ** |
 | Năm thuế UK + MTD | Logbook HMRC | Bản UK | Không | Không | Không | **SA103 + file nhập MTD + FreeAgent** |
 | Không cần tài khoản / ngân hàng | Không | Không | Không | Không | Có | **Có** |
 | Quảng cáo | Không | Không | Không | Không | **Có** | **Không** |
-| Giới hạn bản free | **15 chuyến/tháng (giấu)** | 40 chuyến/tháng | Hạn chế | Có | Quảng cáo | **20 ảnh/tháng, nói rõ lúc cài; mọi thứ khác dùng mãi** |
-| Giá trả phí (UK) | ≈ £96/năm | ≈ £95/năm | ≈ £60–100/năm | $100/năm | IAP | **£24.99/năm** (tạm, sẽ chỉnh) |
+| Giới hạn bản free | **15 chuyến/tháng (giấu)** | 40 chuyến/tháng | 30 chuyến tự động/tháng, PDF trả phí | Có | Quảng cáo | **20 ảnh/tháng, nói rõ lúc cài; mọi thứ khác dùng mãi** |
+| Giá trả phí (UK) | ≈ £96/năm | ≈ £95/năm (US $139.99) | US $89.99–119.99/năm | $100/năm | Bỏ QC: năm / tháng / trọn đời | **£24.99/năm** (tạm, sẽ chỉnh) |
 
 Khác biệt nói trên store: ghi không danh mục + phân loại Chủ nhật; tự động **không sót âm thầm**; không tài khoản/ngân hàng;
 không khoá dữ liệu khi ngừng trả; rẻ hơn 3–4 lần. **Không** quảng bá "Start/Stop + xuất file miễn phí" là khác biệt (Hurdlr
