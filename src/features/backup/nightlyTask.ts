@@ -6,6 +6,7 @@ import { getSettings } from '@/db/settingsRepo';
 import { syncProNotices } from '@/features/pro/notices';
 import { generateDueRecurring } from '@/features/recurring/repo';
 import { notifyBackupNeedsTap, syncReminders } from '@/features/settings/notifications';
+import { purgeExpiredTrash } from '@/features/trash/purge';
 
 import { runNightlyNow } from './folder';
 import { nightlyDue } from './nightly';
@@ -25,6 +26,11 @@ export async function runBackgroundWork(now = Date.now(), opts: { notifyOnFail: 
     generateDueRecurring(db, now);
   } catch (e) {
     console.warn('[nightly] recurring failed', e);
+  }
+  try {
+    purgeExpiredTrash(now);
+  } catch (e) {
+    console.warn('[nightly] trash purge failed', e);
   }
   try {
     await syncReminders(db, now);

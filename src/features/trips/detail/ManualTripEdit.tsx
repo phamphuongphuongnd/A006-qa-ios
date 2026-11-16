@@ -2,10 +2,16 @@ import { useState } from 'react';
 
 import { db } from '@/db/client';
 import type { TripRow } from '@/db/schema';
-import { deleteTrip, tripRoute, updateManualTrip } from '@/db/tripsRepo';
-import { pickerScope } from '@/domain/types';
-import { distanceValue, type DistanceUnit } from '@/features/trips/format';
+import { getTrip, tripRoute, updateManualTrip } from '@/db/tripsRepo';
+import { pickerScope , currencyOf } from '@/domain/types';
+import { distanceValue, formatDay, type DistanceUnit } from '@/features/trips/format';
 import { openPro } from '@/features/pro/openPro';
+import { useAmountExpr } from '@/features/ocr/useAmountExpr';
+import { deleteTripToTrash } from '@/features/trips/deleteTrip';
+import { TripDeleteDialog } from '@/features/trips/detail/TripDeleteDialog';
+import { parkingNoteFor, setTripParking, tripParkingMinor } from '@/features/trips/parking';
+import { ParkingField, ParkingKeyBar } from '@/features/trips/ParkingField';
+import { SaveRegularSheet } from '@/features/savedTrips/ui';
 import { ModalHeader } from '@/features/trips/ModalHeader';
 import { rememberRoute } from '@/features/trips/route/places';
 import { routeFormOf, useRouteOption } from '@/features/trips/route/useRouteOption';
@@ -13,8 +19,8 @@ import { useSettings } from '@/state/settings';
 import { TripForm } from '@/features/trips/TripForm';
 import { refreshWidgets } from '@/features/widgets/refresh';
 import { t } from '@/i18n';
-import { Dialog, IconButton, useSnackbar } from '@/ui';
-import { Trash2, X } from '@/ui/icons';
+import { Button, IconButton, useSnackbar } from '@/ui';
+import { Repeat, Trash2, X } from '@/ui/icons';
 
 const trim = (n: number) => String(Math.round(n * 10) / 10);
 
@@ -27,6 +33,11 @@ export function ManualTripEdit({ trip, unit, close }: { trip: TripRow; unit: Dis
   const route = useRouteOption();
   // Without the service (no key) an A → B trip opens as Distance and keeps its From / To.
   const isRoute = tripRoute(trip) !== null && route !== 'hidden';
+  const currency = currencyOf(settings.region ?? 'UK');
+  const [parkingSaved] = useState(() => tripParkingMinor(db, trip.id));
+  const [parkingEditing, setParkingEditing] = useState(false);
+  const parking = useAmountExpr(parkingSaved);
+  const [saveRegular, setSaveRegular] = useState(false);
 
   return (
     <TripForm
@@ -40,6 +51,7 @@ export function ManualTripEdit({ trip, unit, close }: { trip: TripRow; unit: Dis
         />
       }
       unit={unit}
+      bottomExtra={parkingEditing ? <ParkingKeyBar amount={parking} currency={currency} /> : null}
       submitLabel={t('common.save')}
       route={route}
       region={settings.region ?? 'UK'}
@@ -55,36 +67,62 @@ export function ManualTripEdit({ trip, unit, close }: { trip: TripRow; unit: Dis
         scope: trip.source === 'gap' ? trip.scope : pickerScope(trip.scope),
         purpose: trip.purpose,
       }}
-      hint={trip.source === 'gap' ? t('tripCheck.estimated') : undefined}
+      hint={
+        trip.exportedAt
+          ? t('s6.exportedWarn', { date: formatDay(trip.exportedAt) })
+          : trip.source === 'gap'
+            ? t('tripCheck.estimated')
+            : undefined
+      }
+      extra={
+        <>
+          <ParkingField amount={parking} currency={currency} onEditingChange={setParkingEditing} />
+          <Button label={t('s6.saveRegular')} icon={Repeat} variant="outline" full onPress={() => setSaveRegular(true)} />
+        </>
+      }
       onSubmit={(r) => {
         // Estimated gap trips keep their span (moved with the day).
         const span = trip.source === 'gap' && trip.endedAt !== null ? trip.endedAt - trip.startedAt : 0;
         updateManualTrip(db, trip.id, span > 0 ? { ...r, endedAt: r.date + span } : r);
         const before = tripRoute(trip);
         if (r.route && (!before || before.from.label !== r.route.from.label || before.to.label !== r.route.to.label)) rememberRoute(db, r.route);
+        const after = getTrip(db, trip.id);
+        if (after && parking.minor !== parkingSaved) setTripParking(db, after, parking.minor, currency, parkingNoteFor(after));
         refreshWidgets().catch(() => {});
         snack({ message: t('trip.updated') });
         close();
       }}>
-      <Dialog
+      {saveRegular ? (
+        <SaveRegularSheet
+          trip={trip}
+          unit={unit}
+          visible
+          onClose={() => setSaveRegular(false)}
+          onSaved={() => {
+            setSaveRegular(false);
+            snack({ message: t('s6.regularSaved') });
+          }}
+        />
+      ) : null}
+      <TripDeleteDialog
         visible={askDelete}
-        title={t('trip.deleteConfirm')}
-        body={t('trip.deleteBody')}
+        parkingMinor={parkingSaved}
+        currency={currency}
         onClose={() => setAskDelete(false)}
-        actions={[
-          { label: t('common.cancel'), onPress: () => setAskDelete(false) },
-          {
-            label: t('common.delete'),
-            variant: 'danger',
-            onPress: () => {
-              setAskDelete(false);
-              deleteTrip(db, trip.id);
+        onDelete={(deleteParking) => {
+          setAskDelete(false);
+          const undo = deleteTripToTrash(db, trip.id, deleteParking);
+          refreshWidgets().catch(() => {});
+          snack({
+            message: t('trip.deleted'),
+            actionLabel: t('autoTrip.undo'),
+            onAction: () => {
+              undo?.();
               refreshWidgets().catch(() => {});
-              snack({ message: t('trip.deleted') });
-              close();
             },
-          },
-        ]}
+          });
+          close();
+        }}
       />
     </TripForm>
   );

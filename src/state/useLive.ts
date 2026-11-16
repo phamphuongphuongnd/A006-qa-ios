@@ -21,7 +21,9 @@ export type LiveTable =
   | 'pro_state'
   | 'places'
   | 'trip_gap_dismissals'
-  | 'odometer_readings';
+  | 'odometer_readings'
+  | 'trash'
+  | 'saved_trips';
 
 const versions = new Map<string, number>();
 const subs = new Map<string, Set<() => void>>();

@@ -38,6 +38,7 @@ export function startTrip(
     originalEndedAt: null,
     originalDistanceM: null,
     classifiedBy: null,
+    exportedAt: null,
     ...NO_ROUTE,
   };
   db.insert(trips).values(row).run();
@@ -201,6 +202,7 @@ export function addManualTrip(db: AppDb, t: ManualTrip): TripRow {
     originalEndedAt: null,
     originalDistanceM: null,
     classifiedBy: null,
+    exportedAt: null,
     ...routeCols(t.route ?? null),
   };
   db.insert(trips).values(row).run();

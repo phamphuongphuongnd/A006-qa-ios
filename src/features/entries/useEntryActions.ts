@@ -16,6 +16,7 @@ import {
   type SplitPart,
 } from '@/db/entriesRepo';
 import type { Scope } from '@/domain/types';
+import { entryTrashId, trashEntries, untrash } from '@/features/trash/repo';
 import { deleteReceiptFiles } from '@/files/receipts';
 import { t, tn } from '@/i18n';
 import { useSnackbar, type SnackOptions } from '@/ui';
@@ -30,7 +31,7 @@ function inOneTransaction(fn: () => void) {
 
 /**
  * Entry changes that always come with an Undo snackbar (product rule: Undo after delete / merge / split / sort).
- * Receipt files no longer used are deleted only once the snackbar goes away without Undo.
+ * Deleted entries also go to Recently deleted (Q30), which keeps their receipt files until it purges them.
  */
 export function useEntryActions({ above, bottomOffset }: Lift = {}) {
   const snack = useSnackbar();
@@ -39,13 +40,17 @@ export function useEntryActions({ above, bottomOffset }: Lift = {}) {
   const remove = useCallback(
     (ids: string[]) => {
       if (ids.length === 0) return;
-      const { snapshot, orphaned } = deleteEntries(db, ids);
+      const { snapshot } = deleteEntries(db, ids);
+      // Q30: kept in Recently deleted for 30 days (photos stay on disk until then).
+      trashEntries(db, snapshot);
       snack({
         ...lift,
         message: ids.length === 1 ? t('entries.deleted') : t('entries.deletedMany', { count: ids.length }),
         actionLabel: t('common.undo'),
-        onAction: () => restoreSnapshot(db, snapshot),
-        onDismiss: () => deleteReceiptFiles(orphaned),
+        onAction: () => {
+          restoreSnapshot(db, snapshot);
+          untrash(db, ids.map(entryTrashId));
+        },
       });
     },
     [snack, lift],

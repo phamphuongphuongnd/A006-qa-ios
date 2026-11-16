@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { db } from '@/db/client';
 import type { TripRow } from '@/db/schema';
 import { getTrip, recentPurposes, tripPointsOf } from '@/db/tripsRepo';
-import { pickerScope, type Scope } from '@/domain/types';
+import { currencyOf, pickerScope, type Scope } from '@/domain/types';
 import {
   discardTrip,
   endActiveTrip,
@@ -24,6 +24,9 @@ import { distanceValue, formatClock, formatDay, formatDistance, formatDuration }
 import { useActiveTrip } from '@/features/trips/hooks';
 import { setTripScope } from '@/features/trips/auto/repo';
 import { ModalHeader } from '@/features/trips/ModalHeader';
+import { useAmountExpr } from '@/features/ocr/useAmountExpr';
+import { parkingNoteFor, setTripParking } from '@/features/trips/parking';
+import { ParkingField } from '@/features/trips/ParkingField';
 import { wasBackgroundStepShown } from '@/features/trips/permissionState';
 import { TripMap } from '@/features/trips/map/TripMap';
 import { RouteSketch } from '@/features/trips/RouteSketch';
@@ -321,8 +324,14 @@ function EndTripSheet({ trip, unit, onDone }: { trip: TripRow; unit: 'mi' | 'km'
   const [purpose, setPurpose] = useState(trip.purpose);
   const [askDiscard, setAskDiscard] = useState(false);
   const [suggestions] = useState(() => recentPurposes(db, 4));
+  const { settings } = useSettings();
+  const currency = currencyOf(settings.region ?? 'UK');
+  const parking = useAmountExpr(0);
   const save = () => {
     saveEndedTrip(trip.id, scope, purpose);
+    // Q28: Parking & tolls typed at the end of the trip (after the scope is saved, so the expense takes it).
+    const saved = getTrip(db, trip.id);
+    if (saved && parking.minor > 0) setTripParking(db, saved, parking.minor, currency, parkingNoteFor(saved));
     onDone(true);
   };
   const range = t('trip.endedRange', {
@@ -369,6 +378,7 @@ function EndTripSheet({ trip, unit, onDone }: { trip: TripRow; unit: 'mi' | 'km'
             ))}
         </ChipRow>
       ) : null}
+      <ParkingField amount={parking} currency={currency} inlineCalc />
       <Button label={t('common.save')} full onPress={save} />
       <Pressable accessibilityRole="button" onPress={() => setAskDiscard(true)} style={{ minHeight: 48, alignItems: 'center', justifyContent: 'center', marginTop: -8 }}>
         <Text style={{ color: colors.error, fontSize: 17, fontFamily: fonts.bold }}>{t('trip.discardTrip')}</Text>

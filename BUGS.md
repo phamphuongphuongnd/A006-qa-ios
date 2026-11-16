@@ -176,3 +176,9 @@
   (3) 🟡 A → B: chip nơi hay đến "Wakefield Westgate Railwa…" tràn quá mép phải, công tắc "Odometer | Distance | A → B" ép
   sát; (4) 🟡 Sort → Split: nút danh mục từng phần còn "Choo.." (mất chữ "Choose"). Ảnh bằng chứng: thư mục scratchpad P5-3
   (tc345/miles.png, ab.png, split.png).
+
+### S6 (nhánh `s6-competitor-ideas`, thử trên giả lập theo Phương 2026-11-16)
+- [x] **B-S6a** 🟠 Ô "Parking & tolls" ở Thêm / Sửa chuyến: bấm vào thì ô và hàng "+ − × ÷" nằm sau nút Save + bàn phím →
+  không thấy số đang gõ, bấm "+" trúng Save (lưu £2.50 thay vì 2.50+1.00). Sửa: khi đang gõ, thanh dưới (trên nút Save) hiện
+  "Parking & tolls  2.50+1.00 = £3.50" + hàng "+ − × ÷" (`ParkingKeyBar`); sheet End trip giữ hàng phép tính ngay dưới ô —
+  thử giả lập: £3.50 lưu đúng.

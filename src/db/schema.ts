@@ -64,8 +64,16 @@ export const entries = sqliteTable(
     ocrMerchant: text('ocr_merchant'),
     /** Receipt date as epoch ms (local midnight). */
     ocrDate: integer('ocr_date'),
+    /** Parking & tolls typed on a trip (Q28): the trip this expense belongs to. Cleared if the trip is deleted but kept. */
+    tripId: text('trip_id'),
+    /** Last time this entry went into an export file (Q29); edits after that count as "changed since export". */
+    exportedAt: integer('exported_at'),
   },
-  (t) => [index('entries_occurred_idx').on(t.occurredAt), index('entries_category_idx').on(t.categoryId)],
+  (t) => [
+    index('entries_occurred_idx').on(t.occurredAt),
+    index('entries_category_idx').on(t.categoryId),
+    index('entries_trip_idx').on(t.tripId),
+  ],
 );
 
 export const receipts = sqliteTable(
@@ -120,6 +128,8 @@ export const trips = sqliteTable(
     toLat: real('to_lat'),
     toLng: real('to_lng'),
     roundTrip: integer('round_trip', { mode: 'boolean' }).notNull().default(false),
+    /** Last time this trip went into an export file (Q29). */
+    exportedAt: integer('exported_at'),
   },
   (t) => [index('trips_started_idx').on(t.startedAt)],
 );
@@ -283,6 +293,53 @@ export const odometerReadings = sqliteTable(
   (t) => [index('odometer_readings_read_idx').on(t.readAt)],
 );
 
+/**
+ * Recently deleted (Q30): what a delete removed, kept for 30 days so it can be restored. Not part of backups.
+ * Receipt files listed in `files` are kept on disk until the item is purged.
+ */
+export const trash = sqliteTable(
+  'trash',
+  {
+    id: text('id').primaryKey(),
+    kind: text('kind').$type<'entry' | 'trip'>().notNull(),
+    deletedAt: integer('deleted_at').notNull(),
+    /** What the list shows: entry note / category, or trip time span. */
+    label: text('label').notNull().default(''),
+    /** Entry: signed amount shown in the list (expense negative). */
+    amountMinor: integer('amount_minor'),
+    currency: text('currency').$type<'GBP' | 'USD'>(),
+    /** Trip: distance shown in the list. */
+    distanceM: real('distance_m'),
+    /** Entry / trip date (occurred / started) for the list. */
+    itemAt: integer('item_at').notNull(),
+    /** JSON snapshot of the rows the delete removed (see features/trash). */
+    payload: text('payload').notNull(),
+    /** JSON array of receipt / photo file names to delete when purged (if no row uses them then). */
+    files: text('files').notNull().default('[]'),
+  },
+  (t) => [index('trash_deleted_idx').on(t.deletedAt)],
+);
+
+/** Regular trips (Q31): a trip saved to add again in one tap from Add trip. On the phone, in backups. */
+export const savedTrips = sqliteTable('saved_trips', {
+  id: text('id').primaryKey(),
+  label: text('label').notNull(),
+  /** One-way distance; Round trip doubles it when added. */
+  distanceM: real('distance_m').notNull(),
+  roundTrip: integer('round_trip', { mode: 'boolean' }).notNull().default(false),
+  scope: text('scope').$type<Scope>().notNull().default('work'),
+  purpose: text('purpose').notNull().default(''),
+  fromLabel: text('from_label'),
+  toLabel: text('to_label'),
+  fromLat: real('from_lat'),
+  fromLng: real('from_lng'),
+  toLat: real('to_lat'),
+  toLng: real('to_lng'),
+  useCount: integer('use_count').notNull().default(0),
+  lastUsedAt: integer('last_used_at'),
+  createdAt: integer('created_at').notNull(),
+});
+
 /** Key → JSON value. See `settings` repository for the typed shape. */
 export const settings = sqliteTable('settings', {
   key: text('key').primaryKey(),
@@ -304,3 +361,5 @@ export type ProStateRow = typeof proState.$inferSelect;
 export type PlaceRow = typeof places.$inferSelect;
 export type TripGapDismissalRow = typeof tripGapDismissals.$inferSelect;
 export type OdometerReadingRow = typeof odometerReadings.$inferSelect;
+export type TrashRow = typeof trash.$inferSelect;
+export type SavedTripRow = typeof savedTrips.$inferSelect;

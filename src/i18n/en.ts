@@ -4,6 +4,7 @@ import { homeV2 } from './v2/home';
 import { mtd } from './v2/mtd';
 import { ocr } from './v2/ocr';
 import { pro } from './v2/pro';
+import { s6 } from './v2/s6';
 import { settingsV2 } from './v2/settings';
 import { sortV2 } from './v2/sortV2';
 import { tripCheck } from './v2/tripCheck';
@@ -653,4 +654,5 @@ export const en = {
   homeV2,
   settingsV2,
   tripCheck,
+  s6,
 } as const;

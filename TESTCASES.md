@@ -373,23 +373,24 @@
 
 ## Bản 2 — S6 Ý từ thử đối thủ (Q28–Q31, F-23, nhánh `s6-competitor-ideas`)
 
-> **T** = Jest · **M** = Galaxy A13 (dev build của nhánh). Cả 4 tính năng miễn phí → thử ở cả Free lẫn Pro.
+> **T** = Jest · **E** = giả lập `Medium_Phone_API_37.0` (dev build nhánh, bản Free, cài mới) — Phương chọn giả lập thay A13
+> 2026-11-16 vì A13 đang chạy P5. Cả 4 tính năng miễn phí.
 
 | # | Mục | Việc | Kỳ vọng | Cách | Kết quả |
 |---|---|---|---|---|---|
-| TC-350 | Q30 | Xoá 1 khoản có 2 ảnh, đợi hết Undo | Khoản ở S-21 "27 days left"…; ảnh vẫn còn trong thư mục | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
-| TC-351 | Q30 | Restore từ S-21 | Khoản về đúng chỗ, đủ ảnh, danh mục, phạm vi; biến khỏi S-21 | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
-| TC-352 | Q30 | Xoá chuyến GPS rồi Restore | Chuyến về đủ điểm GPS, điểm dừng, đoạn Personal | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
-| TC-353 | Q30 | Mục quá 30 ngày | Tác vụ đêm / mở app xoá hẳn + xoá ảnh không còn dùng | T | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
-| TC-354 | Q30 | Delete now · Empty · "Delete all data" | Xoá hẳn đúng mục; Delete all data làm rỗng S-21 | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
-| TC-355 | Q30 | Sao lưu rồi khôi phục | File sao lưu không chứa thùng rác; khôi phục không lỗi | T | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
-| TC-356 | Q28 | End trip nhập "3.50" | 1 khoản Parking £3.50 gắn chuyến, phạm vi theo chuyến, không vào hàng chờ | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
-| TC-357 | Q28 | Sửa số trên S-07c / xoá số | Khoản cập nhật / vào Recently deleted; Miles hiện "+ £3.50 parking & tolls" | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
-| TC-358 | Q28 | Xoá chuyến có khoản gắn | Hỏi "Delete both" / "Keep the expense", làm đúng lựa chọn | M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
-| TC-359 | Q28 | Báo cáo Mileage rate | Parking cộng ngoài mức dặm, không trùng | T | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
-| TC-360 | Q31 | Save as a regular trip từ S-07c | Có trong Settings → Regular trips; chip ở S-08 | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
-| TC-361 | Q31 | Chạm chip + Round trip | S-08 điền sẵn dặm × 2, from/to, phạm vi, ngày hôm nay; use_count +1 | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
-| TC-362 | Q31 | Free dùng chip có from/to | Không đòi Pro (chỉ tính tuyến mới mới cần Pro) | M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
-| TC-363 | Q29 | Xuất CSV quý | Khoản + chuyến trong kỳ có nhãn "Exported"; ngoài kỳ thì không | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
-| TC-364 | Q29 | Sửa khoản đã xuất | Dòng "Already in your export of …"; S-10 "1 change since your last export" | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
-| TC-365 | Dữ liệu | Migration 0004 trên DB đang dùng + khôi phục sao lưu cũ | Chạy không mất dữ liệu | T + M | ⏸ chưa có code (tính năng S6, chờ Phương duyệt) |
+| TC-350 | Q30 | Xoá 1 khoản có 2 ảnh, đợi hết Undo | Khoản ở S-21 "27 days left"…; ảnh vẫn còn trong thư mục | T + M | ✅ T trash.test; E: xoá chuyến + khoản đỗ xe → S-21 "30 days left" |
+| TC-351 | Q30 | Restore từ S-21 | Khoản về đúng chỗ, đủ ảnh, danh mục, phạm vi; biến khỏi S-21 | T + M | ✅ T; E: Restore khoản đỗ xe → về Entries, vẫn gắn chuyến |
+| TC-352 | Q30 | Xoá chuyến GPS rồi Restore | Chuyến về đủ điểm GPS, điểm dừng, đoạn Personal | T + M | ✅ T (GPS, đủ điểm); E chuyến tay 12.4 mi Restore → Miles có lại |
+| TC-353 | Q30 | Mục quá 30 ngày | Tác vụ đêm / mở app xoá hẳn + xoá ảnh không còn dùng | T | ✅ T |
+| TC-354 | Q30 | Delete now · Empty · "Delete all data" | Xoá hẳn đúng mục; Delete all data làm rỗng S-21 | T + M | ✅ T (Delete now / Empty / Delete all data); E chưa bấm Empty |
+| TC-355 | Q30 | Sao lưu rồi khôi phục | File sao lưu không chứa thùng rác; khôi phục không lỗi | T | ✅ T |
+| TC-356 | Q28 | End trip nhập "3.50" | 1 khoản Parking £3.50 gắn chuyến, phạm vi theo chuyến, không vào hàng chờ | T + M | ✅ T; E: £3.50 → Entries "Parking · Mon 16 Nov", đã có danh mục, Home "All sorted" |
+| TC-357 | Q28 | Sửa số trên S-07c / xoá số | Khoản cập nhật / vào Recently deleted; Miles hiện "+ £3.50 parking & tolls" | T + M | ✅ T; E: sửa 2.50 → 2.50+1.00 = £3.50, Miles "+ £3.50 parking & tolls" (sau B-S6a) |
+| TC-358 | Q28 | Xoá chuyến có khoản gắn | Hỏi "Delete both" / "Keep the expense", làm đúng lựa chọn | M | ✅ E: hỏi "Also delete the £3.50…?" → Delete both → cả 2 vào S-21; Keep: T |
+| TC-359 | Q28 | Báo cáo Mileage rate | Parking cộng ngoài mức dặm, không trùng | T | ✅ T |
+| TC-360 | Q31 | Save as a regular trip từ S-07c | Có trong Settings → Regular trips; chip ở S-08 | T + M | ✅ E: Save as a regular trip "Depot to Leeds" → Settings "Regular trips, 1" |
+| TC-361 | Q31 | Chạm chip + Round trip | S-08 điền sẵn dặm × 2, from/to, phạm vi, ngày hôm nay; use_count +1 | T + M | ✅ E: chip → 12.4, Round trip → 24.8, "Filled from Depot to Leeds"; T use_count |
+| TC-362 | Q31 | Free dùng chip có from/to | Không đòi Pro (chỉ tính tuyến mới mới cần Pro) | M | ⏳ E chưa có chuyến A → B (Pro) để lưu; T: chuyến lưu giữ from/to |
+| TC-363 | Q29 | Xuất CSV quý | Khoản + chuyến trong kỳ có nhãn "Exported"; ngoài kỳ thì không | T + M | ✅ T; E: xuất CSV năm → 2 chuyến "Exported" |
+| TC-364 | Q29 | Sửa khoản đã xuất | Dòng "Already in your export of …"; S-10 "1 change since your last export" | T + M | ✅ T; E: sửa 24.8 → 25 → mất nhãn, S-10 "1 change since your last export on Mon 16 Nov" |
+| TC-365 | Dữ liệu | Migration 0004 trên DB đang dùng + khôi phục sao lưu cũ | Chạy không mất dữ liệu | T + M | ✅ T (sao lưu cũ khôi phục được); E: cài mới chạy 0004. A13 (dữ liệu thật) chưa — Phương chọn thử giả lập |

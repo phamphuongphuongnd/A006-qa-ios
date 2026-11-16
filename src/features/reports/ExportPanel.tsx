@@ -10,13 +10,16 @@ import { listEntries, unsortedCount } from '@/db/entriesRepo';
 import type { Region } from '@/domain/types';
 import { openPro } from '@/features/pro/openPro';
 import { withLockSuspended } from '@/features/settings/lockState';
-import { t } from '@/i18n';
+import { formatDay } from '@/features/trips/format';
+import { t, tn } from '@/i18n';
 import { usePro } from '@/state/pro';
 import { useSettings } from '@/state/settings';
+import { useLive } from '@/state/useLive';
 import { fonts, radius, useTheme } from '@/theme';
 import { Badge, Button, Chip, ChipRow, Dialog, Field, IconButton, Sheet, Toggle, Txt } from '@/ui';
 
 import { buildExport, ExportCancelled, NothingToExport } from './buildExport';
+import { exportChanges, markExported } from './exported';
 import { defaultExportKinds, FREE_KINDS, isProKind, kindsFor, MTD_KINDS, type ExportKind } from './exportDocs';
 import {
   DEFAULT_FREEAGENT_VEHICLE,
@@ -87,6 +90,7 @@ export function ExportPanel({
   onClose: (snack?: { message: string; error?: boolean }) => void;
   showHeader?: boolean;
 }) {
+  'use no memo';
   const { colors } = useTheme();
   const { settings, update } = useSettings();
   const { pro } = usePro();
@@ -109,6 +113,8 @@ export function ExportPanel({
   const chosen = kinds.filter((k) => offered.includes(k) && (pro || !isProKind(k)));
   const wantsMtd = chosen.some((k) => MTD_KINDS.includes(k));
   const unsorted = unsortedCount(db, period);
+  const lastExport = settings.exportLog[period.fileStem] ?? null;
+  const changes = useLive(() => (lastExport !== null ? exportChanges(db, period, includePersonal) : 0), [lastExport, period.start, period.end, includePersonal], ['entries', 'trips']);
   const periodKey = `${period.start}-${period.end}`;
   const showMtdCard = wantsMtd && unsorted > 0 && leftOutFor !== periodKey;
   const photos = pro && offered.includes('receiptsZip') ? countPhotos(period) : 0;
@@ -158,6 +164,8 @@ export function ExportPanel({
         isCancelled: () => cancelled.current,
       });
       if (cancelled.current) return;
+      // Q29: everything of the period in these files is now "Exported".
+      markExported(db, period, includePersonal);
       if (!(await Sharing.isAvailableAsync())) {
         onClose({ message: t('export.shareUnavailable'), error: true });
         return;
@@ -356,6 +364,13 @@ export function ExportPanel({
         </View>
       ) : null}
 
+      {lastExport !== null ? (
+        <Txt v="small" c={changes > 0 ? 'sunText' : 'textSecondary'} center style={{ fontFamily: fonts.semibold }} accessibilityLiveRegion="polite">
+          {changes > 0
+            ? tn('s6.changesSince', changes, { date: formatDay(lastExport) })
+            : t('s6.noChangesSince', { date: formatDay(lastExport) })}
+        </Txt>
+      ) : null}
       <Button
         label={chosen.length === 1 ? t('mtd.export.exportOne') : t('mtd.export.exportN', { count: chosen.length })}
         icon={Download}

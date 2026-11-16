@@ -7,6 +7,7 @@ import { getSettings } from '@/db/settingsRepo';
 import { syncProNotices } from '@/features/pro/notices';
 import { refreshProFromStore } from '@/features/pro/store';
 import { generateDueRecurring } from '@/features/recurring/repo';
+import { purgeExpiredTrash } from '@/features/trash/purge';
 import { BACKUP_TAP_URL, ensureSortChannel, NUDGE_URL, ODOMETER_URL, SORT_URL, syncReminders } from '@/features/settings/notifications';
 import { router } from '@/services/router';
 import { useSettings } from '@/state/settings';
@@ -25,6 +26,11 @@ function catchUp() {
   const now = Date.now();
   try {
     generateDueRecurring(db, now);
+  } catch {
+    // retried next time
+  }
+  try {
+    purgeExpiredTrash(now);
   } catch {
     // retried next time
   }

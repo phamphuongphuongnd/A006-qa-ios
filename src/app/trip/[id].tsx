@@ -4,7 +4,7 @@ import { Pressable, View } from 'react-native';
 
 import { db } from '@/db/client';
 import type { TripRow } from '@/db/schema';
-import { deleteTrip, getTrip, tripPointsOf, updateTrip } from '@/db/tripsRepo';
+import { getTrip, tripPointsOf, updateTrip } from '@/db/tripsRepo';
 import { countedPath, metersToMiles } from '@/domain/mileage';
 import type { Scope } from '@/domain/types';
 import {
@@ -12,18 +12,23 @@ import {
   editGpsTrip,
   listSegments,
   restoreSegment,
-  restoreTrip,
   restoreTripScope,
   revertTripRow,
   setTripScope,
-  snapshotTrip,
   splitTripAt,
   toggleSegment,
   unsplitTrip,
   type TripEdit,
 } from '@/features/trips/auto/repo';
 import { findStops, sameRange, segmentForStop, splitMiles, type Stop } from '@/features/trips/auto/stops';
+import { currencyOf } from '@/domain/types';
+import { useAmountExpr } from '@/features/ocr/useAmountExpr';
+import { deleteTripToTrash } from '@/features/trips/deleteTrip';
 import { ManualTripEdit } from '@/features/trips/detail/ManualTripEdit';
+import { TripDeleteDialog } from '@/features/trips/detail/TripDeleteDialog';
+import { parkingNoteFor, setTripParking, tripParkingMinor } from '@/features/trips/parking';
+import { ParkingField, ParkingKeyBar } from '@/features/trips/ParkingField';
+import { SaveRegularSheet } from '@/features/savedTrips/ui';
 import { TimeWheel } from '@/features/trips/detail/TimeWheel';
 import { TripDetailSketch } from '@/features/trips/detail/TripDetailSketch';
 import { TripMap } from '@/features/trips/map/TripMap';
@@ -35,8 +40,8 @@ import { router } from '@/services/router';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { useTheme } from '@/theme';
-import { Badge, Button, Card, Dialog, Divider, EmptyState, Field, IconButton, Screen, Segmented, Sheet, Txt, useSnackbar } from '@/ui';
-import { ChevronLeft, ChevronRight, Home, Pencil, Split, Trash2 } from '@/ui/icons';
+import { Badge, Button, Card, Divider, EmptyState, Field, IconButton, Screen, Segmented, Sheet, Txt, useSnackbar } from '@/ui';
+import { ChevronLeft, ChevronRight, Home, Pencil, Repeat, Split, Trash2 } from '@/ui/icons';
 
 const trim = (n: number) => String(Math.round(n * 10) / 10);
 const minuteOfDay = (at: number) => {
@@ -92,6 +97,11 @@ function TripDetail({ trip, close }: { trip: TripRow; close: () => void }) {
   const [edit, setEdit] = useState<EditKind | null>(null);
   const [askDelete, setAskDelete] = useState(false);
   const [purpose, setPurpose] = useState(trip.purpose);
+  const [saveRegular, setSaveRegular] = useState(false);
+  const currency = currencyOf(settings.region ?? 'UK');
+  const parkingSaved = useLive(() => tripParkingMinor(db, trip.id), [trip.id], ['entries']);
+  const parking = useAmountExpr(parkingSaved);
+  const [parkingEditing, setParkingEditing] = useState(false);
 
   const endedAt = trip.endedAt ?? trip.startedAt;
   const span = { startedAt: trip.startedAt, endedAt };
@@ -185,20 +195,25 @@ function TripDetail({ trip, close }: { trip: TripRow; close: () => void }) {
     if (purpose.trim() !== trip.purpose) updateTrip(db, trip.id, { purpose });
   };
 
-  const remove = () => {
+  const remove = (deleteParking: boolean) => {
     setAskDelete(false);
-    const snap = snapshotTrip(db, trip.id);
-    deleteTrip(db, trip.id);
+    const undo = deleteTripToTrash(db, trip.id, deleteParking);
     refresh();
     close();
     snack({
       message: t('trip.deleted'),
       actionLabel: t('autoTrip.undo'),
       onAction: () => {
-        if (snap) restoreTrip(db, snap);
+        undo?.();
         refresh();
       },
     });
+  };
+
+  const saveParking = () => {
+    if (parking.minor === parkingSaved) return;
+    const cur = getTrip(db, trip.id);
+    if (cur) setTripParking(db, cur, parking.minor, currency, parkingNoteFor(cur));
   };
 
   const stop = stopIdx !== null ? (stops[stopIdx] ?? null) : null;
@@ -215,6 +230,8 @@ function TripDetail({ trip, close }: { trip: TripRow; close: () => void }) {
   return (
     <Screen
       avoidKeyboard
+      bottomInset
+      bottom={parkingEditing ? <View style={{ flex: 1 }}><ParkingKeyBar amount={parking} currency={currency} /></View> : undefined}
       header={
         <ModalHeader
           icon={ChevronLeft}
@@ -340,6 +357,26 @@ function TripDetail({ trip, close }: { trip: TripRow; close: () => void }) {
         maxLength={120}
       />
 
+      {trip.exportedAt ? (
+        <Txt v="small" c="textSecondary">
+          {t('s6.exportedOn', { date: formatDay(trip.exportedAt) })}
+        </Txt>
+      ) : null}
+      <ParkingField amount={parking} currency={currency} onDone={saveParking} onEditingChange={setParkingEditing} />
+      <Button label={t('s6.saveRegular')} icon={Repeat} variant="outline" full onPress={() => setSaveRegular(true)} />
+      {saveRegular ? (
+        <SaveRegularSheet
+          trip={trip}
+          unit={unit}
+          visible
+          onClose={() => setSaveRegular(false)}
+          onSaved={() => {
+            setSaveRegular(false);
+            snack({ message: t('s6.regularSaved'), above: 'none' });
+          }}
+        />
+      ) : null}
+
       {/* Stop sheet */}
       <Sheet visible={stop !== null} onClose={() => setStopIdx(null)} scroll={false}>
         {stop && stopIdx !== null ? (
@@ -393,15 +430,12 @@ function TripDetail({ trip, close }: { trip: TripRow; close: () => void }) {
         />
       ) : null}
 
-      <Dialog
+      <TripDeleteDialog
         visible={askDelete}
-        title={t('trip.deleteConfirm')}
-        body={t('autoTrip.deleteBody')}
+        parkingMinor={parkingSaved}
+        currency={currency}
         onClose={() => setAskDelete(false)}
-        actions={[
-          { label: t('common.cancel'), onPress: () => setAskDelete(false) },
-          { label: t('common.delete'), variant: 'danger', onPress: remove },
-        ]}
+        onDelete={remove}
       />
     </Screen>
   );
