@@ -4,7 +4,7 @@ import { db } from '@/db/client';
 import type { TripRow } from '@/db/schema';
 import { getTrip, tripRoute, updateManualTrip } from '@/db/tripsRepo';
 import { pickerScope , currencyOf } from '@/domain/types';
-import { distanceValue, type DistanceUnit } from '@/features/trips/format';
+import { distanceValue, formatDay, type DistanceUnit } from '@/features/trips/format';
 import { openPro } from '@/features/pro/openPro';
 import { useAmountExpr } from '@/features/ocr/useAmountExpr';
 import { deleteTripToTrash } from '@/features/trips/deleteTrip';
@@ -65,7 +65,13 @@ export function ManualTripEdit({ trip, unit, close }: { trip: TripRow; unit: Dis
         scope: trip.source === 'gap' ? trip.scope : pickerScope(trip.scope),
         purpose: trip.purpose,
       }}
-      hint={trip.source === 'gap' ? t('tripCheck.estimated') : undefined}
+      hint={
+        trip.exportedAt
+          ? t('s6.exportedWarn', { date: formatDay(trip.exportedAt) })
+          : trip.source === 'gap'
+            ? t('tripCheck.estimated')
+            : undefined
+      }
       extra={
         <>
           <ParkingField amount={parking} currency={currency} />

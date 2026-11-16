@@ -26,6 +26,7 @@ import { ocrAvailable, ocrDev, readReceipt } from '@/features/ocr/reader';
 import { entryOrigin, fillEntryOcr, setReceiptOcrText } from '@/features/ocr/repo';
 import { afterSave } from '@/features/ocr/rulesHook';
 import { LinkedLines } from '@/features/entries/LinkedLines';
+import { formatDay } from '@/features/trips/format';
 import { CalcBar, ExprLine, PhotosUsedUpSheet, trialOffered } from '@/features/ocr/ui';
 import { useAmountExpr } from '@/features/ocr/useAmountExpr';
 import { openPro } from '@/features/pro/openPro';
@@ -380,6 +381,11 @@ function Editor({ entry }: { entry: EntryRowT }) {
       </ScrollView>
 
       <View style={{ paddingHorizontal: GUTTER, paddingTop: 8, paddingBottom: keyboardUp ? 12 : Math.max(insets.bottom, 16) + 12 }}>
+        {dirty && entry.exportedAt ? (
+          <Txt v="small" c="sunText" center style={{ marginBottom: 8, fontFamily: fonts.semibold }} accessibilityLiveRegion="polite">
+            {t('s6.exportedWarn', { date: formatDay(entry.exportedAt) })}
+          </Txt>
+        ) : null}
         <Button label={t('entries.saveChanges')} full disabled={!dirty || !valid} onPress={save} />
       </View>
       {keyboardUp && editingAmount ? <CalcBar onOp={amount.op} /> : null}

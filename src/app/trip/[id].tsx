@@ -354,6 +354,11 @@ function TripDetail({ trip, close }: { trip: TripRow; close: () => void }) {
         maxLength={120}
       />
 
+      {trip.exportedAt ? (
+        <Txt v="small" c="textSecondary">
+          {t('s6.exportedOn', { date: formatDay(trip.exportedAt) })}
+        </Txt>
+      ) : null}
       <ParkingField amount={parking} currency={currency} onDone={saveParking} />
       <Button label={t('s6.saveRegular')} icon={Repeat} variant="outline" full onPress={() => setSaveRegular(true)} />
       {saveRegular ? (

@@ -58,7 +58,7 @@ export function EntryRow({
         accessibilityLabel={`${note}, ${amount}${category ? '' : `, ${t('common.unsorted')}`}`}
         left={<EntryAvatar category={category} />}
         title={note}
-        subtitle={`${weekdayTime(entry.occurredAt)} · ${scopeLabel}`}
+        subtitle={`${weekdayTime(entry.occurredAt)} · ${scopeLabel}${entry.exportedAt ? ` · ${t('s6.exported')}` : ''}`}
         right={
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <SourceBadge entry={entry} />

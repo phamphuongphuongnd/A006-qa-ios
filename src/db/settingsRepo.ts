@@ -64,6 +64,8 @@ export interface AppSettings {
   odometerCheck: 'off' | 'weekly' | 'monthly';
   /** Home alert cards hidden with ✕ until this time (7 days), by alert id (features/home/alerts.ts). */
   alertSnoozedUntil: Partial<Record<string, number>>;
+  /** Q29: when the files of a period were last made in S-10, by the period's file stem ("2026-27-Q3"). */
+  exportLog: Partial<Record<string, number>>;
 }
 
 export type MergeStopMinutes = 10 | 20 | 45;
@@ -109,6 +111,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   nfcTagWritten: false,
   odometerCheck: 'monthly',
   alertSnoozedUntil: {},
+  exportLog: {},
 };
 
 export function getSettings(db: AppDb): AppSettings {

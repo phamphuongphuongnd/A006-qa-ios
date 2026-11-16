@@ -445,7 +445,7 @@ function TripRowView({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={[title, sub, parkingLine, scopeLabel, trip.edited ? t('miles.edited') : '', estimated ? t('tripCheck.estimated') : '', t('autoTrip.swipeHint')]
+      accessibilityLabel={[title, sub, parkingLine, scopeLabel, trip.edited ? t('miles.edited') : '', estimated ? t('tripCheck.estimated') : '', trip.exportedAt ? t('s6.exported') : '', t('autoTrip.swipeHint')]
         .filter(Boolean)
         .join('. ')}
       onPress={() => router.push(`/trip/${trip.id}`)}
@@ -474,6 +474,7 @@ function TripRowView({
           </Txt>
           {trip.edited ? <Badge kind="neutral" label={t('miles.edited')} /> : null}
           {estimated ? <Badge kind="neutral" label={t('tripCheck.estimated')} /> : null}
+          {trip.exportedAt ? <Badge kind="neutral" label={t('s6.exported')} /> : null}
         </View>
         {parkingLine ? (
           <Txt v="small" c="textSecondary" numberOfLines={1}>
