@@ -138,6 +138,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "27d20460-7185-4470-a788-e92de8b04103"
+      }
+    },
+    "owner": "phamthuphuong"
   }
 }
