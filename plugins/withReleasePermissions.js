@@ -2,16 +2,21 @@
  * Release-only manifest overrides (android/app/src/release/AndroidManifest.xml).
  * Play Billing (expo-iap) talks to the Play Store app over IPC with com.android.vending.BILLING — never remove it.
  *
- * B-19: Sunday Sort has no network, no push and no overlay, but Expo / RN libraries declare those permissions.
+ * B-19: Sunday Sort has no push and no overlay, but Expo / RN libraries declare those permissions.
  * Remove them from the RELEASE build only (android/app/src/release/AndroidManifest.xml has the highest merge
- * priority), so debug / dev-client builds keep INTERNET for Metro and SYSTEM_ALERT_WINDOW for the dev menu.
+ * priority), so debug / dev-client builds keep SYSTEM_ALERT_WINDOW for the dev menu.
+ *
+ * INTERNET is KEPT in release since Q25 (bản 2, S1b): trip maps load OpenFreeMap tiles and A → B trips call
+ * openrouteservice (address search + driving distance). Recorded GPS tracks are still never sent.
+ * TODO(P6): privacy policy + Play Data safety must say: typed A → B addresses (and the position for "Current
+ * location") go to openrouteservice; map tiles for the area shown are downloaded from OpenFreeMap.
  */
 const fs = require('fs');
 const path = require('path');
 const { withDangerousMod } = require('expo/config-plugins');
 
 const REMOVE = [
-  'android.permission.INTERNET',
+  // INTERNET stays (Q25: maps + A → B) — see the note above.
   // ACCESS_NETWORK_STATE is kept (bản 2): expo-background-task schedules WorkManager with NetworkType.CONNECTED and
   // JobScheduler throws SecurityException for a network constraint without it (Android 9+) → nightly backup (S4).
   'android.permission.SYSTEM_ALERT_WINDOW',

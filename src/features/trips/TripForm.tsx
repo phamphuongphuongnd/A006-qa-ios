@@ -8,10 +8,16 @@ import { t } from '@/i18n';
 import { fonts, radius, useTheme } from '@/theme';
 import { Button, Card, Dialog, Field, Screen, Segmented, Sheet, Txt } from '@/ui';
 
+import type { Region } from '@/domain/types';
+
 import { formatDay, formatDistance, sameDay, type DistanceUnit } from './format';
-import { checkTripForm, type TripFormResult, type TripFormValues } from './tripFormCheck';
+import { RouteFields } from './route/RouteFields';
+import { checkTripForm, EMPTY_ROUTE, type RouteFormState, type TripFormResult, type TripFormValues } from './tripFormCheck';
 
 export type { TripFormResult, TripFormValues, TripInputMode } from './tripFormCheck';
+
+/** A → B option (Q25): shown + usable (Pro), shown with a lock (free → S-19), or hidden (no service key in this build). */
+export type RouteOption = 'available' | 'locked' | 'hidden';
 
 /**
  * S-08 Add / edit trip screen (`header` from the route). `gpsOnly` (editing a GPS trip): only distance, scope and
@@ -27,6 +33,9 @@ export function TripForm({
   onSubmit,
   extra,
   children,
+  route = 'hidden',
+  region = 'UK',
+  onRouteLocked,
 }: {
   header: React.ReactNode;
   initial: TripFormValues;
@@ -36,6 +45,9 @@ export function TripForm({
   onSubmit: (r: TripFormResult) => void;
   extra?: React.ReactNode;
   children?: React.ReactNode;
+  route?: RouteOption;
+  region?: Region;
+  onRouteLocked?: () => void;
 }) {
   const { colors, dark } = useTheme();
   const [v, setV] = useState<TripFormValues>(initial);
@@ -43,7 +55,9 @@ export function TripForm({
   const [longAsk, setLongAsk] = useState<TripFormResult | null>(null);
   const [iosDate, setIosDate] = useState(false);
   const [today] = useState(() => Date.now());
+  const [notice, setNotice] = useState<string | null>(null);
   const set = (patch: Partial<TripFormValues>) => setV((x) => ({ ...x, ...patch }));
+  const setRoute = (fn: (r: RouteFormState) => RouteFormState) => setV((x) => ({ ...x, route: fn(x.route ?? EMPTY_ROUTE) }));
   const check = checkTripForm(v, unit);
   const error = !check.ok ? (check.error ?? (touched ? t('trip.enterDistance') : null)) : null;
 
@@ -56,6 +70,8 @@ export function TripForm({
       purpose: v.purpose,
       miles: check.miles,
       ...(check.odo && unit === 'mi' ? { odoStart: check.odo.start, odoEnd: check.odo.end } : {}),
+      // A → B ends; null clears them when the trip is now entered another way; undefined (option hidden) keeps them.
+      ...(check.route ? { route: check.route } : route !== 'hidden' ? { route: null } : {}),
     };
     if (check.miles > LONG_TRIP_MILES) setLongAsk(r);
     else onSubmit(r);
@@ -84,11 +100,43 @@ export function TripForm({
         <Segmented
           accessibilityLabel={t('trip.addTitle')}
           value={v.mode}
-          onChange={(mode) => set({ mode })}
+          onChange={(mode) => {
+            if (mode === 'route' && route === 'locked' && v.mode !== 'route') {
+              onRouteLocked?.();
+              return;
+            }
+            setNotice(null);
+            set({ mode });
+          }}
           options={[
             { value: 'odometer', label: t('trip.odometer') },
             { value: 'distance', label: t('trip.distance') },
+            ...(route !== 'hidden' || v.mode === 'route'
+              ? [{ value: 'route' as const, label: route === 'locked' && v.mode !== 'route' ? `${t('autoTrip.route.mode')} · PRO` : t('autoTrip.route.mode') }]
+              : []),
           ]}
+        />
+      ) : null}
+
+      {notice ? (
+        <Card variant="warn" style={{ paddingVertical: 12 }}>
+          <Txt v="body" style={{ fontFamily: fonts.semibold }} accessibilityLiveRegion="polite">
+            {notice}
+          </Txt>
+        </Card>
+      ) : null}
+
+      {v.mode === 'route' && !gpsOnly ? (
+        <RouteFields
+          value={v.route ?? EMPTY_ROUTE}
+          setRoute={setRoute}
+          region={region}
+          unit={unit}
+          error={check.ok ? null : check.error}
+          onOffline={() => {
+            setNotice(t('autoTrip.route.offline'));
+            set({ mode: 'distance' });
+          }}
         />
       ) : null}
 
@@ -126,7 +174,7 @@ export function TripForm({
             </Txt>
           </Card>
         </>
-      ) : (
+      ) : v.mode === 'route' && !gpsOnly ? null : (
         <Field
           label={unitField}
           value={v.distance}

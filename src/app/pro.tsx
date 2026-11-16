@@ -22,7 +22,7 @@ import { fonts, GUTTER, useTheme, type ColorName } from '@/theme';
 import { Badge, Button, Card, Progress, Txt, useSnackbar } from '@/ui';
 import { Car, CheckCircle2, FileText, ImagePlus, Info, Pause, Receipt, RotateCcw, Sun, Tags, type LucideIcon } from '@/ui/icons';
 
-const FEATURES: ProFeature[] = ['auto_trips', 'rules', 'recurring', 'ocr', 'suggestions', 'tax_files', 'photos'];
+const FEATURES: ProFeature[] = ['auto_trips', 'rules', 'recurring', 'ocr', 'suggestions', 'tax_files', 'photos', 'route_miles'];
 const BENEFIT_ICONS: LucideIcon[] = [Car, Tags, Receipt, RotateCcw, ImagePlus, FileText];
 /** Apple's standard licence agreement covers subscriptions without a custom EULA; Play's terms on Android. */
 const TERMS_URL = Platform.OS === 'ios' ? 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/' : 'https://play.google.com/about/play-terms/';

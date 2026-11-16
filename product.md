@@ -17,7 +17,8 @@ và **phân loại cả tuần một lần vào Chủ nhật**. Bản 2 thêm **
 nhận ra đang lái xe, tự gộp các điểm giao thành một **chuyến ca**, luật tự phân loại nơi bán quen, khoản lặp lại, đọc hoá đơn
 trên máy, sao lưu tự động mỗi đêm — và **luôn báo ngay khi app ngừng ghi**. Cuối kỳ có sẵn tổng theo ô tờ khai (UK SA103 /
 MTD · Mỹ Schedule C) và file đúng mẫu để nhập vào phần mềm MTD (MTDsorted, BrightBooks, TaxCalc…) hoặc FreeAgent.
-Không quảng cáo, không tài khoản, không server, không kết nối ngân hàng, dữ liệu không rời điện thoại.
+Không quảng cáo, không tài khoản, không server, không kết nối ngân hàng, dữ liệu không rời điện thoại (ngoại lệ Q25: ảnh nền
+bản đồ tải từ OpenFreeMap; địa chỉ gõ ở chuyến A → B gửi openrouteservice để tính đường — tuyến GPS không bao giờ gửi đi).
 **Miễn phí** phần ghi và phân loại tay; **Pro** (thuê bao năm) cho tự động + xuất file năm thuế/MTD + ảnh không giới hạn.
 
 ---
@@ -170,6 +171,8 @@ hiện: "Estimate only — not tax advice."
 | Đọc hoá đơn (OCR) | — | Có |
 | Khoản lặp lại | — | Có |
 | Chuyến Start/Stop tay, thẻ NFC, Personal stop, nhập tay | Có | Có |
+| Bản đồ thật trong chuyến (S-07b, S-07c, ảnh nhỏ ở Miles) — Q25 | Có | Có |
+| **A → B tự tính dặm** (tìm địa chỉ, tuyến lái xe, khứ hồi, chỗ hay đi) — Q25 | — | Có |
 | Chuyến tự động (cảm biến, Bluetooth van, cắm sạc), gộp chuyến ca | — | Có |
 | Tách Personal segment sau chuyến, sửa giờ chuyến, vuốt Work/Personal | Có | Có |
 | Báo khi nghi sót (quên Stop, GPS im, ngày làm không có chuyến) | Có | Có |
@@ -385,6 +388,19 @@ nút đáy "Accept all suggestions (12)" (Pro; hỏi "Apply suggested categories
 Personal" · "Purpose" ("e.g. Amazon route DLS4") · "Save trip". Lỗi: End < Start → "End reading must be higher than start";
 > 1.000 dặm → "That's a long trip — 1,240 mi. Save anyway?".
 
+**A → B (Pro, Q25)** — công tắc thành 3 lựa chọn "Odometer | Distance | A → B"; bản free bấm "A → B · PRO" → S-19
+("Miles from A to B are a Pro feature"); bản build không có khoá dịch vụ → ẩn A → B.
+- "From" (+ nút "Current location": vị trí máy → tên địa chỉ gần nhất) · "To" · gõ ≥ 3 ký tự → gợi ý địa chỉ / cửa hàng /
+  kho trong nước theo vùng (UK / US), ưu tiên gần điểm đã chọn · chọn xong ô thành thẻ tên + ✕ để chọn lại.
+- Chip **"Frequent places"** (chỗ đã dùng, xếp theo số lần + gần đây; bảng `places` trên máy) — chạm chip không gọi tìm kiếm.
+- Công tắc **"Round trip"** ("There and back — miles × 2") · thẻ "= 12.4 mi · Driving route" / "= 24.8 mi · Round trip" ·
+  bản đồ xem trước tuyến lái xe. Date · Work/Personal · Purpose · "Save trip".
+- Lỗi: không mạng / dịch vụ hết lượt → "No internet — enter miles instead" (chuyển sang Distance) · "Couldn't find a driving
+  route between these places" · "From and To are the same place".
+- Chuyến lưu là chuyến nhập tay có From/To: Miles và màn sửa ghi "DLS4 → Tesco Leeds" (+ "Round trip"); sửa lại mở đúng
+  chế độ A → B (không gọi lại dịch vụ nếu không đổi điểm). Dịch vụ: **openrouteservice** gói miễn phí (khoá
+  `EXPO_PUBLIC_ORS_KEY`, Phương tạo).
+
 ### F-12 · Chuyến GPS: tay, NFC và tự động — S-07a…S-07g **[Đổi lớn]**
 
 **Bắt đầu / dừng tay (miễn phí):** "Start trip" ở Home, Miles, widget, phím tắt, **thẻ NFC**. Đang ghi: thông báo cố định
@@ -416,12 +432,14 @@ Personal" · "Purpose" ("e.g. Amazon route DLS4") · "Save trip". Lỗi: End < S
 a trip is running." · "Location stays on your phone." · "Allow location" / "Not now"; bước 2 Android "To keep recording with the
 screen off, choose 'Allow all the time'." · "Open settings".
 
-**S-07b Active trip** — số dặm rất lớn · thời gian · phác hoạ đường (không bản đồ nền) · "GPS good"/"Weak GPS signal" ·
+**S-07b Active trip** — số dặm rất lớn · thời gian · **bản đồ thật nhỏ** (Q25: đường vẽ dần, chấm vàng vị trí hiện tại; không
+mạng → phác hoạ đường như cũ) · "GPS good"/"Weak GPS signal" ·
 nhãn "Auto" nếu có · "Personal stop" · "End trip". End → sheet "Trip saved · 128.4 mi" · "Work / Personal" · "Purpose" ·
 "Save" / "Discard trip" (hỏi lại).
 
 **S-07c Trip detail** **[Mới]** (chạm chuyến ở Miles / "Split trip" ở Sort)
-- Phác hoạ đường dài hơn, **điểm dừng** là chấm tròn đánh số; chặng Personal tô xám tím.
+- **Bản đồ thật** lớn, kéo / phóng được (Q25: MapLibre + OpenFreeMap): chấm xanh lá điểm đầu, ghim đỏ điểm cuối, **điểm dừng**
+  là chấm tròn đánh số; chặng Personal tô xám tím; ghi "© OpenStreetMap · OpenFreeMap". Không mạng → phác hoạ đường.
 - "Tue 10 Nov · 07:02 → 11:48 · 42.3 mi · Auto" · nhãn "Edited" nếu đã sửa.
 - **Tách Personal segment** (Q6): chạm một điểm dừng → sheet "Stop at 09:40 · 12 min" · "Mark the drive to this stop as
   personal" / "Mark the drive from this stop as personal" / "Split the trip here". Chặng đổi màu ngay, dặm cập nhật
@@ -467,7 +485,9 @@ Bỏ qua bước nào → trạng thái cam "Automatic trips may miss drives" + 
 - Thẻ trạng thái tự động (như Home mục 5) · thẻ chuyến đang chạy.
 - 2 nút: "Start trip" · "Add manually".
 - Danh sách theo tháng: "Tue 10 Nov · 07:02–11:48 · 42.3 mi · Auto · Work" + nhãn "Unsorted" vàng / "Edited" / "GPS" /
-  "Manual" / "NFC". **Vuốt phải = Work, vuốt trái = Personal** **[Mới]**, nền xanh dương / xám tím, snackbar "Marked as
+  "Manual" / "NFC"; chuyến A → B ghi "DLS4 → Tesco Leeds". **[Q25]** chuyến GPS có **ảnh bản đồ nhỏ** ở đầu dòng (tạo 1 lần,
+  lưu trong thư mục app, xoá khi chuyến bị sửa / xoá; chưa có / không mạng → biểu tượng cũ) + dòng ghi công bản đồ cuối danh
+  sách. **Vuốt phải = Work, vuốt trái = Personal** **[Mới]**, nền xanh dương / xám tím, snackbar "Marked as
   personal" + "Undo". Chạm → S-07c.
 - Rỗng: "No trips yet" · "Start a trip, turn on automatic trips, or add miles from your odometer."
 
@@ -597,7 +617,9 @@ Như bản 1, thêm câu: "Sunday Sort isn't MTD software and doesn't send anyth
 - **Receipt**: nhiều ảnh / khoản (đã có), + `ocr_text` (tuỳ chọn, xoá được).
 - **Category**: + `mtd_category` (UK), `vehicle_running_cost` (bool).
 - **Trip**: + `source` (gps/auto/manual/nfc), `edited`, `original_started_at`, `original_ended_at`, `original_distance_m`,
-  `scope` cho phép `unsorted`, `classified_by` (bluetooth/route/work_hours/user).
+  `scope` cho phép `unsorted`, `classified_by` (bluetooth/route/work_hours/user); **Q25** `from_label`, `to_label`, `from_lat`,
+  `from_lng`, `to_lat`, `to_lng`, `round_trip` (chuyến A → B; migration `0002`).
+- **Place** **[Mới, Q25]**: id, label, address, lat, lng, use_count, last_used_at (chỗ hay đi của A → B, trên máy, có trong sao lưu).
 - **TripStop** **[Mới]**: trip_id, started_at, ended_at, lat, lng (để chạm tách đoạn).
 - **TripSegment** **[Mới]**: trip_id, from_ts, to_ts, distance_m, scope (Personal segment).
 - **Rule** **[Mới]**: id, match_text, type, min_minor, max_minor, category_id, scope, enabled, created_at, hits.
@@ -692,5 +714,6 @@ giá "$31.99 / year".
 - Không Android Auto / CarPlay (dễ bị store từ chối — Q18).
 - Không nhiều xe / nhiều sổ / nhiều doanh nghiệp ở bản 2 (một xe, một cách tính xe).
 - Không quảng cáo; không gói tháng, không trọn đời; không thông báo bán hàng; không khoá / xoá dữ liệu khi hết Pro.
-- Không bản đồ nền (chỉ phác hoạ đường đi) · không gửi ảnh / dữ liệu OCR ra khỏi máy.
+- Không gửi tuyến GPS, ảnh hay dữ liệu OCR ra khỏi máy (bản đồ nền + A → B dùng mạng từ Q25 — xem §0; P6 sửa privacy
+  policy + Data safety).
 - Chỉ tiếng Anh (i18n dựng sẵn).

@@ -111,6 +111,14 @@ export const trips = sqliteTable(
     originalDistanceM: real('original_distance_m'),
     /** Why an automatic trip got its scope; null when the driver chose it. */
     classifiedBy: text('classified_by').$type<TripClassifiedBy>(),
+    /** A → B trips (Q25, Pro): place labels + coordinates; distance = driving route (× 2 when round trip). */
+    fromLabel: text('from_label'),
+    toLabel: text('to_label'),
+    fromLat: real('from_lat'),
+    fromLng: real('from_lng'),
+    toLat: real('to_lat'),
+    toLng: real('to_lng'),
+    roundTrip: integer('round_trip', { mode: 'boolean' }).notNull().default(false),
   },
   (t) => [index('trips_started_idx').on(t.startedAt)],
 );
@@ -237,6 +245,19 @@ export const proState = sqliteTable('pro_state', {
   lastVerifiedAt: integer('last_verified_at'),
 });
 
+/** Places used in A → B trips ("Frequent places" chips, Q25). On the phone only. */
+export const places = sqliteTable('places', {
+  id: text('id').primaryKey(),
+  /** Short name shown on chips and trips ("DLS4", "Tesco Leeds"). */
+  label: text('label').notNull(),
+  /** Longer address line from the search result. */
+  address: text('address').notNull().default(''),
+  lat: real('lat').notNull(),
+  lng: real('lng').notNull(),
+  useCount: integer('use_count').notNull().default(1),
+  lastUsedAt: integer('last_used_at').notNull(),
+});
+
 /** Key → JSON value. See `settings` repository for the typed shape. */
 export const settings = sqliteTable('settings', {
   key: text('key').primaryKey(),
@@ -255,3 +276,4 @@ export type RuleOfferRow = typeof ruleOffers.$inferSelect;
 export type RecurringRow = typeof recurring.$inferSelect;
 export type KnownRouteRow = typeof knownRoutes.$inferSelect;
 export type ProStateRow = typeof proState.$inferSelect;
+export type PlaceRow = typeof places.$inferSelect;

@@ -26,7 +26,7 @@ export const PRO_PRODUCT_ID = 'sundaysort_pro_annual';
 export const PRO_FALLBACK_PRICE: Record<'UK' | 'US', string> = { UK: '£24.99', US: '$31.99' };
 
 /** What a "PRO" lock / S-19 sheet is about (sheet subtitle). */
-export type ProFeature = 'auto_trips' | 'rules' | 'recurring' | 'ocr' | 'suggestions' | 'tax_files' | 'photos';
+export type ProFeature = 'auto_trips' | 'rules' | 'recurring' | 'ocr' | 'suggestions' | 'tax_files' | 'photos' | 'route_miles';
 
 export type ProStatus =
   | { kind: 'free'; trialAvailable: boolean }

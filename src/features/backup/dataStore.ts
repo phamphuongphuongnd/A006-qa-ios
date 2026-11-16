@@ -2,6 +2,7 @@ import {
   categories,
   entries,
   knownRoutes,
+  places,
   proState,
   receipts,
   recurring,
@@ -35,6 +36,7 @@ export function snapshotTables(db: AppDb): BackupTables {
     ruleOffers: db.select().from(ruleOffers).all(),
     recurring: db.select().from(recurring).all(),
     knownRoutes: db.select().from(knownRoutes).all(),
+    places: db.select().from(places).all(),
     proState: db.select().from(proState).all(),
   };
 }
@@ -53,6 +55,7 @@ function clearAll(tx: AppDb) {
   tx.delete(tripPoints).run();
   tx.delete(trips).run();
   tx.delete(knownRoutes).run();
+  tx.delete(places).run();
   tx.delete(receipts).run();
   tx.delete(entries).run();
   tx.delete(rules).run();
@@ -105,6 +108,7 @@ export function replaceAllData(db: AppDb, t: BackupTables, backupCreatedAt?: num
     insertChunks(t.ruleOffers ?? [], (p) => d.insert(ruleOffers).values(p).run());
     insertChunks(t.recurring ?? [], (p) => d.insert(recurring).values(p).run());
     insertChunks(t.knownRoutes ?? [], (p) => d.insert(knownRoutes).values(p).run());
+    insertChunks(t.places ?? [], (p) => d.insert(places).values(p).run());
     if (!d.select().from(proState).get()) insertChunks(t.proState ?? [], (p) => d.insert(proState).values(p).run());
     insertChunks(t.settings, (p) => d.insert(settings).values(p).run());
     if (backupCreatedAt !== undefined) {

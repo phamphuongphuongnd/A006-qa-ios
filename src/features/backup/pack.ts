@@ -4,6 +4,7 @@ import type {
   CategoryRow,
   EntryRow,
   KnownRouteRow,
+  PlaceRow,
   ProStateRow,
   ReceiptRow,
   RecurringRow,
@@ -47,10 +48,12 @@ export interface BackupTables {
   recurring: RecurringRow[];
   knownRoutes: KnownRouteRow[];
   proState: ProStateRow[];
+  /** Q25 A → B frequent places (absent from older files → []). */
+  places: PlaceRow[];
 }
 
 /** Tables a version-1 backup does not have. */
-export const V2_TABLES = ['tripStops', 'tripSegments', 'rules', 'ruleOffers', 'recurring', 'knownRoutes', 'proState'] as const;
+export const V2_TABLES = ['tripStops', 'tripSegments', 'rules', 'ruleOffers', 'recurring', 'knownRoutes', 'proState', 'places'] as const;
 
 export interface BackupCounts {
   entries: number;
@@ -232,6 +235,7 @@ const ROW_CHECKS: Record<keyof BackupTables, (r: Record<string, unknown>) => boo
   recurring: (r) => isStr(r.id) && isInt(r.amountMinor) && isStr(r.freq) && isInt(r.day) && isStr(r.nextOn),
   knownRoutes: (r) => isStr(r.id) && isNum(r.startLat) && isNum(r.startLng) && isNum(r.endLat) && isNum(r.endLng),
   proState: (r) => isStr(r.id),
+  places: (r) => isStr(r.id) && isStr(r.label) && isNum(r.lat) && isNum(r.lng),
 };
 
 /** Format → version → shape. Order matters: an unknown file is "not a backup", a future one is "newer". */

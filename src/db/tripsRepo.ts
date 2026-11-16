@@ -38,6 +38,7 @@ export function startTrip(
     originalEndedAt: null,
     originalDistanceM: null,
     classifiedBy: null,
+    ...NO_ROUTE,
   };
   db.insert(trips).values(row).run();
   return row;
@@ -110,6 +111,59 @@ export function markInterrupted(db: AppDb, tripId: string) {
 export const tripRunningTooLong = (t: TripRow, now = Date.now()) =>
   (t.status === 'running' || t.status === 'paused') && now - t.startedAt >= TRIP_REMINDER_MS;
 
+/** One end of an A → B trip (Q25). */
+export interface RoutePlace {
+  label: string;
+  lat: number;
+  lng: number;
+}
+
+/** A → B trip ends; the trip's distance is the driving route (already × 2 when `roundTrip`). */
+export interface TripRoute {
+  from: RoutePlace;
+  to: RoutePlace;
+  roundTrip: boolean;
+}
+
+type RouteCols = Pick<TripRow, 'fromLabel' | 'toLabel' | 'fromLat' | 'fromLng' | 'toLat' | 'toLng' | 'roundTrip'>;
+
+export const NO_ROUTE: RouteCols = {
+  fromLabel: null,
+  toLabel: null,
+  fromLat: null,
+  fromLng: null,
+  toLat: null,
+  toLng: null,
+  roundTrip: false,
+};
+
+const routeCols = (r: TripRoute | null): RouteCols =>
+  r
+    ? {
+        fromLabel: r.from.label.trim(),
+        toLabel: r.to.label.trim(),
+        fromLat: r.from.lat,
+        fromLng: r.from.lng,
+        toLat: r.to.lat,
+        toLng: r.to.lng,
+        roundTrip: r.roundTrip,
+      }
+    : NO_ROUTE;
+
+/** The A → B ends stored on a trip, or null for odometer / typed-distance / GPS trips. */
+export function tripRoute(t: TripRow): TripRoute | null {
+  if (t.fromLabel === null || t.toLabel === null || t.fromLat === null || t.fromLng === null || t.toLat === null || t.toLng === null)
+    return null;
+  return {
+    from: { label: t.fromLabel, lat: t.fromLat, lng: t.fromLng },
+    to: { label: t.toLabel, lat: t.toLat, lng: t.toLng },
+    roundTrip: t.roundTrip,
+  };
+}
+
+/** "DLS4 → Tesco Leeds"; null when the trip has no A → B ends. */
+export const routeTitle = (t: Pick<TripRow, 'fromLabel' | 'toLabel'>) => (t.fromLabel && t.toLabel ? `${t.fromLabel} → ${t.toLabel}` : null);
+
 export interface ManualTrip {
   date: number;
   scope: Scope;
@@ -117,6 +171,8 @@ export interface ManualTrip {
   miles?: number;
   odoStart?: number;
   odoEnd?: number;
+  /** A → B ends. Add: omit = none. Edit: omit = keep what is stored, null = clear. */
+  route?: TripRoute | null;
 }
 
 export function addManualTrip(db: AppDb, t: ManualTrip): TripRow {
@@ -140,6 +196,7 @@ export function addManualTrip(db: AppDb, t: ManualTrip): TripRow {
     originalEndedAt: null,
     originalDistanceM: null,
     classifiedBy: null,
+    ...routeCols(t.route ?? null),
   };
   db.insert(trips).values(row).run();
   return row;
@@ -226,6 +283,7 @@ export function updateManualTrip(db: AppDb, id: string, t: ManualTrip) {
       odoEnd: t.odoEnd ?? null,
       scope: t.scope,
       purpose: t.purpose.trim(),
+      ...(t.route !== undefined ? routeCols(t.route) : {}),
     })
     .where(and(eq(trips.id, id), eq(trips.source, 'manual')))
     .run();
