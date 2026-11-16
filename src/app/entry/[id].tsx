@@ -25,6 +25,7 @@ import { OriginCard } from '@/features/ocr/OriginCard';
 import { ocrAvailable, ocrDev, readReceipt } from '@/features/ocr/reader';
 import { entryOrigin, fillEntryOcr, setReceiptOcrText } from '@/features/ocr/repo';
 import { afterSave } from '@/features/ocr/rulesHook';
+import { LinkedLines } from '@/features/entries/LinkedLines';
 import { CalcBar, ExprLine, PhotosUsedUpSheet, trialOffered } from '@/features/ocr/ui';
 import { useAmountExpr } from '@/features/ocr/useAmountExpr';
 import { openPro } from '@/features/pro/openPro';
@@ -350,6 +351,7 @@ function Editor({ entry }: { entry: EntryRowT }) {
             </Group>
 
             <OriginCard entry={entry} origin={data.origin} currency={currency} />
+            <LinkedLines entry={entry} />
 
             <View style={{ gap: 6 }}>
               <Txt v="caption" c="textSecondary" style={{ fontFamily: fonts.bold }}>

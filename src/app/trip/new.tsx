@@ -17,6 +17,10 @@ import { refreshWidgets } from '@/features/widgets/refresh';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { useSnackbar } from '@/ui';
+import { currencyOf } from '@/domain/types';
+import { useAmountExpr } from '@/features/ocr/useAmountExpr';
+import { parkingNoteFor, setTripParking } from '@/features/trips/parking';
+import { ParkingField } from '@/features/trips/ParkingField';
 
 const num = (s: string | undefined) => (s !== undefined && s !== '' && Number.isFinite(Number(s)) ? Number(s) : null);
 
@@ -40,6 +44,8 @@ export default function NewTripScreen() {
   const [initialDate] = useState(() => gap?.from ?? num(p.date) ?? Date.now());
   const trim1 = (n: number) => String(Math.round(n * 10) / 10);
   const close = () => (router.canGoBack() ? router.back() : router.replace('/miles'));
+  const parking = useAmountExpr(0);
+  const currency = currencyOf(settings.region ?? 'UK');
 
   return (
     <TripForm
@@ -50,6 +56,7 @@ export default function NewTripScreen() {
         region={settings.region ?? 'UK'}
         onRouteLocked={() => openPro('route_miles')}
         hint={gap ? t('tripCheck.gapHint') : estimated ? t('tripCheck.odoHint') : undefined}
+        extra={<ParkingField amount={parking} currency={currency} />}
         initial={{
           mode: estimated ? 'distance' : 'odometer',
           start: '',
@@ -65,6 +72,7 @@ export default function NewTripScreen() {
           const row = addManualTrip(db, { ...r, ...extra });
           if (gap) answerGap(db, gap.prevId, gap.nextId, 'added');
           if (r.route) rememberRoute(db, r.route);
+          if (parking.minor > 0) setTripParking(db, row, parking.minor, currency, parkingNoteFor(row));
           refreshWidgets().catch(() => {});
           snack({ message: t('trip.saved', { distance: formatDistance(row.distanceM, unit) }) });
           close();

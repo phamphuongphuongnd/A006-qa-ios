@@ -50,3 +50,17 @@ WHEN OLD.`exported_at` IS NOT NULL AND NEW.`exported_at` IS OLD.`exported_at`
 BEGIN
   UPDATE `trips` SET `exported_at` = NULL WHERE `id` = NEW.`id`;
 END;
+--> statement-breakpoint
+-- Q28: Parking & tolls typed on a trip follows the trip's scope; sorting an Unsorted trip sorts its parking too.
+CREATE TRIGGER `trips_parking_scope` AFTER UPDATE OF `scope` ON `trips`
+WHEN NEW.`scope` IS NOT OLD.`scope`
+BEGIN
+  UPDATE `entries` SET
+    `scope` = CASE NEW.`scope` WHEN 'personal' THEN 'personal' ELSE 'work' END,
+    `category_id` = CASE WHEN NEW.`scope` <> 'unsorted' AND `category_id` IS NULL
+      THEN (SELECT `id` FROM `categories` WHERE `key` = 'parking' LIMIT 1) ELSE `category_id` END,
+    `sorted_at` = CASE WHEN NEW.`scope` <> 'unsorted' AND `category_id` IS NULL
+      THEN CAST(strftime('%s', 'now') AS INTEGER) * 1000 ELSE `sorted_at` END,
+    `updated_at` = CAST(strftime('%s', 'now') AS INTEGER) * 1000
+  WHERE `trip_id` = NEW.`id` AND `type` = 'expense';
+END;

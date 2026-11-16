@@ -11,7 +11,7 @@ import { businessTripMiles, listTrips, mileageTotals, routeTitle } from '@/db/tr
 import { formatDistanceNumber, formatRate, mileageEstimateByDate, periodsIn, tierThresholdReached } from '@/domain/mileage';
 import { formatMoney } from '@/domain/money';
 import { taxYearFor, taxYearOf } from '@/domain/taxYear';
-import { currencyOf, type Region, type Scope } from '@/domain/types';
+import { currencyOf, type Currency, type Region, type Scope } from '@/domain/types';
 import { businessUse, vehicleTreatment } from '@/domain/vehicleCosts';
 import { setTripScope, restoreTripScope } from '@/features/trips/auto/repo';
 import { autoTripState } from '@/features/trips/autoState';
@@ -22,6 +22,7 @@ import { distanceValue, formatClock, formatDay, formatDistance, groupByMonth, sa
 import { dayMonth, weekdayTime } from '@/features/entries/format';
 import { sweepThumbs } from '@/features/trips/map/thumbs';
 import { TripThumb } from '@/features/trips/map/TripThumb';
+import { parkingByTrip } from '@/features/trips/parking';
 import { TripSwipeRow } from '@/features/trips/TripSwipeRow';
 import { refreshWidgets } from '@/features/widgets/refresh';
 import { usePro } from '@/state/pro';
@@ -84,6 +85,8 @@ export default function MilesScreen() {
     [allTrips, year.start, year.end],
   );
   const totals = useLive(() => mileageTotals(db, year), [year.start, year.end], ['trips']);
+  // Q28 Parking & tolls typed on trips ("+ £3.50 parking & tolls" under the row).
+  const parking = useLive(() => parkingByTrip(db, trips.map((x) => x.id)), [trips], ['entries']);
   // Q26 Missing trips (last 30 days) + Q27 odometer readings, drawn inside the month lists.
   const gaps = useMissingTrips();
   const gapDist = useGapDistances(gaps);
@@ -227,7 +230,7 @@ export default function MilesScreen() {
                   <Fragment key={it.key}>
                     {it.kind === 'trip' ? (
                       <TripSwipeRow onScope={(sc) => onScope(it.trip, sc)}>
-                        <TripRowView trip={it.trip} unit={unit} divider={i > 0} />
+                        <TripRowView trip={it.trip} unit={unit} divider={i > 0} parkingMinor={parking.get(it.trip.id) ?? 0} currency={currencyOf(region)} />
                       </TripSwipeRow>
                     ) : it.kind === 'gap' ? (
                       <GapRow
@@ -398,7 +401,19 @@ function TotalsCard({
   );
 }
 
-function TripRowView({ trip, unit, divider }: { trip: TripRow; unit: DistanceUnit; divider: boolean }) {
+function TripRowView({
+  trip,
+  unit,
+  divider,
+  parkingMinor,
+  currency,
+}: {
+  trip: TripRow;
+  unit: DistanceUnit;
+  divider: boolean;
+  parkingMinor: number;
+  currency: Currency;
+}) {
   const { colors } = useTheme();
   const gps = trip.source === 'gps';
   const Icon = gps ? LocateFixed : Gauge;
@@ -425,11 +440,12 @@ function TripRowView({ trip, unit, divider }: { trip: TripRow; unit: DistanceUni
       ? `${formatClock(trip.startedAt)}–${sameDay(trip.startedAt, trip.endedAt) ? formatClock(trip.endedAt) : weekdayTime(trip.endedAt)}`
       : '';
   const sub = [times, ab ?? how, ab && trip.roundTrip ? t('autoTrip.route.roundTag') : '', trip.purpose].filter(Boolean).join(' · ');
+  const parkingLine = parkingMinor > 0 ? t('s6.parkingOnTrip', { amount: formatMoney(parkingMinor, currency) }) : null;
   const scopeLabel = trip.scope === 'unsorted' ? t('autoTrip.unsorted') : personal ? t('common.personal') : t('common.work');
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={[title, sub, scopeLabel, trip.edited ? t('miles.edited') : '', estimated ? t('tripCheck.estimated') : '', t('autoTrip.swipeHint')]
+      accessibilityLabel={[title, sub, parkingLine, scopeLabel, trip.edited ? t('miles.edited') : '', estimated ? t('tripCheck.estimated') : '', t('autoTrip.swipeHint')]
         .filter(Boolean)
         .join('. ')}
       onPress={() => router.push(`/trip/${trip.id}`)}
@@ -459,6 +475,11 @@ function TripRowView({ trip, unit, divider }: { trip: TripRow; unit: DistanceUni
           {trip.edited ? <Badge kind="neutral" label={t('miles.edited')} /> : null}
           {estimated ? <Badge kind="neutral" label={t('tripCheck.estimated')} /> : null}
         </View>
+        {parkingLine ? (
+          <Txt v="small" c="textSecondary" numberOfLines={1}>
+            {parkingLine}
+          </Txt>
+        ) : null}
       </View>
       {trip.scope === 'unsorted' ? <Badge kind="unsorted" label={scopeLabel} /> : <Tag kind={personal ? 'personal' : 'work'} label={scopeLabel} />}
     </Pressable>

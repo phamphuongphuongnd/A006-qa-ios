@@ -27,6 +27,7 @@ export const s6 = {
   parking: 'Parking & tolls',
   parkingUS: 'Parking & tolls',
   parkingHint: 'Saved as an expense with this trip',
+  parkingNone: 'none',
   parkingOnTrip: '+ {amount} parking & tolls',
   parkingNote: 'Parking · {trip}',
   fromTrip: 'From trip · {date}',
