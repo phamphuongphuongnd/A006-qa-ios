@@ -27,7 +27,7 @@ const hash = (s: string) => {
 
 /** Thumbnail file name for this version of the trip (changes when what it shows changes). */
 export const thumbName = (t: Pick<TripRow, 'id' | 'startedAt' | 'endedAt' | 'distanceM' | 'scope'>, dark: boolean) =>
-  `${t.id}_${hash(`${t.startedAt}|${t.endedAt}|${Math.round(t.distanceM)}|${t.scope}|${dark ? 'd' : 'l'}|v1`)}.png`;
+  `${t.id}_${hash(`${t.startedAt}|${t.endedAt}|${Math.round(t.distanceM)}|${t.scope}|${dark ? 'd' : 'l'}|v2`)}.png`;
 
 const known = new Map<string, string | null>(); // name → uri (null = no file)
 const failedAt = new Map<string, number>();
@@ -55,7 +55,8 @@ async function make(t: TripRow, dark: boolean, colors: { work: string; personal:
   const lines = tripLines(pts, [], t.scope === 'personal');
   if (!lines.bounds || !lines.start || !lines.end) return null;
   const style = await loadStyleJson(dark);
-  const layers = (style.layers as unknown[]) ?? [];
+  // No place names / road labels: unreadable at 56dp and they crowd the route.
+  const layers = ((style.layers as { type?: string }[]) ?? []).filter((l) => l.type !== 'symbol');
   const sources = (style.sources as Record<string, unknown>) ?? {};
   const pinsFc: GeoJSON.FeatureCollection = {
     type: 'FeatureCollection',
