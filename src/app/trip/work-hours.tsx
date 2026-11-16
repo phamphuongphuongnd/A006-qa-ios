@@ -1,9 +1,9 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import { Platform, Pressable, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { db } from '@/db/client';
-import { updateSettings, type WorkHours } from '@/db/settingsRepo';
+import type { WorkHours } from '@/db/settingsRepo';
 import { ModalHeader } from '@/features/trips/ModalHeader';
 import { t } from '@/i18n';
 import { router } from '@/services/router';
@@ -18,15 +18,16 @@ const hhmm = (min: number) => `${String(Math.floor(min / 60)).padStart(2, '0')}:
 
 /** Work hours (P1-3, off by default): trips outside are still recorded, as Personal. */
 export default function WorkHoursScreen() {
-  const { settings } = useSettings();
+  const { settings, update } = useSettings();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const wh = settings.workHours;
   const [pick, setPick] = useState<'startMin' | 'endMin' | null>(null);
-  const save = (patch: Partial<WorkHours>) => updateSettings(db, { workHours: { ...wh, ...patch } });
+  const save = (patch: Partial<WorkHours>) => update({ workHours: { ...wh, ...patch } });
   const close = () => (router.canGoBack() ? router.back() : router.replace('/settings'));
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
       <ModalHeader icon={ChevronLeft} iconLabel={t('common.back')} onIcon={close} title={t('autoTrip.whTitle')} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 48 }}>
         <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>

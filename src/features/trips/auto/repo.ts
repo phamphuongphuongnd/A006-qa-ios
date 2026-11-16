@@ -179,6 +179,17 @@ export function editGpsTrip(db: AppDb, tripId: string, e: TripEdit) {
     const pts = pointsOf(db, tripId).filter((p) => p.ts >= startedAt && p.ts <= endedAt);
     if (pts.length >= 2) distanceM = trackDistance(pts);
   }
+  // Edited back to exactly what was recorded → it is the recorded trip again (no "Edited", no "Recorded" line).
+  const oStart = t.originalStartedAt ?? t.startedAt;
+  const oEnd = t.originalEndedAt ?? t.endedAt;
+  const oDist = t.originalDistanceM ?? t.distanceM;
+  if (startedAt === oStart && endedAt === oEnd && (e.miles === undefined || Math.abs(distanceM - oDist) < 1)) {
+    db.update(trips)
+      .set({ startedAt, endedAt, distanceM: oDist, edited: false, originalStartedAt: null, originalEndedAt: null, originalDistanceM: null })
+      .where(eq(trips.id, tripId))
+      .run();
+    return;
+  }
   db.update(trips)
     .set({
       startedAt,

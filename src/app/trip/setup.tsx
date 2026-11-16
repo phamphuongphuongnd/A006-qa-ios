@@ -3,6 +3,7 @@ import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import { useState } from 'react';
 import { Linking, Platform, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { syncAutoDetection } from '@/features/trips/auto/runner';
 import { ModalHeader } from '@/features/trips/ModalHeader';
@@ -60,6 +61,7 @@ const STEPS: Step[] = [
 /** S-07e Automatic trips setup: one permission per step; skipping leaves S-07d orange ("may miss drives"). */
 export default function AutoSetupScreen() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const [i, setI] = useState(0);
   const [busy, setBusy] = useState(false);
   const step = STEPS[i];
@@ -85,7 +87,7 @@ export default function AutoSetupScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top, paddingBottom: insets.bottom }}>
       <ModalHeader icon={X} iconLabel={t('trip.close')} onIcon={finish} title={t('autoTrip.setupTitle')} />
       <View style={{ flex: 1, padding: 24, gap: 16, alignItems: 'center' }}>
         <Txt v="label" c="textSecondary">

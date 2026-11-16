@@ -1,9 +1,9 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { PermissionsAndroid, Platform, Pressable, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { db } from '@/db/client';
-import { updateSettings, type MergeStopMinutes } from '@/db/settingsRepo';
+import type { AppSettings, MergeStopMinutes } from '@/db/settingsRepo';
 import { useNow } from '@/features/entries/useNow';
 import { openPro } from '@/features/pro/openPro';
 import { autoTripsSupported, bondedDevices, isSamsung, nativeHealth, simulateSignal, type TripDetectHealth } from '@/features/trips/auto/native';
@@ -44,9 +44,10 @@ export function autoStatus(on: boolean, h: TripDetectHealth | null, lastRunAt: n
 
 /** S-07d Automatic trips [Pro]. */
 export default function AutoTripsScreen() {
-  const { settings } = useSettings();
+  const { settings, update } = useSettings();
   const { pro } = usePro();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const [health, setHealth] = useState(() => nativeHealth());
   const [flags, setFlags] = useState(() => getAutoFlags());
   const [btOpen, setBtOpen] = useState(false);
@@ -63,8 +64,8 @@ export default function AutoTripsScreen() {
   const android = Platform.OS === 'android';
   const samsung = isSamsung();
 
-  const apply = async (patch: Parameters<typeof updateSettings>[1]) => {
-    updateSettings(db, patch);
+  const apply = async (patch: Partial<AppSettings>) => {
+    update(patch);
     await syncAutoDetection();
     refresh();
   };
@@ -75,7 +76,7 @@ export default function AutoTripsScreen() {
       return;
     }
     if (v) {
-      updateSettings(db, { autoTrips: true });
+      update({ autoTrips: true });
       router.push('/trip/setup');
       return;
     }
@@ -83,7 +84,7 @@ export default function AutoTripsScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
       <ModalHeader
         icon={ChevronLeft}
         iconLabel={t('common.back')}

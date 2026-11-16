@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Platform, ScrollView, Share, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import NfcManager, { Ndef, NfcTech } from 'react-native-nfc-manager';
 
-import { db } from '@/db/client';
-import { updateSettings } from '@/db/settingsRepo';
 import { ModalHeader } from '@/features/trips/ModalHeader';
 import { t } from '@/i18n';
 import { router } from '@/services/router';
@@ -19,7 +18,8 @@ type Phase = 'idle' | 'writing' | 'done' | 'failed' | 'unsupported' | 'off';
 /** S-07g NFC tag (free, Q18): write a sticker that starts / ends a trip; iPhone uses a Shortcuts automation. */
 export default function NfcTagScreen() {
   const { colors } = useTheme();
-  const { settings } = useSettings();
+  const insets = useSafeAreaInsets();
+  const { settings, update } = useSettings();
   const ios = Platform.OS === 'ios';
   const [phase, setPhase] = useState<Phase>(settings.nfcTagWritten ? 'done' : 'idle');
   const close = () => (router.canGoBack() ? router.back() : router.replace('/miles'));
@@ -43,7 +43,7 @@ export default function NfcTagScreen() {
       await NfcManager.requestTechnology(NfcTech.Ndef);
       const bytes = Ndef.encodeMessage([Ndef.uriRecord(NFC_TOGGLE_URL)]);
       await NfcManager.ndefHandler.writeNdefMessage(bytes);
-      updateSettings(db, { nfcTagWritten: true });
+      update({ nfcTagWritten: true });
       setPhase('done');
     } catch {
       setPhase((p) => (p === 'writing' ? 'failed' : p));
@@ -58,7 +58,7 @@ export default function NfcTagScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
       <ModalHeader icon={ChevronLeft} iconLabel={t('common.back')} onIcon={close} title={t('autoTrip.nfcTitle')} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 48 }}>
         <View style={{ alignItems: 'center', paddingVertical: 16 }}>

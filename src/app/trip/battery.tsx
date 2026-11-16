@@ -1,5 +1,6 @@
 import * as IntentLauncher from 'expo-intent-launcher';
 import { Linking, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { isSamsung } from '@/features/trips/auto/native';
 import { syncAutoDetection } from '@/features/trips/auto/runner';
@@ -15,6 +16,7 @@ const PACKAGE = 'com.phiotron.sundaysort';
 /** S-07f Battery tips (Samsung wording on Samsung phones). */
 export default function BatteryTipsScreen() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const samsung = isSamsung();
   const close = () => (router.canGoBack() ? router.back() : router.replace('/trip/auto'));
   const open = async () => {
@@ -26,7 +28,7 @@ export default function BatteryTipsScreen() {
   };
   const tips = samsung ? [t('autoTrip.tip1'), t('autoTrip.tip2')] : [t('autoTrip.tipGeneric')];
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
       <ModalHeader icon={ChevronLeft} iconLabel={t('common.back')} onIcon={close} title={t('autoTrip.tipsTitle')} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 48 }}>
         <Txt v="body">{samsung ? t('autoTrip.tipsIntro') : t('autoTrip.tipsIntroGeneric')}</Txt>

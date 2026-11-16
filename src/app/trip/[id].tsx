@@ -3,15 +3,14 @@ import { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { db } from '@/db/client';
-import type { TripRow, TripStopRow } from '@/db/schema';
+import type { TripRow } from '@/db/schema';
 import { deleteTrip, getTrip, tripPointsOf, updateTrip } from '@/db/tripsRepo';
-import { countedPath } from '@/domain/mileage';
+import { countedPath, metersToMiles } from '@/domain/mileage';
 import type { Scope } from '@/domain/types';
 import {
   deleteSegment,
   editGpsTrip,
   listSegments,
-  listStops,
   restoreSegment,
   restoreTrip,
   restoreTripScope,
@@ -23,7 +22,7 @@ import {
   unsplitTrip,
   type TripEdit,
 } from '@/features/trips/auto/repo';
-import { sameRange, segmentForStop, splitMiles } from '@/features/trips/auto/stops';
+import { findStops, sameRange, segmentForStop, splitMiles, type Stop } from '@/features/trips/auto/stops';
 import { ManualTripEdit } from '@/features/trips/detail/ManualTripEdit';
 import { TimeWheel } from '@/features/trips/detail/TimeWheel';
 import { TripDetailSketch } from '@/features/trips/detail/TripDetailSketch';
@@ -83,7 +82,8 @@ function TripDetail({ trip, close }: { trip: TripRow; close: () => void }) {
   const unit = settings.distanceUnit;
   const raw = useLive(() => tripPointsOf(db, trip.id), [trip.id], ['trip_points']);
   const points = useMemo(() => countedPath(raw), [raw]);
-  const stops = useLive(() => listStops(db, trip.id), [trip.id], ['trip_stops']);
+  // From the track itself (same rule as the saved trip_stops), so trips recorded before Stops existed get them too.
+  const stops = useMemo(() => findStops(raw), [raw]);
   const segments = useLive(() => listSegments(db, trip.id), [trip.id], ['trip_segments']);
   const personalRanges = useMemo(() => segments.filter((s) => s.scope === 'personal'), [segments]);
 
@@ -142,7 +142,7 @@ function TripDetail({ trip, close }: { trip: TripRow; close: () => void }) {
     }
   };
 
-  const splitHere = (stop: TripStopRow) => {
+  const splitHere = (stop: Stop) => {
     setStopIdx(null);
     const before = getTrip(db, trip.id);
     const second = before ? splitTripAt(db, trip.id, stop.endedAt) : null;
@@ -201,7 +201,7 @@ function TripDetail({ trip, close }: { trip: TripRow; close: () => void }) {
   };
 
   const stop = stopIdx !== null ? (stops[stopIdx] ?? null) : null;
-  const stopMin = (s: TripStopRow) => Math.max(1, Math.round((s.endedAt - s.startedAt) / 60_000));
+  const stopMin = (s: Stop) => Math.max(1, Math.round((s.endedAt - s.startedAt) / 60_000));
   const isPersonal = (i: number, side: 'to' | 'from') => segments.some((s) => sameRange(s, segmentForStop(stops, i, side, span)));
 
   const rows: { kind: EditKind; label: string; value: string }[] = [
@@ -469,8 +469,15 @@ function MilesSheet({
           variant="sun"
           full
           disabled={error !== null}
-          // Untouched (same rounded number as shown) keeps the exact GPS distance and no "Edited" tag.
-          onPress={() => (text.trim() === shown ? onClose() : n !== null && onSave(inputToMiles(n, unit)))}
+          // Untouched (same rounded number as shown) keeps the exact GPS distance and no "Edited" tag; typing the
+          // recorded number back gives the exact recorded distance (the repo then drops "Edited").
+          onPress={() =>
+            text.trim() === shown
+              ? onClose()
+              : text.trim() === trim(distanceValue(recordedM, unit))
+                ? onSave(metersToMiles(recordedM))
+                : n !== null && onSave(inputToMiles(n, unit))
+          }
         />
       }>
       <Field

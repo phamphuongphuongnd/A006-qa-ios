@@ -8,6 +8,16 @@ import { sketchTripDetail, type DetailPoint } from '../auto/detailSketch';
 import type { SegmentRange } from '../auto/stops';
 
 const STOP_R = 13;
+const HIT = 48;
+
+/** Tap target of stop i: 48dp, shrunk (not below the drawn circle) so close stops never cover each other. */
+function hitSize(stops: { x: number; y: number }[], i: number): number {
+  let near = Infinity;
+  stops.forEach((q, j) => {
+    if (j !== i) near = Math.min(near, Math.max(Math.abs(q.x - stops[i].x), Math.abs(q.y - stops[i].y)));
+  });
+  return Math.max(STOP_R * 2, Math.min(HIT, near));
+}
 
 /**
  * S-07c route drawing: Work runs solid blue, Personal runs dotted purple-grey, Stops as numbered circles you can tap.
@@ -61,21 +71,23 @@ export function TripDetailSketch({
             {s.start ? <Circle cx={s.start.x} cy={s.start.y} r={7} fill={dotFill} /> : null}
             {s.end ? <Rect x={s.end.x - 8} y={s.end.y - 8} width={16} height={16} rx={3} fill={dotFill} /> : null}
           </Svg>
-          {s.stops.map((p, i) => (
-            <Pressable
-              key={i}
-              accessibilityRole="button"
-              accessibilityLabel={stopLabel(i)}
-              onPress={() => onStop(i)}
-              hitSlop={6}
-              style={[styles.stopHit, { left: p.x - 22, top: p.y - 22 }]}>
-              <View style={[styles.stop, { backgroundColor: colors.surface, borderColor: dotFill }]}>
-                <Text maxFontSizeMultiplier={1} style={{ color: colors.text, fontSize: 12, fontFamily: fonts.bold }}>
-                  {i + 1}
-                </Text>
-              </View>
-            </Pressable>
-          ))}
+          {s.stops.map((p, i) => {
+            const size = hitSize(s.stops, i);
+            return (
+              <Pressable
+                key={i}
+                accessibilityRole="button"
+                accessibilityLabel={stopLabel(i)}
+                onPress={() => onStop(i)}
+                style={[styles.stopHit, { left: p.x - size / 2, top: p.y - size / 2, width: size, height: size }]}>
+                <View style={[styles.stop, { backgroundColor: colors.surface, borderColor: dotFill }]}>
+                  <Text maxFontSizeMultiplier={1} style={{ color: colors.text, fontSize: 12, fontFamily: fonts.bold }}>
+                    {i + 1}
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          })}
         </>
       ) : null}
     </View>
@@ -83,7 +95,7 @@ export function TripDetailSketch({
 }
 
 const styles = StyleSheet.create({
-  stopHit: { position: 'absolute', width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  stopHit: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   stop: {
     width: STOP_R * 2,
     height: STOP_R * 2,

@@ -84,6 +84,17 @@ describe('auto trip repository', () => {
     expect(() => editGpsTrip(db, trip.id, { endedAt: T0 })).toThrow();
   });
 
+  it('editing back to the recorded values drops Edited and the Recorded line', () => {
+    const db = makeTestDb();
+    const trip = seedTrip(db);
+    editGpsTrip(db, trip.id, { miles: 9 });
+    editGpsTrip(db, trip.id, { miles: metersToMiles(trip.distanceM) });
+    expect(getTrip(db, trip.id)).toEqual(trip);
+    editGpsTrip(db, trip.id, { startedAt: T0 + 17 * MIN });
+    editGpsTrip(db, trip.id, { startedAt: T0 });
+    expect(getTrip(db, trip.id)).toEqual(trip);
+  });
+
   it('sorting by hand marks the driver choice; Undo restores the scope', () => {
     const db = makeTestDb();
     const trip = seedTrip(db);
