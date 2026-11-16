@@ -1,5 +1,5 @@
 import { DEFAULT_CATEGORIES } from '../categories';
-import { normaliseNote, suggest, type SortedEntry, type SuggestCategory } from '../suggest';
+import { amountClose, mostUsed, normaliseNote, suggest, type SortedEntry, type SuggestCategory } from '../suggest';
 
 const cats: SuggestCategory[] = DEFAULT_CATEGORIES.UK.map((c, i) => ({ id: c.key, type: c.type, key: c.key, hidden: false, order: i }));
 
@@ -81,5 +81,42 @@ describe('suggest', () => {
   it('matches multi-word keywords as phrases only', () => {
     expect(suggest({ type: 'expense', note: 'Kwik Fit tyres', amountMinor: 18999 }, cats, []).categoryIds[0]).toBe('repairs');
     expect(suggest({ type: 'income', note: 'flexible hours', amountMinor: 100 }, cats, []).categoryIds[0]).not.toBe('tips');
+  });
+});
+
+describe('suggest — bản 2 signals (F-07)', () => {
+  const h = (note: string, amountMinor: number, categoryId: string, merchant: string | null = null): SortedEntry => ({
+    type: 'expense', note, amountMinor, categoryId, scope: 'work', merchant,
+  });
+
+  it('the amount alone (±2%) points to what was sorted at that price', () => {
+    const history = [h('weekly thing', 2499, 'phone')];
+    expect(suggest({ type: 'expense', note: 'Direct debit', amountMinor: 2499 }, cats, history).categoryIds[0]).toBe('phone');
+    expect(suggest({ type: 'expense', note: 'Direct debit', amountMinor: 2540 }, cats, history).categoryIds[0]).toBe('phone'); // +1.6%
+    // +4%: no amount signal, same ranking as a far-off amount.
+    expect(suggest({ type: 'expense', note: 'Direct debit', amountMinor: 2600 }, cats, history)).toEqual(
+      suggest({ type: 'expense', note: 'Direct debit', amountMinor: 99999 }, cats, history),
+    );
+    expect(amountClose(1000, 1020)).toBe(true);
+    expect(amountClose(1000, 1021)).toBe(false);
+  });
+
+  it('the OCR total counts as a second amount, the OCR merchant as words', () => {
+    const history = [h('Kwik Fit', 18999, 'repairs')];
+    expect(suggest({ type: 'expense', note: '', amountMinor: 100, ocrAmountMinor: 18999 }, cats, history).categoryIds[0]).toBe('repairs');
+    const viaMerchant = [h('', 6000, 'equipment', 'TESCO STORES LTD')];
+    expect(suggest({ type: 'expense', note: 'shop', amountMinor: 900, merchant: 'Tesco Express' }, cats, viaMerchant).categoryIds[0]).toBe('equipment');
+  });
+
+  it('Most used = 90-day usage, then category order', () => {
+    const usage = [
+      { categoryId: 'parking', count: 5 },
+      { categoryId: 'fuel', count: 9 },
+      { categoryId: 'delivery_income', count: 20 },
+    ];
+    const top = mostUsed('expense', cats, usage);
+    expect(top.slice(0, 2)).toEqual(['fuel', 'parking']);
+    expect(top).toHaveLength(3);
+    expect(mostUsed('expense', cats, [])).toEqual(cats.filter((c) => c.type === 'expense').slice(0, 3).map((c) => c.id));
   });
 });

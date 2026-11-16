@@ -1,52 +1,87 @@
 import { useLocalSearchParams } from 'expo-router';
 import { router } from '@/services/router';
-import { Check, LayoutGrid, ListChecks } from '@/ui/icons';
+import { Check, ChevronDown, ChevronLeft, ListChecks } from '@/ui/icons';
 import { useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { db } from '@/db/client';
 import type { EntryListItem } from '@/db/entriesRepo';
-import type { Currency } from '@/domain/types';
+import type { CategoryRow } from '@/db/schema';
+import type { Currency, Scope } from '@/domain/types';
 import { CategorySheet } from '@/features/entries/CategorySheet';
-import { signedAmount, weekdayTime } from '@/features/entries/format';
+import { signedAmount } from '@/features/entries/format';
+import { sortTrip, undoSortTrip } from '@/features/entries/sortRepo';
 import { useEntryActions } from '@/features/entries/useEntryActions';
-import { useSortWeek, WeekPickerSheet, WeekProgress } from '@/features/entries/useSortWeek';
+import { useSortWeek, type SortItem } from '@/features/entries/useSortWeek';
+import { distanceValue, formatClock } from '@/features/trips/format';
 import { t } from '@/i18n';
+import { useSettings } from '@/state/settings';
 import { fonts, GUTTER, radius, useTheme } from '@/theme';
-import { Button, Chip, Dialog, EmptyState, Tag, Txt } from '@/ui';
+import { Button, Dialog, EmptyState, IconButton, Txt, useSnackbar } from '@/ui';
 
-/** S-06a Sort · List view: best suggestion per entry, ✓ to accept, or accept all at once. Param: `week` (start ms). */
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const weekday = (at: number) => DAYS[new Date(at).getDay()];
+
+/**
+ * S-06a Sort · List view. Pro: best suggestion per entry, ✓ to accept, "Accept all suggestions (N)".
+ * Free: "Choose ▾" picks a category, ✓ confirms; no bulk accept. Trips: "W" / "P". Param: `week` (start ms).
+ */
 export default function SortListScreen() {
   const params = useLocalSearchParams<{ week?: string }>();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const [chosen, setChosen] = useState<number | null>(params.week ? Number(params.week) : null);
-  const [weekSheet, setWeekSheet] = useState(false);
+  const { settings } = useSettings();
   const [picking, setPicking] = useState<EntryListItem | null>(null);
+  const [chosenCat, setChosenCat] = useState<Record<string, string>>({});
   const [confirmAll, setConfirmAll] = useState(false);
   const actions = useEntryActions({ above: 'none', bottomOffset: 80 });
-  const s = useSortWeek(chosen);
+  const snack = useSnackbar();
+  const s = useSortWeek(params.week ? Number(params.week) : null);
   const week = s.week;
+  const byId = new Map(s.cats.map((c) => [c.id, c]));
 
-  const rows = s.queue.map((e) => ({ entry: e, best: s.suggestFor(e).categories[0] }));
-  const acceptable = rows.filter((r) => r.best);
+  const best = (e: EntryListItem): CategoryRow | undefined => {
+    const own = chosenCat[e.id];
+    if (own) return byId.get(own);
+    return s.pro ? s.suggestFor(e).categories[0] : undefined;
+  };
+  const rows = s.queue;
+  const acceptable = s.pro ? rows.filter((r): r is Extract<SortItem, { kind: 'entry' }> => r.kind === 'entry' && !!best(r.entry)) : [];
 
   const finishIfDone = (sortedNow: number) => {
     if (week && sortedNow >= s.queue.length) router.replace(`/sort-done?week=${week.start}`);
   };
-
-  const accept = (e: EntryListItem, categoryId: string, name: string) => {
-    actions.sortOne(e.id, categoryId, name);
+  const accept = (e: EntryListItem, c: CategoryRow) => {
+    actions.sortOne(e.id, c.id, c.name);
+    finishIfDone(1);
+  };
+  const tripScope = (id: string, scope: Scope) => {
+    const u = sortTrip(db, id, scope);
+    if (u) {
+      snack({
+        above: 'none',
+        bottomOffset: 80,
+        message: scope === 'work' ? t('sortV2.tripSortedWork') : t('sortV2.tripSortedPersonal'),
+        actionLabel: t('common.undo'),
+        onAction: () => undoSortTrip(db, u),
+      });
+    }
     finishIfDone(1);
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
       <View style={[styles.top, { paddingHorizontal: GUTTER }]}>
-        <Txt v="h1" accessibilityRole="header" style={{ flex: 1 }}>
-          {t('sort.title')}
+        <IconButton icon={ChevronLeft} label={t('common.back')} onPress={() => router.back()} />
+        <Txt v="h2" accessibilityRole="header" style={{ flex: 1 }}>
+          {t('sortV2.listTitle')}
         </Txt>
-        <Button label={t('sort.cardView')} icon={LayoutGrid} variant="text" size="sm" onPress={() => router.back()} />
+        {week ? (
+          <Txt c="textSecondary" style={{ fontFamily: fonts.semibold }}>
+            {t('sortV2.ofTotal', { done: s.done, total: s.total })}
+          </Txt>
+        ) : null}
       </View>
 
       {!week || rows.length === 0 ? (
@@ -55,100 +90,118 @@ export default function SortListScreen() {
         </View>
       ) : (
         <>
-          <View style={{ paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: 12 }}>
-            <WeekProgress week={week} done={s.done} total={s.total} onPick={() => setWeekSheet(true)} />
-          </View>
           <FlatList
             data={rows}
-            keyExtractor={(r) => r.entry.id}
-            contentContainerStyle={{ paddingHorizontal: GUTTER, paddingBottom: 20 }}
+            keyExtractor={(r) => r.key}
+            contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: 20 }}
+            ListFooterComponent={
+              s.pro ? undefined : (
+                <Txt v="small" c="textSecondary" center style={{ marginTop: 14 }}>
+                  {t('sortV2.chooseHint')}
+                </Txt>
+              )
+            }
             renderItem={({ item, index }) => {
-              const e = item.entry;
               const first = index === 0;
               const last = index === rows.length - 1;
-              return (
-                <View
-                  style={[
-                    styles.row,
-                    {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.line,
-                      borderTopWidth: first ? 1 : 0,
-                      borderBottomWidth: last ? 1 : 0,
-                      borderTopLeftRadius: first ? radius.card : 0,
-                      borderTopRightRadius: first ? radius.card : 0,
-                      borderBottomLeftRadius: last ? radius.card : 0,
-                      borderBottomRightRadius: last ? radius.card : 0,
-                    },
-                  ]}>
-                  <View style={[styles.inner, !first && { borderTopWidth: 1, borderTopColor: colors.line }]}>
-                    <View style={{ flex: 1, gap: 6 }}>
-                      <View style={styles.sb}>
-                        <Txt numberOfLines={1} style={{ fontFamily: fonts.bold, flexShrink: 1 }}>
-                          {e.note || t('common.noNote')}
+              const frame = [
+                styles.row,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.line,
+                  borderTopWidth: first ? 1 : 0,
+                  borderBottomWidth: last ? 1 : 0,
+                  borderTopLeftRadius: first ? radius.card : 0,
+                  borderTopRightRadius: first ? radius.card : 0,
+                  borderBottomLeftRadius: last ? radius.card : 0,
+                  borderBottomRightRadius: last ? radius.card : 0,
+                },
+              ];
+              const inner = [styles.inner, !first && { borderTopWidth: 1, borderTopColor: colors.line }];
+              if (item.kind === 'trip') {
+                const tr = item.trip;
+                const miles = `${distanceValue(tr.distanceM, settings.distanceUnit).toFixed(1)} ${settings.distanceUnit}`;
+                return (
+                  <View style={frame}>
+                    <View style={inner}>
+                      <View style={{ flex: 1 }}>
+                        <Txt numberOfLines={1} style={{ fontFamily: fonts.bold }}>
+                          {t('sortV2.tripRow', { miles, day: weekday(tr.startedAt) })}
                         </Txt>
-                        <Txt v="amount" size={16} c={e.type === 'income' ? 'incomeText' : 'expenseText'}>
-                          {signedAmount(e.type, e.amountMinor, e.currency as Currency)}
+                        <Txt v="small" c="textSecondary">
+                          {`${formatClock(tr.startedAt)}–${formatClock(tr.endedAt ?? tr.startedAt)}`}
                         </Txt>
                       </View>
-                      <View style={styles.sb}>
-                        <View style={{ flexShrink: 1 }}>
-                          <Chip size="s" state={item.best ? 'best' : 'default'} label={item.best?.name ?? t('sort.pickCategory')} onPress={() => setPicking(e)} />
-                        </View>
-                        {e.scope === 'personal' ? (
-                          <Tag kind="personal" label={t('common.personal')} />
-                        ) : (
-                          <Txt v="caption" c="textTertiary" style={{ fontFamily: fonts.regular }}>
-                            {weekdayTime(e.occurredAt)}
-                          </Txt>
-                        )}
-                      </View>
+                      <ScopeCircle label={t('sortV2.work1')} a11y={t('common.work')} color={colors.work} onPress={() => tripScope(tr.id, 'work')} />
+                      <ScopeCircle label={t('sortV2.personal1')} a11y={t('common.personal')} color={colors.personal} onPress={() => tripScope(tr.id, 'personal')} />
                     </View>
-                    {item.best ? (
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={t('sort.accept', { name: item.best.name })}
-                        onPress={() => accept(e, item.best!.id, item.best!.name)}
-                        hitSlop={4}
-                        style={[styles.ok, { backgroundColor: colors.incomeSoft }]}>
-                        <Check size={24} color={colors.incomeText} strokeWidth={2.4} />
-                      </Pressable>
-                    ) : null}
+                  </View>
+                );
+              }
+              const e = item.entry;
+              const b = best(e);
+              return (
+                <View style={frame}>
+                  <View style={inner}>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Txt numberOfLines={1} style={{ fontFamily: fonts.bold }}>
+                        {e.note || t('common.noNote')}
+                      </Txt>
+                      <Txt v="small" c="textSecondary" numberOfLines={1}>
+                        {`${signedAmount(e.type, e.amountMinor, e.currency as Currency)} · ${weekday(e.occurredAt)}`}
+                      </Txt>
+                    </View>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={b ? t('sortV2.changeCategory', { name: b.name }) : t('sortV2.choose')}
+                      onPress={() => setPicking(e)}
+                      style={[
+                        styles.choose,
+                        { borderColor: b && s.pro && !chosenCat[e.id] ? colors.sun : colors.lineStrong, backgroundColor: b && s.pro && !chosenCat[e.id] ? colors.sunSoft : colors.surface },
+                      ]}>
+                      <Txt numberOfLines={1} maxFontSizeMultiplier={1.4} style={{ fontSize: 15, fontFamily: fonts.semibold, flexShrink: 1 }}>
+                        {b?.name ?? t('sortV2.choose')}
+                      </Txt>
+                      <ChevronDown size={16} color={colors.text} />
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={b ? t('sort.accept', { name: b.name }) : t('sortV2.choose')}
+                      accessibilityState={{ disabled: !b }}
+                      disabled={!b}
+                      onPress={() => b && accept(e, b)}
+                      hitSlop={4}
+                      style={[styles.ok, { backgroundColor: b ? colors.incomeSoft : colors.surfaceAlt }]}>
+                      <Check size={22} color={b ? colors.incomeText : colors.textTertiary} strokeWidth={2.4} />
+                    </Pressable>
                   </View>
                 </View>
               );
             }}
           />
-          <View style={[styles.bottom, { backgroundColor: colors.background, borderTopColor: colors.line, paddingBottom: Math.max(insets.bottom, 12) + 4 }]}>
-            <Button
-              label={t('sort.acceptAll', { count: acceptable.length })}
-              icon={ListChecks}
-              full
-              disabled={acceptable.length === 0}
-              onPress={() => setConfirmAll(true)}
-            />
-          </View>
+          {s.pro ? (
+            <View style={[styles.bottom, { backgroundColor: colors.background, borderTopColor: colors.line, paddingBottom: Math.max(insets.bottom, 12) + 4 }]}>
+              <Button
+                label={t('sort.acceptAll', { count: acceptable.length })}
+                icon={ListChecks}
+                full
+                disabled={acceptable.length === 0}
+                onPress={() => setConfirmAll(true)}
+              />
+            </View>
+          ) : null}
         </>
       )}
 
-      <WeekPickerSheet
-        visible={weekSheet}
-        onClose={() => setWeekSheet(false)}
-        weeks={s.weeks}
-        current={week?.start ?? null}
-        onPick={(start) => {
-          setChosen(start);
-          setWeekSheet(false);
-        }}
-      />
       <CategorySheet
         visible={!!picking}
         onClose={() => setPicking(null)}
         type={picking?.type}
+        selectedId={picking ? (chosenCat[picking.id] ?? null) : null}
         onPick={(id) => {
           const e = picking;
           setPicking(null);
-          if (e && id) accept(e, id, s.cats.find((c) => c.id === id)?.name ?? '');
+          if (e && id) setChosenCat((m) => ({ ...m, [e.id]: id }));
         }}
       />
       <Dialog
@@ -163,7 +216,7 @@ export default function SortListScreen() {
             variant: 'primary',
             onPress: () => {
               setConfirmAll(false);
-              actions.sortMany(acceptable.map((r) => ({ id: r.entry.id, categoryId: r.best!.id })));
+              actions.sortMany(acceptable.map((r) => ({ id: r.entry.id, categoryId: best(r.entry)!.id })));
               finishIfDone(acceptable.length);
             },
           },
@@ -173,11 +226,20 @@ export default function SortListScreen() {
   );
 }
 
+function ScopeCircle({ label, a11y, color, onPress }: { label: string; a11y: string; color: string; onPress: () => void }) {
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={a11y} onPress={onPress} hitSlop={4} style={[styles.circle, { borderColor: color }]}>
+      <Txt style={{ fontSize: 17, fontFamily: fonts.bold, color }}>{label}</Txt>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
-  top: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 14, paddingBottom: 6 },
+  top: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingTop: 8, paddingBottom: 8 },
   row: { borderLeftWidth: 1, borderRightWidth: 1, paddingHorizontal: 14 },
-  inner: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 64, paddingVertical: 10 },
-  sb: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  ok: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginLeft: 4 },
+  inner: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 72, paddingVertical: 10 },
+  choose: { minHeight: 44, maxWidth: 170, borderRadius: 22, borderWidth: 1.5, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  ok: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  circle: { width: 48, height: 48, borderRadius: 24, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   bottom: { paddingHorizontal: GUTTER, paddingTop: 12, borderTopWidth: 1 },
 });

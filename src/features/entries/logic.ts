@@ -102,6 +102,33 @@ export function sortQueue<T extends { id: string; occurredAt: number; categoryId
   return [...head, ...tail];
 }
 
+/** One card in the Sort queue (bản 2): an unsorted entry or an Unsorted automatic trip (P1-2). */
+export type QueueItem<E, T> = { kind: 'entry'; key: string; at: number; entry: E } | { kind: 'trip'; key: string; at: number; trip: T };
+
+/** Skip-list key of a trip card (entry cards use the entry id). */
+export const tripKey = (id: string) => `trip:${id}`;
+
+/**
+ * Entries and trips in one queue, oldest first; skipped keys go to the back in skip order (same rules as `sortQueue`).
+ * `trips` must already be the open (unsorted) ones.
+ */
+export function mixedQueue<E extends { id: string; occurredAt: number; categoryId: string | null }, T extends { id: string; startedAt: number }>(
+  entries: E[],
+  trips: T[],
+  skipped: string[],
+): QueueItem<E, T>[] {
+  const items: QueueItem<E, T>[] = [
+    ...entries.filter((e) => e.categoryId === null).map((e) => ({ kind: 'entry' as const, key: e.id, at: e.occurredAt, entry: e })),
+    ...trips.map((t) => ({ kind: 'trip' as const, key: tripKey(t.id), at: t.startedAt, trip: t })),
+  ];
+  const ordered = sortQueue(
+    items.map((i) => ({ id: i.key, occurredAt: i.at, categoryId: null })),
+    skipped,
+  );
+  const byKey = new Map(items.map((i) => [i.key, i]));
+  return ordered.map((o) => byKey.get(o.id)!);
+}
+
 /** Week shown on the Sort tab: the user's pick while it still has work, else the newest week with unsorted entries. */
 export function pickSortWeek(chosen: number | null, weeksWithWork: { week: Period }[]): Period | null {
   if (chosen !== null) {
