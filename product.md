@@ -183,6 +183,7 @@ hiện: "Estimate only — not tax advice."
 | Xuất **"CSV – all entries"** + **"CSV – mileage log"** (dữ liệu thô) | Có | Có |
 | Xuất PDF, tổng theo ô thuế, file MTD (CSV + .xlsx), FreeAgent, ZIP ảnh | — | Có |
 | Widget, khoá app | Có | Có |
+| **[Mới]** Parking & tolls trên chuyến, nhãn "Exported", Recently deleted 30 ngày, Saved trips (Q28–Q31, F-23) | Có | Có |
 
 **Giá:** "£24.99 / year" (giá tạm — Phương chỉnh trước khi lên store; US quy theo tỷ giá thực, mockup ghi "$31.99 / year").
 Không gói tháng, không trọn đời. **Dùng thử:** 7 ngày, chạy trong app, không cần thẻ, người dùng tự bấm bắt đầu.
@@ -624,17 +625,50 @@ Như bản 1: "App lock" · "Lock after" (Immediately / After 1 minute / After 5
   "From 6 Apr 2026: 55p / 25p").
 - **Logging:** "Default for new entries" · "Keep adding after save" · "Distance unit".
 - **Trips** **[Mới]:** "Automatic trips" → S-07d · "NFC tag" → S-07g · "Work hours" · "Odometer check" (Off / Weekly /
-  Monthly, mặc định Monthly — Q27).
+  Monthly, mặc định Monthly — Q27) · "Regular trips" (Q31).
 - **Sorting** **[Mới]:** "Auto-sort rules" → S-18 · "Recurring entries" → S-17 · "Categories" → S-11.
 - **Notifications** → S-20.
 - **Security:** "App lock" · "Lock after".
-- **Your data:** "Backup & restore" → S-12 · "Export" → S-10 · "Delete all data" (hỏi 2 lần, gõ "DELETE").
+- **Your data:** "Backup & restore" → S-12 · "Export" → S-10 · "Recently deleted" → S-21 (Q30) · "Delete all data"
+  (hỏi 2 lần, gõ "DELETE").
 - **Appearance:** "Theme".
 - **About:** "How Sunday Sort works" · "Privacy policy" · "Not tax advice" (S-16) · "Rate the app" · "Contact" · "Version 2.0.0".
 
 ### F-22 · Thông tin & miễn trừ — S-16
 
 Như bản 1, thêm câu: "Sunday Sort isn't MTD software and doesn't send anything to HMRC or the IRS."
+
+### F-23 · Ý từ thử thật đối thủ (Q28–Q31, chốt 2026-11-16) **[Mới]** — miễn phí, không mockup riêng
+Ghép từ thẻ / sheet / chip / dòng có sẵn của mockup v2 (như Q26/Q27). Nguồn: `research.md` §9.
+
+**Q28 · Parking & tolls trên chuyến** (MileIQ có) — S-07b sheet End trip, S-07c, S-08
+- Ô "Parking & tolls" (ô số tiền có máy tính, để trống = không có) ngay dưới quãng đường.
+- Có số → tạo / sửa **1 khoản Expense gắn chuyến**: danh mục "Parking, tolls & congestion" (US "Parking & tolls"), phạm vi
+  theo chuyến (chuyến Unsorted → khoản Unsorted), giờ = giờ kết thúc chuyến, ghi chú "Parking · <tuyến hoặc giờ chuyến>",
+  không vào hàng chờ nếu chuyến đã có phạm vi. Xoá số → xoá khoản đó (vào Recently deleted).
+- Dòng chuyến ở Miles + S-07c: "+ £3.50 parking & tolls". Khoản ở Entries có dòng nhỏ "From trip · 10 Nov 07:02" (chạm → S-07c).
+- Xoá chuyến có khoản gắn → hỏi "Also delete the £3.50 parking & tolls?" ("Delete both" / "Keep the expense").
+- Báo cáo không đổi: vẫn là khoản chi "Parking…" cộng ngoài mức dặm (X2).
+
+**Q29 · Đánh dấu đã xuất** (MileIQ "Mark drives as reported") — S-04, S-07, S-05, S-07c, S-10
+- Mỗi lần xuất file ở S-10 (mọi loại, free lẫn Pro) xong → khoản / chuyến trong kỳ đó được ghi "đã xuất lúc …".
+- Entries / Miles: nhãn nhỏ "Exported" (cạnh nhãn Auto/Recurring). S-05 / S-07c: dòng "Exported on 12 Nov".
+- Sửa / xoá / tách / gộp khoản đã xuất → dòng báo dưới tiêu đề (không chặn): "Already in your export of 12 Nov. Export
+  again to include this change." Từ lúc đó khoản tính là "changed since export".
+- S-10: dòng trên nút tạo file khi kỳ đang chọn có thay đổi: "3 changes since your last export on 12 Nov".
+
+**Q30 · Recently deleted (30 ngày)** (Cash Book, MileIQ Trash) — S-15 → S-21 mới
+- Xoá khoản / chuyến (mọi chỗ) vẫn có Undo như cũ, **và** vào "Recently deleted"; ảnh giữ tới khi xoá hẳn.
+- S-21 "Recently deleted": "Items are removed for good after 30 days." · danh sách theo ngày xoá: icon · tên / ghi chú · số tiền
+  hoặc dặm · "Deleted 3 Nov · 27 days left" · chạm → "Restore" / "Delete now" · nút trên cùng "Empty" (hỏi 1 lần). Rỗng:
+  "Nothing deleted in the last 30 days."
+- Tự dọn khi quá 30 ngày (tác vụ đêm + lúc mở app). "Delete all data" xoá luôn mục này. Sao lưu không chứa mục này.
+
+**Q31 · Saved trips** (Everlance Favorite Trips + Round trip) — S-07c, S-08
+- S-07c menu ⋯ "Save as a regular trip" → sheet: tên (mặc định "From → To" hoặc "12.4 mi trip") · Work/Personal · purpose.
+- S-08: hàng chip trên cùng "Regular trips" (dùng nhiều nhất trước, tối đa 6 + "See all") → chạm điền sẵn dặm, from/to,
+  phạm vi, purpose, ngày = hôm nay; công tắc "Round trip" (× 2) có sẵn của A → B dùng chung.
+- Settings → Trips → "Regular trips" (sửa tên, xoá). Dùng lại dặm đã lưu = miễn phí; tính tuyến mới A → B vẫn Pro.
 
 ---
 
@@ -656,6 +690,10 @@ Như bản 1, thêm câu: "Sunday Sort isn't MTD software and doesn't send anyth
 - **KnownRoute** **[Mới]**: vùng đầu–cuối đã xếp ≥ 3 lần, scope (cho tự gắn chuyến).
 - **OdometerReading** **[Mới, Q27]**: id, read_at, value, photo_uri (tuỳ chọn).
 - **TripGapDismissal** **[Mới, Q26]**: prev_trip_id, next_trip_id ("Not a trip"). Khoảng trống tính lúc xem, không lưu.
+- **F-23 [Mới, Q28–Q31, migration `0004`]**: Entry + `trip_id` (khoản Parking gắn chuyến), `exported_at`; Trip +
+  `exported_at`; **Trash**: id, kind (entry/trip), deleted_at, label, amount_minor / distance_m, payload (JSON ảnh chụp dòng +
+  ảnh hoá đơn / điểm GPS), files (JSON đường dẫn ảnh giữ lại) — không vào sao lưu; **SavedTrip**: id, label, from/to label +
+  toạ độ (tuỳ chọn), distance_m, round_trip, scope, purpose, use_count, last_used_at — có trong sao lưu.
 - **ProState** **[Mới]**: trial_started_at, trial_ends_at, entitlement (none/trial/active/expired), expires_at, product_id,
   last_verified_at.
 - **Free photo allowance**: tính từ Receipt theo tháng (không cần bảng).
@@ -730,6 +768,8 @@ giá "$31.99 / year".
 | S-18 | Auto-sort rules + sheet sửa | Pro · free khoá | sáng |
 | S-19 | Sunday Sort Pro | chưa dùng thử (sheet theo ngữ cảnh) · đang dùng thử · đã mua · hết hạn · lỗi mua | sáng + tối |
 | S-20 | Notifications | — | sáng |
+| S-21 | Recently deleted **[Mới, Q30]** | có mục · rỗng (ghép từ dòng Entries / Miles + sheet có sẵn, không vẽ thêm) | sáng |
+| — | **[Mới, F-23]** ô "Parking & tolls" (S-07b/c, S-08), nhãn "Exported" + dòng báo đã xuất (S-04/05/07/07c/10), chip "Regular trips" (S-08) — ghép từ thành phần có sẵn | | sáng |
 | — | Hộp thoại & snackbar: Discard, Delete + Undo, Merge, Change region, Change vehicle method, Delete all data, lỗi quyền camera/vị trí/hoạt động | | sáng |
 | — | Thông báo hệ thống: nhắc Chủ nhật, nhắc ghi hằng ngày, chuyến đang chạy, tự bắt đầu, đã lưu, quên Stop, GPS im, bị chặn, gia hạn, sắp hết dùng thử | Android + iOS | — |
 

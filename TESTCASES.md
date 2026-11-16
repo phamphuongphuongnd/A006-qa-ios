@@ -370,3 +370,26 @@
 | TC-345 | Chữ 200% | Màn mới bản 2 (Sort split, S-19, S-07d, A → B, S-08b) | Không cắt chữ | E | ⏳ |
 | TC-346 | Tối | Màn mới bản 2 | Đúng màu, đọc được | E | ⏳ |
 | TC-347 | Offline | Mọi luồng trừ A → B / bản đồ | Chạy bình thường | E | ⏳ |
+
+## Bản 2 — S6 Ý từ thử đối thủ (Q28–Q31, F-23, nhánh `s6-competitor-ideas`)
+
+> **T** = Jest · **M** = Galaxy A13 (dev build của nhánh). Cả 4 tính năng miễn phí → thử ở cả Free lẫn Pro.
+
+| # | Mục | Việc | Kỳ vọng | Cách | Kết quả |
+|---|---|---|---|---|---|
+| TC-350 | Q30 | Xoá 1 khoản có 2 ảnh, đợi hết Undo | Khoản ở S-21 "27 days left"…; ảnh vẫn còn trong thư mục | T + M | ⏳ |
+| TC-351 | Q30 | Restore từ S-21 | Khoản về đúng chỗ, đủ ảnh, danh mục, phạm vi; biến khỏi S-21 | T + M | ⏳ |
+| TC-352 | Q30 | Xoá chuyến GPS rồi Restore | Chuyến về đủ điểm GPS, điểm dừng, đoạn Personal | T + M | ⏳ |
+| TC-353 | Q30 | Mục quá 30 ngày | Tác vụ đêm / mở app xoá hẳn + xoá ảnh không còn dùng | T | ⏳ |
+| TC-354 | Q30 | Delete now · Empty · "Delete all data" | Xoá hẳn đúng mục; Delete all data làm rỗng S-21 | T + M | ⏳ |
+| TC-355 | Q30 | Sao lưu rồi khôi phục | File sao lưu không chứa thùng rác; khôi phục không lỗi | T | ⏳ |
+| TC-356 | Q28 | End trip nhập "3.50" | 1 khoản Parking £3.50 gắn chuyến, phạm vi theo chuyến, không vào hàng chờ | T + M | ⏳ |
+| TC-357 | Q28 | Sửa số trên S-07c / xoá số | Khoản cập nhật / vào Recently deleted; Miles hiện "+ £3.50 parking & tolls" | T + M | ⏳ |
+| TC-358 | Q28 | Xoá chuyến có khoản gắn | Hỏi "Delete both" / "Keep the expense", làm đúng lựa chọn | M | ⏳ |
+| TC-359 | Q28 | Báo cáo Mileage rate | Parking cộng ngoài mức dặm, không trùng | T | ⏳ |
+| TC-360 | Q31 | Save as a regular trip từ S-07c | Có trong Settings → Regular trips; chip ở S-08 | T + M | ⏳ |
+| TC-361 | Q31 | Chạm chip + Round trip | S-08 điền sẵn dặm × 2, from/to, phạm vi, ngày hôm nay; use_count +1 | T + M | ⏳ |
+| TC-362 | Q31 | Free dùng chip có from/to | Không đòi Pro (chỉ tính tuyến mới mới cần Pro) | M | ⏳ |
+| TC-363 | Q29 | Xuất CSV quý | Khoản + chuyến trong kỳ có nhãn "Exported"; ngoài kỳ thì không | T + M | ⏳ |
+| TC-364 | Q29 | Sửa khoản đã xuất | Dòng "Already in your export of …"; S-10 "1 change since your last export" | T + M | ⏳ |
+| TC-365 | Dữ liệu | Migration 0004 trên DB đang dùng + khôi phục sao lưu cũ | Chạy không mất dữ liệu | T + M | ⏳ |
