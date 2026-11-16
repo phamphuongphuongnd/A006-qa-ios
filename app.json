@@ -132,7 +132,8 @@
       "./plugins/withReleasePermissions",
       "expo-iap",
       "./plugins/withNfcTripTag",
-      "expo-background-task"
+      "expo-background-task",
+      "@maplibre/maplibre-react-native"
     ],
     "experiments": {
       "typedRoutes": true,
