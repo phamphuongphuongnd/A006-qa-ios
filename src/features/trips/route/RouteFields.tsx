@@ -186,7 +186,7 @@ export function RouteFields({
           maxLength={80}
           right={open && searching ? <ActivityIndicator color={colors.textSecondary} /> : null}
         />
-        {which === 'from' ? (
+        {which === 'from' && !(open && active) ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t('autoTrip.route.currentLocation')}
@@ -246,8 +246,9 @@ export function RouteFields({
 
   return (
     <View style={{ gap: 16 }}>
-      {end('from')}
-      {end('to')}
+      {/* While typing in one end, the other steps aside so the suggestions sit right under the field, above the keyboard. */}
+      {!(active && focus === 'to') ? end('from') : null}
+      {!(active && focus === 'from') ? end('to') : null}
 
       {shownChips.length > 0 && (!value.from || !value.to || focus) ? (
         <View style={{ gap: 8 }}>

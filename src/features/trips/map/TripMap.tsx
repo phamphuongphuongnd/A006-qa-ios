@@ -74,6 +74,8 @@ export function TripMap({
   if (state === 'failed' || !lines.bounds) return <>{fallback}</>;
 
   const pad = Math.min(48, height / 5);
+  // The end pin stands 34dp above its point: leave room for it at the top.
+  const padding = { top: live ? pad : pad + 30, right: pad, bottom: pad, left: pad };
   const casing = dark ? '#12161C' : '#FFFFFF';
   return (
     <View style={{ height }} accessibilityLabel={t('autoTrip.map.a11y')}>
@@ -93,9 +95,9 @@ export function TripMap({
         onDidFinishLoadingMap={() => setState('ready')}
         onDidFailLoadingMap={() => setState('failed')}>
         {live ? (
-          <Camera bounds={lines.bounds} padding={{ top: pad, right: pad, bottom: pad, left: pad }} duration={600} easing="ease" />
+          <Camera bounds={lines.bounds} padding={padding} duration={600} easing="ease" />
         ) : (
-          <Camera initialViewState={{ bounds: lines.bounds, padding: { top: pad, right: pad, bottom: pad, left: pad } }} />
+          <Camera initialViewState={{ bounds: lines.bounds, padding }} />
         )}
         <GeoJSONSource id="trip" data={shape}>
           <Layer
