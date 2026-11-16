@@ -15,3 +15,13 @@ export function t(key: TKey, params?: Record<string, string | number>): string {
   if (params) for (const [k, v] of Object.entries(params)) s = s.replaceAll(`{${k}}`, String(v));
   return s;
 }
+
+/**
+ * Count-aware t(): uses the `<key>One` string when `count` is 1 and one exists (B-42 — never "1 entries").
+ * `count` is also passed as `{count}` unless `params` sets it.
+ */
+export function tn(key: TKey, count: number, params?: Record<string, string | number>): string {
+  const one = `${key}One` as TKey;
+  const useOne = count === 1 && t(one) !== one;
+  return t(useOne ? one : key, { count, ...params });
+}

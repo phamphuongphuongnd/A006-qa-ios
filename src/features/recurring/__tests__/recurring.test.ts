@@ -13,6 +13,7 @@ import {
   generateDueRecurring,
   getRecurring,
   isEnded,
+  recurringName,
   setPaused,
   updateRecurring,
   validateRecurring,
@@ -176,5 +177,25 @@ describe('recurring repo', () => {
     expect(validateRecurring(input({ amountMinor: 0 }))).toBe('amount');
     expect(validateRecurring(input({ endsOn: '2026-01-01' }))).toBe('ends_before_start');
     expect(validateRecurring(input())).toBeNull();
+  });
+
+  it('B-41: a new template needs a category, so its entries never land in the Sort queue', () => {
+    expect(validateRecurring(input({ categoryId: null }))).toBe('category');
+    expect(() => createRecurring(db, input({ categoryId: null }), NOW)).toThrow('category');
+    expect(generateDueRecurring(db, NOW, true)).toBe(0);
+    expect(unsortedCount(db)).toBe(0);
+  });
+
+  it('B-41: a template whose category was deleted can still be paused', () => {
+    const r = createRecurring(db, input(), NOW);
+    updateRecurring(db, r.id, input({ categoryId: null }), NOW);
+    expect(() => setPaused(db, r.id, true, NOW)).not.toThrow();
+    expect(getRecurring(db, r.id)!.paused).toBe(true);
+  });
+
+  it('B-41: the list names a template by its note, else its category', () => {
+    expect(recurringName('Van lease', 'Fuel', 'Recurring entries')).toBe('Van lease');
+    expect(recurringName('  ', 'Phone & data', 'Recurring entries')).toBe('Phone & data');
+    expect(recurringName('', null, 'Recurring entries')).toBe('Recurring entries');
   });
 });

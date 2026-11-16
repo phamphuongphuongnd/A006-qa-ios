@@ -17,7 +17,7 @@ import {
 } from '@/db/entriesRepo';
 import type { Scope } from '@/domain/types';
 import { deleteReceiptFiles } from '@/files/receipts';
-import { t } from '@/i18n';
+import { t, tn } from '@/i18n';
 import { useSnackbar, type SnackOptions } from '@/ui';
 
 type Lift = Pick<SnackOptions, 'above' | 'bottomOffset'>;
@@ -124,7 +124,7 @@ export function useEntryActions({ above, bottomOffset }: Lift = {}) {
       categoriseMany(db, items);
       snack({
         ...lift,
-        message: t('sort.sortedMany', { count: items.length }),
+        message: tn('sort.sortedMany', items.length),
         actionLabel: t('common.undo'),
         onAction: () => {
           inOneTransaction(() => before.forEach((e) => updateEntry(db, e.id, { categoryId: e.categoryId, scope: e.scope })));

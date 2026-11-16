@@ -117,6 +117,7 @@ export const recurringV2 = {
   deleted: 'Recurring entry deleted',
   madeNow: '{count} added to your log',
   errAmount: 'Enter an amount',
+  errCategory: 'Pick a category',
   errEnds: 'The end date is before the start date',
   pickDay: 'Day of the month',
   pickWeekday: 'Day of the week',

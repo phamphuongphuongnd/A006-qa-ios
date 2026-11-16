@@ -13,7 +13,7 @@ import { fonts, radius, useTheme } from '@/theme';
 import { Badge, Button, Chip, ChipRow, Field, Segmented, Sheet, Toggle, Txt } from '@/ui';
 import { ChevronDown } from '@/ui/icons';
 
-import type { RecurringInput } from './repo';
+import { recurringName, type RecurringInput } from './repo';
 import { dayFieldFor, dayOf, longDay, ordinal, parseDay } from './schedule';
 
 const FREQS: { value: RecurringFreq; key: 'weekly' | 'fourWeekly' | 'monthly' | 'yearly' }[] = [
@@ -62,7 +62,7 @@ export function RecurringSheet({
   const set = (p: Partial<RecurringInput>) => setV((cur) => ({ ...cur, ...p }));
 
   const cats = listCategories(db, { type: v.type });
-  const cat = cats.find((c) => c.id === v.categoryId) ?? null;
+  const cat = cats.find((c) => c.id === v.categoryId) ?? listCategories(db, { type: v.type, includeHidden: true }).find((c) => c.id === v.categoryId) ?? null;
 
   const changeFreq = (freq: RecurringFreq) => {
     // Keep the day sensible for the new kind ("1st" → the start's weekday for Weekly).
@@ -73,6 +73,11 @@ export function RecurringSheet({
     const minor = parseMinor(amount);
     if (minor === null || minor <= 0) {
       setError(t('recurring.errAmount'));
+      return;
+    }
+    // B-41: entries from a template are made already sorted — no category, no save.
+    if (!v.categoryId || !cat) {
+      setError(t('recurring.errCategory'));
       return;
     }
     if (v.endsOn && v.endsOn < v.startsOn) {
@@ -88,7 +93,7 @@ export function RecurringSheet({
       ? [1, 2, 3, 4, 5, 6, 0].map((d) => ({ value: d, label: WEEKDAYS[d] }))
       : Array.from({ length: 31 }, (_, i) => ({ value: i + 1, label: ordinal(i + 1), sub: i >= 28 ? 'Shorter months use their last day' : undefined }));
 
-  const title = v.note.trim() || (isNew ? t('recurring.newTitle') : t('recurring.title'));
+  const title = recurringName(v.note, isNew ? null : cat?.name, isNew ? t('recurring.newTitle') : t('recurring.title'));
 
   return (
     <Sheet

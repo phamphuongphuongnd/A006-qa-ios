@@ -15,7 +15,7 @@ import { sortTrip, undoSortTrip } from '@/features/entries/sortRepo';
 import { useEntryActions } from '@/features/entries/useEntryActions';
 import { useSortWeek, type SortItem } from '@/features/entries/useSortWeek';
 import { distanceValue, formatClock } from '@/features/trips/format';
-import { t } from '@/i18n';
+import { t, tn } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { fonts, GUTTER, radius, useTheme } from '@/theme';
 import { Button, Dialog, EmptyState, IconButton, Txt, useSnackbar } from '@/ui';
@@ -207,7 +207,7 @@ export default function SortListScreen() {
       <Dialog
         visible={confirmAll}
         onClose={() => setConfirmAll(false)}
-        title={t('sort.acceptAllConfirm', { count: acceptable.length })}
+        title={tn('sort.acceptAllConfirm', acceptable.length)}
         body={t('sort.acceptAllBody')}
         actions={[
           { label: t('common.cancel'), onPress: () => setConfirmAll(false) },

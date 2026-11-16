@@ -13,7 +13,7 @@ import { useEntryActions } from '@/features/entries/useEntryActions';
 import { useNow } from '@/features/entries/useNow';
 import { autoSortedIn, markAutoReviewed, restoreRuleEntries, rulesByIds, unsortRuleEntries, type AutoSortedItem } from '@/features/rules/repo';
 import { NavHeader } from '@/features/settings/ui';
-import { t } from '@/i18n';
+import { t, tn } from '@/i18n';
 import { router } from '@/services/router';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, useTheme } from '@/theme';
@@ -85,7 +85,7 @@ export default function AutoSortedScreen() {
     const u = unsortRuleEntries(db, ruleId, week);
     snack({
       above: 'none',
-      message: t('sortV2.undoneAll', { count: u.rows.length }),
+      message: tn('sortV2.undoneAll', u.rows.length),
       actionLabel: t('common.undo'),
       onAction: () => restoreRuleEntries(db, u),
     });

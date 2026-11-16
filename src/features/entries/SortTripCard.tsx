@@ -1,5 +1,5 @@
 import { Home, MapPin, SkipForward, Split, Truck } from '@/ui/icons';
-import { useRef, useState } from 'react';
+import { useRef, useState, type ComponentRef } from 'react';
 import { Animated, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { db } from '@/db/client';
@@ -34,6 +34,7 @@ export function SortTripCard({
   const { colors, dark } = useTheme();
   const [x] = useState(() => new Animated.Value(0));
   const busy = useRef(false);
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const points = useLive(() => tripPointsOf(db, trip.id), [trip.id], ['trip_points']);
   const value = distanceValue(trip.distanceM, unit);
   const end = trip.endedAt ?? trip.lastPointAt ?? trip.startedAt;
@@ -54,7 +55,13 @@ export function SortTripCard({
   return (
     <Animated.View style={[{ position: 'absolute', left: 0, right: 0, top: stacked ? 16 : 0, bottom: 0 }, { transform: [{ translateX: x }] }]}>
       <Card style={[styles.card, { shadowColor: '#161D2B' }]}>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+        {/* B-43: when the card scrolls, show it (Android keeps the bar; iOS flashes it once the content is taller). */}
+        <ScrollView
+          ref={scrollRef}
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.body}
+          persistentScrollbar
+          onContentSizeChange={() => scrollRef.current?.flashScrollIndicators()}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <MapPin size={18} color={colors.text} />
             <Txt style={{ fontSize: 15, fontFamily: fonts.bold }}>{t('sortV2.trip')}</Txt>
@@ -79,11 +86,12 @@ export function SortTripCard({
             <BigScope label={t('common.work')} icon={Truck} bg={colors.workFill} onPress={() => sort('work')} />
             <BigScope label={t('common.personal')} icon={Home} bg={colors.personalFill} onPress={() => sort('personal')} />
           </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Button label={t('sortV2.splitTrip')} icon={Split} variant="text" size="sm" onPress={() => router.push(`/trip/${trip.id}`)} />
-            <Button label={t('sort.skip')} icon={SkipForward} variant="text" size="sm" onPress={skip} />
-          </View>
         </ScrollView>
+        {/* B-43: pinned under the scrolling part — the route sketch never pushes it out of sight. */}
+        <View testID="sort-card-actions" style={styles.footer}>
+          <Button label={t('sortV2.splitTrip')} icon={Split} variant="text" size="sm" onPress={() => router.push(`/trip/${trip.id}`)} />
+          <Button label={t('sort.skip')} icon={SkipForward} variant="text" size="sm" onPress={skip} />
+        </View>
       </Card>
     </Animated.View>
   );
@@ -105,7 +113,8 @@ function BigScope({ label, icon: Icon, bg, onPress }: { label: string; icon: typ
 
 const styles = StyleSheet.create({
   card: { flex: 1, padding: 0, shadowOpacity: 0.28, shadowRadius: 20, shadowOffset: { width: 0, height: 18 }, elevation: 6 },
-  body: { flexGrow: 1, gap: 14, padding: 20 },
+  body: { flexGrow: 1, gap: 14, padding: 20, paddingBottom: 8 },
+  footer: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 12 },
   sketch: { height: 150, borderRadius: 16, overflow: 'hidden' },
   big: { flex: 1, minHeight: 64, borderRadius: 32, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
 });

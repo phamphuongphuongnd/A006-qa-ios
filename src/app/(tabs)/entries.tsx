@@ -22,7 +22,7 @@ import { SwipeRow } from '@/features/entries/SwipeRow';
 import { useEntryActions } from '@/features/entries/useEntryActions';
 import { useNow } from '@/features/entries/useNow';
 import { CaptureFab } from '@/features/entries/CaptureFab';
-import { t, type TKey } from '@/i18n';
+import { t, tn, type TKey } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { useDebounced } from '@/state/useDebounced';
 import { useLive } from '@/state/useLive';
@@ -362,7 +362,7 @@ export default function EntriesScreen() {
               actions.patchMany(
                 selRows.map((r) => r.id),
                 { scope: to },
-                t('entries.scopeSet', { count: selRows.length, scope: to === 'work' ? t('common.work') : t('common.personal') }),
+                tn('entries.scopeSet', selRows.length, { scope: to === 'work' ? t('common.work') : t('common.personal') }),
               );
               setSelected(null);
             }}
@@ -407,7 +407,7 @@ export default function EntriesScreen() {
           actions.patchMany(
             selRows.map((r) => r.id),
             { categoryId: id },
-            t('entries.categorySet', { count: selRows.length }),
+            tn('entries.categorySet', selRows.length),
           );
           setSelected(null);
         }}

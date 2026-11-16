@@ -27,7 +27,7 @@ import { authenticate, deviceCanLock } from '@/features/settings/LockedView';
 import { cancelSortReminders } from '@/features/settings/notifications';
 import { backupDue, daysSince, timeLabel, WEEKDAYS } from '@/features/settings/reminder';
 import { GroupLabel, NavHeader, NavRow, OptionSheet, Pill, type Option } from '@/features/settings/ui';
-import { t } from '@/i18n';
+import { t, tn } from '@/i18n';
 import { ProCard } from '@/features/settings/ProCard';
 import { usePro } from '@/state/pro';
 import { useSettings } from '@/state/settings';
@@ -134,7 +134,7 @@ export default function SettingsScreen() {
     days === null ? (
       <Pill label={t('settings.backupNever')} bg={due ? 'expenseSoft' : 'surfaceAlt'} fg={due ? 'expenseText' : 'textSecondary'} />
     ) : (
-      <Pill label={t('settings.backupDays', { days })} bg={due ? 'expenseSoft' : 'surfaceAlt'} fg={due ? 'expenseText' : 'textSecondary'} />
+      <Pill label={tn('settings.backupDays', days, { days })} bg={due ? 'expenseSoft' : 'surfaceAlt'} fg={due ? 'expenseText' : 'textSecondary'} />
     );
 
   const version = Constants.expoConfig?.version ?? '1.0.0';

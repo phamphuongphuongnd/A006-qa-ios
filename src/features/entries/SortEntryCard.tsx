@@ -102,8 +102,10 @@ export function SortEntryCard({
         <ScrollView
           ref={scrollRef}
           style={{ flex: 1 }}
-          contentContainerStyle={styles.cardBody}
-          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.cardBody, mode === 'view' && { paddingBottom: 8 }]}
+          // B-43: when the card scrolls, show it (Android keeps the bar; iOS flashes it once the content is taller).
+          persistentScrollbar
+          onContentSizeChange={() => scrollRef.current?.flashScrollIndicators()}
           keyboardShouldPersistTaps="handled"
           onLayout={() => {
             if (keyboardUp && open) scrollRef.current?.scrollToEnd({ animated: true });
@@ -187,19 +189,19 @@ export function SortEntryCard({
               />
             </>
           ) : null}
-          <View style={{ flex: 1 }} />
-          {mode === 'view' ? (
-            <>
-              <Divider />
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <CardAction label={t('sortV2.edit')} icon={Pencil} onPress={() => setMode('edit')} />
-                <CardAction label={t('sort.split')} icon={Split} onPress={() => setMode('split')} />
-                <CardAction label={t('sortV2.merge')} icon={Combine} onPress={onMerge} />
-                <CardAction label={t('sort.skip')} icon={SkipForward} onPress={skip} />
-              </View>
-            </>
-          ) : null}
         </ScrollView>
+        {/* B-43: pinned under the scrolling part — three rows of chips or a route sketch never push it out of sight. */}
+        {mode === 'view' ? (
+          <View testID="sort-card-actions" style={styles.footer}>
+            <Divider />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <CardAction label={t('sortV2.edit')} icon={Pencil} onPress={() => setMode('edit')} />
+              <CardAction label={t('sort.split')} icon={Split} onPress={() => setMode('split')} />
+              <CardAction label={t('sortV2.merge')} icon={Combine} onPress={onMerge} />
+              <CardAction label={t('sort.skip')} icon={SkipForward} onPress={skip} />
+            </View>
+          </View>
+        ) : null}
       </Card>
       <CategorySheet
         visible={more}
@@ -464,6 +466,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   cardBody: { flexGrow: 1, gap: 14, padding: 20 },
+  footer: { gap: 6, paddingHorizontal: 20, paddingBottom: 8 },
   more: { height: 44, borderRadius: 22, paddingHorizontal: 16, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   panel: { borderRadius: radius.card, padding: 14, gap: 10 },
   box: { borderRadius: 12, paddingHorizontal: 14, paddingVertical: 8, gap: 2 },

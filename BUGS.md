@@ -124,15 +124,17 @@
   "Self Assessment & MTD" — case TC-218 — tái hiện: cài mới → Get started. — sửa: `onboarding.regionUKSub` (dùng chung S-01b + Settings Region) + test `src/i18n/__tests__/copyV2.test.ts`
 - [x] **B-40** 🟠 CSV "mileage log" chưa có cột From / To / Round trip cho chuyến A → B (Q25) → kế toán không thấy chuyến đi đâu
   (HMRC cần mục đích + nơi đến) — case TC-270 — `src/domain/csv.ts` `mileageCsv` (TODO P5); thêm cả cột `estimated` theo F-15. — sửa: cột `from`, `to`, `round_trip` (trống với chuyến không phải A → B) + `estimated` (yes khi source = gap); `buildExport` truyền nhãn — test `reportCsv.test.ts` "A → B trips carry from / to / round trip"
-- [ ] **B-41** 🟠 S-17 Recurring: lưu được mẫu khi chưa chọn danh mục → khoản tạo ra "Unsorted", vào hàng chờ Sort (trái với
+- [x] **B-41** 🟠 S-17 Recurring: lưu được mẫu khi chưa chọn danh mục → khoản tạo ra "Unsorted", vào hàng chờ Sort (trái với
   "Created already sorted… never wait in the Sort queue"); danh sách hiện "Recurring entries · £289.00" khi không có ghi chú
-  (nên lấy tên danh mục) — case TC-257 — tái hiện: Settings → Recurring entries → Add → gõ 289.00 → Save (chưa chọn Category).
-- [ ] **B-42** 🟡 Số ít/số nhiều: "Apply suggested categories to 1 entries?", "1 auto-sorted · 1 recurring entries added" (S-06c),
-  snackbar "Sorted 1 entries" — case TC-248, TC-249 — tái hiện: tuần chỉ còn 1 khoản → List view → Accept all.
-- [ ] **B-43** 🟡 Thẻ Sort: khi chip gợi ý xuống 3 hàng (hoặc thẻ chuyến có hình tuyến), hàng "Edit · Split · Merge · Skip" /
+  (nên lấy tên danh mục) — case TC-257 — tái hiện: Settings → Recurring entries → Add → gõ 289.00 → Save (chưa chọn Category). — sửa: `validateRecurring` trả `category` (tạo mẫu mới bắt buộc có danh mục; mẫu cũ có danh mục bị xoá vẫn sửa / tạm dừng được), sheet báo "Pick a category"; danh sách / tiêu đề sheet lấy tên danh mục khi không có ghi chú (`recurringName`) + test `recurring.test.ts` "B-41 …" — thử A13: Add → 12.00 → Save → "Pick a category", sheet giữ nguyên; chọn Phone & data → Save → danh sách "Phone & data · £12.00 · Monthly on the 16th", khoản tạo ra đã phân loại
+- [x] **B-42** 🟡 Số ít/số nhiều: "Apply suggested categories to 1 entries?", "1 auto-sorted · 1 recurring entries added" (S-06c),
+  snackbar "Sorted 1 entries" — case TC-248, TC-249 — tái hiện: tuần chỉ còn 1 khoản → List view → Accept all. — sửa: `tn()` (`src/i18n/index.ts`) chọn chuỗi `<key>One` khi đếm = 1; thêm bản số ít cho acceptAllConfirm, sortedMany, autoAndRecurring, recurringOnly, undoneAll, categorySet, scopeSet, settings.backupDays + test `copyV2.test.ts` "singular counts" — thử A13: tuần 16–22 còn 1 khoản → "Apply the suggested category to 1 entry?" → snackbar "Sorted 1 entry"
+- [x] **B-43** 🟡 Thẻ Sort: khi chip gợi ý xuống 3 hàng (hoặc thẻ chuyến có hình tuyến), hàng "Edit · Split · Merge · Skip" /
   "Split trip · Skip" nằm dưới mép thẻ, phải cuộn trong thẻ mới thấy, không có dấu hiệu cuộn — case TC-244 — tái hiện: A13
   (cỡ chữ 0.8) → Sort tuần 9–15 Nov → thẻ "EE phone £15.00" (Phone & data / Van repairs & servicing / Fuel / More…).
-  Đề xuất: ghim hàng hành động ở đáy thẻ, ngoài vùng cuộn.
+  Đề xuất: ghim hàng hành động ở đáy thẻ, ngoài vùng cuộn. — sửa: `SortEntryCard` / `SortTripCard` đưa hàng hành động ra ngoài
+  ScrollView (ghim đáy thẻ) + thanh cuộn hiện thường trực khi thẻ cuộn được (`persistentScrollbar`; iOS nháy thanh cuộn) + test
+  `sortCardLayout.test.ts` — thử A13: thẻ EE phone → Edit · Split · Merge · Skip luôn hiện ở đáy, thanh cuộn bên phải, cuộn trong thẻ tới Work / Personal
 - [x] **B-44** 🟡 Backup & restore: ô "Backup folder" hiện "acc=6;doc=encoded=…" (mã tài liệu Google Drive) thay vì tên thư mục —
   case TC-320 — sửa: `folderLabel` bỏ tên dạng mã → "Google Drive"; nhãn đã lưu được làm sạch khi hiển thị (`shownFolderLabel`,
   `src/features/backup/folderLabel.ts`) + test `folderLabel.test.ts` — thử A13: "Backup folder · Google Drive"

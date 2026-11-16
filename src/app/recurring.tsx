@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { listCategories } from '@/db/categoriesRepo';
 import { db } from '@/db/client';
 import { getEntry } from '@/db/entriesRepo';
 import type { RecurringRow } from '@/db/schema';
@@ -17,6 +18,7 @@ import {
   getRecurring,
   isEnded,
   listRecurring,
+  recurringName,
   updateRecurring,
   type RecurringInput,
 } from '@/features/recurring/repo';
@@ -49,6 +51,7 @@ export default function RecurringScreen() {
   const { pro } = usePro();
   const params = useLocalSearchParams<{ from?: string; id?: string }>();
   const rows = useLive(() => listRecurring(db), [], ['recurring']);
+  const catNames = useLive(() => new Map(listCategories(db, { includeHidden: true }).map((c) => [c.id, c.name])), [], ['categories']);
   const [editing, setEditing] = useState<Editing | null>(null);
   const [askDelete, setAskDelete] = useState(false);
   const seq = useRef(0);
@@ -154,7 +157,8 @@ export default function RecurringScreen() {
           <Group>
             {rows.map((r) => {
               const status = r.paused ? t('recurring.paused') : isEnded(r) ? t('recurring.ended') : t('recurring.next', { date: shortDay(r.nextOn, today) });
-              const title = `${r.note || t('recurring.title')} · ${formatMoney(r.amountMinor, r.currency)}`;
+              const name = recurringName(r.note, r.categoryId ? catNames.get(r.categoryId) : null, t('recurring.title'));
+              const title = `${name} · ${formatMoney(r.amountMinor, r.currency)}`;
               const sub = `${repeatLabel(r)} · ${status}`;
               return (
                 <Pressable

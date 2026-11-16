@@ -14,7 +14,7 @@ import { SunDoneArt } from '@/features/entries/art';
 import { milesLabel } from '@/features/entries/format';
 import { useNow } from '@/features/entries/useNow';
 import { autoCounts } from '@/features/rules/repo';
-import { t } from '@/i18n';
+import { t, tn } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, useTheme } from '@/theme';
@@ -44,11 +44,11 @@ export default function SortDoneScreen() {
   );
   const autoText =
     data.auto.auto > 0 && data.auto.recurring > 0
-      ? t('sortV2.autoAndRecurring', data.auto)
+      ? tn('sortV2.autoAndRecurring', data.auto.recurring, data.auto)
       : data.auto.auto > 0
         ? t('sortV2.autoOnly', data.auto)
         : data.auto.recurring > 0
-          ? t('sortV2.recurringOnly', data.auto)
+          ? tn('sortV2.recurringOnly', data.auto.recurring, data.auto)
           : null;
 
   const done = () => (router.canGoBack() ? router.back() : router.replace('/sort'));

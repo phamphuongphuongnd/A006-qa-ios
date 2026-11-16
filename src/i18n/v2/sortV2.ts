@@ -54,8 +54,10 @@ export const sortV2 = {
 
   // S-06c
   autoAndRecurring: '{auto} auto-sorted · {recurring} recurring entries added',
+  autoAndRecurringOne: '{auto} auto-sorted · 1 recurring entry added',
   autoOnly: '{auto} auto-sorted',
   recurringOnly: '{recurring} recurring entries added',
+  recurringOnlyOne: '1 recurring entry added',
   keepSafe: 'Keep it safe',
   turnOnNightly: 'Turn on nightly backup',
   setUp: 'Set up',
@@ -66,6 +68,7 @@ export const sortV2 = {
   entriesOne: '1 entry',
   undoAll: 'Undo all from this rule',
   undoneAll: '{count} entries back in the Sort queue',
+  undoneAllOne: '1 entry back in the Sort queue',
   editRule: 'Edit rule',
   editRecurring: 'Edit recurring',
   recurringGroup: 'Recurring · {name}',

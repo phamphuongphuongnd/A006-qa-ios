@@ -25,12 +25,23 @@ export interface RecurringInput {
   paused: boolean;
 }
 
-export type RecurringError = 'amount' | 'ends_before_start';
+export type RecurringError = 'amount' | 'category' | 'ends_before_start';
 
+/**
+ * A template needs a category (B-41): its entries are "created already sorted" and never wait in the Sort queue.
+ * Only a template whose category was later deleted has none — it may still be edited / paused, and its entries go
+ * to Sort (see `generateDueRecurring`).
+ */
 export function validateRecurring(i: RecurringInput): RecurringError | null {
   if (!Number.isInteger(i.amountMinor) || i.amountMinor <= 0) return 'amount';
+  if (!i.categoryId) return 'category';
   if (i.endsOn && i.endsOn < i.startsOn) return 'ends_before_start';
   return null;
+}
+
+/** List / sheet title: the note, else the category name (B-41), else "Recurring entries". */
+export function recurringName(note: string, categoryName: string | null | undefined, fallback: string): string {
+  return note.trim() || categoryName || fallback;
 }
 
 export const listRecurring = (db: AppDb): RecurringRow[] =>
@@ -80,7 +91,8 @@ export function createRecurring(db: AppDb, i: RecurringInput, now = Date.now(), 
  */
 export function updateRecurring(db: AppDb, id: string, i: RecurringInput, now = Date.now()): RecurringRow | undefined {
   const err = validateRecurring(i);
-  if (err) throw new Error(err);
+  // A template left without a category (it was deleted) can still be paused or edited.
+  if (err && err !== 'category') throw new Error(err);
   const cur = getRecurring(db, id);
   if (!cur) return undefined;
   const today = dayOf(now);
