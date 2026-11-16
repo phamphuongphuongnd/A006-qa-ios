@@ -23,6 +23,7 @@ import {
   type TripEdit,
 } from '@/features/trips/auto/repo';
 import { findStops, sameRange, segmentForStop, splitMiles, type Stop } from '@/features/trips/auto/stops';
+import { trashTrip, tripTrashId, untrash } from '@/features/trash/repo';
 import { ManualTripEdit } from '@/features/trips/detail/ManualTripEdit';
 import { TimeWheel } from '@/features/trips/detail/TimeWheel';
 import { TripDetailSketch } from '@/features/trips/detail/TripDetailSketch';
@@ -189,6 +190,7 @@ function TripDetail({ trip, close }: { trip: TripRow; close: () => void }) {
     setAskDelete(false);
     const snap = snapshotTrip(db, trip.id);
     deleteTrip(db, trip.id);
+    if (snap) trashTrip(db, snap);
     refresh();
     close();
     snack({
@@ -196,6 +198,7 @@ function TripDetail({ trip, close }: { trip: TripRow; close: () => void }) {
       actionLabel: t('autoTrip.undo'),
       onAction: () => {
         if (snap) restoreTrip(db, snap);
+        untrash(db, [tripTrashId(trip.id)]);
         refresh();
       },
     });

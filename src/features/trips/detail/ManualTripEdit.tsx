@@ -6,6 +6,8 @@ import { deleteTrip, tripRoute, updateManualTrip } from '@/db/tripsRepo';
 import { pickerScope } from '@/domain/types';
 import { distanceValue, type DistanceUnit } from '@/features/trips/format';
 import { openPro } from '@/features/pro/openPro';
+import { trashTrip, tripTrashId, untrash } from '@/features/trash/repo';
+import { restoreTrip, snapshotTrip } from '@/features/trips/auto/repo';
 import { ModalHeader } from '@/features/trips/ModalHeader';
 import { rememberRoute } from '@/features/trips/route/places';
 import { routeFormOf, useRouteOption } from '@/features/trips/route/useRouteOption';
@@ -78,9 +80,19 @@ export function ManualTripEdit({ trip, unit, close }: { trip: TripRow; unit: Dis
             variant: 'danger',
             onPress: () => {
               setAskDelete(false);
+              const snap = snapshotTrip(db, trip.id);
               deleteTrip(db, trip.id);
+              if (snap) trashTrip(db, snap);
               refreshWidgets().catch(() => {});
-              snack({ message: t('trip.deleted') });
+              snack({
+                message: t('trip.deleted'),
+                actionLabel: t('autoTrip.undo'),
+                onAction: () => {
+                  if (snap) restoreTrip(db, snap);
+                  untrash(db, [tripTrashId(trip.id)]);
+                  refreshWidgets().catch(() => {});
+                },
+              });
               close();
             },
           },

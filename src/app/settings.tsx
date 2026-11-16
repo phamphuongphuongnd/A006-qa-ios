@@ -2,7 +2,7 @@ import Constants from 'expo-constants';
 import { type Href } from 'expo-router';
 import { router } from '@/services/router';
 import * as WebBrowser from 'expo-web-browser';
-import { CloudUpload, Download, Lock, Tag as TagIcon, Trash2 } from '@/ui/icons';
+import { CloudUpload, Download, Lock, RotateCcw, Tag as TagIcon, Trash2 } from '@/ui/icons';
 import { useEffect, useState } from 'react';
 import { Linking, Platform, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,6 +27,7 @@ import { authenticate, deviceCanLock } from '@/features/settings/LockedView';
 import { cancelSortReminders } from '@/features/settings/notifications';
 import { backupDue, daysSince, timeLabel, WEEKDAYS } from '@/features/settings/reminder';
 import { GroupLabel, NavHeader, NavRow, OptionSheet, Pill, type Option } from '@/features/settings/ui';
+import { trashCount } from '@/features/trash/repo';
 import { t, tn } from '@/i18n';
 import { ProCard } from '@/features/settings/ProCard';
 import { usePro } from '@/state/pro';
@@ -88,6 +89,7 @@ export default function SettingsScreen() {
     else if (res.status === 'saved') update({ vehicleCostMethod: to });
   };
   const hasData = useLive(() => entryCount(db) > 0, [], ['entries']);
+  const trashItems = useLive(() => trashCount(db), [], ['trash']);
 
   useEffect(() => {
     let live = true;
@@ -234,6 +236,12 @@ export default function SettingsScreen() {
         <Group>
           <NavRow icon={CloudUpload} title={t('settings.backup')} right={backupPill} onPress={() => router.push('/backup')} />
           <NavRow icon={Download} title={t('settings.export')} onPress={() => router.push('/export')} />
+          <NavRow
+            icon={RotateCcw}
+            title={t('s6.trashTitle')}
+            value={trashItems > 0 ? t('s6.trashCount', { count: trashItems }) : undefined}
+            onPress={() => router.push('/recently-deleted')}
+          />
           <NavRow icon={Trash2} title={t('settings.deleteAll')} danger onPress={() => setDeleteStep(1)} />
         </Group>
 
