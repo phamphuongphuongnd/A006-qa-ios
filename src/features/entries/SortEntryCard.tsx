@@ -1,6 +1,6 @@
 import { Briefcase, CheckCircle2, ChevronDown, Combine, Pencil, Plus, SkipForward, Split, User, X, type LucideIcon } from '@/ui/icons';
 import { Zap } from '@/ui/icons';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Animated, Image, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { listCategories } from '@/db/categoriesRepo';
@@ -13,7 +13,7 @@ import { receiptUri } from '@/files/receipts';
 import { t } from '@/i18n';
 import { useLive } from '@/state/useLive';
 import { fonts, radius, useTheme } from '@/theme';
-import { Button, Card, Chip, Divider, Segmented, Tag, Txt } from '@/ui';
+import { Button, Card, Chip, Divider, Segmented, Tag, Txt, useKeyboardUp } from '@/ui';
 
 import { CategorySheet } from './CategorySheet';
 import { useDateTimePicker } from './DateTimePick';
@@ -63,6 +63,15 @@ export function SortEntryCard({
   const [viewer, setViewer] = useState(false);
   const [x] = useState(() => new Animated.Value(0));
   const busy = useRef(false);
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
+  const keyboardUp = useKeyboardUp();
+  const open = mode !== 'view';
+  // The screen shrinks after the keyboard opens; scroll once the card has its new height.
+  useEffect(() => {
+    if (!keyboardUp || !open) return;
+    const id = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 150);
+    return () => clearTimeout(id);
+  }, [keyboardUp, open]);
   const receipts = useLive(() => (entry.receiptCount > 0 ? listReceipts(db, entry.id) : []), [entry.id, entry.receiptCount], ['receipts']);
   const currency = entry.currency as Currency;
   const income = entry.type === 'income';
@@ -89,7 +98,16 @@ export function SortEntryCard({
     <Animated.View style={[{ position: 'absolute', left: 0, right: 0, top: stacked ? 16 : 0, bottom: 0 }, { transform: [{ translateX: x }] }]}>
       <Card style={[styles.card, { shadowColor: '#161D2B' }]}>
         {/* Scrolls when large text or an open form makes the card taller than the space (B-24). */}
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.cardBody} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        {/* Keyboard open on Edit / Split: the card shrinks above it (Sort screen) → keep "Left to assign" / Done in view (B-38). */}
+        <ScrollView
+          ref={scrollRef}
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.cardBody}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          onLayout={() => {
+            if (keyboardUp && open) scrollRef.current?.scrollToEnd({ animated: true });
+          }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
             <View style={{ flex: 1, gap: 2 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

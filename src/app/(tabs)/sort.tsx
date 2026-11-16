@@ -1,7 +1,7 @@
 import { router } from '@/services/router';
 import { List , Zap } from '@/ui/icons';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { db } from '@/db/client';
@@ -19,7 +19,7 @@ import { RuleOfferCard } from '@/features/rules/RuleOfferCard';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { fonts, GUTTER, useTheme } from '@/theme';
-import { Button, Card, Txt, useSnackbar } from '@/ui';
+import { Button, Card, Txt, useKeyboardUp, useSnackbar } from '@/ui';
 
 /**
  * S-06 Sort — one card at a time (entries and Unsorted trips). Tapping a category chip / Work / Personal sorts it
@@ -38,6 +38,7 @@ export default function SortScreen() {
   const [pendingOffer, setOffer] = useState<{ offer: RuleOffer; entryId: string; thenDone: number | null } | null>(null);
   const actions = useEntryActions();
   const snack = useSnackbar();
+  const keyboardUp = useKeyboardUp();
   const s = useSortWeek(chosen, skipped);
   const top = s.queue[0];
   // "Undo" on the sort that triggered the offer puts the entry back in the queue: the offer goes away with it.
@@ -153,10 +154,11 @@ export default function SortScreen() {
   const mergeEntry = mergeFor ? s.entries.find((e) => e.id === mergeFor) ?? null : null;
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    // Typing in Edit / Split on the card: the screen shrinks above the keyboard and the FAB hides (B-38).
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, backgroundColor: colors.background }}>
       {header}
       {/* Bottom padding keeps the card clear of the FAB. */}
-      <View style={{ flex: 1, paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: 96, gap: 12 }}>
+      <View style={{ flex: 1, paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: keyboardUp ? 12 : 96, gap: 12 }}>
         <WeekProgress week={week} done={s.done} total={s.total} onPick={() => setWeekSheet(true)} />
         {autoLine}
         <View style={{ flex: 1, marginTop: 6 }}>
@@ -191,7 +193,7 @@ export default function SortScreen() {
           )}
         </View>
       </View>
-      <CaptureFab />
+      {keyboardUp ? null : <CaptureFab />}
       <WeekPickerSheet
         visible={weekSheet}
         onClose={() => setWeekSheet(false)}
@@ -211,7 +213,7 @@ export default function SortScreen() {
           actions.merge(ids);
         }}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

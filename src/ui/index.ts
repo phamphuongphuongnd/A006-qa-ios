@@ -7,3 +7,4 @@ export * from './Overlays';
 export * from './Surfaces';
 export * from './Txt';
 export * from './Status';
+export * from './useKeyboardUp';

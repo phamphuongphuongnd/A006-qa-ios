@@ -240,7 +240,7 @@
 | Mã | Tính năng | Trường hợp | Kết quả mong đợi | Cách | Kết quả |
 |---|---|---|---|---|---|
 | TC-217 | F-01 | S-01c cài mới (UK) | 3 thẻ Mileage rate (55p/25p) / Actual costs / Not sure yet (chọn sẵn); "What's the difference?" → sheet 4 dòng + "Estimate only — not tax advice." | E | ✅ E (cài mới UK): 3 thẻ, "Not sure yet" chọn sẵn, sheet 4 dòng + "Estimate only — not tax advice." |
-| TC-218 | F-01 | S-01e Free & Pro | 2 cột Free / "Pro · £24.99/year", dòng "No ads. No account…", "Continue free" → S-01f; "See Pro" → S-19, không tự bắt đầu dùng thử | E | ✅ E: 2 cột + dòng cam kết; "See Pro" → S-19 (Try / Subscribe), không tự bắt đầu dùng thử. 🟡 S-01b UK ghi "Self Assessment (SA103)" thay vì "Self Assessment & MTD" (B-39) |
+| TC-218 | F-01 | S-01e Free & Pro | 2 cột Free / "Pro · £24.99/year", dòng "No ads. No account…", "Continue free" → S-01f; "See Pro" → S-19, không tự bắt đầu dùng thử | E | ✅ E: 2 cột + dòng cam kết; "See Pro" → S-19 (Try / Subscribe), không tự bắt đầu dùng thử. 🟡 S-01b UK ghi "Self Assessment (SA103)" thay vì "Self Assessment & MTD" (B-39 — đã sửa, test copyV2) |
 | TC-219 | F-01 | S-01c vùng US | Chữ "IRS standard rate per mile…" | E | ✅ E: "IRS standard rate per mile. Gas, repairs and insurance are included." |
 | TC-220 | F-02 Q20 | Máy tính "12.50+4.20" | Biểu thức nhỏ + "= £16.70"; Save lưu 16.70 | T calc + E | ⏳ |
 | TC-221 | F-02 Q20 | Biểu thức lỗi ("12+", ÷0) | Số mờ + "Check the sum", Save mờ | T calc + E | ⏳ |
@@ -264,7 +264,7 @@
 | TC-239 | F-06 | Thẻ Sort Pro | "Suggested" ≤ 3 chip, chip đầu viền vàng | T suggest + E | ✅ M: "SUGGESTED" Fuel / Parking… / Van repairs… + More… |
 | TC-240 | F-06 Q5 | Edit tại chỗ | Thẻ mở form gọn (số tiền có máy tính, ghi chú, ngày) → "Done", không rời màn Sort | E | ✅ M: thẻ mở "Edit" Amount / Note / Date + Done, không rời Sort |
 | TC-241 | F-06 Q5 | Split tại chỗ | 2 phần chia đôi; "Left to assign £0.00" xanh; "Split & sort" chỉ sáng khi đủ; phần có danh mục xong, phần không quay lại hàng chờ; ảnh theo mọi phần | T logic + E | ⏳ |
-| TC-242 | F-06 Q5 | Split lệch tiền / nhiều phần | "£5.00 left" / "£5.00 over" cam; "+ Add part" tối đa 10 | E | ❌ B-38 M: "£5.00 over" + "Split & sort" mờ đúng, nhưng khi gõ số phần, bàn phím che dòng "Left to assign" và nút |
+| TC-242 | F-06 Q5 | Split lệch tiền / nhiều phần | "£5.00 left" / "£5.00 over" cam; "+ Add part" tối đa 10 | E | ✅ M (sau sửa B-38): gõ 41.20 → "£5.00 over" cam + "Split & sort" mờ, nổi trên bàn phím. (Trước sửa ❌ B-38) |
 | TC-243 | F-06 Q5 | Merge tại chỗ | Sheet "Merge with…" khoản cùng loại ±1 ngày → "Merge N entries into one £…?" → thẻ mới vẫn ở hàng chờ; Undo | T logic + E | ⏳ |
 | TC-244 | F-06 P1-2 | Thẻ chuyến Unsorted | "Work" / "Personal" = xong; "Split trip" → S-07c | E | ⏳ |
 | TC-245 | F-06 P1-10 | Xếp cùng nơi bán 3 lần liền | Thẻ "Always sort 'X' as …?" → "Always" tạo luật (thấy ở S-18) | T rulesDb + E | ⏳ |
@@ -292,7 +292,7 @@
 | TC-267 | F-11 Q25 | Current location (geo fix UK) | Ô From = tên địa chỉ gần nhất | E | ⏳ |
 | TC-268 | F-11 Q25 | Lỗi mạng / cùng chỗ / không có đường | "No internet — enter miles instead" + chuyển Distance · "From and To are the same place" · "Couldn't find a driving route…" | T routeMap + E | ⏳ |
 | TC-269 | F-11 Q25 | Lưu + sửa lại chuyến A → B | Miles "A → B · Round trip"; sửa mở đúng A → B, không gọi lại dịch vụ | E | ⏳ |
-| TC-270 | F-15 Q25 | CSV mileage log chuyến A → B | Có cột from / to / round_trip | T csv | ❌ B-40 T: `mileageCsv` chưa có cột from / to / round_trip (TODO P5 trong csv.ts) |
+| TC-270 | F-15 Q25 | CSV mileage log chuyến A → B | Có cột from / to / round_trip | T csv | ✅ T (sau sửa B-40): cột from / to / round_trip + estimated. (Trước sửa ❌ B-40) |
 | TC-271 | F-11 Q25 | Build không có khoá ORS | Ẩn A → B | T routeMap | ⏳ |
 | TC-272 | F-12 Q25 | S-07b bản đồ live (GPS giả) | Đường vẽ dần, chấm vàng vị trí, camera theo tuyến | E | ⏳ |
 | TC-273 | F-12 Q25 | S-07c bản đồ | Chấm xanh lá đầu, ghim đỏ cuối, điểm dừng đánh số, "© OpenStreetMap · OpenFreeMap", kéo/phóng | E | ⏳ |

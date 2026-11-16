@@ -69,8 +69,8 @@ describe('csv', () => {
   });
   it('builds the mileage log', () => {
     const doc = mileageCsv([{ startedAt: at(2026, 11, 10), miles: 128.44, scope: 'work', purpose: 'Route DLS4', source: 'gps', odoStart: null, odoEnd: null }]);
-    expect(doc.trim().split('\r\n')[0]).toBe('date,start,end,miles,work_personal,purpose,source,edited,original_miles,odometer_start,odometer_end');
-    expect(doc.trim().split('\r\n')[1]).toBe('2026-11-10,12:00,,128.4,work,Route DLS4,GPS,no,,,');
+    expect(doc.trim().split('\r\n')[0]).toBe('date,start,end,miles,work_personal,purpose,from,to,round_trip,source,edited,estimated,original_miles,odometer_start,odometer_end');
+    expect(doc.trim().split('\r\n')[1]).toBe('2026-11-10,12:00,,128.4,work,Route DLS4,,,,GPS,no,no,,,');
   });
   it('mileage log: automatic / NFC trips, edited times and manual odometer trips', () => {
     const doc = mileageCsv([
@@ -79,9 +79,21 @@ describe('csv', () => {
       { startedAt: at(2026, 11, 13), miles: 25, scope: 'work', purpose: 'Depot', source: 'manual', odoStart: 1000, odoEnd: 1025 },
     ]);
     const l = doc.trim().split('\r\n');
-    expect(l[1]).toBe('2026-11-11,07:00,11:00,40.0,unsorted,,auto,yes,42.3,,');
-    expect(l[2]).toBe('2026-11-12,08:00,09:00,10.0,work,,NFC,no,,,');
-    expect(l[3]).toBe('2026-11-13,,,25.0,work,Depot,manual,no,,1000,1025');
+    expect(l[1]).toBe('2026-11-11,07:00,11:00,40.0,unsorted,,,,,auto,yes,no,42.3,,');
+    expect(l[2]).toBe('2026-11-12,08:00,09:00,10.0,work,,,,,NFC,no,no,,,');
+    expect(l[3]).toBe('2026-11-13,,,25.0,work,Depot,,,,manual,no,no,,1000,1025');
+  });
+  // P5 · TC-270 / B-40: A → B trips name both ends; gap trips are estimated (Q25 / Q26)
+  it('mileage log: A → B trips carry from / to / round trip, gap trips are estimated', () => {
+    const doc = mileageCsv([
+      { startedAt: at(2026, 11, 14), miles: 24.6, scope: 'work', purpose: 'Depot run', source: 'manual', odoStart: null, odoEnd: null, fromLabel: 'Amazon DLS4, Leeds', toLabel: '12 High St, Wakefield', roundTrip: true },
+      { startedAt: at(2026, 11, 15), miles: 8.2, scope: 'work', purpose: '', source: 'manual', odoStart: null, odoEnd: null, fromLabel: 'Home', toLabel: 'Depot', roundTrip: false },
+      { startedAt: at(2026, 11, 16), miles: 3.1, scope: 'unsorted', purpose: '', source: 'gap', odoStart: null, odoEnd: null },
+    ]);
+    const l = doc.trim().split('\r\n');
+    expect(l[1]).toBe('2026-11-14,,,24.6,work,Depot run,"Amazon DLS4, Leeds","12 High St, Wakefield",yes,manual,no,no,,,');
+    expect(l[2]).toBe('2026-11-15,,,8.2,work,,Home,Depot,no,manual,no,no,,,');
+    expect(l[3]).toBe('2026-11-16,,,3.1,unsorted,,,,,gap,no,yes,,,');
   });
   // Step 4 · TC-154
   it('builds the totals-by-category file, one row per category with its tax line', () => {

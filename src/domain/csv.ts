@@ -130,13 +130,19 @@ export interface CsvTrip {
   originalMiles?: number | null;
   odoStart: number | null;
   odoEnd: number | null;
+  /** A → B trips (Q25): place labels; null for GPS / typed-in trips. */
+  fromLabel?: string | null;
+  toLabel?: string | null;
+  roundTrip?: boolean;
 }
 
-// TODO(P5, S5 owns this file): Q25 A → B trips — add from / to (+ round_trip) columns from trips.from_label / to_label.
-/** F-15 "CSV – mileage log" (free, raw). */
+/** F-15 "CSV – mileage log" (free, raw). A → B trips carry from / to / round_trip; gap trips are marked estimated (Q26). */
 export function mileageCsv(trips: CsvTrip[]): string {
   return csvDocument([
-    csvRow(['date', 'start', 'end', 'miles', 'work_personal', 'purpose', 'source', 'edited', 'original_miles', 'odometer_start', 'odometer_end']),
+    csvRow([
+      'date', 'start', 'end', 'miles', 'work_personal', 'purpose', 'from', 'to', 'round_trip',
+      'source', 'edited', 'estimated', 'original_miles', 'odometer_start', 'odometer_end',
+    ]),
     ...[...trips]
       .sort((a, b) => a.startedAt - b.startedAt)
       .map((t) => {
@@ -148,8 +154,12 @@ export function mileageCsv(trips: CsvTrip[]): string {
           t.miles.toFixed(1),
           t.scope,
           t.purpose,
+          t.fromLabel ?? '',
+          t.toLabel ?? '',
+          t.fromLabel || t.toLabel ? (t.roundTrip ? 'yes' : 'no') : '',
           tripSourceLabel(t),
           t.edited ? 'yes' : 'no',
+          t.source === 'gap' ? 'yes' : 'no',
           t.edited && t.originalMiles != null ? t.originalMiles.toFixed(1) : '',
           t.odoStart,
           t.odoEnd,

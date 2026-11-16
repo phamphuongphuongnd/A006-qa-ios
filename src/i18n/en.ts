@@ -56,7 +56,7 @@ export const en = {
     getStarted: 'Get started',
     regionTitle: 'Where do you file your taxes?',
     regionUK: 'United Kingdom',
-    regionUKSub: '£ · Tax year 6 Apr – 5 Apr · Self Assessment (SA103)',
+    regionUKSub: '£ · Tax year 6 Apr – 5 Apr · Self Assessment & MTD',
     regionUS: 'United States',
     regionUSSub: '$ · Calendar year · Schedule C',
     regionLater: 'You can change this later in Settings.',

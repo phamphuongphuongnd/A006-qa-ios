@@ -117,10 +117,10 @@
   onboarding vẫn mở được và router chọn route đầu tiên) — case TC-217 — tái hiện: trình giả lập cài mới APK dev → mở app → "OCR
   probe". — sửa: khai đủ 6 route trong nhóm `guard={onboarded}` + test `src/state/__tests__/routesDeclared.test.ts` (mọi route
   phải được khai) — thử trình giả lập: cài mới → S-01a "Log it in 10 seconds…"
-- [ ] **B-38** 🟡 Sort → Split tại chỗ: khi gõ số tiền một phần, bàn phím che dòng "Left to assign" và nút "Split & sort" — phải
+- [x] **B-38** 🟡 Sort → Split tại chỗ: khi gõ số tiền một phần, bàn phím che dòng "Left to assign" và nút "Split & sort" — phải
   ẩn bàn phím mới biết còn thiếu / thừa bao nhiêu (giống B-36) — case TC-242 — tái hiện: A13 → Sort → thẻ Shell M62 → Split →
-  chạm ô Part 1 → gõ 41.20.
-- [ ] **B-39** 🟡 S-01b: thẻ United Kingdom ghi "£ · Tax year 6 Apr – 5 Apr · Self Assessment (SA103)"; product.md v2 F-01 ghi
-  "Self Assessment & MTD" — case TC-218 — tái hiện: cài mới → Get started.
-- [ ] **B-40** 🟠 CSV "mileage log" chưa có cột From / To / Round trip cho chuyến A → B (Q25) → kế toán không thấy chuyến đi đâu
-  (HMRC cần mục đích + nơi đến) — case TC-270 — `src/domain/csv.ts` `mileageCsv` (TODO P5); thêm cả cột `estimated` theo F-15.
+  chạm ô Part 1 → gõ 41.20. — sửa: màn Sort `KeyboardAvoidingView` + ẩn FAB khi bàn phím mở, thẻ tự cuộn tới cuối form (`useKeyboardUp`) + test `src/ui/__tests__/keyboardSort.test.ts` — thử A13: gõ 41.20 ở Part 2 → "Left to assign £5.00 over" + "Split & sort" (mờ) nổi trên bàn phím
+- [x] **B-39** 🟡 S-01b: thẻ United Kingdom ghi "£ · Tax year 6 Apr – 5 Apr · Self Assessment (SA103)"; product.md v2 F-01 ghi
+  "Self Assessment & MTD" — case TC-218 — tái hiện: cài mới → Get started. — sửa: `onboarding.regionUKSub` (dùng chung S-01b + Settings Region) + test `src/i18n/__tests__/copyV2.test.ts`
+- [x] **B-40** 🟠 CSV "mileage log" chưa có cột From / To / Round trip cho chuyến A → B (Q25) → kế toán không thấy chuyến đi đâu
+  (HMRC cần mục đích + nơi đến) — case TC-270 — `src/domain/csv.ts` `mileageCsv` (TODO P5); thêm cả cột `estimated` theo F-15. — sửa: cột `from`, `to`, `round_trip` (trống với chuyến không phải A → B) + `estimated` (yes khi source = gap); `buildExport` truyền nhãn — test `reportCsv.test.ts` "A → B trips carry from / to / round trip"
