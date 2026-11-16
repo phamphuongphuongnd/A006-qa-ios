@@ -38,6 +38,7 @@ export function TripForm({
   onRouteLocked,
   hint,
   top,
+  bottomExtra,
 }: {
   header: React.ReactNode;
   initial: TripFormValues;
@@ -54,6 +55,8 @@ export function TripForm({
   hint?: string;
   /** Above the mode switch, e.g. the Regular trips chips (Q31). */
   top?: React.ReactNode;
+  /** Above the Save button in the bottom bar, e.g. <ParkingKeyBar> while Parking & tolls is typed (Q28). */
+  bottomExtra?: React.ReactNode;
 }) {
   const { colors, dark } = useTheme();
   const [v, setV] = useState<TripFormValues>(initial);
@@ -100,7 +103,12 @@ export function TripForm({
   const unitField = unit === 'km' ? t('trip.kmField') : t('trip.milesField');
 
   return (
-    <Screen header={header} avoidKeyboard bottomInset bottom={<Button label={submitLabel} full onPress={submit} style={{ flex: 1 }} />}>
+    <Screen header={header} avoidKeyboard bottomInset bottom={
+        <View style={{ flex: 1, gap: 10 }}>
+          {bottomExtra}
+          <Button label={submitLabel} full onPress={submit} />
+        </View>
+      }>
       <View style={{ gap: 16 }}>
       {top}
       {hint ? (

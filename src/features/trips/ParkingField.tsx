@@ -15,7 +15,21 @@ import { ParkingCircle } from '@/ui/icons';
  * "Parking & tolls" on a trip (Q28): an amount field with the calculator (Q20) — digits from the number pad
  * (cash-register style), "+ − × ÷" from the bar under the field while it is being edited. Empty = no parking.
  */
-export function ParkingField({ amount, currency, onDone }: { amount: AmountExpr; currency: Currency; onDone?: () => void }) {
+export function ParkingField({
+  amount,
+  currency,
+  onDone,
+  onEditingChange,
+  inlineCalc = false,
+}: {
+  amount: AmountExpr;
+  currency: Currency;
+  onDone?: () => void;
+  /** Screens show <ParkingKeyBar> in their bottom bar (above the keyboard) while this is true. */
+  onEditingChange?: (editing: boolean) => void;
+  /** Sheets have no bottom bar: show the "+ − × ÷" row under the field instead. */
+  inlineCalc?: boolean;
+}) {
   const { colors } = useTheme();
   const ref = useRef<ComponentRef<typeof TextInput>>(null);
   const [editing, setEditing] = useState(false);
@@ -32,6 +46,7 @@ export function ParkingField({ amount, currency, onDone }: { amount: AmountExpr;
         accessibilityLabel={`${t('s6.parking')}, ${has ? shown : t('s6.parkingNone')}${amount.invalid ? `. ${t('ocr.checkSum')}` : ''}`}
         onPress={() => {
           setEditing(true);
+          onEditingChange?.(true);
           ref.current?.focus();
         }}
         style={[
@@ -52,6 +67,7 @@ export function ParkingField({ amount, currency, onDone }: { amount: AmountExpr;
         onChangeText={amount.onChangeText}
         onBlur={() => {
           setEditing(false);
+          onEditingChange?.(false);
           onDone?.();
         }}
         keyboardType="number-pad"
@@ -59,7 +75,7 @@ export function ParkingField({ amount, currency, onDone }: { amount: AmountExpr;
         contextMenuHidden
         style={styles.hidden}
       />
-      {editing ? <CalcBar onOp={amount.op} /> : null}
+      {editing && inlineCalc ? <CalcBar onOp={amount.op} /> : null}
       {amount.invalid ? (
         <Txt v="caption" c="error">
           {t('ocr.checkSum')}
@@ -85,3 +101,24 @@ const styles = StyleSheet.create({
   },
   hidden: { position: 'absolute', width: 1, height: 1, opacity: 0 },
 });
+
+/**
+ * Bottom-bar strip while Parking & tolls is being typed (the field itself is often under the keyboard): what was typed
+ * ("2.50+1.00 = £3.50") and the "+ − × ÷" row.
+ */
+export function ParkingKeyBar({ amount, currency }: { amount: AmountExpr; currency: Currency }) {
+  const shown = formatMoney(amount.shownMinor, currency);
+  return (
+    <View style={{ gap: 8 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+        <Txt v="small" c="textSecondary" style={{ fontFamily: fonts.bold }}>
+          {t('s6.parking')}
+        </Txt>
+        <Txt v="body" style={[{ fontFamily: fonts.bold, flexShrink: 1 }, amount.invalid && { opacity: 0.4 }]} numberOfLines={1} accessibilityLiveRegion="polite">
+          {amount.isExpression ? `${formatExpr(amount.expr)} = ${shown}` : shown}
+        </Txt>
+      </View>
+      <CalcBar onOp={amount.op} />
+    </View>
+  );
+}

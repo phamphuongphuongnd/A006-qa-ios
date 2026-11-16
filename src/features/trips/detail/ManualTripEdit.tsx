@@ -10,7 +10,7 @@ import { useAmountExpr } from '@/features/ocr/useAmountExpr';
 import { deleteTripToTrash } from '@/features/trips/deleteTrip';
 import { TripDeleteDialog } from '@/features/trips/detail/TripDeleteDialog';
 import { parkingNoteFor, setTripParking, tripParkingMinor } from '@/features/trips/parking';
-import { ParkingField } from '@/features/trips/ParkingField';
+import { ParkingField, ParkingKeyBar } from '@/features/trips/ParkingField';
 import { SaveRegularSheet } from '@/features/savedTrips/ui';
 import { ModalHeader } from '@/features/trips/ModalHeader';
 import { rememberRoute } from '@/features/trips/route/places';
@@ -35,6 +35,7 @@ export function ManualTripEdit({ trip, unit, close }: { trip: TripRow; unit: Dis
   const isRoute = tripRoute(trip) !== null && route !== 'hidden';
   const currency = currencyOf(settings.region ?? 'UK');
   const [parkingSaved] = useState(() => tripParkingMinor(db, trip.id));
+  const [parkingEditing, setParkingEditing] = useState(false);
   const parking = useAmountExpr(parkingSaved);
   const [saveRegular, setSaveRegular] = useState(false);
 
@@ -50,6 +51,7 @@ export function ManualTripEdit({ trip, unit, close }: { trip: TripRow; unit: Dis
         />
       }
       unit={unit}
+      bottomExtra={parkingEditing ? <ParkingKeyBar amount={parking} currency={currency} /> : null}
       submitLabel={t('common.save')}
       route={route}
       region={settings.region ?? 'UK'}
@@ -74,7 +76,7 @@ export function ManualTripEdit({ trip, unit, close }: { trip: TripRow; unit: Dis
       }
       extra={
         <>
-          <ParkingField amount={parking} currency={currency} />
+          <ParkingField amount={parking} currency={currency} onEditingChange={setParkingEditing} />
           <Button label={t('s6.saveRegular')} icon={Repeat} variant="outline" full onPress={() => setSaveRegular(true)} />
         </>
       }

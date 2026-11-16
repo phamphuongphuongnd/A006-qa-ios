@@ -160,3 +160,9 @@
 - [ ] **B-50** 🟡 (đề xuất, chờ Phương) Bật rồi tắt chuyến bằng NFC / `sundaysort://trip/toggle` mà xe không chạy → lưu chuyến
   "0.0 mi · NFC · Work" trong Miles (chạm nhầm 2 lần là có rác) — case TC-293 — đề xuất: tắt chuyến < 0.1 mi thì bỏ, snackbar
   "Trip under 0.1 mi — not saved".
+
+### S6 (nhánh `s6-competitor-ideas`, thử trên giả lập theo Phương 2026-11-16)
+- [x] **B-S6a** 🟠 Ô "Parking & tolls" ở Thêm / Sửa chuyến: bấm vào thì ô và hàng "+ − × ÷" nằm sau nút Save + bàn phím →
+  không thấy số đang gõ, bấm "+" trúng Save (lưu £2.50 thay vì 2.50+1.00). Sửa: khi đang gõ, thanh dưới (trên nút Save) hiện
+  "Parking & tolls  2.50+1.00 = £3.50" + hàng "+ − × ÷" (`ParkingKeyBar`); sheet End trip giữ hàng phép tính ngay dưới ô —
+  thử giả lập: £3.50 lưu đúng.

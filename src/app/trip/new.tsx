@@ -20,7 +20,7 @@ import { useSnackbar } from '@/ui';
 import { currencyOf } from '@/domain/types';
 import { useAmountExpr } from '@/features/ocr/useAmountExpr';
 import { parkingNoteFor, setTripParking } from '@/features/trips/parking';
-import { ParkingField } from '@/features/trips/ParkingField';
+import { ParkingField, ParkingKeyBar } from '@/features/trips/ParkingField';
 import type { SavedTripRow } from '@/db/schema';
 import { getSavedTrip, markSavedTripUsed, savedMiles, savedRoute } from '@/features/savedTrips/repo';
 import { RegularTripChips } from '@/features/savedTrips/ui';
@@ -55,6 +55,7 @@ export default function NewTripScreen() {
   const [initialDate] = useState(() => gap?.from ?? num(p.date) ?? Date.now());
   const trim1 = (n: number) => String(Math.round(n * 10) / 10);
   const close = () => (router.canGoBack() ? router.back() : router.replace('/miles'));
+  const [parkingEditing, setParkingEditing] = useState(false);
   const parking = useAmountExpr(0);
   const currency = currencyOf(settings.region ?? 'UK');
   // Q31: a Regular trip picked from the chips (or "See all" → ?saved=<id>) refills the form (new key).
@@ -67,6 +68,7 @@ export default function NewTripScreen() {
   return (
     <TripForm
         key={picked?.key ?? 0}
+        bottomExtra={parkingEditing ? <ParkingKeyBar amount={parking} currency={currency} /> : null}
         top={
           estimated ? undefined : (
             <RegularTripChips
@@ -87,7 +89,7 @@ export default function NewTripScreen() {
         hint={
           gap ? t('tripCheck.gapHint') : estimated ? t('tripCheck.odoHint') : picked ? t('s6.regularFilled', { name: picked.saved.label }) : undefined
         }
-        extra={<ParkingField amount={parking} currency={currency} />}
+        extra={<ParkingField amount={parking} currency={currency} onEditingChange={setParkingEditing} />}
         initial={
           picked
             ? {

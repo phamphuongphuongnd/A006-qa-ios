@@ -378,7 +378,7 @@ function EndTripSheet({ trip, unit, onDone }: { trip: TripRow; unit: 'mi' | 'km'
             ))}
         </ChipRow>
       ) : null}
-      <ParkingField amount={parking} currency={currency} />
+      <ParkingField amount={parking} currency={currency} inlineCalc />
       <Button label={t('common.save')} full onPress={save} />
       <Pressable accessibilityRole="button" onPress={() => setAskDiscard(true)} style={{ minHeight: 48, alignItems: 'center', justifyContent: 'center', marginTop: -8 }}>
         <Text style={{ color: colors.error, fontSize: 17, fontFamily: fonts.bold }}>{t('trip.discardTrip')}</Text>

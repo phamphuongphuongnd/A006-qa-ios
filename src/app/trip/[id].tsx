@@ -27,7 +27,7 @@ import { deleteTripToTrash } from '@/features/trips/deleteTrip';
 import { ManualTripEdit } from '@/features/trips/detail/ManualTripEdit';
 import { TripDeleteDialog } from '@/features/trips/detail/TripDeleteDialog';
 import { parkingNoteFor, setTripParking, tripParkingMinor } from '@/features/trips/parking';
-import { ParkingField } from '@/features/trips/ParkingField';
+import { ParkingField, ParkingKeyBar } from '@/features/trips/ParkingField';
 import { SaveRegularSheet } from '@/features/savedTrips/ui';
 import { TimeWheel } from '@/features/trips/detail/TimeWheel';
 import { TripDetailSketch } from '@/features/trips/detail/TripDetailSketch';
@@ -101,6 +101,7 @@ function TripDetail({ trip, close }: { trip: TripRow; close: () => void }) {
   const currency = currencyOf(settings.region ?? 'UK');
   const parkingSaved = useLive(() => tripParkingMinor(db, trip.id), [trip.id], ['entries']);
   const parking = useAmountExpr(parkingSaved);
+  const [parkingEditing, setParkingEditing] = useState(false);
 
   const endedAt = trip.endedAt ?? trip.startedAt;
   const span = { startedAt: trip.startedAt, endedAt };
@@ -229,6 +230,8 @@ function TripDetail({ trip, close }: { trip: TripRow; close: () => void }) {
   return (
     <Screen
       avoidKeyboard
+      bottomInset
+      bottom={parkingEditing ? <View style={{ flex: 1 }}><ParkingKeyBar amount={parking} currency={currency} /></View> : undefined}
       header={
         <ModalHeader
           icon={ChevronLeft}
@@ -359,7 +362,7 @@ function TripDetail({ trip, close }: { trip: TripRow; close: () => void }) {
           {t('s6.exportedOn', { date: formatDay(trip.exportedAt) })}
         </Txt>
       ) : null}
-      <ParkingField amount={parking} currency={currency} onDone={saveParking} />
+      <ParkingField amount={parking} currency={currency} onDone={saveParking} onEditingChange={setParkingEditing} />
       <Button label={t('s6.saveRegular')} icon={Repeat} variant="outline" full onPress={() => setSaveRegular(true)} />
       {saveRegular ? (
         <SaveRegularSheet
