@@ -39,6 +39,45 @@ describe('moneyIn', () => {
     expect(moneyIn('13:05')).toEqual([]);
     expect(moneyIn('$ 9.99').map((m) => m.minor)).toEqual([999]);
   });
+
+  it('fixes OCR slips after a currency sign only (seen on A13: "£72.4O", "£72.4")', () => {
+    expect(moneyIn('£72.4O').map((m) => m.minor)).toEqual([7240]);
+    expect(moneyIn('£72.4').map((m) => m.minor)).toEqual([7240]);
+    expect(moneyIn('£7O.40').map((m) => m.minor)).toEqual([]); // O in the pounds: not guessed
+    expect(moneyIn('£72.O5').map((m) => m.minor)).toEqual([7205]);
+    expect(moneyIn('45.2L')).toEqual([]);
+    expect(moneyIn('VAT 20.0%')).toEqual([]);
+  });
+});
+
+describe('parseReceipt — real A13 read of the Shell photo', () => {
+  // Lines and boxes as ML Kit returned them on the Galaxy A13 (y centre, x left); total figure read as "£72.4O" / "£72.4".
+  const at = (text: string, y: number, x: number): RawLine => ({ text, box: { x, y: y - 0.012, w: 0.25, h: 0.024 } });
+  const raw: RawOcr = {
+    lines: [
+      at('M62 J25 BRIGHOUSE', 0.35, 0.3),
+      at('SHELL', 0.41, 0.23),
+      at('SUBTOTAL', 0.53, 0.22),
+      at('TOTAL', 0.61, 0.23),
+      at('PUMP 3 UNLEADED', 0.43, 0.22),
+      at('50.70 L@ 142.9p/L', 0.47, 0.22),
+      at('VAT @ 20%', 0.56, 0.22),
+      at('VISA CONTACTLESS', 0.65, 0.23),
+      at('09/11/26', 0.71, 0.33),
+      at('£72.4', 0.42, 0.67),
+      at('£60.33', 0.51, 0.67),
+      at('£12.07', 0.55, 0.68),
+      at('£72.4O', 0.59, 0.65),
+      at('£72.4', 0.64, 0.68),
+      at('06:12', 0.7, 0.6),
+    ],
+  };
+
+  it('reads £72.40 as the total, not the subtotal', () => {
+    const r = parseReceipt(raw, 'UK', NOW);
+    expect(r.amountMinor).toBe(7240);
+    expect(r.confidence.amount).toBeGreaterThanOrEqual(OCR_FILL_CONFIDENCE);
+  });
 });
 
 describe('parseReceipt — UK fuel receipt', () => {

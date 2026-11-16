@@ -63,7 +63,13 @@ interface Money {
 const MONEY_RE = /([£$€]?)\s?(\d{1,3}(?:,\d{3})+|\d{1,6})(?:\.\s?|,)(\d{2})(?!\d)/g;
 
 /** Amounts in one line, skipping dates (12.11.26), litres (45.20L), rates (20.00%) and per-unit prices. */
-export function moneyIn(text: string): Money[] {
+export function moneyIn(raw: string): Money[] {
+  // OCR slips seen on a real Shell receipt (A13): "£72.4O" (letter O for 0) and "£72.4" (last 0 dropped). Only fixed
+  // after a currency sign, so "45.2L" or a reference number never turns into money.
+  const text = raw
+    .replace(/([£$€]\s?\d{1,6}[.,]\d?)[Oo](?![A-Za-z])/g, (_m, a: string) => `${a}0`)
+    .replace(/([£$€]\s?\d{1,6}[.,])[Oo](\d)/g, (_m, a: string, b: string) => `${a}0${b}`)
+    .replace(/([£$€]\s?\d{1,6}[.,]\d)(?![\d%A-Za-z])/g, (_m, a: string) => `${a}0`);
   const out: Money[] = [];
   for (const m of text.matchAll(MONEY_RE)) {
     const start = m.index ?? 0;
