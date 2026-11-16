@@ -132,6 +132,7 @@ export interface CsvTrip {
   odoEnd: number | null;
 }
 
+// TODO(P5, S5 owns this file): Q25 A → B trips — add from / to (+ round_trip) columns from trips.from_label / to_label.
 /** F-15 "CSV – mileage log" (free, raw). */
 export function mileageCsv(trips: CsvTrip[]): string {
   return csvDocument([

@@ -25,6 +25,7 @@ import { useActiveTrip } from '@/features/trips/hooks';
 import { setTripScope } from '@/features/trips/auto/repo';
 import { ModalHeader } from '@/features/trips/ModalHeader';
 import { wasBackgroundStepShown } from '@/features/trips/permissionState';
+import { TripMap } from '@/features/trips/map/TripMap';
 import { RouteSketch } from '@/features/trips/RouteSketch';
 import { countedPath, formatDistanceNumber } from '@/domain/mileage';
 import { t } from '@/i18n';
@@ -224,7 +225,12 @@ export default function ActiveTripScreen() {
           </Card>
         ) : null}
         <Card style={{ alignSelf: 'stretch', flex: 1, maxHeight: paused ? 210 : 290, marginTop: paused ? 6 : 20, padding: 0, overflow: 'hidden', opacity: paused ? 0.7 : 1 }}>
-          <RouteSketch points={points} height={paused ? 210 : 290} live={!paused} />
+          <TripMap
+            points={points}
+            height={paused ? 210 : 290}
+            live
+            fallback={<RouteSketch points={points} height={paused ? 210 : 290} live={!paused} />}
+          />
         </Card>
         {!paused ? (
           <Txt v="caption" c="textTertiary">

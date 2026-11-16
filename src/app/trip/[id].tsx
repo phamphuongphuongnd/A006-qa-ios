@@ -26,6 +26,7 @@ import { findStops, sameRange, segmentForStop, splitMiles, type Stop } from '@/f
 import { ManualTripEdit } from '@/features/trips/detail/ManualTripEdit';
 import { TimeWheel } from '@/features/trips/detail/TimeWheel';
 import { TripDetailSketch } from '@/features/trips/detail/TripDetailSketch';
+import { TripMap } from '@/features/trips/map/TripMap';
 import { distanceValue, formatClock, formatDay, formatDistance, inputToMiles, parseNumberInput } from '@/features/trips/format';
 import { ModalHeader } from '@/features/trips/ModalHeader';
 import { refreshWidgets } from '@/features/widgets/refresh';
@@ -202,6 +203,7 @@ function TripDetail({ trip, close }: { trip: TripRow; close: () => void }) {
 
   const stop = stopIdx !== null ? (stops[stopIdx] ?? null) : null;
   const stopMin = (s: Stop) => Math.max(1, Math.round((s.endedAt - s.startedAt) / 60_000));
+  const stopLabel = (i: number) => t('autoTrip.stopA11y', { n: i + 1, time: formatClock(stops[i].startedAt), min: stopMin(stops[i]) });
   const isPersonal = (i: number, side: 'to' | 'from') => segments.some((s) => sameRange(s, segmentForStop(stops, i, side, span)));
 
   const rows: { kind: EditKind; label: string; value: string }[] = [
@@ -224,14 +226,26 @@ function TripDetail({ trip, close }: { trip: TripRow; close: () => void }) {
       }>
       <Card style={{ padding: 0, overflow: 'hidden' }}>
         {points.length >= 2 ? (
-          <TripDetailSketch
+          <TripMap
             points={points}
             stops={stops}
             personal={personalRanges}
             allPersonal={trip.scope === 'personal'}
-            height={220}
-            stopLabel={(i) => t('autoTrip.stopA11y', { n: i + 1, time: formatClock(stops[i].startedAt), min: stopMin(stops[i]) })}
+            height={300}
+            interactive
+            stopLabel={stopLabel}
             onStop={setStopIdx}
+            fallback={
+              <TripDetailSketch
+                points={points}
+                stops={stops}
+                personal={personalRanges}
+                allPersonal={trip.scope === 'personal'}
+                height={220}
+                stopLabel={stopLabel}
+                onStop={setStopIdx}
+              />
+            }
           />
         ) : (
           <View style={{ height: 120, alignItems: 'center', justifyContent: 'center', padding: 16 }}>

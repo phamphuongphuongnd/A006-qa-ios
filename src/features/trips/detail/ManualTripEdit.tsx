@@ -2,10 +2,14 @@ import { useState } from 'react';
 
 import { db } from '@/db/client';
 import type { TripRow } from '@/db/schema';
-import { deleteTrip, updateManualTrip } from '@/db/tripsRepo';
+import { deleteTrip, tripRoute, updateManualTrip } from '@/db/tripsRepo';
 import { pickerScope } from '@/domain/types';
 import { distanceValue, type DistanceUnit } from '@/features/trips/format';
+import { openPro } from '@/features/pro/openPro';
 import { ModalHeader } from '@/features/trips/ModalHeader';
+import { rememberRoute } from '@/features/trips/route/places';
+import { routeFormOf, useRouteOption } from '@/features/trips/route/useRouteOption';
+import { useSettings } from '@/state/settings';
 import { TripForm } from '@/features/trips/TripForm';
 import { refreshWidgets } from '@/features/widgets/refresh';
 import { t } from '@/i18n';
@@ -18,7 +22,11 @@ const trim = (n: number) => String(Math.round(n * 10) / 10);
 export function ManualTripEdit({ trip, unit, close }: { trip: TripRow; unit: DistanceUnit; close: () => void }) {
   const snack = useSnackbar();
   const [askDelete, setAskDelete] = useState(false);
+  const { settings } = useSettings();
   const odo = trip.odoStart !== null && trip.odoEnd !== null && unit === 'mi';
+  const route = useRouteOption();
+  // Without the service (no key) an A → B trip opens as Distance and keeps its From / To.
+  const isRoute = tripRoute(trip) !== null && route !== 'hidden';
 
   return (
     <TripForm
@@ -33,8 +41,12 @@ export function ManualTripEdit({ trip, unit, close }: { trip: TripRow; unit: Dis
       }
       unit={unit}
       submitLabel={t('common.save')}
+      route={route}
+      region={settings.region ?? 'UK'}
+      onRouteLocked={() => openPro('route_miles')}
       initial={{
-        mode: odo ? 'odometer' : 'distance',
+        mode: isRoute ? 'route' : odo ? 'odometer' : 'distance',
+        route: routeFormOf(trip),
         start: odo ? trim(trip.odoStart!) : '',
         end: odo ? trim(trip.odoEnd!) : '',
         distance: trim(distanceValue(trip.distanceM, unit)),
@@ -44,6 +56,8 @@ export function ManualTripEdit({ trip, unit, close }: { trip: TripRow; unit: Dis
       }}
       onSubmit={(r) => {
         updateManualTrip(db, trip.id, r);
+        const before = tripRoute(trip);
+        if (r.route && (!before || before.from.label !== r.route.from.label || before.to.label !== r.route.to.label)) rememberRoute(db, r.route);
         refreshWidgets().catch(() => {});
         snack({ message: t('trip.updated') });
         close();

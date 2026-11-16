@@ -21,6 +21,7 @@ export const pro = {
     suggestions: 'Suggested categories are a Pro feature',
     tax_files: 'Tax-year files are a Pro feature',
     photos: "You've used this month's 20 free photos",
+    route_miles: 'Miles from A to B are a Pro feature',
   },
   tryFree: 'Try Pro free for 7 days',
   tryFreeNote: 'No card needed. Nothing is charged.',

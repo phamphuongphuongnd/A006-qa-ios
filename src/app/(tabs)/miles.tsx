@@ -1,12 +1,12 @@
 import { router } from '@/services/router';
 import { ChevronDown, ChevronRight, Flag, Gauge, LocateFixed, MapPin, MoreHorizontal, Plus, Smartphone, Truck } from '@/ui/icons';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Linking, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { db } from '@/db/client';
 import type { TripRow } from '@/db/schema';
-import { businessTripMiles, listTrips, mileageTotals } from '@/db/tripsRepo';
+import { businessTripMiles, listTrips, mileageTotals, routeTitle } from '@/db/tripsRepo';
 import { formatRate, mileageEstimateByDate, periodsIn } from '@/domain/mileage';
 import { formatMoney } from '@/domain/money';
 import { taxYearFor, taxYearOf } from '@/domain/taxYear';
@@ -14,6 +14,8 @@ import { currencyOf, type Region, type Scope } from '@/domain/types';
 import { setTripScope, restoreTripScope } from '@/features/trips/auto/repo';
 import { autoTripState } from '@/features/trips/autoState';
 import { formatClock, formatDay, formatDistance, groupByMonth, type DistanceUnit } from '@/features/trips/format';
+import { sweepThumbs } from '@/features/trips/map/thumbs';
+import { TripThumb } from '@/features/trips/map/TripThumb';
 import { TripSwipeRow } from '@/features/trips/TripSwipeRow';
 import { refreshWidgets } from '@/features/widgets/refresh';
 import { usePro } from '@/state/pro';
@@ -103,6 +105,16 @@ export default function MilesScreen() {
   const showMore = () => {
     if (shownN < trips.length) setShown({ year: startYear, n: shownN + ROWS_STEP });
   };
+  // Map thumbnails of deleted / edited trips go once the list has settled (Q25).
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        sweepThumbs();
+      } catch {}
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [allTrips]);
+  const hasMaps = trips.some((x) => x.source === 'gps');
 
   return (
     <Screen
@@ -171,6 +183,11 @@ export default function MilesScreen() {
               </Card>
             </View>
           ))}
+          {hasMaps ? (
+            <Txt v="fine" c="textTertiary" center>
+              {t('autoTrip.map.listAttribution')}
+            </Txt>
+          ) : null}
         </>
       ) : (
         <>
@@ -284,9 +301,18 @@ function TripRowView({ trip, unit, divider }: { trip: TripRow; unit: DistanceUni
   const tint = personal ? colors.personal : gps ? colors.work : colors.textSecondary;
   const bg = trip.scope === 'unsorted' ? colors.sunSoft : personal ? colors.personalSoft : gps ? colors.workSoft : colors.surfaceAlt;
   const title = t('miles.rowLabel', { date: formatDay(trip.startedAt), distance: formatDistance(trip.distanceM, unit) });
-  const how = !gps ? t('autoTrip.manual') : trip.startedBy === 'auto' ? t('autoTrip.auto') : trip.startedBy === 'nfc' ? t('autoTrip.nfc') : t('autoTrip.gps');
+  const ab = routeTitle(trip);
+  const how = ab
+    ? t('autoTrip.route.mode')
+    : !gps
+      ? t('autoTrip.manual')
+      : trip.startedBy === 'auto'
+        ? t('autoTrip.auto')
+        : trip.startedBy === 'nfc'
+          ? t('autoTrip.nfc')
+          : t('autoTrip.gps');
   const times = gps && trip.endedAt ? `${formatClock(trip.startedAt)}–${formatClock(trip.endedAt)}` : '';
-  const sub = [times, how, trip.purpose].filter(Boolean).join(' · ');
+  const sub = [times, ab ?? how, ab && trip.roundTrip ? t('autoTrip.route.roundTag') : '', trip.purpose].filter(Boolean).join(' · ');
   const scopeLabel = trip.scope === 'unsorted' ? t('autoTrip.unsorted') : personal ? t('common.personal') : t('common.work');
   return (
     <Pressable
@@ -294,9 +320,20 @@ function TripRowView({ trip, unit, divider }: { trip: TripRow; unit: DistanceUni
       accessibilityLabel={`${title}. ${sub}. ${scopeLabel}${trip.edited ? `. ${t('miles.edited')}` : ''}. ${t('autoTrip.swipeHint')}`}
       onPress={() => router.push(`/trip/${trip.id}`)}
       style={({ pressed }) => [styles.li, divider && { borderTopWidth: 1, borderTopColor: colors.line }, pressed && { opacity: 0.7 }]}>
-      <View style={[styles.av, { backgroundColor: bg }]}>
-        <Icon size={22} color={tint} strokeWidth={2} />
-      </View>
+      {gps ? (
+        <TripThumb
+          trip={trip}
+          placeholder={
+            <View style={[styles.av, { backgroundColor: bg }]}>
+              <Icon size={22} color={tint} strokeWidth={2} />
+            </View>
+          }
+        />
+      ) : (
+        <View style={[styles.av, { backgroundColor: bg }]}>
+          <Icon size={22} color={tint} strokeWidth={2} />
+        </View>
+      )}
       <View style={{ flex: 1, minWidth: 0 }}>
         <Txt v="h3" numberOfLines={1}>
           {title}
