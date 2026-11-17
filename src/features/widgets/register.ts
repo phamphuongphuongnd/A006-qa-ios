@@ -5,6 +5,13 @@
 import { Platform } from 'react-native';
 import { registerWidgetTaskHandler } from 'react-native-android-widget';
 
+import { ensureMigrated } from '@/db/migrate';
+
 import { widgetTaskHandler } from './android/taskHandler';
 
-if (Platform.OS === 'android') registerWidgetTaskHandler(widgetTaskHandler);
+// The launcher can draw a widget right after an app update, before any screen ran the migrations (QA-100 OLD-4).
+if (Platform.OS === 'android')
+  registerWidgetTaskHandler(async (props) => {
+    await ensureMigrated().catch(() => {});
+    return widgetTaskHandler(props);
+  });

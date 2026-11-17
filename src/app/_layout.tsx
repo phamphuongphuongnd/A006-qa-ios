@@ -6,16 +6,15 @@ import {
   Inter_800ExtraBold,
   useFonts,
 } from '@expo-google-fonts/inter';
-import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Platform, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { expoDb } from '@/db/client';
+import { ensureMigrated } from '@/db/migrate';
 import { DataServices, LockGate } from '@/services/data';
 import { useNavigationBarStyle } from '@/services/navigationBar';
 import { RouterBridge } from '@/services/router';
@@ -24,15 +23,25 @@ import { SettingsProvider, useSettings } from '@/state/settings';
 import { AppThemeProvider, useTheme } from '@/theme';
 import { SnackbarProvider } from '@/ui';
 
-import migrations from '../../drizzle/migrations';
-
 SplashScreen.preventAutoHideAsync();
 
 const RUNTIME_FONTS =
   Platform.OS === 'android' ? {} : { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold };
 
+/** Same migration run as the background entry points (`ensureMigrated`), so a headless task can't race the screens. */
+function useDbReady() {
+  const [state, setState] = useState<{ success: boolean; error?: Error }>({ success: false });
+  useEffect(() => {
+    ensureMigrated().then(
+      () => setState({ success: true }),
+      (e: unknown) => setState({ success: false, error: e instanceof Error ? e : new Error(String(e)) }),
+    );
+  }, []);
+  return state;
+}
+
 export default function RootLayout() {
-  const { success, error } = useMigrations(expoDb, migrations);
+  const { success, error } = useDbReady();
   const [fontsLoaded, fontError] = useFonts(RUNTIME_FONTS);
   // Android has Inter linked into the APK at build time (expo-font plugin, app.json), so it never waits here.
   // Elsewhere: fall back to the system font rather than block the app.

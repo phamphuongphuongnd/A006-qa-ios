@@ -3,7 +3,7 @@ import { useLocalSearchParams, useNavigation, usePreventRemove } from 'expo-rout
 import { router } from '@/services/router';
 import { Briefcase, FileText, User, X } from '@/ui/icons';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { db } from '@/db/client';
@@ -150,6 +150,13 @@ export default function CaptureScreen() {
       hide.remove();
     };
   }, []);
+  // QA-100 OLD-1: on short screens (360×640dp) the number pad leaves ~390dp; the helper lines go while it is up so the
+  // amount keeps its room (it had shrunk to ~4px).
+  const { height: windowHeight } = useWindowDimensions();
+  const tight = keyboardUp && windowHeight < 720;
+  // QA-100 OLD-2: before Android 11 the keyboard height RN reports leaves out the nav bar the app draws behind
+  // (edge-to-edge), so the calculator row ended up half under the keyboard.
+  const keyboardOffset = Platform.OS === 'android' && Number(Platform.Version) < 30 ? insets.bottom : 0;
 
   const close = () => setLeaving(true);
 
@@ -255,7 +262,7 @@ export default function CaptureScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.surface, paddingTop: insets.top }}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={keyboardOffset}>
         {/* Top row: close · Expense|Income · date chip */}
         <View style={[styles.top, { paddingHorizontal: Platform.OS === 'ios' ? GUTTER : 12 }]}>
           <IconButton icon={X} label={t('common.close')} onPress={() => (dirty ? setConfirmDiscard(true) : close())} />
@@ -304,6 +311,7 @@ export default function CaptureScreen() {
                 v="amountTyped"
                 c={amount.shownMinor > 0 ? tone : 'textTertiary'}
                 adjustsFontSizeToFit
+                minimumFontScale={0.5}
                 numberOfLines={1}
                 maxFontSizeMultiplier={1.2}
                 style={{ flexShrink: 1 }}>
@@ -340,7 +348,7 @@ export default function CaptureScreen() {
           />
         </Pressable>
 
-        <View style={{ paddingHorizontal: GUTTER, paddingBottom: keyboardUp ? 10 : 12 + insets.bottom, gap: 12 }}>
+        <View style={{ paddingHorizontal: GUTTER, paddingBottom: keyboardUp ? 10 : 12 + insets.bottom, gap: tight ? 8 : 12 }}>
           {chipMinor !== null ? (
             <ReceiptSaysChip
               minor={chipMinor}
@@ -411,9 +419,11 @@ export default function CaptureScreen() {
                   {scopeOn ? t('common.work') : t('common.personal')}
                 </Txt>
               </Pressable>
-              <Txt maxFontSizeMultiplier={1.4} numberOfLines={2} center style={{ maxWidth: 150, fontSize: 13, fontFamily: fonts.semibold }} c="textSecondary">
-                {scopeOn ? t('capture.tapForPersonal') : t('capture.tapForWork')}
-              </Txt>
+              {tight ? null : (
+                <Txt maxFontSizeMultiplier={1.4} numberOfLines={2} center style={{ maxWidth: 150, fontSize: 13, fontFamily: fonts.semibold }} c="textSecondary">
+                  {scopeOn ? t('capture.tapForPersonal') : t('capture.tapForWork')}
+                </Txt>
+              )}
             </View>
             <RoundButton
               icon={FileText}
@@ -440,12 +450,14 @@ export default function CaptureScreen() {
             </ScrollView>
           ) : null}
 
-          {slots.left !== null ? <PhotosLeft left={slots.left} low={slots.low} /> : null}
+          {slots.left !== null && !tight ? <PhotosLeft left={slots.left} low={slots.low} /> : null}
 
           <Button label={t('common.save')} variant={type} full disabled={amount.minor <= 0} onPress={save} />
-          <Txt v="caption" c="textTertiary" center style={{ marginTop: -4, fontFamily: fonts.regular }}>
-            {t('capture.noCategory')}
-          </Txt>
+          {tight ? null : (
+            <Txt v="caption" c="textTertiary" center style={{ marginTop: -4, fontFamily: fonts.regular }}>
+              {t('capture.noCategory')}
+            </Txt>
+          )}
         </View>
         {keyboardUp && !noteOpen ? <CalcBar onOp={amount.op} /> : null}
       </KeyboardAvoidingView>
@@ -506,7 +518,7 @@ function Caret({ color }: { color: string }) {
 const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingTop: 10, paddingBottom: 6 },
   dateChip: { minHeight: 36, borderRadius: 18, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center', maxWidth: 150 },
-  middle: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 20 },
+  middle: { flex: 1, minHeight: 88, alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 20 },
   amountRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   amountBox: { borderRadius: 20, paddingHorizontal: 16, paddingVertical: 6, alignItems: 'center', maxWidth: '100%' },
   noteLine: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2, maxWidth: '100%' },

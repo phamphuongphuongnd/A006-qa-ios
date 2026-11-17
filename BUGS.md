@@ -231,3 +231,19 @@
   Sort servers: we never see your data", permStays "Your route is never sent to us", 4 câu "lives only on this phone" → "kept on this
   phone", `docs/privacy.html` thêm mục "Outside services" + System backup + nightly folder; product.md §F-01/S-07a/§11.
   ⏳ Đăng bản privacy mới lên trang công khai + Data safety: phần store, chờ Phương.
+- [ ] **B-57** 🟠 (QA OLD-1, phiên B) Màn nhập khoản trên màn thấp 360×640dp (API 26, và API 30 đặt 720×1280@320): khi bàn phím số mở,
+  số tiền đang gõ co còn ~4px / biến mất — `middle` `flex: 1` không có `minHeight`, hàng Photo/Work/Note + gợi ý + "20 of 20 free photos"
+  + Save + chú thích + CalcBar chiếm hết ~390dp. Bằng chứng `qa-runs/android-old/_smoke26/17_expense_typed.png`. Sửa (`capture.tsx`):
+  màn cao < 720dp khi bàn phím mở → ẩn "Tap for Personal", "N of 20 free photos", "No category needed…", gap 8; `middle` `minHeight: 88`;
+  số tiền `minimumFontScale 0.5`. ⏳ chờ phiên B thử lại bằng APK mới.
+- [ ] **B-58** 🟡 (QA OLD-2) Android 8: hàng phép tính (CalcBar) bị bàn phím che nửa dưới (API 30 cùng cỡ màn không bị). Nghi: RN báo chiều
+  cao bàn phím không gồm thanh điều hướng app vẽ phía sau (edge-to-edge) trước Android 11 → `KeyboardAvoidingView` bù thiếu. Sửa thử:
+  `keyboardVerticalOffset = insets.bottom` khi Android < 11 (`capture.tsx`). ⏳ chờ phiên B kiểm trên API 26 (giả thuyết, chưa xác nhận).
+- [ ] **B-59** 🟠 (QA OLD-4, mở rộng) Migration DB chỉ chạy trong `app/_layout.tsx` (`useMigrations`), trong khi Android chạy JS **không cần
+  màn** cho GPS chuyến (`TRIP_TASK`), tín hiệu chuyến tự động (headless `TRIP_DETECT_TASK`), sao lưu đêm, widget, và `onActive` 2 s sau khi mở.
+  Lần mở đầu: log `[auto-trip] sync failed: no such table: settings` (API 26/30). Nặng hơn: **sau mỗi bản cập nhật có migration mới**, trước
+  khi tài xế mở app, các tác vụ nền chạy trên schema cũ → điểm GPS / chuyến tự động / sao lưu đêm / widget lỗi âm thầm. Sửa: `src/db/migrate.ts`
+  `ensureMigrated()` (chạy 1 lần mỗi runtime, lỗi thì thử lại), `_layout` dùng chung, mọi điểm vào nền `await ensureMigrated()`
+  (`backgroundTask.ts` ×3, `nightlyTask.ts`, `widgets/register.ts`). ⏳ thử: cài mới (logcat không còn "no such table") + cập nhật đè.
+- [ ] **B-60** 🟡 (QA OLD-3) 360dp: nút nổi "+" che nửa phải nút "Actual costs" trong thẻ "Choose how you claim your vehicle" (Reports) ở vị trí
+  mặc định; cuộn lên thì bấm được (đệm 100dp). ⏳ chờ Phương chọn cách xử lý.
