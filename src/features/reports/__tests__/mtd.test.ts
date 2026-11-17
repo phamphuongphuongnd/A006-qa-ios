@@ -256,6 +256,14 @@ describe('FreeAgent (CSV)', () => {
     // An engine size that doesn't fit the type is corrected (electric → "All").
     expect(fixEngineSize({ engineType: 'Electric (Home charger)', engineSize: 'Over 2000cc' }).engineSize).toBe('All');
   });
+
+  it('B-55: electric journeys before 1 Sep 2025 say plain "Electric"', () => {
+    const ev = { engineType: 'Electric (Home charger)' as const, engineSize: 'All' };
+    const [mi] = freeAgentMileageCsv('Dan Walker', [{ at: at(2025, 8, 31), miles: 10, purpose: 'Evri' }, { at: at(2025, 9, 1), miles: 12, purpose: 'Evri' }], ev, 'mileage');
+    const l = lines(mi);
+    expect(l[1]).toBe('Dan Walker,31/08/2025,Evri,10.0,Car,Electric,All,1');
+    expect(l[2]).toBe('Dan Walker,01/09/2025,Evri,12.0,Car,Electric (Home charger),All,1');
+  });
 });
 
 describe('export kinds (free vs Pro, F-15)', () => {

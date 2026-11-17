@@ -197,6 +197,10 @@
   khi chữ lớn; lời chào `numberOfLines`/`adjustsFontSizeToFit` hoặc huy hiệu xuống dòng dưới.
   — sửa: `Screen` tiêu đề `numberOfLines={2} adjustsFontSizeToFit` + vùng headerRight co được (`maxWidth: '62%'`), Home
   huy hiệu + nút Settings xuống dòng khi hẹp; Miles dòng giờ 2 dòng + test `largeText.test.ts` (B-54). Chưa thử A13 ở chữ 200%.
+- [x] **B-55** 🟡 FreeAgent mileage CSV: xe điện luôn ghi "Electric (Home charger)" / "(Public charger)", nhưng FreeAgent chỉ nhận
+  2 loại này cho chuyến từ 01/09/2025; chuyến trước đó phải là "Electric" → xuất năm 2025/26 cho xe điện sẽ bị từ chối — tìm
+  ra khi khảo sát TC-318 (support.freeagent.com "Import mileage claims in bulk") — sửa: `freeAgentEngineTypeOn` theo ngày chuyến
+  + test `mtd.test.ts` "B-55".
 
 ### S6 (nhánh `s6-competitor-ideas`, thử trên giả lập theo Phương 2026-11-16)
 - [x] **B-S6a** 🟠 Ô "Parking & tolls" ở Thêm / Sửa chuyến: bấm vào thì ô và hàng "+ − × ÷" nằm sau nút Save + bàn phím →

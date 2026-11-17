@@ -338,6 +338,13 @@ export function freeAgentEngineSizes(t: FreeAgentEngineType): string[] {
   if (t === 'Petrol' || t === 'LPG') return ['Up to 1400cc', '1401-2000cc', 'Over 2000cc'];
   return ['All'];
 }
+/**
+ * B-55: FreeAgent only accepts the "(Home charger)" / "(Public charger)" electric types for journeys on or after
+ * 1 Sep 2025; earlier journeys must say plain "Electric" (FreeAgent "Import mileage claims in bulk").
+ */
+const FREEAGENT_EV_SPLIT = new Date(2025, 8, 1).getTime();
+export const freeAgentEngineTypeOn = (t: FreeAgentEngineType, at: number): string =>
+  t.startsWith('Electric') && at < FREEAGENT_EV_SPLIT ? 'Electric' : t;
 /** Most delivery vans: a 2.0–2.2 litre diesel. */
 export const DEFAULT_FREEAGENT_VEHICLE: FreeAgentVehicle = { engineType: 'Diesel', engineSize: 'Over 2000cc' };
 /** Keeps an engine size valid for its type (switching type resets the size to the first valid one). */
@@ -431,7 +438,9 @@ export function freeAgentMileageCsv(claimant: string, trips: FreeAgentTrip[], ve
         header,
         ...sorted
           .slice(i, i + FREEAGENT_MAX_ROWS)
-          .map((t) => csvRow([claimant, ukDate(t.at), t.purpose.trim() || 'Business miles', t.miles.toFixed(1), 'Car', v.engineType, v.engineSize, reclaim])),
+          .map((t) =>
+            csvRow([claimant, ukDate(t.at), t.purpose.trim() || 'Business miles', t.miles.toFixed(1), 'Car', freeAgentEngineTypeOn(v.engineType, t.at), v.engineSize, reclaim]),
+          ),
       ]),
     );
   }
