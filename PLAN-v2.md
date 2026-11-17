@@ -101,6 +101,13 @@
   release + product.md / privacy hứa "không mạng, dữ liệu không rời máy" → S1b phải giữ INTERNET ở release và sửa product.md
   (§0, §11, F-12/F-13 phác hoạ → bản đồ); P6 sửa privacy policy + Data safety.
 
+## P5 + P6 phần 1 — kết quả (2026-11-17)
+- P5: 363 case — 334 ✅ · 5 ⏭ (TC-294 NFC: A13 không có NFC) · ⏳ 6 chỉ Phương: TC-299/272 chạy xe, 344 TalkBack, 318 nhập MTDsorted/FreeAgent (đã đối chiếu tài liệu: khớp), 362 bản free, 335 mua thật. Thử M·P cùng Phương: chữ 200%, tối, máy bay, App lock, widget, reboot.
+- Sửa B-38…B-55 (B-45 🔴 sao lưu Drive đêm). B-51 (RN IntentModule busy loop) chốt **(c) giới hạn đã biết** cho 1.0 — release đo ≈0% CPU nền; theo dõi `batterystats` sau ca chạy xe, tái diễn → (b) module ghi đè IntentAndroid.
+- A13 đang chạy **bản release ký khoá debug** (`assembleRelease` sau `expo prebuild --clean`), chuyến tự động bật — để Phương chạy xe.
+- **Luật dừng (Phương 17/11):** xong P6 phần 1 → dừng; khoá ký, tag v1.0.0, AAB/iOS, listing, privacy/Data safety, nộp — chỉ làm khi Phương bảo.
+- Bàn giao: `side-session-notes/local_5b605898…/P5-handover-4.md` (+ `P5-Phuong-TalkBack-chay-xe.md`); phiên P6 local_1004d5bc đang chờ dữ liệu chạy xe.
+
 ## Rủi ro kỹ thuật (grill ở P1, kiểm ở P3)
 - Tự viết module dò chuyến: thử nhiều trên xe thật; Samsung tắt app nền → hướng dẫn tắt tối ưu pin trong app.
 - iOS không có sự kiện Bluetooth xe khi chạy nền → iOS dựa vào CoreMotion "automotive" + thay đổi vị trí đáng kể.

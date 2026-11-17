@@ -3,7 +3,7 @@
 > Brief tĩnh của app. **≤ 60 dòng, không ghi lịch sử** (lịch sử ở git + `memory/sessions/`).
 > Tiến độ: `CHECKLIST.md` · Tính năng: `product.md` · Test: `TESTCASES.md` · Lỗi: `BUGS.md`.
 
-**Đang ở:** bản 2 (`PLAN-v2.md`): P0–P4 xong, đã ghép S1b/S1c → **P5 Ghép & kiểm** `dev` `3e6f45e` (421 test): còn 50 case ⏳, lỗi B-41/42/43 chưa sửa, widget iOS chờ Appetize (build `ios-simulator-preview` afa5a63e), TalkBack + chạy xe cần Phương → rồi P6 (2026-11-16); **S6** (Q28–Q31, từ thử đối thủ) đã ghép `dev` `74b6daf`
+**Đang ở:** bản 2 (`PLAN-v2.md`): P0–P5 + S6 xong, **P6 phần 1 (sửa lỗi) xong** `dev` `e50362d` (470 test; B-51 = giới hạn đã biết). Còn ⏳ Phương: chạy xe (TC-299/272, bản release đã cài A13), TalkBack (344), nhập MTDsorted/FreeAgent (318), bản free (362, sau 23/11), mua thật (335, cần Play nội bộ), widget iOS Appetize. **Phần lên store chờ lời Phương** (2026-11-17)
 
 ## Brief
 - **Mã app / thư mục:** `A006-sundaysort` → `apps/A006-sundaysort/`
