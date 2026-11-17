@@ -247,3 +247,9 @@
   (`backgroundTask.ts` ×3, `nightlyTask.ts`, `widgets/register.ts`). ⏳ thử: cài mới (logcat không còn "no such table") + cập nhật đè.
 - [ ] **B-60** 🟡 (QA OLD-3) 360dp: nút nổi "+" che nửa phải nút "Actual costs" trong thẻ "Choose how you claim your vehicle" (Reports) ở vị trí
   mặc định; cuộn lên thì bấm được (đệm 100dp). Phương chọn **xếp dọc**: màn < 420dp → 2 nút thành 2 hàng, chừa lề phải 56dp cho nút + (`reports.tsx`). ⏳ thử 360dp.
+- [ ] **B-61** 🟡 (QA phiên A) Ô số tiền: bàn phím số Android có phím "." nhưng app bỏ dấu chấm (kiểu máy tính tiền) → gõ "7.5" ra £0.75,
+  "120" ra £1.20. Phương chốt **nhận dấu chấm**: `features/ocr/calc.ts` — toán hạng tiền có dấu chấm = số thập phân (≤ 2 số sau dấu, "," = "."),
+  không dấu vẫn kiểu máy tính tiền; toán hạng × ÷ bỏ dấu; test `calc.test.ts` "decimal point". Áp cho Ghi nhanh, Sửa khoản, Parking & tolls. ⏳ thử máy.
+- [ ] **B-62** 🟡 (QA phiên A) Xuất file rồi huỷ bảng chia sẻ (Back) → khoản vẫn "Exported on …" (đánh dấu khi tạo file, trước khi chia sẻ).
+  Phương chốt **hỏi lại như sao lưu**: `ExportPanel.tsx` sau bảng chia sẻ hiện "Did you send or save the files?" → chỉ "Yes, sent" mới
+  `markExported`; product.md Q29 sửa theo. ⏳ thử máy (cả Export từ tab Reports lẫn S-10).

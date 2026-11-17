@@ -108,6 +108,8 @@ export function ExportPanel({
   /** FreeAgent name + engine sheet: before exporting ('run') or from the "Change" link ('edit'). */
   const [freeagentAsk, setFreeagentAsk] = useState<'run' | 'edit' | null>(null);
   const [busy, setBusy] = useState(false);
+  /** QA-100: the share sheet never says whether the file went anywhere — ask before marking the period Exported (Q29). */
+  const [sentAsk, setSentAsk] = useState(false);
   const cancelled = useRef(false);
 
   const chosen = kinds.filter((k) => offered.includes(k) && (pro || !isProKind(k)));
@@ -164,8 +166,6 @@ export function ExportPanel({
         isCancelled: () => cancelled.current,
       });
       if (cancelled.current) return;
-      // Q29: everything of the period in these files is now "Exported".
-      markExported(db, period, includePersonal);
       if (!(await Sharing.isAvailableAsync())) {
         onClose({ message: t('export.shareUnavailable'), error: true });
         return;
@@ -173,7 +173,7 @@ export function ExportPanel({
       await withLockSuspended(() =>
         Sharing.shareAsync(out.file.uri, { mimeType: out.mimeType, UTI: out.uti, dialogTitle: t('export.title') }),
       );
-      onClose();
+      setSentAsk(true);
     } catch (e) {
       if (e instanceof ExportCancelled) return;
       if (e instanceof NothingToExport) onClose({ message: t('export.noReceipts') });
@@ -425,6 +425,33 @@ export function ExportPanel({
           }}
         />
       ) : null}
+      <Dialog
+        visible={sentAsk}
+        title={t('export.sentTitle')}
+        body={t('export.sentBody')}
+        onClose={() => {
+          setSentAsk(false);
+          onClose();
+        }}
+        actions={[
+          {
+            label: t('export.sentNo'),
+            onPress: () => {
+              setSentAsk(false);
+              onClose();
+            },
+          },
+          {
+            label: t('export.sentYes'),
+            onPress: () => {
+              // Q29: everything of the period in these files is now "Exported".
+              markExported(db, period, includePersonal);
+              setSentAsk(false);
+              onClose();
+            },
+          },
+        ]}
+      />
     </View>
   );
 }

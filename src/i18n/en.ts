@@ -476,6 +476,10 @@ export const en = {
     failed: "Couldn't create the file. Free up some storage and try again.",
     noReceipts: 'No receipt photos in this period.',
     shareUnavailable: "Sharing isn't available on this device.",
+    sentTitle: 'Did you send or save the files?',
+    sentBody: "Tap Yes only if they went to your accountant, email, Drive or Files. Then this period's entries and trips show as Exported.",
+    sentYes: 'Yes, sent',
+    sentNo: 'Not sent',
   },
   backup: {
     lastBackup: 'Last backup',

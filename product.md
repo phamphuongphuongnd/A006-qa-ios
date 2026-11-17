@@ -237,7 +237,8 @@ Mở từ: 2 nút lớn Home, FAB "+", widget, phím tắt icon app (long-press:
 
 **S-03 Quick capture** (sheet toàn màn hình, < 300ms, bàn phím số tự bật)
 - Hàng trên: "✕" · công tắc **"Expense" | "Income"** · chip ngày giờ "Now" (chạm chọn; đổi hiện "Tue 10 Nov, 13:05").
-- Số tiền rất lớn "£0.00", gõ "1250" → "£12.50".
+- Số tiền rất lớn "£0.00", gõ "1250" → "£12.50". Gõ dấu chấm (bàn phím Android có) thì hiểu là số thập phân: "7.5" → "£7.50",
+  "120." → "£120.00", tối đa 2 số sau dấu (Phương chốt 2026-11-17, QA-100).
 - **Máy tính trong ô số tiền** **[Mới]** (Q20): bàn phím có thêm hàng "+ − × ÷"; gõ "12.50+4.20" hiện biểu thức nhỏ phía trên
   và số lớn "= £16.70"; Save lưu kết quả. Biểu thức lỗi → số lớn mờ + chữ "Check the sum".
 - Hàng 3 nút tròn 56dp:
@@ -651,7 +652,8 @@ Ghép từ thẻ / sheet / chip / dòng có sẵn của mockup v2 (như Q26/Q27)
 - Báo cáo không đổi: vẫn là khoản chi "Parking…" cộng ngoài mức dặm (X2).
 
 **Q29 · Đánh dấu đã xuất** (MileIQ "Mark drives as reported") — S-04, S-07, S-05, S-07c, S-10
-- Mỗi lần xuất file ở S-10 (mọi loại, free lẫn Pro) xong → khoản / chuyến trong kỳ đó được ghi "đã xuất lúc …".
+- Mỗi lần xuất file ở S-10 (mọi loại, free lẫn Pro) xong → sau bảng chia sẻ hỏi "Did you send or save the files?" (Yes, sent /
+  Not sent) như sao lưu; chỉ "Yes, sent" mới ghi khoản / chuyến trong kỳ "đã xuất lúc …" (Phương chốt 2026-11-17, QA-100).
 - Entries / Miles: nhãn nhỏ "Exported" (cạnh nhãn Auto/Recurring). S-05 / S-07c: dòng "Exported on 12 Nov".
 - Sửa / xoá / tách / gộp khoản đã xuất → dòng báo dưới tiêu đề (không chặn): "Already in your export of 12 Nov. Export
   again to include this change." Từ lúc đó khoản tính là "changed since export".
