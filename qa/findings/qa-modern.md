@@ -47,6 +47,16 @@ Cài đặt gốc từng máy: `qa-runs/modern/_baseline/`.
   Gợi ý: khi `accuracy === 'coarse'` → coi như `needs_permission` có lời riêng ("Turn on Precise location to measure miles") + mở cài đặt;
   màn chuyến khi > 60 s không có điểm tốt → nêu lý do. Áp cho cả chuyến tự động (Pro) nếu dùng chung đường quyền.
 
+### MOD-7 🟠 Chạm đúp "Save" ở màn nhập khoản → lưu 2 khoản trùng
+- **Máy/persona:** Fold mở, P056 (US, double_tap_save, chữ 1.3, tối, edge_delay), runner `j_double_tap_save`: gõ 5.55 → 2 lệnh
+  `input tap` liền nhau lên nút Save (≈0,2 s cách nhau, như người dùng chạm đúp).
+- **Kỳ vọng:** 1 khoản; "to sort" +1; Out tuần +$5.55. **Thực tế:** "29 entries to sort" (trước 27), Out tuần $56.39 → **$67.49 = +2 × $5.55**.
+- **Bằng chứng:** `qa-runs/modern/P056/21-after-double-tap.png`, `result.json` (verify_numbers trước đó khớp: Out $56.39, 27 to sort).
+- **Nguyên nhân gốc:** `src/app/capture.tsx:199-249` — chốt `savingRef` có, nhưng khi không có ảnh thì `save()` chạy đồng bộ hết và
+  **`savingRef.current = false` ở dòng 247 trước `close()`** (dòng 249). Màn còn gắn trong lúc chuyển cảnh đóng → chạm thứ hai thấy
+  `savingRef=false`, `amount.minor` vẫn 555 → `createEntry` lần nữa. (Bật "Keep adding" thì `reset()` xoá số nên không trùng.)
+  Gợi ý: chỉ mở lại chốt khi `keep` (sau `reset()`), còn khi `close()` thì giữ `savingRef=true`; hoặc `disabled` nút Save khi đang lưu.
+
 ### MOD-2 🟠 (mở rộng B-57 / OLD-1) Màn cao nhưng chữ 200% → số tiền đang gõ co còn ~6px
 - **Máy:** emulator-5562 Pixel 9 Pro XL **997dp cao**, `font_scale 2.0`, nền tối, persona P005.
 - **Bước:** Home → Expense → chạm số tiền (bàn phím số mở) → gõ `12.34`.
@@ -83,14 +93,53 @@ Cài đặt gốc từng máy: `qa-runs/modern/_baseline/`.
   định với chữ `fontSize 12` không giới hạn `maxFontSizeMultiplier` (`:372`). Gợi ý: nhãn `minWidth` + `flexShrink: 0` hoặc xếp nhãn lên
   trên khi `fontScale ≥ 1.6`; khung ảnh `minWidth/minHeight` thay cho kích thước cố định hoặc `maxFontSizeMultiplier={1.3}` cho chữ trong khung.
 
+### MOD-8 🟡 Home: "2037 entries to sort" không có dấu phẩy nghìn, nơi khác lại có ("5,006 entries", "2,011 entries")
+- P098 Fold (`qa-runs/modern/P098/08-home.png`); màn khôi phục/hộp đổi vùng dùng `formatCount`. Nguyên nhân: `src/app/(tabs)/index.tsx:115`
+  truyền `count: data.unsorted` thô vào `t('home.toSort')`. Sửa: `formatCount(data.unsorted)` (như `src/app/backup.tsx:34`).
+
 ### MOD-5 🟡 Nhỏ, ghi lại cho đủ
+- Danh sách Entries: tiêu đề ngày của **năm trước** không ghi năm — "MON 17 NOV" (2025) nằm ngay dưới "TODAY" (Tue 17 Nov 2026)
+  (`qa-runs/modern/m4/fold-p083-search-hyperlink.png`). Gợi ý: thêm năm khi khác năm hiện tại.
 - Hộp "Discard this entry?" khi đã gắn 2 ảnh vẫn ghi "$0.00 expense won't be saved." — không nhắc ảnh sẽ mất (`fold-photo-*.png`).
 - Thư viện ảnh (Photo Picker) chỉ mở được bằng **giữ lâu** nút Photo (`capture.tsx:409`) — khó phát hiện. Photo Picker chạy đúng, không
   xin quyền ảnh; bỏ khoản thì bộ đếm "20 of 20 free photos" trả lại đúng.
 - `android:enableOnBackInvokedCallback="false"` (manifest) → không có hiệu ứng back dự đoán của Android 16; back cử chỉ vẫn đúng.
 - Màn nhập khoản: caret nhấp nháy làm `uiautomator dump` báo "could not get idle state" (chỉ ảnh hưởng công cụ test, không phải người dùng).
 
-## 3. Điểm riêng máy đời mới (mục 4 kế hoạch)
+## 3. Persona (runner `qa/tools/run_persona.py` của phiên A, dùng nguyên bản; `--out modern`)
+
+Hồ sơ máy: `--profile-override pixel9proxl` / `pixel_fold_open` (tên lạ → runner không đổi `wm size/density`, chỉ áp chữ/tối/múi giờ/mạng
+của persona). Fold chạy qua lớp bọc `run_fold.py` (scratchpad) chỉ cắt dòng "[Warning] Multiple displays" khỏi `screencap` — không đổi logic.
+Kết quả: `qa-runs/modern/<id>/result.json`. Lượt hỏng vì máy chủ cạn bộ nhớ (13:30, adb/emu treo) để riêng ở `qa-runs/modern/_infra/` và
+đã chạy lại — không tính.
+
+| Persona | Máy | Vùng · hành vi · chữ · nền · mạng | Kết quả | Ghi chú (đã xem ảnh/kiểm tay) |
+|---|---|---|---|---|
+| P002 | XL | US · quick_capture_only · 1.3 · tối · slow_3g | ✅ 10/10 | |
+| P008 | XL | US · weekly_sorter · 2.0 · tối · airplane | ❌ restore, verify | Runner: bộ chọn file không mở sau lần bấm. **Làm tay cùng điều kiện (chữ 2.0, tối, máy bay) → bộ chọn mở bình thường** (`m4/xl-p008-picker.png`). Không tái hiện → ⏭, nghi runner bấm lúc màn đang chuyển |
+| P015 | XL | UK · never_sorts · 1.3 · sáng · drops_midway | ❌ journey | Runner giả định tuần này trống; dữ liệu mẫu đã có 1 khoản thu tuần này (`expected.weekIn=4217`) → "0 of 4" là **đúng** |
+| P019 | XL | UK · split_merge_heavy · 1.3 · 2000 khoản · airplane | ✅ 10/10 | |
+| P025 | XL | UK · gps_trips · 2.0 · edge_delay | ✅ 10/10 | chuyến 1.9 mi. (Lượt 1 ra 0.0 mi lúc máy chủ quá tải, lệnh `emu geo fix` treo → bỏ) |
+| P029 | XL | UK · manual_miles_odometer · 2.0 · tối | ❌ journey | App hiện đúng "= 128 mi" (`P029/21-odometer.png`); runner đọc nhầm nút "A → B · PRO" |
+| P031 | XL | UK · year_end_export · 1.3 · 2000 khoản | ❌ journey | App hỏi "442 entries aren't sorted → Export anyway / Sort first" (đúng thiết kế); runner không bấm "Export anyway". Luồng xuất đã kiểm tay ✅ trên Fold (5.006 khoản) |
+| P044 | XL | US · pro_trial · 1.3 · tối · airplane · 2000 khoản | ✅ 10/10 | |
+| P050 | XL | US · wipe_all · 2.0 · tối | ❌ verify | File mẫu P050 có 0 khoản (personas.json ghi 30) → runner bỏ khôi phục nhưng vẫn tìm "Income" ở Reports trống. App đúng ("No data for this period") |
+| P054 | XL | US · region_switch · 2.0 · dữ liệu UK 2011 khoản | ❌ journey | Runner bấm "Change" khi ô tỷ giá trống (bàn phím không tự hiện) → app báo "Enter a rate like 1.27" (đúng). **Làm tay: gõ 1.27 → Change → US/USD/Jan–Dec, £81.43 → $103.42 ✅** (`m4/xl-region-*.png`) |
+| P037 | Fold mở | UK · backup_restore_other_phone · 2.0 · 2000 khoản | ✅ 10/10 | |
+| P056 | Fold mở | US · double_tap_save · 1.3 · tối · edge_delay | ❌ journey | **Lỗi app thật → MOD-7** (chạm đúp lưu 2 khoản) |
+| P062 | Fold mở | US · kill_mid_save · 2.0 · tối | ✅ 10/10 | force-stop ngay sau Save: khoản vẫn còn |
+| P066 | Fold mở | US · revoke_permissions · 2.0 · slow_3g | ✅ 10/10 | thu hồi quyền giữa chuyến → Home báo "Your trip stopped recording … Saved 0.3 mi" |
+| P073 | Fold mở | UK · low_storage · 1.3 | ✅ 10/10 | /data còn 30 MB: nhập khoản + sao lưu vẫn chạy |
+| P077 | Fold mở | UK · clock_tax_boundary · 1.3 · tối | ✅ 10/10 | 5/4/2027 23:58 → 6/4: tiêu đề 2026/27 → 2027/28 |
+| P083 | Fold mở | UK · weird_text · 2.0 · tối · airplane | ❌ journey | Runner kẹt ở nút Save (tìm theo màu). **Làm tay cùng điều kiện: lưu £4.44 ✅, ghi chú `=HYPERLINK("http://x.example","click") 100% \ back` lưu và hiện nguyên văn ✅, tìm "100%" ra đúng 4 dòng (không khớp tất cả) ✅** (`m4/fold-p083-*.png`) |
+| P087 | Fold mở | UK · app_lock · 2.0 | ✅ 9 + ⏭ 1 | app_lock ⏭: cần khoá màn hình + vân tay trên máy ảo (cài đặt bảo mật — không tự đặt) |
+| P091 | Fold mở | UK · recurring_rules · 2.0 · slow_3g | ✅ 10/10 | người dùng free thấy cổng Pro đúng |
+| P098 | Fold mở | US · large_history · 1.3 · tối · 5.006 khoản | ❌ verify (1 dòng) | Home "2037 entries to sort" không có dấu phẩy nghìn (runner mong "2,037") → **MOD-8 🟡**. Các số khác khớp; Entries 6,6 s, tìm 8,0 s, Reports 6,9 s (gồm thời gian dump adb) |
+
+**Tổng:** 20 persona có `result.json` thật (10 XL + 10 Fold). Lỗi app thật từ persona: MOD-7 🟠, MOD-8 🟡. Các ❌ còn lại đều đã kiểm tay
+và là lỗi runner (đã gửi danh sách cho phiên A) hoặc không tái hiện (P008). ⏭: P087 app_lock (cần khoá màn hình hệ thống).
+
+## 4. Điểm riêng máy đời mới (mục 4 kế hoạch)
 
 | Kiểm | Máy | Kết quả |
 |---|---|---|
