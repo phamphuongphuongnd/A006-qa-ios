@@ -367,7 +367,7 @@
 | TC-342 | Dữ liệu | Migration 0001–0003 | Chạy trên DB bản 1 có dữ liệu | T migrationV2 + E | ✅ T migrationV2; M: migration 0003 chạy trên dữ liệu thật (TC-215) |
 | TC-343 | Quyền | Manifest release | Giữ INTERNET, BILLING, NFC, ACTIVITY_RECOGNITION…; không quyền thừa | E | ✅ plugin `withReleasePermissions.js` giữ INTERNET, BILLING, NFC, ACTIVITY_RECOGNITION…, chỉ gỡ overlay / bộ nhớ / push / badge; bản dev trên A13 có NFC, BILLING, BLUETOOTH_CONNECT, CAMERA. ⚠ `android/` cục bộ sinh 13/11 còn gỡ INTERNET → P6 build release cục bộ phải `npx expo prebuild --clean` (EAS tự prebuild); kiểm lại manifest của AAB release |
 | TC-344 | TalkBack | Kịch bản Q23 qua 6 màn | Đọc đúng nhãn | P | ⏳ |
-| TC-345 | Chữ 200% | Màn mới bản 2 (Sort split, S-19, S-07d, A → B, S-08b) | Không cắt chữ | E | ⏳ |
+| TC-345 | Chữ 200% | Màn mới bản 2 (Sort split, S-19, S-07d, A → B, S-08b) | Không cắt chữ | E | ❌ B-52 (17/11, chữ 2.0: Miles nút ⋯ bị đẩy khỏi màn, dòng chuyến mất số dặm, chip A → B tràn, Split "Choo..") → đã sửa c77f635, thử lại ✅; còn 🟡 B-54 (giờ chuyến bị nhãn Exported cắt, lời chào Home ngắt chữ). S-19, S-07d, S-08b, Backup, thẻ Sort đạt |
 | TC-346 | Tối | Màn mới bản 2 | Đúng màu, đọc được | E | ✅ M·P (Phương bật Chế độ tối 17/11; Theme trong app tạm để System rồi trả về Light như cũ): Home, Sort + Split, Miles, chi tiết chuyến, A → B, S-19 Pro, S-07d, S-08b, Reports đúng màu tối, chữ đọc rõ |
 | TC-347 | Offline | Mọi luồng trừ A → B / bản đồ | Chạy bình thường | E | ✅ M·P (Phương bật chế độ máy bay 17/11, wifi tắt): ghi khoản £1.23 → "Saved · £1.23 expense"; Sort, Miles, Reports đủ số; Export 4 file (CSV + PDF) → zip + bảng chia sẻ; khoản thử đã xoá |
 

@@ -170,7 +170,7 @@
   patch-package `IntentModule.kt` — trong `onHostResume` nếu Activity vẫn null thì `resolve(null)` thay vì chờ lại; build
   native mới, để máy chạy nền qua đêm rồi đo `top -H`. **P6:** `android/` cục bộ sinh ngày 13/11 (manifest release cũ còn gỡ
   INTERNET) → trước khi build native / release cục bộ chạy `npx expo prebuild --clean` (EAS tự prebuild).
-- [ ] **B-52** 🟠 Chữ 200% (font_scale 2.0, Phương bật) — case TC-345 — S-19, S-07d, S-08b, Backup, thẻ Sort (hàng hành động
+- [x] **B-52** 🟠 Chữ 200% (font_scale 2.0, Phương bật) — case TC-345 — S-19, S-07d, S-08b, Backup, thẻ Sort (hàng hành động
   ghim đáy, B-43) đạt. Sai: (1) 🟠 Miles: tiêu đề "Miles · Tax year 2026/27 ⌄" đẩy nút ⋯ "More" ra ngoài mép phải (còn 14 px)
   → không mở được menu Automatic trips / NFC tag / Odometer check; (2) 🟡 Miles: dòng chuyến cắt "Fri 13 Nov ·.." mất số dặm;
   (3) 🟡 A → B: chip nơi hay đến "Wakefield Westgate Railwa…" tràn quá mép phải, công tắc "Odometer | Distance | A → B" ép
@@ -178,6 +178,8 @@
   (tc345/miles.png, ab.png, split.png). — sửa (code, chờ thử lại ở chữ 200% cuối phần C): Miles nhãn năm co lại
   (`flex: 1, minWidth: 0` + `numberOfLines={1}`), tiêu đề dòng chuyến 2 dòng; `Chip` `maxWidth: '100%'` + chữ `flexShrink`;
   nút danh mục ở Split `adjustsFontSizeToFit` + test `src/ui/__tests__/largeText.test.ts`
+  — thử A13 lại ở chữ 200% (17/11): Miles "Tax year 20.." + nút ⋯ mở menu Automatic trips / NFC tag / Odometer check;
+  dòng chuyến "Fri 13 Nov · / 2.9 mi"; chip "Wakefield Westgate Rail.." trong mép; Split "Choose" đủ chữ.
 - [x] **B-53** 🟠 App lock: bấm "Unlock" không có phản hồi (Phương báo 17/11 sau TC-295) và app không khoá lại nữa (để nền
   68 giây vẫn mở) — tái hiện: App lock bật → app khoá → `sundaysort://trip/toggle` 2 lần liền (như chạm thẻ NFC) → hộp vân
   tay bị intent mới cắt ngang, `authenticateAsync` không trả kết quả → `busy` + `withLockSuspended` kẹt. Lần thử lại hộp vân
@@ -186,6 +188,9 @@
   Chưa thử A13 (cần tái hiện lúc kẹt). Hệ quả thêm thấy 17/11: toggle lần 2 tới lúc hộp vân tay đang mở thì bị bỏ qua → chuyến NFC
   vẫn chạy (GPS bật) tới khi toggle lại; widget hiện đúng "End trip · 0.0 mi". Đề xuất P6: hàng đợi deep link toggle chạy sau khi hộp
   vân tay đóng.
+- [ ] **B-54** 🟡 (P6) Chữ 200% còn: Miles dòng chuyến giờ bị cắt "07:4.." khi có nhãn "Exported" (S6); Home lời chào ngắt giữa
+  chữ "Mor / ning, driver" vì huy hiệu "Trial · 7 days left" chiếm chỗ — case TC-345. Đề xuất: nhãn Exported xuống dòng riêng
+  khi chữ lớn; lời chào `numberOfLines`/`adjustsFontSizeToFit` hoặc huy hiệu xuống dòng dưới.
 
 ### S6 (nhánh `s6-competitor-ideas`, thử trên giả lập theo Phương 2026-11-16)
 - [x] **B-S6a** 🟠 Ô "Parking & tolls" ở Thêm / Sửa chuyến: bấm vào thì ô và hàng "+ − × ÷" nằm sau nút Save + bàn phím →
