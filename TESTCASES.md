@@ -311,7 +311,7 @@
 | TC-286 | F-12 Q2 | Chuyến tay đứng yên ≥ 45 phút | "Still on a trip?" · "End trip" (lùi giờ) / "Keep going" | T autoEngine, longTripReminder | ✅ T (jest 414 xanh 16/11) |
 | TC-287 | F-12 Q2 | Mất vị trí ≥ 10 phút khi đang chạy | "Trip isn't recording" | T autoEngine | ✅ T (jest 414 xanh 16/11) |
 | TC-288 | F-12 F-18 | Hết Pro / dùng thử khi tự động đang bật | Tự động tắt, báo ngay, về Start/Stop tay | T proAndVehicle + E | ✅ T proAndVehicle + M: tự động đang bật → Pretend expired → Home về "Start trip", thông báo "Automatic trips are off" (đã trả Pro thật, tắt tự động) |
-| TC-289 | F-12 | Khởi động lại máy (BOOT_COMPLETED) | Dò tự động đăng ký lại | E | ⏳ |
+| TC-289 | F-12 | Khởi động lại máy (BOOT_COMPLETED) | Dò tự động đăng ký lại | E | ✅ M (bản release, 17/11): chuyến tự động bật → `adb reboot` → máy lên 09:56:30, Phương mở khoá → hệ thống tự mở tiến trình Sunday Sort lúc 09:56:51 với lý do BOOT_COMPLETED (không mở app) → BootReceiver đăng ký lại, logcat không có "SundayTripDetect … re-register failed" |
 | TC-290 | F-12 Q6 | S-07c tách Personal segment | Chạm điểm dừng → 3 lựa chọn; "Work x mi · Personal y mi"; Undo | T tripsX + E | ✅ T tripsX + routeMap ("splits Work / Personal runs…"). ⏭ M: chuyến thử không có điểm dừng → checklist chạy xe |
 | TC-291 | F-12 Q19 | Sửa giờ / dặm chuyến GPS | Nhãn "Edited" ở S-07c, Miles, CSV; "Recorded: …" giữ số gốc | T tripsX + E | ✅ M: sửa dặm chuyến Auto 14.6 → 15.0 → nhãn "Edited" + "Recorded: 12:00–12:18 · 14.6 mi"; CSV T reportCsv ("edited times") |
 | TC-292 | F-12 Q18 | S-07g máy không NFC | "This phone doesn't support NFC tags." | E | ✅ M: A13 không có NFC (`pm list features`) → S-07g "This phone doesn't support NFC tags." |
