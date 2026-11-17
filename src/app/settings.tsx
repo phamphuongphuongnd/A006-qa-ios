@@ -63,6 +63,8 @@ export default function SettingsScreen() {
   const [convertCount, setConvertCount] = useState(0);
   const [rateText, setRateText] = useState('');
   const [rateError, setRateError] = useState(false);
+  // QA-100 A13-1: the hint and the error must show the same example (US → UK said "e.g. 0.79", then "like 1.27").
+  const rateExample = region === 'UK' ? '1.27' : '0.79';
   const [howSheet, setHowSheet] = useState(false);
   const [deleteStep, setDeleteStep] = useState<0 | 1 | 2>(0);
   const [deleteText, setDeleteText] = useState('');
@@ -437,8 +439,8 @@ export default function SettingsScreen() {
             }}
             keyboardType="decimal-pad"
             autoFocus
-            placeholder={region === 'UK' ? 'e.g. 1.27' : 'e.g. 0.79'}
-            error={rateError ? t('settings.rateError') : null}
+            placeholder={`e.g. ${rateExample}`}
+            error={rateError ? t('settings.rateError', { example: rateExample }) : null}
           />
         ) : null}
       </Dialog>

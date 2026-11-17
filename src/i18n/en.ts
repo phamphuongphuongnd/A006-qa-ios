@@ -555,7 +555,7 @@ export const en = {
     changeRegionConvertOne:
       "Currency, tax year and form lines will switch. Your 1 entry in {from} will be converted to {to} at the rate below. This can't be undone, so back up first if you're not sure.",
     rateLabel: 'Exchange rate: 1 {from} = ? {to}',
-    rateError: 'Enter a rate like 1.27',
+    rateError: 'Enter a rate like {example}',
     change: 'Change',
     cancel: 'Cancel',
     logging: 'Logging',
