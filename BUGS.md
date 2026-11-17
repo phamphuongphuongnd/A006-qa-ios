@@ -273,3 +273,9 @@
   thấp hoặc chữ lớn (chiều cao / fontScale < 700) → hình còn 55%, đệm 16; tiêu đề `maxFontSizeMultiplier 1.6`. ⏳ iOS lượt 2.
   Ghi nhận (không sửa): log iOS "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện đọc đăng ký
   push từ keychain, app chỉ dùng thông báo local; theo dõi ở lượt 2 xem thông báo nhắc có hiện không.
+- [ ] **B-67** 🟠 (QA SPE-1, phiên D) Deep link `sundaysort://reports?from=-99999999999999999&to=0` treo app vĩnh viễn (luồng JS 100%, RAM tới OOM,
+  phải buộc dừng) — link BROWSABLE nên trang web/thẻ NFC bất kỳ mở được; `from=0&to=99999999999999999` treo ~190 s; Custom 1970→2026 với
+  20.000 khoản treo ~95 s. Gốc: `monthlySeries` `for(;;)` gặp ngày ngoài phạm vi Date → NaN → không dừng; `linkedPeriod` không chặn biên;
+  tìm tháng bằng `find` tuyến tính. Sửa: `saneReportRange` (từ 1/1/2000, ≤ 10 năm, ≤ hôm nay + 1 năm) cho deep link + ô Custom (lỗi "Choose up
+  to 10 years, from 2000 onwards.", From có minimumDate); `monthlySeries` dừng khi ngày không hợp lệ, tối đa 121 tháng, tìm nhị phân; test
+  `reports.test.ts` "SPE-1". ⏳ phiên D thử lại deep link.

@@ -435,6 +435,7 @@ export const en = {
     to: 'To',
     apply: 'Apply',
     customError: 'The end date must be on or after the start date.',
+    customRangeError: 'Choose up to 10 years, from 2000 onwards.',
     unsortedWarn: "{count} entries in this period aren't sorted yet",
     unsortedWarnOne: "1 entry in this period isn't sorted yet",
     sortNow: 'Sort now',

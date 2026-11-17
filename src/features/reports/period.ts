@@ -75,6 +75,18 @@ export const endOfDay = (at: number) => {
  */
 export const MTD_FIRST_TAX_YEAR = 2026;
 
+// QA-100 SPE-1: a link like sundaysort://reports?from=-99999999999999999&to=0 (or a 1970→2026 custom range) froze the
+// app. Report ranges are limited to 1 Jan 2000 … one year from today, at most 10 years long.
+export const REPORT_MIN_AT = new Date(2000, 0, 1).getTime();
+export const REPORT_MAX_YEARS = 10;
+export function saneReportRange(start: number, end: number, now = Date.now()): boolean {
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return false;
+  if (start < REPORT_MIN_AT || end > now + 366 * 86_400_000) return false;
+  const limit = new Date(start);
+  limit.setFullYear(limit.getFullYear() + REPORT_MAX_YEARS);
+  return end <= limit.getTime() + 86_400_000;
+}
+
 const ms = (y: number, m: number, d: number) => new Date(y, m, d).getTime();
 
 /** The four MTD quarters of a UK tax year: [start, end) each, standard or calendar. */

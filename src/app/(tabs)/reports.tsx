@@ -17,6 +17,8 @@ import {
   availableTaxYears,
   endOfDay,
   PERIOD_MODES,
+  REPORT_MIN_AT,
+  saneReportRange,
   periodFor,
   startOfDay,
   type MtdPeriodKind,
@@ -52,7 +54,7 @@ const grouped = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d
 function linkedPeriod(p: { from?: string; to?: string }): Period | null {
   const start = Number(p.from);
   const end = Number(p.to);
-  return p.from && p.to && Number.isFinite(start) && Number.isFinite(end) && end > start ? { start, end } : null;
+  return p.from && p.to && saneReportRange(start, end) ? { start, end } : null;
 }
 
 /**
@@ -526,7 +528,8 @@ function Row({ label, value, color }: { label: string; value: string; color: 'in
 function CustomPeriodSheet({ initial, onApply, onClose }: { initial: Period; onApply: (p: Period) => void; onClose: () => void }) {
   const [from, setFrom] = useState(new Date(initial.start));
   const [to, setTo] = useState(new Date(initial.end - 1));
-  const valid = startOfDay(from.getTime()) <= startOfDay(to.getTime());
+  const ordered = startOfDay(from.getTime()) <= startOfDay(to.getTime());
+  const valid = ordered && saneReportRange(startOfDay(from.getTime()), endOfDay(to.getTime()));
   return (
     <Sheet
       visible
@@ -540,11 +543,11 @@ function CustomPeriodSheet({ initial, onApply, onClose }: { initial: Period; onA
           onPress={() => onApply({ start: startOfDay(from.getTime()), end: endOfDay(to.getTime()) })}
         />
       }>
-      <DateField label={t('reports.from')} value={from} display={formatDate(from.getTime())} onChange={setFrom} maximumDate={to} />
+      <DateField label={t('reports.from')} value={from} display={formatDate(from.getTime())} onChange={setFrom} maximumDate={to} minimumDate={new Date(REPORT_MIN_AT)} />
       <DateField label={t('reports.to')} value={to} display={formatDate(to.getTime())} onChange={setTo} minimumDate={from} />
       {!valid ? (
         <Txt v="small" c="error">
-          {t('reports.customError')}
+          {ordered ? t('reports.customRangeError') : t('reports.customError')}
         </Txt>
       ) : null}
     </Sheet>
