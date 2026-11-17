@@ -37,6 +37,9 @@ import { xlsxBytes } from './xlsx';
 
 export class ExportCancelled extends Error {}
 export class NothingToExport extends Error {}
+/** QA-100 SPE-6: printing never returned on a big period — give up after this long and say so. */
+export class PdfTooBig extends Error {}
+const PDF_TIMEOUT_MS = 120_000;
 
 /** Below this we don't even try (PDF + photos can be several MB). */
 const MIN_FREE_BYTES = 25 * 1024 * 1024;
@@ -240,7 +243,13 @@ export async function buildExport(opts: {
       entries: entries.map((e) => ({ ...e, categoryName: catOf(e.categoryId)?.name ?? null })),
       generatedAt: Date.now(),
     });
-    const { uri } = await Print.printToFileAsync({ html });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const { uri } = await Promise.race([
+      Print.printToFileAsync({ html }),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new PdfTooBig()), PDF_TIMEOUT_MS);
+      }),
+    ]).finally(() => clearTimeout(timer));
     const tmp = new File(uri);
     const f = new File(dir, exportFileName('pdf', period.fileStem));
     await tmp.move(f, { overwrite: true });

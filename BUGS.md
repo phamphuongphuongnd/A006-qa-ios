@@ -307,3 +307,12 @@
   trên Android) — kẹt, phải đóng màn. Sửa: `features/ocr/refocus.ts` (blur rồi focus khung sau) cho Ghi nhanh, Sửa khoản, Parking & tolls.
 - [ ] **B-74** 🟡 (QA OLD-8, phiên B) Bộ nhớ máy đầy: Save ở Ghi nhanh không lưu, không báo gì (SQLITE_FULL bị nuốt). Sửa: báo "Couldn't save.
   Free up some storage on your phone and try again.", giữ số trên màn.
+- [ ] **B-75** 🟠 (QA OLD-7, phiên B) Bộ nhớ máy đầy → mở app là "Sunday Sort has stopped" (lặp lại tới khi xoá bớt): WorkManager (kéo vào bởi
+  expo-background-task + widget) khởi tạo lúc mở app, ghi DB riêng gặp SQLITE_FULL → `IllegalStateException`. Sửa: plugin
+  `plugins/withWorkManagerSafeInit.js` — `MainApplication` là `Configuration.Provider` với `setInitializationExceptionHandler` (ghi log, việc nền
+  bỏ qua, app vẫn mở), gỡ `WorkManagerInitializer` mặc định (manifest `tools:node="remove"`), thêm `androidx.work:work-runtime:2.10.5`;
+  `expo prebuild --clean` lại. ⏳ phiên B: đầy bộ nhớ → mở app 3 lần; còn chỗ → sao lưu đêm/widget vẫn chạy.
+- [ ] **B-76** 🟠 (QA SPE-6, phiên D) Xuất PDF kỳ dài (~8.000 khoản trở lên) treo mãi ở "Preparing your files…", WebView ~2,9 GB RAM, cả máy ì.
+  Gốc: mọi khoản in vào 1 trang HTML, `printToFileAsync` không giới hạn thời gian. Sửa: bảng Entries / Mileage log trong PDF tối đa 2.000 dòng +
+  dòng "Showing the first 2,000 of N entries. The full list is in the CSV export." (tổng vẫn tính đủ); in quá 120 s → báo "The PDF is taking too
+  long for this period. Pick a shorter period, or use the CSV." Test `reports.test.ts` "SPE-6". ⏳ phiên D thử lại 2 năm + 20k.

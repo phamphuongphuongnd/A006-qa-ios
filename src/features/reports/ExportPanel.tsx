@@ -18,7 +18,7 @@ import { useLive } from '@/state/useLive';
 import { fonts, radius, useTheme } from '@/theme';
 import { Badge, Button, Chip, ChipRow, Dialog, Field, IconButton, Sheet, Toggle, Txt } from '@/ui';
 
-import { buildExport, ExportCancelled, NothingToExport } from './buildExport';
+import { buildExport, ExportCancelled, NothingToExport, PdfTooBig } from './buildExport';
 import { exportChanges, markExported } from './exported';
 import { defaultExportKinds, FREE_KINDS, isProKind, kindsFor, MTD_KINDS, type ExportKind } from './exportDocs';
 import {
@@ -177,6 +177,7 @@ export function ExportPanel({
     } catch (e) {
       if (e instanceof ExportCancelled) return;
       if (e instanceof NothingToExport) onClose({ message: t('export.noReceipts') });
+      else if (e instanceof PdfTooBig) onClose({ message: t('export.pdfTooBig'), error: true });
       else onClose({ message: t('export.failed'), error: true });
     } finally {
       setBusy(false);
