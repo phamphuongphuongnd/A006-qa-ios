@@ -192,6 +192,15 @@
   Chưa thử A13 (cần tái hiện lúc kẹt). Hệ quả thêm thấy 17/11: toggle lần 2 tới lúc hộp vân tay đang mở thì bị bỏ qua → chuyến NFC
   vẫn chạy (GPS bật) tới khi toggle lại; widget hiện đúng "End trip · 0.0 mi". Đề xuất P6: hàng đợi deep link toggle chạy sau khi hộp
   vân tay đóng.
+  **Phần 2 (P6, 17/11):** tái hiện trên A13 bản release (App lock bật, khoá sau 1 phút, app ở nền 70 s) → toggle → hộp vân tay mở →
+  toggle lần 2 sau 1,5 s → chuyến vẫn chạy (thông báo trip-ongoing còn). Logcat: intent 2 tới lúc 10:27:24.88 khi toggle 1 còn đang bật
+  GPS (thông báo chuyến hiện lúc 26.06) → màn `/trip/toggle` vẫn đang mở nên expo-router coi là "đã ở đó", không chạy lại. Gốc không
+  phải hộp vân tay mà là 2 toggle sát nhau (hộp vân tay làm toggle 1 chậm hơn). Hộp vân tay không bị cắt ngang lần này.
+  — sửa: `src/app/+native-intent.tsx` (`redirectSystemPath`, gọi 1 lần cho mỗi deep link, cả mở nguội) đếm từng lần toggle;
+  `src/features/trips/toggleQueue.ts` chạy lần lượt; màn `trip/toggle` chạy hết hàng đợi rồi mới về Home + test
+  `src/features/trips/__tests__/toggleQueue.test.ts` — thử A13 (release, cài đè giữ dữ liệu): (1) toggle → hộp vân tay → toggle 2 →
+  chuyến tắt; (2) 2 toggle cách 0,3 s (intent 2 tới 48.075, trước khi GPS bật 48.279) → chuyến bật rồi tắt 49.117, không chuyến rác
+  trong Miles; Phương mở khoá vân tay bình thường.
 - [x] **B-54** 🟡 (P6) Chữ 200% còn: Miles dòng chuyến giờ bị cắt "07:4.." khi có nhãn "Exported" (S6); Home lời chào ngắt giữa
   chữ "Mor / ning, driver" vì huy hiệu "Trial · 7 days left" chiếm chỗ — case TC-345. Đề xuất: nhãn Exported xuống dòng riêng
   khi chữ lớn; lời chào `numberOfLines`/`adjustsFontSizeToFit` hoặc huy hiệu xuống dòng dưới.
