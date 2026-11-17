@@ -1,0 +1,14 @@
+# App still starts after everything above; last look at Home / Entries / Reports.
+appId: com.phiotron.sundaysort
+name: 99_final_state
+---
+- runFlow: common/home.yaml
+- takeScreenshot: ${PID}_99a_home
+- tapOn: "Entries.*"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_99b_entries
+- tapOn: "Reports"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_99c_reports

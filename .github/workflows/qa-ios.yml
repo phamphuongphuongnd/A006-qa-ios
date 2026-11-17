@@ -1,0 +1,241 @@
+name: QA iOS (QA-100)
+
+# QA-100 part C: Release build for the iOS Simulator (no signing, no secrets) + Maestro suite qa/maestro for every
+# persona with an `ios` device in qa/personas.json. Evidence (screenshots, app log, crash reports, result.json) is
+# uploaded as artifact qa-ios-<run_number>. Private repo: macOS minutes count x10 — keep runs few and targeted.
+on:
+  push:
+    branches: [qa-ios]
+    paths-ignore:
+      - '**.md'
+      - 'qa/findings/**'
+      - 'design/**'
+  workflow_dispatch:
+    inputs:
+      personas:
+        description: 'Comma list of persona ids (empty = every persona with an ios device)'
+        default: ''
+      ipad_personas:
+        description: 'Extra runs on iPad (app is iPhone-only → compatibility mode); empty = none'
+        default: 'P002-ipad,P041-ipad'
+      test_budget_min:
+        description: 'Stop starting new personas after this many minutes of testing'
+        default: '55'
+      runner:
+        description: 'macOS runner label'
+        default: 'macos-26'
+      parallel:
+        description: 'Run the small-iPhone and Pro Max lanes at the same time'
+        default: 'true'
+
+concurrency:
+  group: qa-ios
+  cancel-in-progress: true
+
+env:
+  MAESTRO_VERSION: '2.12.1'
+  MAESTRO_CLI_NO_ANALYTICS: '1'
+  MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED: 'true'
+  MAESTRO_DRIVER_STARTUP_TIMEOUT: '240000'
+
+jobs:
+  fixtures:
+    name: Persona backup files (Linux, cheap)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Write qa/fixtures/<id>.sundaysort for every persona
+        run: QA_WRITE_FIXTURES=1 npx jest src/qa --ci
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qa-fixtures-${{ github.run_number }}
+          path: qa/fixtures/*.sundaysort
+          retention-days: 5
+
+  ios:
+    name: iOS Simulator personas
+    needs: fixtures
+    runs-on: ${{ inputs.runner || 'macos-26' }}
+    timeout-minutes: 115
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        id: tool
+        run: |
+          xcodebuild -version
+          sw_vers
+          echo "xcode=$(xcodebuild -version | head -1 | tr ' ' '-')" >> "$GITHUB_OUTPUT"
+          echo "t0=$(date +%s)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore built app (skips the build when app sources did not change)
+        id: appcache
+        uses: actions/cache/restore@v4
+        with:
+          path: build/app
+          key: qa-ios-app-${{ steps.tool.outputs.xcode }}-${{ hashFiles('package-lock.json', 'app.json', 'index.ts', 'babel.config.js', 'metro.config.js', 'tsconfig.json', 'src/**', 'assets/**', 'modules/**', 'plugins/**', 'targets/**', 'drizzle/**') }}
+
+      - uses: actions/setup-node@v4
+        if: steps.appcache.outputs.cache-hit != 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: npm ci
+        if: steps.appcache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: expo prebuild (clean)
+        if: steps.appcache.outputs.cache-hit != 'true'
+        run: npx expo prebuild -p ios --clean --no-install
+
+      - name: CocoaPods cache
+        if: steps.appcache.outputs.cache-hit != 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/CocoaPods
+          key: qa-ios-pods-${{ hashFiles('package-lock.json', 'app.json') }}
+          restore-keys: qa-ios-pods-
+
+      - name: pod install
+        if: steps.appcache.outputs.cache-hit != 'true'
+        working-directory: ios
+        env:
+          RCT_USE_PREBUILT_RNCORE: '1'
+          RCT_USE_RN_DEP: '1'
+        run: pod install
+
+      - name: xcodebuild Release (simulator, unsigned)
+        if: steps.appcache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p build
+          WS=$(ls -d ios/*.xcworkspace | head -1)
+          SCHEME=$(basename "$WS" .xcworkspace)
+          echo "workspace $WS scheme $SCHEME"
+          set +e
+          xcodebuild -workspace "$WS" -scheme "$SCHEME" -configuration Release \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/dd \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO COMPILER_INDEX_STORE_ENABLE=NO \
+            build > build/xcodebuild.log 2>&1
+          CODE=$?
+          set -e
+          grep -E "error:|\*\* BUILD" build/xcodebuild.log | head -100 || true
+          if [ $CODE -ne 0 ]; then tail -150 build/xcodebuild.log; exit $CODE; fi
+          APP=$(ls -d build/dd/Build/Products/Release-iphonesimulator/*.app | head -1)
+          mkdir -p build/app
+          cp -R "$APP" build/app/
+          ls build/app/*.app/PlugIns || echo "no PlugIns (widget extension missing)"
+
+      - name: Upload build log
+        if: failure() && steps.appcache.outputs.cache-hit != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-ios-buildlog-${{ github.run_number }}
+          path: build/xcodebuild.log
+          retention-days: 5
+
+      - name: Save built app
+        if: steps.appcache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: build/app
+          key: ${{ steps.appcache.outputs.cache-primary-key }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Maestro ${{ env.MAESTRO_VERSION }}
+        run: |
+          curl -fsSL -o /tmp/maestro.zip "https://github.com/mobile-dev-inc/maestro/releases/download/cli-${MAESTRO_VERSION}/maestro.zip"
+          unzip -q /tmp/maestro.zip -d "$HOME/maestro-cli"
+          BIN=$(dirname "$(find "$HOME/maestro-cli" -path '*/bin/maestro' -type f | head -1)")
+          echo "$BIN" >> "$GITHUB_PATH"
+          "$BIN/maestro" --version
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: qa-fixtures-${{ github.run_number }}
+          path: qa/fixtures
+
+      - name: Create and boot simulators
+        run: |
+          eval "$(python3 qa/ios/pick_devices.py)"
+          echo "runtime $RUNTIME_ID ($RUNTIME_VER) | small: $SE_NAME | max: $PM_NAME | ipad: $IPAD_NAME"
+          defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false || true
+          SE_UDID=$(xcrun simctl create qa-se "$SE_TYPE" "$RUNTIME_ID")
+          PM_UDID=$(xcrun simctl create qa-pm "$PM_TYPE" "$RUNTIME_ID")
+          IPAD_UDID=""
+          if [ -n "$IPAD_TYPE" ]; then IPAD_UDID=$(xcrun simctl create qa-ipad "$IPAD_TYPE" "$RUNTIME_ID"); fi
+          for U in $SE_UDID $PM_UDID; do xcrun simctl boot "$U"; done
+          for U in $SE_UDID $PM_UDID; do xcrun simctl bootstatus "$U" -b >/dev/null; done
+          # Open Files once so "On My iPhone" (File Provider local storage) exists for the restore step.
+          for U in $SE_UDID $PM_UDID; do xcrun simctl launch "$U" com.apple.DocumentsApp >/dev/null 2>&1 || true; done
+          sleep 10
+          for U in $SE_UDID $PM_UDID; do xcrun simctl terminate "$U" com.apple.DocumentsApp >/dev/null 2>&1 || true; done
+          {
+            echo "RUNTIME=$RUNTIME_VER"
+            echo "SE_UDID=$SE_UDID"; echo "SE_NAME=$SE_NAME"
+            echo "PM_UDID=$PM_UDID"; echo "PM_NAME=$PM_NAME"
+            echo "IPAD_UDID=$IPAD_UDID"; echo "IPAD_NAME=$IPAD_NAME"
+          } >> "$GITHUB_ENV"
+
+      - name: Run personas
+        env:
+          PERSONAS_IN: ${{ inputs.personas }}
+          IPAD_IN: ${{ github.event_name == 'workflow_dispatch' && inputs.ipad_personas || 'P002-ipad,P041-ipad' }}
+          BUDGET_MIN: ${{ inputs.test_budget_min || '55' }}
+          PARALLEL: ${{ inputs.parallel || 'true' }}
+        run: |
+          chmod +x qa/ios/run-lane.sh
+          OUT="$PWD/out"
+          mkdir -p "$OUT"
+          APP=$(ls -d "$PWD"/build/app/*.app | head -1)
+          SE_LIST=$(python3 -c "import json,os; w=[x.strip() for x in os.environ['PERSONAS_IN'].split(',') if x.strip()]; print(','.join(p['id'] for p in json.load(open('qa/personas.json')) if p['ios']=='iphone_se' and (not w or p['id'] in w)))")
+          PM_LIST=$(python3 -c "import json,os; w=[x.strip() for x in os.environ['PERSONAS_IN'].split(',') if x.strip()]; print(','.join(p['id'] for p in json.load(open('qa/personas.json')) if p['ios']=='iphone_pro_max' and (not w or p['id'] in w)))")
+          echo "$SE_LIST,$PM_LIST,$IPAD_IN" | tr ',' '\n' | sed '/^$/d;/^none$/d' > "$OUT/planned.txt"
+          echo "small: $SE_LIST"; echo "max: $PM_LIST"; echo "ipad: $IPAD_IN"
+          DEADLINE=$(( $(date +%s) + BUDGET_MIN * 60 ))
+          if [ "$PARALLEL" = true ]; then
+            RUN_WIDGET=1 qa/ios/run-lane.sh se "$SE_UDID" "$SE_NAME" "$RUNTIME" "$APP" "$OUT" "$DEADLINE" "$SE_LIST" > "$OUT/lane-se.log" 2>&1 &
+            P1=$!
+            qa/ios/run-lane.sh pm "$PM_UDID" "$PM_NAME" "$RUNTIME" "$APP" "$OUT" "$DEADLINE" "$PM_LIST" > "$OUT/lane-pm.log" 2>&1 &
+            P2=$!
+            wait $P1 $P2 || true
+          else
+            RUN_WIDGET=1 qa/ios/run-lane.sh se "$SE_UDID" "$SE_NAME" "$RUNTIME" "$APP" "$OUT" "$DEADLINE" "$SE_LIST" > "$OUT/lane-se.log" 2>&1 || true
+            qa/ios/run-lane.sh pm "$PM_UDID" "$PM_NAME" "$RUNTIME" "$APP" "$OUT" "$DEADLINE" "$PM_LIST" > "$OUT/lane-pm.log" 2>&1 || true
+          fi
+          cat "$OUT/lane-se.log" "$OUT/lane-pm.log"
+          if [ -n "$IPAD_IN" ] && [ "$IPAD_IN" != none ] && [ -n "$IPAD_UDID" ]; then
+            xcrun simctl shutdown "$SE_UDID" || true
+            xcrun simctl shutdown "$PM_UDID" || true
+            xcrun simctl boot "$IPAD_UDID" && xcrun simctl bootstatus "$IPAD_UDID" -b >/dev/null
+            xcrun simctl launch "$IPAD_UDID" com.apple.DocumentsApp >/dev/null 2>&1 || true
+            sleep 8
+            xcrun simctl terminate "$IPAD_UDID" com.apple.DocumentsApp >/dev/null 2>&1 || true
+            qa/ios/run-lane.sh ipad "$IPAD_UDID" "$IPAD_NAME" "$RUNTIME" "$APP" "$OUT" "$DEADLINE" "$IPAD_IN" > "$OUT/lane-ipad.log" 2>&1 || true
+            cat "$OUT/lane-ipad.log"
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          [ -d out ] && python3 qa/ios/summarize.py out || echo "no out/"
+          echo "mac job minutes so far: $(( ($(date +%s) - ${{ steps.tool.outputs.t0 }}) / 60 ))"
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-ios-${{ github.run_number }}
+          path: out/
+          retention-days: 14
+          if-no-files-found: warn

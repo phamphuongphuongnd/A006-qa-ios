@@ -1,0 +1,57 @@
+appId: com.phiotron.sundaysort
+name: 01_onboarding
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Get started"
+    timeout: 90000
+- takeScreenshot: ${PID}_01a_welcome
+- tapOn: "Get started"
+- extendedWaitUntil:
+    visible: 'Where do you file your taxes\?'
+    timeout: 15000
+- tapOn: ${REGION_LABEL}
+- takeScreenshot: ${PID}_01b_region
+- scrollUntilVisible:
+    element:
+      text: "Continue"
+    timeout: 10000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: 'How do you claim your vehicle\?'
+    timeout: 15000
+- takeScreenshot: ${PID}_01c_vehicle
+- scrollUntilVisible:
+    element:
+      text: "Continue"
+    timeout: 10000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Your categories are ready"
+    timeout: 15000
+- takeScreenshot: ${PID}_01d_categories
+- scrollUntilVisible:
+    element:
+      text: "Looks good"
+    timeout: 10000
+- tapOn: "Looks good"
+- extendedWaitUntil:
+    visible: "Continue free"
+    timeout: 15000
+- takeScreenshot: ${PID}_01e_free_pro
+# Never See Pro / trial / Subscribe.
+- tapOn: "Continue free"
+- extendedWaitUntil:
+    visible: 'When do you want to sort your week\?'
+    timeout: 15000
+- takeScreenshot: ${PID}_01f_reminder
+- scrollUntilVisible:
+    element:
+      text: "Not now"
+    timeout: 10000
+- tapOn: "Not now"
+- extendedWaitUntil:
+    visible: "Settings"
+    timeout: 20000
+- takeScreenshot: ${PID}_01g_home_first

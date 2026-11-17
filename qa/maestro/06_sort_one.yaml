@@ -1,0 +1,32 @@
+# Sort tab: give one entry a category.
+appId: com.phiotron.sundaysort
+name: 06_sort_one
+---
+- runFlow: common/home.yaml
+- tapOn: "Sort.*"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_06a_sort
+- assertNotVisible: "Nothing to sort"
+- runFlow:
+    when:
+      visible: "Fuel"
+    commands:
+      - tapOn: "Fuel"
+- runFlow:
+    when:
+      notVisible: "Sorted as .*"
+    commands:
+      - tapOn:
+          text: "More…"
+          optional: true
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - takeScreenshot: ${PID}_06b_more
+      - tapOn:
+          text: "Fuel|Delivery income"
+          index: 0
+- extendedWaitUntil:
+    visible: "Sorted as .*"
+    timeout: 8000
+- takeScreenshot: ${PID}_06c_sorted

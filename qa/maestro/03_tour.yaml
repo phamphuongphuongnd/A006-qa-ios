@@ -1,0 +1,54 @@
+# Five tabs + Settings screens, one screenshot each (layout on every device / font size / theme).
+appId: com.phiotron.sundaysort
+name: 03_tour
+---
+- runFlow: common/home.yaml
+- takeScreenshot: ${PID}_03a_home
+- scroll
+- takeScreenshot: ${PID}_03b_home_scrolled
+- tapOn: "Entries.*"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_03c_entries
+- tapOn: "Sort.*"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_03d_sort
+- tapOn: "Miles"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_03e_miles
+- tapOn: "Reports"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_03f_reports
+- scroll
+- takeScreenshot: ${PID}_03g_reports_scrolled
+- runFlow: common/home.yaml
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "Region"
+    timeout: 15000
+- takeScreenshot: ${PID}_03h_settings
+- scroll
+- takeScreenshot: ${PID}_03i_settings_scrolled
+- runFlow:
+    file: common/settings_item.yaml
+    env:
+      ITEM: "Backup & restore"
+      SHOT: 03j_backup
+- runFlow:
+    file: common/settings_item.yaml
+    env:
+      ITEM: "Categories"
+      SHOT: 03k_categories
+- runFlow:
+    file: common/settings_item.yaml
+    env:
+      ITEM: "Export"
+      SHOT: 03l_export
+- runFlow:
+    file: common/settings_item.yaml
+    env:
+      ITEM: "Mileage rates"
+      SHOT: 03m_mileage_rates

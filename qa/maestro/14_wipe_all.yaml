@@ -1,0 +1,36 @@
+appId: com.phiotron.sundaysort
+name: 14_wipe_all
+---
+- runFlow:
+    when:
+      true: ${DO_WIPE == 'true'}
+    commands:
+      - runFlow: common/home.yaml
+      - tapOn: "Settings"
+      - scrollUntilVisible:
+          element:
+            text: "Delete all data"
+          timeout: 20000
+      - tapOn: "Delete all data"
+      - extendedWaitUntil:
+          visible: 'Delete all data\?'
+          timeout: 10000
+      - takeScreenshot: ${PID}_14a_ask
+      - tapOn: "Continue"
+      - extendedWaitUntil:
+          visible: "Type DELETE to confirm"
+          timeout: 10000
+      - tapOn: "DELETE"
+      - inputText: "DELETE"
+      - takeScreenshot: ${PID}_14b_typed
+      - tapOn:
+          text: "Delete all data"
+          below: "Type DELETE to confirm"
+      - waitForAnimationToEnd:
+          timeout: 5000
+      - takeScreenshot: ${PID}_14c_after_wipe
+      - runFlow: common/home.yaml
+      - tapOn: "Entries.*"
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - takeScreenshot: ${PID}_14d_entries_empty

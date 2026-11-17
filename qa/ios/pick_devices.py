@@ -1,0 +1,40 @@
+"""Pick the newest iOS runtime on the runner and the device types QA-100 wants (small iPhone, Pro Max, iPad).
+
+Prints shell exports: RUNTIME_ID RUNTIME_VER SE_TYPE SE_NAME PM_TYPE PM_NAME IPAD_TYPE IPAD_NAME.
+"""
+import json
+import re
+import shlex
+import subprocess
+
+rt = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'runtimes', '-j']))['runtimes']
+ios = [r for r in rt if r.get('platform') == 'iOS' and r.get('isAvailable')]
+ios.sort(key=lambda r: [int(x) for x in re.findall(r'\d+', r['version'])])
+r = ios[-1]
+types = [(d['name'], d['identifier']) for d in r.get('supportedDeviceTypes', [])]
+if not types:
+    dt = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'devicetypes', '-j']))['devicetypes']
+    types = [(d['name'], d['identifier']) for d in dt]
+names = [n for n, _ in types]
+
+
+def pick(prefs, pattern):
+    for p in prefs:
+        if p in names:
+            return p
+    cands = [n for n in names if re.search(pattern, n)]
+    return cands[-1] if cands else ''
+
+
+se = pick(['iPhone SE (3rd generation)', 'iPhone SE (2nd generation)', 'iPhone 16e', 'iPhone 13 mini'], r'^iPhone (SE|\d+e|\d+ mini)')
+pm = pick(['iPhone 16 Pro Max', 'iPhone 17 Pro Max', 'iPhone 15 Pro Max'], r'^iPhone \d+ Pro Max$')
+ipad = pick(['iPad (A16)', 'iPad (10th generation)', 'iPad (11th generation)'], r'^iPad( Air)? ')
+ident = dict(types)
+out = {
+    'RUNTIME_ID': r['identifier'], 'RUNTIME_VER': r['version'],
+    'SE_NAME': se, 'SE_TYPE': ident.get(se, ''),
+    'PM_NAME': pm, 'PM_TYPE': ident.get(pm, ''),
+    'IPAD_NAME': ipad, 'IPAD_TYPE': ident.get(ipad, ''),
+}
+for k, v in out.items():
+    print(f'{k}={shlex.quote(v)}')

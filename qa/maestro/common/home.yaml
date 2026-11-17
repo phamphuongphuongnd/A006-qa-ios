@@ -1,0 +1,7 @@
+# Restart the app and wait for Home.
+appId: com.phiotron.sundaysort
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "Settings"
+    timeout: 60000

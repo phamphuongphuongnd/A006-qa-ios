@@ -1,0 +1,24 @@
+# Save, then kill the app at once: after relaunch the entry is there once (or not at all), never twice / broken.
+appId: com.phiotron.sundaysort
+name: 13_kill_mid_save
+---
+- runFlow:
+    when:
+      true: ${DO_KILL == 'true'}
+    commands:
+      - runFlow:
+          file: common/capture.yaml
+          env:
+            NOTE: "KILL-${PID}"
+            AMOUNT: "11"
+      - tapOn: "Save"
+      - stopApp
+      - runFlow: common/home.yaml
+      - takeScreenshot: ${PID}_13a_relaunched
+      - tapOn: "Entries.*"
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - takeScreenshot: ${PID}_13b_entries
+      - assertNotVisible:
+          text: "KILL-${PID}"
+          index: 1

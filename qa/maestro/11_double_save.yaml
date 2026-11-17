@@ -1,0 +1,25 @@
+# Two fast taps on Save must create ONE entry.
+appId: com.phiotron.sundaysort
+name: 11_double_save
+---
+- runFlow:
+    file: common/capture.yaml
+    env:
+      NOTE: "DBL-${PID}"
+      AMOUNT: "9"
+- tapOn:
+    text: "Save"
+    repeat: 2
+    delay: 40
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_11a_after_double_tap
+- runFlow: common/home.yaml
+- tapOn: "Entries.*"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_11b_entries
+- assertVisible: "DBL-${PID}"
+- assertNotVisible:
+    text: "DBL-${PID}"
+    index: 1

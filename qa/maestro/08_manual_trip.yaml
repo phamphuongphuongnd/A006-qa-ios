@@ -1,0 +1,42 @@
+# Miles → Add manually → odometer readings → Save trip.
+appId: com.phiotron.sundaysort
+name: 08_manual_trip
+---
+- runFlow: common/home.yaml
+- tapOn: "Miles"
+- waitForAnimationToEnd:
+    timeout: 3000
+- scrollUntilVisible:
+    element:
+      text: "Add manually"
+    timeout: 15000
+- tapOn: "Add manually"
+- extendedWaitUntil:
+    visible: "Add trip"
+    timeout: 10000
+- takeScreenshot: ${PID}_08a_add_trip
+- tapOn:
+    text: "Odometer"
+    optional: true
+- tapOn: 'e\.g\. 48,210'
+- inputText: "48210"
+- tapOn: 'e\.g\. 48,338'
+- inputText: "48238"
+- takeScreenshot: ${PID}_08b_odometer_typed
+- scrollUntilVisible:
+    element:
+      text: 'e\.g\. Amazon route DLS4'
+    timeout: 10000
+- tapOn: 'e\.g\. Amazon route DLS4'
+- inputText: "QA trip ${PID}"
+- pressKey: Enter
+- scrollUntilVisible:
+    element:
+      text: "Save trip"
+    timeout: 10000
+- takeScreenshot: ${PID}_08c_before_save
+- tapOn: "Save trip"
+- extendedWaitUntil:
+    visible: "Trip saved.*"
+    timeout: 10000
+- takeScreenshot: ${PID}_08d_trip_saved

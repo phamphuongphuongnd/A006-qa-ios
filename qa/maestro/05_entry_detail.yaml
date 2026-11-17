@@ -1,0 +1,16 @@
+appId: com.phiotron.sundaysort
+name: 05_entry_detail
+---
+- runFlow: common/home.yaml
+- tapOn: "Entries.*"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn: "QA-${PID}.*"
+- extendedWaitUntil:
+    visible: "Save changes"
+    timeout: 10000
+- takeScreenshot: ${PID}_05a_detail
+- tapOn: "More"
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: ${PID}_05b_detail_menu

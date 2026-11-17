@@ -1,0 +1,13 @@
+# Quick capture: New expense → AMOUNT → Note NOTE. The caller taps Save.
+appId: com.phiotron.sundaysort
+---
+- runFlow: home.yaml
+- tapOn: "New expense"
+- extendedWaitUntil:
+    visible: "Amount.*"
+    timeout: 15000
+- inputText: ${AMOUNT}
+- tapOn: "Note"
+- inputText: ${NOTE}
+- waitForAnimationToEnd:
+    timeout: 2000

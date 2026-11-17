@@ -1,0 +1,54 @@
+# Load the persona's backup (qa/fixtures/<id>.sundaysort, copied into Files › On My iPhone by the runner).
+appId: com.phiotron.sundaysort
+name: 02_restore
+---
+- runFlow:
+    when:
+      platform: iOS
+      true: ${FIXTURE != 'none'}
+    commands:
+      - runFlow: common/home.yaml
+      - tapOn: "Settings"
+      - scrollUntilVisible:
+          element:
+            text: "Backup & restore"
+          timeout: 20000
+      - tapOn: "Backup & restore"
+      - extendedWaitUntil:
+          visible: "Restore from backup"
+          timeout: 15000
+      - takeScreenshot: ${PID}_02a_backup
+      - tapOn: "Restore from backup"
+      - waitForAnimationToEnd:
+          timeout: 5000
+      - takeScreenshot: ${PID}_02b_picker
+      - runFlow:
+          when:
+            notVisible: "${FIXTURE}.*"
+          commands:
+            - tapOn:
+                text: "Browse"
+                optional: true
+            - waitForAnimationToEnd:
+                timeout: 3000
+            - tapOn:
+                text: "On My iPhone"
+                optional: true
+            - waitForAnimationToEnd:
+                timeout: 3000
+      - takeScreenshot: ${PID}_02c_picker_files
+      - tapOn: "${FIXTURE}.*"
+      - extendedWaitUntil:
+          visible: "Replace this phone's data"
+          timeout: 120000
+      - takeScreenshot: ${PID}_02d_preview
+      - tapOn: "Replace this phone's data"
+      - extendedWaitUntil:
+          visible: "Replace"
+          timeout: 10000
+      - takeScreenshot: ${PID}_02e_confirm
+      - tapOn: "Replace"
+      - extendedWaitUntil:
+          visible: "Backup restored"
+          timeout: 240000
+      - takeScreenshot: ${PID}_02f_restored

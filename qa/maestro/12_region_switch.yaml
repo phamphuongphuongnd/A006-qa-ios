@@ -1,0 +1,31 @@
+appId: com.phiotron.sundaysort
+name: 12_region_switch
+---
+- runFlow:
+    when:
+      true: ${DO_REGION_SWITCH == 'true'}
+    commands:
+      - runFlow: common/home.yaml
+      - tapOn: "Settings"
+      - extendedWaitUntil:
+          visible: "Region"
+          timeout: 15000
+      - tapOn: "Region"
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - takeScreenshot: ${PID}_12a_region_sheet
+      - tapOn: ${OTHER_REGION_LABEL}
+      - extendedWaitUntil:
+          visible: 'Change region\?'
+          timeout: 10000
+      - takeScreenshot: ${PID}_12b_change_ask
+      - tapOn: "Change"
+      - waitForAnimationToEnd:
+          timeout: 5000
+      - takeScreenshot: ${PID}_12c_after_change
+      - runFlow: common/home.yaml
+      - takeScreenshot: ${PID}_12d_home_new_region
+      - tapOn: "Reports"
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - takeScreenshot: ${PID}_12e_reports_new_region
