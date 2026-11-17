@@ -29,6 +29,37 @@ Cài đặt gốc từng máy: `qa-runs/modern/_baseline/`.
 - Lưu ý vận hành: máy chủ Windows chạm trần commit (7 máy ảo) nên phải tạm tắt XL để chạy máy 16 KB; lần đầu `adb install` (stream) làm
   máy 16 KB rơi offline — cài bằng `adb push` + `pm install` thì ổn.
 
+## 2a. Chạy lại trên APK `sundaysort-qa-538ede9-all.apk` (dev 538ede9, B-56…B-70) — 2026-11-17 15:30–15:55
+
+Bằng chứng: `qa-runs/modern/regress-538ede9/`. Máy: XL (`-gpu host`) rồi Fold (`-gpu swiftshader_indirect`), mỗi lúc 1 máy, 3072 MB.
+
+| Lỗi | Kiểm | Kết quả |
+|---|---|---|
+| 16 KB tĩnh | `zipalign -P 16` + LOAD align 124 `.so` | ✅ arm64-v8a 31/31, x86_64 31/31 = 0x4000; chỉ x86 / armeabi-v7a 32-bit 0x1000 (không thuộc yêu cầu) |
+| MOD-2 / B-64 | XL chữ 2.0, tối, P005: Expense → gõ 1234 | ✅ "£12.34" chữ lớn (`xl-f2-typed.png`) |
+| MOD-2 / B-64 | Fold mở xoay ngang (ROTATION_90), chữ 1.0: gõ 750 | ✅ "$7.50" rõ, bố cục gọn (`fold-land-capture.png`) |
+| MOD-1 / B-63 | XL: Start trip → Approximate + Only this time | ✅ màn "Turn on precise location" → hộp Android "Change to precise?" |
+| | → "Keep approximate" | ✅ app mở trang App info (Android đã khoá không hỏi lại, `USER_FIXED`) |
+| | Bật "Use precise location" trong Cài đặt → quay lại → "Allow precise location" | ✅ sang bước 2 → chuyến "GPS good", 2 km → 1.2 mi (`xl-mod1-*.png`). 🟡 nhỏ: quay lại từ Cài đặt màn không tự đi tiếp, phải bấm lại "Allow precise location" |
+| MOD-7 / B-70 | Màn nhập, Keep adding **tắt**: 2 lệnh tap liền lên Save | ✅ 1 khoản (36 → 37) |
+| | Keep adding **bật**: chạm đúp Save, rồi gõ khoản tiếp + Save | ✅ 1 khoản, màn reset £0.00, khoản sau lưu bình thường (38 → 40, Out £20.11 → £38.98) |
+| | Add trip (Odometer 48210 → 48338): chạm đúp "Save trip" | ✅ 1 chuyến 128 mi (Business tổng 128 mi) |
+| | Odometer check (48,500): chạm đúp Save | ✅ 1 lần đọc |
+| | Recurring entries | ⏭ tính năng Pro, người dùng free không tạo được (không mua thật) |
+
+Ghi chú: bàn phím hiện QWERTY thay bàn phím số trên máy XL lần này — **cài lại bản cũ ece3819 cũng QWERTY** → do trạng thái Gboard
+của máy ảo, không phải app (`keyboardType="number-pad"` không đổi).
+
+### MOD-9 🟠 Ẩn bàn phím bằng Back rồi chạm vào số tiền → bàn phím không hiện lại, không gõ tiếp được (có từ ece3819, 538ede9 còn)
+- **Máy:** XL API 37 (bàn phím phần mềm, `hw.keyboard=no`), cả ece3819 và 538ede9; chữ 1.0 và 2.0.
+- **Bước:** Home → Expense (bàn phím tự hiện) → Back (bàn phím ẩn, caret còn) → chạm vào "£0.00" / vùng giữa, 1–2 lần.
+- **Kỳ vọng:** bàn phím số hiện lại. **Thực tế:** `dumpsys input_method` → `mInputShown=false` sau mỗi lần chạm; caret biến mất. Ô ẩn
+  vẫn là `mServedView` (gõ bằng adb vẫn vào: "£0.05") nhưng người dùng không có bàn phím → kẹt, phải đóng màn mở lại.
+  Cử chỉ Back trên Android 10+ ẩn bàn phím trước nên rất dễ gặp. (`regress-538ede9/xl-f2-kb2.png`, `xl-old-refocus*.png`)
+- **Nguyên nhân gốc nghi ngờ:** `src/app/capture.tsx:113-116` `focusAmount()` gọi `amountRef.current?.focus()` lên ô **đang focus sẵn**
+  → Android không mở lại IME. Gợi ý: `if (amountRef.current?.isFocused()) { amountRef.current.blur(); requestAnimationFrame(() => amountRef.current?.focus()); } else amountRef.current?.focus();`
+  (hoặc lắng nghe `keyboardDidHide` → `blur()`). Kiểm cả ô số ở Sửa khoản / Parking & tolls nếu cùng mẫu ô ẩn.
+
 ## 2. Lỗi tìm được
 
 ### MOD-1 🟠 Chọn "Approximate" (vị trí gần đúng) ở hộp quyền Android → chuyến GPS ghi 0.0 mi, kẹt "Finding GPS…", không báo gì
