@@ -261,3 +261,8 @@
   0 mi âm thầm). ⏳ phiên F thử lại.
 - [ ] **B-64** 🟠 (QA MOD-2, mở rộng B-57) Máy cao (Pixel 9 Pro XL 997dp) + chữ 200% → số tiền đang gõ co ~6px vì điều kiện B-57 chỉ xét
   chiều cao < 720dp. Sửa: so theo chiều cao chia `fontScale` (`capture.tsx`); `minHeight` vùng số tiền giữ nguyên. ⏳ phiên F thử lại.
+- [ ] **B-65** 🟠 (QA OLD-5, phiên B; nghi từ đầu QA) Bật App lock (Lock after = Immediately) → Home → Recents: ảnh thu nhỏ hiện nguyên
+  màn có số tiền (API 26, `qa-runs/android-old/_dbg/al_recents.png`). Khoá vẫn đúng khi mở lại / deep link. Gốc: không có gì ẩn nội dung
+  khi app vào nền. Sửa: `modules/system-bars` thêm `setHideInRecents` — Android 13+ `setRecentsScreenshotEnabled(false)` (vẫn chụp màn hình
+  được), Android < 13 `FLAG_SECURE` cho cửa sổ app + cửa sổ Modal (chặn cả chụp màn hình khi App lock bật — giới hạn của Android cũ);
+  iOS: phủ màn nền khi app rời `active` (`services/recentsPrivacy.ts`, `LockGate`). ⏳ cần build native mới; thử API 26 + API 37 + A13 + iOS.
