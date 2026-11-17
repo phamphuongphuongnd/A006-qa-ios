@@ -52,3 +52,7 @@ Thumbs.db
 
 # local Expo modules build output
 modules/*/android/build/
+
+# QA-100 (evidence + generated backups stay local)
+/qa-runs/
+/qa/fixtures/
