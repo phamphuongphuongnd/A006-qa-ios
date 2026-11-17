@@ -66,7 +66,8 @@ export function Screen({
             {headerLeft}
             <View style={{ flex: 1, minWidth: 0 }}>
               {title ? (
-                <Txt v="h1" accessibilityRole="header">
+                // B-54: at 200% text a narrow title shrinks instead of breaking inside a word ("Mor / ning").
+                <Txt v="h1" accessibilityRole="header" numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.6}>
                   {title}
                 </Txt>
               ) : null}
@@ -76,7 +77,7 @@ export function Screen({
                 </Txt>
               ) : null}
             </View>
-            {headerRight}
+            {headerRight ? <View style={{ flexShrink: 1, maxWidth: '62%' }}>{headerRight}</View> : null}
           </View>
         ) : null)}
       <View style={{ flex: 1 }}>

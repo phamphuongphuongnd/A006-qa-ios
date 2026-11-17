@@ -65,7 +65,7 @@ export default function HomeScreen() {
       title={t(`home.${greetingKey(now)}`)}
       subtitle={t('home.taxYear', { label: taxYearOf(now, region).label })}
       headerRight={
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {proStatus.kind === 'trial' ? (
             <Badge kind="trial" label={proStatus.daysLeft === 1 ? t('homeV2.trialOne') : t('homeV2.trial', { days: proStatus.daysLeft })} />
           ) : proStatus.kind === 'pro' ? (

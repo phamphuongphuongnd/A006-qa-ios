@@ -188,9 +188,11 @@
   Chưa thử A13 (cần tái hiện lúc kẹt). Hệ quả thêm thấy 17/11: toggle lần 2 tới lúc hộp vân tay đang mở thì bị bỏ qua → chuyến NFC
   vẫn chạy (GPS bật) tới khi toggle lại; widget hiện đúng "End trip · 0.0 mi". Đề xuất P6: hàng đợi deep link toggle chạy sau khi hộp
   vân tay đóng.
-- [ ] **B-54** 🟡 (P6) Chữ 200% còn: Miles dòng chuyến giờ bị cắt "07:4.." khi có nhãn "Exported" (S6); Home lời chào ngắt giữa
+- [x] **B-54** 🟡 (P6) Chữ 200% còn: Miles dòng chuyến giờ bị cắt "07:4.." khi có nhãn "Exported" (S6); Home lời chào ngắt giữa
   chữ "Mor / ning, driver" vì huy hiệu "Trial · 7 days left" chiếm chỗ — case TC-345. Đề xuất: nhãn Exported xuống dòng riêng
   khi chữ lớn; lời chào `numberOfLines`/`adjustsFontSizeToFit` hoặc huy hiệu xuống dòng dưới.
+  — sửa: `Screen` tiêu đề `numberOfLines={2} adjustsFontSizeToFit` + vùng headerRight co được (`maxWidth: '62%'`), Home
+  huy hiệu + nút Settings xuống dòng khi hẹp; Miles dòng giờ 2 dòng + test `largeText.test.ts` (B-54). Chưa thử A13 ở chữ 200%.
 
 ### S6 (nhánh `s6-competitor-ideas`, thử trên giả lập theo Phương 2026-11-16)
 - [x] **B-S6a** 🟠 Ô "Parking & tolls" ở Thêm / Sửa chuyến: bấm vào thì ô và hàng "+ − × ÷" nằm sau nút Save + bàn phím →

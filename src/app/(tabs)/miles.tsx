@@ -471,7 +471,8 @@ function TripRowView({
           {title}
         </Txt>
         <View style={[styles.flex, { gap: 6 }]}>
-          <Txt v="small" c="textSecondary" numberOfLines={1} style={{ flexShrink: 1 }}>
+          {/* B-54: two lines so a badge ("Exported") never cuts the times to "07:4..". */}
+          <Txt v="small" c="textSecondary" numberOfLines={2} style={{ flexShrink: 1 }}>
             {sub}
           </Txt>
           {trip.edited ? <Badge kind="neutral" label={t('miles.edited')} /> : null}
