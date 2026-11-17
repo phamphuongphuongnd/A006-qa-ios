@@ -272,3 +272,46 @@ describe('wipe and names', () => {
     expect(backupFileName(at(2026, 11, 10, 18))).toBe('SundaySort-backup-2026-11-10.sundaysort');
   });
 });
+
+describe('QA-100 SPE-2: Pro state from a hand-edited backup', () => {
+  const NOW = new Date(2026, 10, 17, 12).getTime();
+  const DAY = 86_400_000;
+  const restoreWith = (pro: Record<string, unknown>) => {
+    const db = makeTestDb();
+    const src = makeTestDb();
+    seedCategories(src, 'UK');
+    const t = snapshotTables(src);
+    t.proState = [{ id: 'pro', trialStartedAt: null, trialEndsAt: null, entitlement: 'none', expiresAt: null, productId: null, autoRenewing: null, lastVerifiedAt: null, ...pro }] as typeof t.proState;
+    jest.spyOn(Date, 'now').mockReturnValue(NOW);
+    replaceAllData(db, t, NOW);
+    (Date.now as jest.Mock).mockRestore();
+    return db.select().from(proState).get()!;
+  };
+
+  it('caps a trial at 7 days from its start', () => {
+    const r = restoreWith({ trialStartedAt: NOW - 3600_000, trialEndsAt: 4102444800000 });
+    expect(r.trialEndsAt).toBe(NOW - 3600_000 + 7 * DAY);
+  });
+
+  it('a trial start in the future becomes now', () => {
+    const r = restoreWith({ trialStartedAt: NOW + 400 * DAY, trialEndsAt: NOW + 407 * DAY });
+    expect(r.trialStartedAt).toBe(NOW);
+    expect(r.trialEndsAt).toBe(NOW + 7 * DAY);
+  });
+
+  it('never trusts an "active" subscription from a file', () => {
+    const r = restoreWith({ entitlement: 'active', expiresAt: 4102444800000, autoRenewing: true });
+    expect(r.entitlement).toBe('expired');
+    expect(r.autoRenewing).toBe(false);
+    expect(r.lastVerifiedAt).toBeNull();
+  });
+
+  it("keeps the phone's own Pro state", () => {
+    const db = makeTestDb();
+    db.insert(proState).values({ id: 'pro', trialStartedAt: 1, trialEndsAt: 2, entitlement: 'none', expiresAt: null, productId: null, autoRenewing: null, lastVerifiedAt: null }).run();
+    const t = snapshotTables(makeTestDb());
+    t.proState = [{ id: 'pro', trialStartedAt: NOW, trialEndsAt: NOW + DAY, entitlement: 'active', expiresAt: null, productId: null, autoRenewing: true, lastVerifiedAt: NOW }];
+    replaceAllData(db, t, NOW);
+    expect(db.select().from(proState).get()!.trialStartedAt).toBe(1);
+  });
+});

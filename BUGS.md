@@ -279,3 +279,10 @@
   tìm tháng bằng `find` tuyến tính. Sửa: `saneReportRange` (từ 1/1/2000, ≤ 10 năm, ≤ hôm nay + 1 năm) cho deep link + ô Custom (lỗi "Choose up
   to 10 years, from 2000 onwards.", From có minimumDate); `monthlySeries` dừng khi ngày không hợp lệ, tối đa 121 tháng, tìm nhị phân; test
   `reports.test.ts` "SPE-1". ⏳ phiên D thử lại deep link.
+- [ ] **B-68** 🟠 (QA SPE-2, phiên D) File `.sundaysort` sửa tay mở khoá Pro vĩnh viễn: máy chưa có `pro_state` (cài mới / cài lại) → Restore file có
+  `proState.trialEndsAt` năm 2100 → "Trial · 26708 days left", PDF/MTD/xlsx/FreeAgent mở (đã xuất thật). Chỉ cần sửa 1 dòng JSON → chia sẻ được
+  "file Pro free". Gốc: `replaceAllData` chép nguyên `proState` của file; `validateManifest` chỉ kiểm `id`. Sửa: `sanitizeRestoredPro`
+  (`domain/pro.ts`) — dùng thử tối đa 7 ngày từ ngày bắt đầu (bắt đầu ở tương lai → hôm nay); `entitlement` 'active' từ file → 'expired',
+  `autoRenewing` false, `lastVerifiedAt` null → lần mở app sau kiểm lại với cửa hàng (người mua thật được Pro lại / "Restore purchase");
+  máy đã có `pro_state` giữ nguyên như cũ. Test `backup.test.ts` "SPE-2". ⏳ phiên D thử lại file độc.
+  (SPE-3 Recents = B-65.)
