@@ -174,6 +174,11 @@
   `react-android` dựng sẵn nên vá `IntentModule.kt` trong node_modules không vào bản build. Theo dõi: sau ca chạy xe đọc
   `adb shell dumpsys batterystats com.phiotron.sundaysort` + `top -H` trên bản release; nếu release cũng bị → làm (b) module
   native nhỏ ghi đè "IntentAndroid" (hoặc (a) patch-package + build RN từ nguồn).
+  **Đo bản release 17/11 (P6, chỉ lệnh đọc):** không thấy vòng lặp. App mở trên màn, không vẽ khung: luồng chính ~7,5% CPU, thức
+  61 lần/s theo vsync, JS ~0 (nhịp hẹn giờ JS của RN, tắt khi tắt màn / xuống nền) — không phải B-51. App ở nền 5 phút (10:38–10:43):
+  luồng chính +0,02 s, JS 0. → giữ (c). Manh mối cho sau 1.0: batterystats từ lần sạc trước (gồm bản dev 16/11) có ~30 job
+  WorkManager (`SystemJobService`) mỗi job giữ wakelock đủ 10 phút (hết giờ, không `jobFinished`) — nghi tác vụ nền headless
+  (`expo-background-task`) treo khi JS khởi động không có Activity, khớp nghi vấn bước kích hoạt ở trên. Theo dõi tiếp sau ca chạy xe.
 - [x] **B-52** 🟠 Chữ 200% (font_scale 2.0, Phương bật) — case TC-345 — S-19, S-07d, S-08b, Backup, thẻ Sort (hàng hành động
   ghim đáy, B-43) đạt. Sai: (1) 🟠 Miles: tiêu đề "Miles · Tax year 2026/27 ⌄" đẩy nút ⋯ "More" ra ngoài mép phải (còn 14 px)
   → không mở được menu Automatic trips / NFC tag / Odometer check; (2) 🟡 Miles: dòng chuyến cắt "Fri 13 Nov ·.." mất số dặm;
