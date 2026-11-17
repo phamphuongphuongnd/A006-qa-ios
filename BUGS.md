@@ -286,3 +286,8 @@
   `autoRenewing` false, `lastVerifiedAt` null → lần mở app sau kiểm lại với cửa hàng (người mua thật được Pro lại / "Restore purchase");
   máy đã có `pro_state` giữ nguyên như cũ. Test `backup.test.ts` "SPE-2". ⏳ phiên D thử lại file độc.
   (SPE-3 Recents = B-65.)
+- [ ] **B-69** 🟠 (QA OLD-6, phiên B) Mở tab Miles có chuyến → app sập native (SIGABRT, "Failed to choose ARGB config", `libmaplibre.so`, luồng
+  Snapshotter) — API 30 GPU phần mềm, P023; mỗi lần mở Miles đều sập lại. Cùng máy GPU host thì bình thường → phụ thuộc EGL của máy (máy thật
+  GPU lạ có thể gặp). JS không bắt được. Sửa (`features/trips/map/thumbs.ts`): ghi cờ file trước mỗi lần chụp ảnh bản đồ, xoá sau; lần mở sau
+  còn cờ = đã sập giữa chừng → tắt ảnh bản đồ thu nhỏ vĩnh viễn trên máy đó (hàng giữ biểu tượng tròn). Còn lại: sập **1 lần** trước khi
+  tự tắt (giới hạn đã biết). ⏳ phiên B: mở Miles 2 lần trên máy swiftshader; kiểm thêm màn chi tiết chuyến (bản đồ MapView) trên máy đó.
