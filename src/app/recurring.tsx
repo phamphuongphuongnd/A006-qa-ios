@@ -121,8 +121,11 @@ export default function RecurringScreen() {
     setEditing({ id: null, input: blank(), key: ++seq.current });
   };
 
+  // QA-100 MOD-7: one save per opened sheet (a double tap created the template twice).
+  const savedKey = useRef<number | null>(null);
   const save = (input: RecurringInput) => {
-    if (!editing) return;
+    if (!editing || savedKey.current === editing.key) return;
+    savedKey.current = editing.key;
     if (editing.id) updateRecurring(db, editing.id, input);
     else createRecurring(db, input, Date.now(), editing.fromDay);
     setEditing(null);

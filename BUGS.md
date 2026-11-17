@@ -291,3 +291,8 @@
   GPU lạ có thể gặp). JS không bắt được. Sửa (`features/trips/map/thumbs.ts`): ghi cờ file trước mỗi lần chụp ảnh bản đồ, xoá sau; lần mở sau
   còn cờ = đã sập giữa chừng → tắt ảnh bản đồ thu nhỏ vĩnh viễn trên máy đó (hàng giữ biểu tượng tròn). Còn lại: sập **1 lần** trước khi
   tự tắt (giới hạn đã biết). ⏳ phiên B: mở Miles 2 lần trên máy swiftshader; kiểm thêm màn chi tiết chuyến (bản đồ MapView) trên máy đó.
+- [ ] **B-70** 🟠 (QA MOD-7, phiên F) Chạm đúp "Save" ở Ghi nhanh (2 chạm cách ~0,2 s, Fold P056) → lưu 2 khoản trùng (to-sort 27→29, Out +2×$5.55).
+  Gốc: `capture.tsx` mở chốt `savingRef` trước `close()` — không có ảnh thì lưu xong ngay, chạm 2 thấy chốt mở và số tiền cũ. Sửa: nhánh đóng màn
+  giữ chốt; "Keep adding" mở chốt sau 300 ms (khi số đã xoá); lỗi giữa chừng thì mở lại. Cùng mẫu đã sửa luôn: thêm chuyến tay (`trip/new.tsx`),
+  số đồng hồ (`trip/odometer.tsx` — chốt bằng state không chặn 2 chạm cùng khung hình → thêm ref), khoản lặp lại (`recurring.tsx`, 1 lần lưu mỗi
+  lần mở sheet). Luật (`rules.tsx`) đã có kiểm trùng trong DB. ⏳ phiên F thử lại P056 + thử chạm đúp 3 màn kia.

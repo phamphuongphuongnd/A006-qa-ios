@@ -200,6 +200,16 @@ export default function CaptureScreen() {
     const minor = amount.minor;
     if (minor <= 0 || savingRef.current) return;
     savingRef.current = true;
+    try {
+      await saveOnce(minor);
+    } catch (e) {
+      savingRef.current = false;
+      throw e;
+    }
+  };
+
+  /** QA-100 MOD-7: a double tap on Save saved two entries — the latch stays shut until the screen has moved on. */
+  const saveOnce = async (minor: number) => {
     const items: PendingRead[] = [];
     let photoFailed = false;
     for (const p of photos.photos) {
@@ -244,9 +254,13 @@ export default function CaptureScreen() {
       above: keep ? 'none' : 'tabs',
       bottomOffset: !keep && params.from === 'home' ? HOME_BAR : 0,
     });
-    savingRef.current = false;
-    if (keep) reset();
-    else close();
+    if (keep) {
+      reset();
+      // Open the latch once the cleared amount has rendered (a second tap in the same frame still saw the old one).
+      setTimeout(() => {
+        savingRef.current = false;
+      }, 300);
+    } else close();
   };
 
   const pickDate = () =>
