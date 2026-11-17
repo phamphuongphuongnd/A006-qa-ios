@@ -2,7 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { router } from '@/services/router';
 import { BarChart3, ChevronDown, Download, Truck } from '@/ui/icons';
 import { useState } from 'react';
-import { Platform, Pressable, View } from 'react-native';
+import { Platform, Pressable, useWindowDimensions, View } from 'react-native';
 
 import { db } from '@/db/client';
 import { entryCount } from '@/db/entriesRepo';
@@ -32,7 +32,7 @@ import { CaptureFab } from '@/features/entries/CaptureFab';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
-import { fonts, useTheme } from '@/theme';
+import { fonts, touch, useTheme } from '@/theme';
 import { Avatar, Button, Card, Chip, ChipRow, Dialog, Divider, EmptyState, Progress, Screen, Segmented, Sheet, Tag, Toggle, Txt, useSnackbar } from '@/ui';
 
 const MODE_LABEL: Record<PeriodMode, () => string> = {
@@ -208,6 +208,7 @@ export default function ReportsScreen() {
 function ReportBody({ period, region }: { period: ReportPeriod; region: Region }) {
   const { settings, update } = useSettings();
   const { colors } = useTheme();
+  const narrow = useWindowDimensions().width < 420;
   const { report, months, currency, miles, mileageEstimateMinor, ratesText, entries, method, treatment, trips, businessUse } = useReport(
     period,
     settings,
@@ -294,9 +295,10 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
               <Txt c="textSecondary">{t('mtd.reports.chooseBody')}</Txt>
             </View>
           </View>
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Button label={t('mtd.reports.mileageRate')} size="sm" style={{ flex: 1 }} onPress={() => pickMethod('mileage')} />
-            <Button label={t('mtd.reports.actualCosts')} size="sm" variant="outline" style={{ flex: 1 }} onPress={() => pickMethod('actual')} />
+          {/* B-60: on narrow phones the floating "+" sat on top of "Actual costs" — stack the two and keep clear of it. */}
+          <View style={narrow ? { gap: 10, marginRight: touch.fab - 8 } : { flexDirection: 'row', gap: 10 }}>
+            <Button label={t('mtd.reports.mileageRate')} size="sm" style={narrow ? undefined : { flex: 1 }} onPress={() => pickMethod('mileage')} />
+            <Button label={t('mtd.reports.actualCosts')} size="sm" variant="outline" style={narrow ? undefined : { flex: 1 }} onPress={() => pickMethod('actual')} />
           </View>
         </View>
       ) : null}

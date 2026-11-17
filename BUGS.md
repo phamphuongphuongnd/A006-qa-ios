@@ -246,4 +246,4 @@
   `ensureMigrated()` (chạy 1 lần mỗi runtime, lỗi thì thử lại), `_layout` dùng chung, mọi điểm vào nền `await ensureMigrated()`
   (`backgroundTask.ts` ×3, `nightlyTask.ts`, `widgets/register.ts`). ⏳ thử: cài mới (logcat không còn "no such table") + cập nhật đè.
 - [ ] **B-60** 🟡 (QA OLD-3) 360dp: nút nổi "+" che nửa phải nút "Actual costs" trong thẻ "Choose how you claim your vehicle" (Reports) ở vị trí
-  mặc định; cuộn lên thì bấm được (đệm 100dp). ⏳ chờ Phương chọn cách xử lý.
+  mặc định; cuộn lên thì bấm được (đệm 100dp). Phương chọn **xếp dọc**: màn < 420dp → 2 nút thành 2 hàng, chừa lề phải 56dp cho nút + (`reports.tsx`). ⏳ thử 360dp.
