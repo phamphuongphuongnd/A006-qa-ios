@@ -142,9 +142,13 @@ export default function CaptureScreen() {
 
   // With the keyboard down the bottom row must clear the system nav bar (B-21); with it up the keyboard covers it.
   const [keyboardUp, setKeyboardUp] = useState(false);
+  const [squeezed, setSqueezed] = useState(false);
   useEffect(() => {
     const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardUp(true));
-    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardUp(false));
+    const hide = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardUp(false);
+      setSqueezed(false);
+    });
     return () => {
       show.remove();
       hide.remove();
@@ -152,9 +156,11 @@ export default function CaptureScreen() {
   }, []);
   // QA-100 OLD-1: on short screens (360×640dp) the number pad leaves ~390dp; the helper lines go while it is up so the
   // amount keeps its room (it had shrunk to ~4px).
-  // QA-100 MOD-2: big text on a tall phone (997dp at 200%) squeezes the same way — compare in text-scaled units.
+  // QA-100 MOD-2: big text on a tall phone (997dp at 200%) and an unfolded Fold in landscape squeeze the same way.
+  // Besides the size guess, measure: once the amount area is squeezed under 80dp with the keyboard up, stay compact
+  // until the keyboard goes down (no flip-flop as the helper lines come and go).
   const { height: windowHeight, fontScale } = useWindowDimensions();
-  const tight = keyboardUp && windowHeight / Math.max(1, fontScale) < 720;
+  const tight = keyboardUp && (squeezed || windowHeight / Math.max(1, fontScale) < 720);
   // QA-100 OLD-2: before Android 11 the keyboard height RN reports leaves out the nav bar the app draws behind
   // (edge-to-edge), so the calculator row ended up half under the keyboard.
   const keyboardOffset = Platform.OS === 'android' && Number(Platform.Version) < 30 ? insets.bottom : 0;
@@ -300,6 +306,9 @@ export default function CaptureScreen() {
           onPress={() => {
             setFromReceipt((f) => ({ ...f, amount: false }));
             focusAmount();
+          }}
+          onLayout={(e) => {
+            if (keyboardUp && !squeezed && e.nativeEvent.layout.height < 80) setSqueezed(true);
           }}
           style={styles.middle}>
           <ExprLine amount={amount} />
@@ -519,7 +528,7 @@ function Caret({ color }: { color: string }) {
 const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingTop: 10, paddingBottom: 6 },
   dateChip: { minHeight: 36, borderRadius: 18, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center', maxWidth: 150 },
-  middle: { flex: 1, minHeight: 88, alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 20 },
+  middle: { flex: 1, minHeight: 64, alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 20 },
   amountRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   amountBox: { borderRadius: 20, paddingHorizontal: 16, paddingVertical: 6, alignItems: 'center', maxWidth: '100%' },
   noteLine: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2, maxWidth: '100%' },

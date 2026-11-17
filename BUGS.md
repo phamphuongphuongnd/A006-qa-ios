@@ -260,7 +260,9 @@
   đặt); chuyến tự động (`setup.tsx`) cũng đòi Precise; đang chạy chuyến mà hạ xuống Approximate → chuyến bị ngắt có thông báo (không ghi
   0 mi âm thầm). ⏳ phiên F thử lại.
 - [ ] **B-64** 🟠 (QA MOD-2, mở rộng B-57) Máy cao (Pixel 9 Pro XL 997dp) + chữ 200% → số tiền đang gõ co ~6px vì điều kiện B-57 chỉ xét
-  chiều cao < 720dp. Sửa: so theo chiều cao chia `fontScale` (`capture.tsx`); `minHeight` vùng số tiền giữ nguyên. ⏳ phiên F thử lại.
+  chiều cao < 720dp. Ca thứ 3: Fold mở xoay ngang (Android 16 bỏ qua `screenOrientation=portrait` trên màn ≥ 600dp) → số tiền ~5px.
+  Sửa: so theo chiều cao chia `fontScale`, **và đo thật** — bàn phím mở mà vùng số tiền < 80dp thì rút gọn tới khi bàn phím đóng
+  (`onLayout`, không bật/tắt qua lại); `minHeight` 64. ⏳ phiên F thử lại (XL @2.0, Fold ngang).
 - [ ] **B-65** 🟠 (QA OLD-5, phiên B; nghi từ đầu QA) Bật App lock (Lock after = Immediately) → Home → Recents: ảnh thu nhỏ hiện nguyên
   màn có số tiền (API 26, `qa-runs/android-old/_dbg/al_recents.png`). Khoá vẫn đúng khi mở lại / deep link. Gốc: không có gì ẩn nội dung
   khi app vào nền. Sửa: `modules/system-bars` thêm `setHideInRecents` — Android 13+ `setRecentsScreenshotEnabled(false)` (vẫn chụp màn hình
