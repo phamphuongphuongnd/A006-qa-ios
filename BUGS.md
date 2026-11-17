@@ -298,3 +298,12 @@
   lần mở sheet). Luật (`rules.tsx`) đã có kiểm trùng trong DB. ⏳ phiên F thử lại P056 + thử chạm đúp 3 màn kia.
 - [ ] **B-71** 🟡 (QA A13-1, phiên E) Đổi vùng US → UK có quy đổi: ô tỷ giá gợi ý "e.g. 0.79" nhưng nhập sai thì báo "Enter a rate like 1.27"
   (chuỗi lỗi cố định). Sửa: `settings.tsx` dùng chung ví dụ theo vùng cho gợi ý và lỗi (`rateError` có `{example}`). ⏳ A13.
+- [ ] **B-72** 🟠 (QA OLD-9, hồi quy B-57/B-58 trên 538ede9, phiên B) Android 8 360dp: chế độ gọn đã chạy nhưng số tiền vẫn ~4px và hàng
+  + − × ÷ vẫn bị bàn phím che nửa. Gốc: `adjustsFontSizeToFit` của Android tính cỡ chữ 1 lần lúc vùng số còn ~0 (bàn phím đang mở) và không
+  phóng lại; bù `insets.bottom` (B-58) là đoán sai. Sửa (`capture.tsx`): cỡ chữ số tiền tính từ chiều cao đo được của vùng số + độ dài chuỗi
+  (24–64), bỏ `adjustsFontSizeToFit`; hàng phép tính **đo vị trí thật** (`measureInWindow`) so với mép trên bàn phím (`keyboardDidShow`
+  `screenY`) rồi nâng lên đúng phần bị che (tối đa 160dp). ⏳ phiên B (API 26 360dp) + F (XL @2.0, Fold ngang) + A13.
+- [ ] **B-73** 🟠 (QA MOD-9, phiên F) Back ẩn bàn phím rồi chạm số tiền → bàn phím không hiện lại (ô ẩn vẫn đang focus, `focus()` không mở IME
+  trên Android) — kẹt, phải đóng màn. Sửa: `features/ocr/refocus.ts` (blur rồi focus khung sau) cho Ghi nhanh, Sửa khoản, Parking & tolls.
+- [ ] **B-74** 🟡 (QA OLD-8, phiên B) Bộ nhớ máy đầy: Save ở Ghi nhanh không lưu, không báo gì (SQLITE_FULL bị nuốt). Sửa: báo "Couldn't save.
+  Free up some storage on your phone and try again.", giữ số trên màn.

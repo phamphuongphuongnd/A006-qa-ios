@@ -39,6 +39,7 @@ import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, useTheme } from '@/theme';
 import { Button, Chip, Dialog, IconButton, RoundButton, Segmented, Txt, useSnackbar } from '@/ui';
+import { refocus } from '@/features/ocr/refocus';
 
 /** Home's fixed Expense/Income bar (72 + 2×12 padding): the Saved snackbar sits above it. */
 const HOME_BAR = 96;
@@ -112,7 +113,7 @@ export default function CaptureScreen() {
 
   const focusAmount = () => {
     setNoteOpen(false);
-    amountRef.current?.focus();
+    refocus(amountRef.current);
   };
 
   // Ask before throwing away a typed entry (✕, Android back, swipe down).
@@ -143,11 +144,21 @@ export default function CaptureScreen() {
   // With the keyboard down the bottom row must clear the system nav bar (B-21); with it up the keyboard covers it.
   const [keyboardUp, setKeyboardUp] = useState(false);
   const [squeezed, setSqueezed] = useState(false);
+  // QA-100 OLD-9: measured, not guessed — where the keyboard starts and how much the calculator row still sits under it.
+  const keyboardTop = useRef<number | null>(null);
+  const [calcLift, setCalcLift] = useState(0);
+  const calcRef = useRef<ComponentRef<typeof View>>(null);
+  const [middleHeight, setMiddleHeight] = useState(0);
   useEffect(() => {
-    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardUp(true));
+    const show = Keyboard.addListener('keyboardDidShow', (e) => {
+      keyboardTop.current = e.endCoordinates.screenY;
+      setKeyboardUp(true);
+    });
     const hide = Keyboard.addListener('keyboardDidHide', () => {
+      keyboardTop.current = null;
       setKeyboardUp(false);
       setSqueezed(false);
+      setCalcLift(0);
     });
     return () => {
       show.remove();
@@ -164,6 +175,14 @@ export default function CaptureScreen() {
   // QA-100 OLD-2: before Android 11 the keyboard height RN reports leaves out the nav bar the app draws behind
   // (edge-to-edge), so the calculator row ended up half under the keyboard.
   const keyboardOffset = Platform.OS === 'android' && Number(Platform.Version) < 30 ? insets.bottom : 0;
+
+  // QA-100 OLD-9: Android's adjustsFontSizeToFit sized the amount once, while its area was still ~0 under the opening
+  // keyboard, and never grew it back (4px on Android 8). Size it from the measured height and the text's length instead.
+  const { width: windowWidth } = useWindowDimensions();
+  const shownText = formatMoney(amount.shownMinor, currency);
+  const byHeight = middleHeight > 0 ? (middleHeight - 16) * 0.78 : 64;
+  const byWidth = (windowWidth - 80) / (Math.max(5, shownText.length + (amount.isExpression ? 2 : 0)) * 0.62);
+  const amountSize = Math.round(Math.max(24, Math.min(64, byHeight, byWidth)));
 
   const close = () => setLeaving(true);
 
@@ -202,9 +221,10 @@ export default function CaptureScreen() {
     savingRef.current = true;
     try {
       await saveOnce(minor);
-    } catch (e) {
+    } catch {
+      // QA-100 OLD-8: a full phone (SQLITE_FULL) failed silently — the driver thought it was saved. Keep the amount.
       savingRef.current = false;
-      throw e;
+      snack({ message: t('capture.saveFailed'), tone: 'error', above: 'none' });
     }
   };
 
@@ -322,7 +342,9 @@ export default function CaptureScreen() {
             focusAmount();
           }}
           onLayout={(e) => {
-            if (keyboardUp && !squeezed && e.nativeEvent.layout.height < 80) setSqueezed(true);
+            const h = e.nativeEvent.layout.height;
+            setMiddleHeight(h);
+            if (keyboardUp && !squeezed && h < 80) setSqueezed(true);
           }}
           style={styles.middle}>
           <ExprLine amount={amount} />
@@ -334,11 +356,9 @@ export default function CaptureScreen() {
               <Txt
                 v="amountTyped"
                 c={amount.shownMinor > 0 ? tone : 'textTertiary'}
-                adjustsFontSizeToFit
-                minimumFontScale={0.5}
                 numberOfLines={1}
-                maxFontSizeMultiplier={1.2}
-                style={{ flexShrink: 1 }}>
+                maxFontSizeMultiplier={1}
+                style={{ flexShrink: 1, fontSize: amountSize, lineHeight: Math.round(amountSize * 1.12) }}>
                 {amount.isExpression ? t('ocr.equals', { amount: shown }) : shown}
               </Txt>
               {!noteOpen && !fromReceipt.amount ? <Caret color={caretColor} /> : null}
@@ -483,7 +503,22 @@ export default function CaptureScreen() {
             </Txt>
           )}
         </View>
-        {keyboardUp && !noteOpen ? <CalcBar onOp={amount.op} /> : null}
+        {keyboardUp && !noteOpen ? (
+          <View
+            ref={calcRef}
+            style={{ marginBottom: calcLift }}
+            onLayout={() =>
+              // Lift the row by whatever part of it the keyboard still covers (old Android reports a short keyboard).
+              calcRef.current?.measureInWindow((_x, y, _w, h) => {
+                const top = keyboardTop.current;
+                if (top === null) return;
+                const covered = Math.round(y + h - top);
+                if (covered > 1) setCalcLift((l) => Math.min(l + covered, 160));
+              })
+            }>
+            <CalcBar onOp={amount.op} />
+          </View>
+        ) : null}
       </KeyboardAvoidingView>
 
       <CameraDeniedDialog visible={cameraDenied} onClose={() => setCameraDenied(false)} />

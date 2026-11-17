@@ -10,6 +10,7 @@ import { t } from '@/i18n';
 import { fonts, radius, useTheme } from '@/theme';
 import { Txt } from '@/ui';
 import { ParkingCircle } from '@/ui/icons';
+import { refocus } from '@/features/ocr/refocus';
 
 /**
  * "Parking & tolls" on a trip (Q28): an amount field with the calculator (Q20) — digits from the number pad
@@ -47,7 +48,7 @@ export function ParkingField({
         onPress={() => {
           setEditing(true);
           onEditingChange?.(true);
-          ref.current?.focus();
+          refocus(ref.current);
         }}
         style={[
           styles.box,
