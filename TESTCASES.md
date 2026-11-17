@@ -297,7 +297,7 @@
 | TC-272 | F-12 Q25 | S-07b bản đồ live (GPS giả) | Đường vẽ dần, chấm vàng vị trí, camera theo tuyến | E | ⏳ |
 | TC-273 | F-12 Q25 | S-07c bản đồ | Chấm xanh lá đầu, ghim đỏ cuối, điểm dừng đánh số, "© OpenStreetMap · OpenFreeMap", kéo/phóng | E | ✅ M: S-07c bản đồ chấm xanh đầu, ghim đỏ cuối, "© OpenStreetMap · OpenFreeMap" (chuyến mẫu không có điểm dừng → số điểm dừng chưa thấy) |
 | TC-274 | F-13 Q25 | Ảnh bản đồ nhỏ ở Miles | Có ảnh cho chuyến GPS; sửa chuyến → ảnh mới; xoá chuyến → ảnh bị dọn | T routeMap + E | ✅ M: ảnh bản đồ nhỏ cho mọi chuyến GPS (cả chuyến thử mới). Ghi chú P6: ảnh 157px không đủ chỗ ghi nguồn OSM (log MapLibre) — cân nhắc 1 dòng "© OpenStreetMap" cuối Miles |
-| TC-275 | F-12 Q25 | Không mạng | S-07b / S-07c hình phác hoạ, Miles icon cũ | E | ⏳ |
+| TC-275 | F-12 Q25 | Không mạng | S-07b / S-07c hình phác hoạ, Miles icon cũ | E | ✅ M·P: chi tiết chuyến GPS hiện bản đồ từ cache MapLibre (vùng đã tải trước) — đầy đủ hơn hình phác hoạ; vùng chưa có cache → `TripMap` hết giờ chờ → hình phác hoạ (code). A → B: gõ "Leeds" → "No internet — enter miles instead" + ô Miles |
 | TC-276 | F-12 Q25 | Giao diện tối | Bản đồ style tối | E | ✅ M·P: chi tiết chuyến GPS (Fri 13 Nov) dùng style bản đồ tối, tuyến xanh + điểm đầu/cuối/điểm dừng rõ, dòng "© OpenStreetMap · OpenFreeMap" |
 | TC-277 | F-12 Q25 | Chuyến 100+ dặm | Bản đồ fit đủ tuyến, ảnh nhỏ đúng | E | ✅ M: chuyến thử Leeds → London 167.9 mi: bản đồ S-07c fit đủ tuyến, ảnh nhỏ đúng |
 | TC-278 | F-12 | S-07d bản free | Công tắc khoá + "PRO" → S-19 "Automatic trips are a Pro feature" | E | ✅ M (free): công tắc "Record trips automatically" có "PRO" → S-19 "Automatic trips are a Pro feature" |
@@ -369,7 +369,7 @@
 | TC-344 | TalkBack | Kịch bản Q23 qua 6 màn | Đọc đúng nhãn | P | ⏳ |
 | TC-345 | Chữ 200% | Màn mới bản 2 (Sort split, S-19, S-07d, A → B, S-08b) | Không cắt chữ | E | ⏳ |
 | TC-346 | Tối | Màn mới bản 2 | Đúng màu, đọc được | E | ✅ M·P (Phương bật Chế độ tối 17/11; Theme trong app tạm để System rồi trả về Light như cũ): Home, Sort + Split, Miles, chi tiết chuyến, A → B, S-19 Pro, S-07d, S-08b, Reports đúng màu tối, chữ đọc rõ |
-| TC-347 | Offline | Mọi luồng trừ A → B / bản đồ | Chạy bình thường | E | ⏳ |
+| TC-347 | Offline | Mọi luồng trừ A → B / bản đồ | Chạy bình thường | E | ✅ M·P (Phương bật chế độ máy bay 17/11, wifi tắt): ghi khoản £1.23 → "Saved · £1.23 expense"; Sort, Miles, Reports đủ số; Export 4 file (CSV + PDF) → zip + bảng chia sẻ; khoản thử đã xoá |
 
 ## Bản 2 — S6 Ý từ thử đối thủ (Q28–Q31, F-23, nhánh `s6-competitor-ideas`)
 
