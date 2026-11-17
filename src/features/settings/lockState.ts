@@ -15,7 +15,16 @@ export async function withLockSuspended<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
   } finally {
-    suspended--;
+    suspended = Math.max(0, suspended - 1);
     resumedAt = Date.now();
   }
+}
+
+/**
+ * B-53: a biometric prompt that the system dropped without answering (a new intent — NFC tag / trip toggle — arrived
+ * while it was up) leaves its promise pending forever. Forget every open suspension so app lock works again.
+ */
+export function resetLockSuspended() {
+  suspended = 0;
+  resumedAt = Date.now();
 }

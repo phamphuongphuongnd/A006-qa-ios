@@ -9,7 +9,7 @@ import { t } from '@/i18n';
 import { GUTTER, useTheme } from '@/theme';
 import { Button, Txt } from '@/ui';
 
-import { withLockSuspended } from './lockState';
+import { resetLockSuspended, withLockSuspended } from './lockState';
 
 /** True when the phone has a fingerprint/face or at least a PIN/passcode to unlock with. */
 export async function deviceCanLock(): Promise<boolean> {
@@ -63,6 +63,19 @@ export function LockedView({ onUnlock }: { onUnlock: () => void }) {
     }
   }, [onUnlock]);
 
+  /**
+   * B-53: "Unlock" pressed means no prompt is on screen. If an earlier prompt is still "pending" (the system dropped it
+   * when a trip-toggle / NFC intent arrived), cancel it and ask again instead of ignoring the tap.
+   */
+  const onUnlockPress = useCallback(async () => {
+    if (busy.current) {
+      await LocalAuthentication.cancelAuthenticate().catch(() => {});
+      resetLockSuspended();
+      busy.current = false;
+    }
+    await tryUnlock();
+  }, [tryUnlock]);
+
   useEffect(() => {
     tryUnlock();
     const sub = AppState.addEventListener('change', (s) => {
@@ -86,7 +99,7 @@ export function LockedView({ onUnlock }: { onUnlock: () => void }) {
         </View>
       </View>
       <View style={{ paddingHorizontal: GUTTER }}>
-        <Button label={t('lock.unlock')} icon={ScanFace} full onPress={tryUnlock} />
+        <Button label={t('lock.unlock')} icon={ScanFace} full onPress={onUnlockPress} />
       </View>
     </View>
   );

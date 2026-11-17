@@ -178,6 +178,12 @@
   (tc345/miles.png, ab.png, split.png). — sửa (code, chờ thử lại ở chữ 200% cuối phần C): Miles nhãn năm co lại
   (`flex: 1, minWidth: 0` + `numberOfLines={1}`), tiêu đề dòng chuyến 2 dòng; `Chip` `maxWidth: '100%'` + chữ `flexShrink`;
   nút danh mục ở Split `adjustsFontSizeToFit` + test `src/ui/__tests__/largeText.test.ts`
+- [x] **B-53** 🟠 App lock: bấm "Unlock" không có phản hồi (Phương báo 17/11 sau TC-295) và app không khoá lại nữa (để nền
+  68 giây vẫn mở) — tái hiện: App lock bật → app khoá → `sundaysort://trip/toggle` 2 lần liền (như chạm thẻ NFC) → hộp vân
+  tay bị intent mới cắt ngang, `authenticateAsync` không trả kết quả → `busy` + `withLockSuspended` kẹt. Lần thử lại hộp vân
+  tay hiện được (không phải lần nào cũng kẹt). — sửa: nút Unlock khi đang "busy" gọi `LocalAuthentication.cancelAuthenticate()`
+  + `resetLockSuspended()` rồi hỏi lại; bộ đếm không xuống âm + test `src/features/settings/__tests__/lockState.test.ts`.
+  Chưa thử A13 (cần tái hiện lúc kẹt).
 
 ### S6 (nhánh `s6-competitor-ideas`, thử trên giả lập theo Phương 2026-11-16)
 - [x] **B-S6a** 🟠 Ô "Parking & tolls" ở Thêm / Sửa chuyến: bấm vào thì ô và hàng "+ − × ÷" nằm sau nút Save + bàn phím →
