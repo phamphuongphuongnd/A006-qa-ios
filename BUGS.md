@@ -183,7 +183,9 @@
   tay bị intent mới cắt ngang, `authenticateAsync` không trả kết quả → `busy` + `withLockSuspended` kẹt. Lần thử lại hộp vân
   tay hiện được (không phải lần nào cũng kẹt). — sửa: nút Unlock khi đang "busy" gọi `LocalAuthentication.cancelAuthenticate()`
   + `resetLockSuspended()` rồi hỏi lại; bộ đếm không xuống âm + test `src/features/settings/__tests__/lockState.test.ts`.
-  Chưa thử A13 (cần tái hiện lúc kẹt).
+  Chưa thử A13 (cần tái hiện lúc kẹt). Hệ quả thêm thấy 17/11: toggle lần 2 tới lúc hộp vân tay đang mở thì bị bỏ qua → chuyến NFC
+  vẫn chạy (GPS bật) tới khi toggle lại; widget hiện đúng "End trip · 0.0 mi". Đề xuất P6: hàng đợi deep link toggle chạy sau khi hộp
+  vân tay đóng.
 
 ### S6 (nhánh `s6-competitor-ideas`, thử trên giả lập theo Phương 2026-11-16)
 - [x] **B-S6a** 🟠 Ô "Parking & tolls" ở Thêm / Sửa chuyến: bấm vào thì ô và hàng "+ − × ÷" nằm sau nút Save + bàn phím →
