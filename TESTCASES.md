@@ -298,7 +298,7 @@
 | TC-273 | F-12 Q25 | S-07c bản đồ | Chấm xanh lá đầu, ghim đỏ cuối, điểm dừng đánh số, "© OpenStreetMap · OpenFreeMap", kéo/phóng | E | ✅ M: S-07c bản đồ chấm xanh đầu, ghim đỏ cuối, "© OpenStreetMap · OpenFreeMap" (chuyến mẫu không có điểm dừng → số điểm dừng chưa thấy) |
 | TC-274 | F-13 Q25 | Ảnh bản đồ nhỏ ở Miles | Có ảnh cho chuyến GPS; sửa chuyến → ảnh mới; xoá chuyến → ảnh bị dọn | T routeMap + E | ✅ M: ảnh bản đồ nhỏ cho mọi chuyến GPS (cả chuyến thử mới). Ghi chú P6: ảnh 157px không đủ chỗ ghi nguồn OSM (log MapLibre) — cân nhắc 1 dòng "© OpenStreetMap" cuối Miles |
 | TC-275 | F-12 Q25 | Không mạng | S-07b / S-07c hình phác hoạ, Miles icon cũ | E | ⏳ |
-| TC-276 | F-12 Q25 | Giao diện tối | Bản đồ style tối | E | ⏳ |
+| TC-276 | F-12 Q25 | Giao diện tối | Bản đồ style tối | E | ✅ M·P: chi tiết chuyến GPS (Fri 13 Nov) dùng style bản đồ tối, tuyến xanh + điểm đầu/cuối/điểm dừng rõ, dòng "© OpenStreetMap · OpenFreeMap" |
 | TC-277 | F-12 Q25 | Chuyến 100+ dặm | Bản đồ fit đủ tuyến, ảnh nhỏ đúng | E | ✅ M: chuyến thử Leeds → London 167.9 mi: bản đồ S-07c fit đủ tuyến, ảnh nhỏ đúng |
 | TC-278 | F-12 | S-07d bản free | Công tắc khoá + "PRO" → S-19 "Automatic trips are a Pro feature" | E | ✅ M (free): công tắc "Record trips automatically" có "PRO" → S-19 "Automatic trips are a Pro feature" |
 | TC-279 | F-12 | S-07e chuỗi quyền | 4 bước, mỗi bước 1 nút; bỏ bước → cam "Automatic trips may miss drives" + "Finish setup" | E | ✅ M: S-07e "STEP 1 OF 4"… mỗi bước 1 nút + "Skip this step"; bỏ bước pin → "Automatic trips may miss drives" + "Fix" (mở S-07f; "Finish setup" khi thiếu quyền vận động / vị trí — theo code) |
@@ -368,7 +368,7 @@
 | TC-343 | Quyền | Manifest release | Giữ INTERNET, BILLING, NFC, ACTIVITY_RECOGNITION…; không quyền thừa | E | ✅ plugin `withReleasePermissions.js` giữ INTERNET, BILLING, NFC, ACTIVITY_RECOGNITION…, chỉ gỡ overlay / bộ nhớ / push / badge; bản dev trên A13 có NFC, BILLING, BLUETOOTH_CONNECT, CAMERA. ⚠ `android/` cục bộ sinh 13/11 còn gỡ INTERNET → P6 build release cục bộ phải `npx expo prebuild --clean` (EAS tự prebuild); kiểm lại manifest của AAB release |
 | TC-344 | TalkBack | Kịch bản Q23 qua 6 màn | Đọc đúng nhãn | P | ⏳ |
 | TC-345 | Chữ 200% | Màn mới bản 2 (Sort split, S-19, S-07d, A → B, S-08b) | Không cắt chữ | E | ⏳ |
-| TC-346 | Tối | Màn mới bản 2 | Đúng màu, đọc được | E | ⏳ |
+| TC-346 | Tối | Màn mới bản 2 | Đúng màu, đọc được | E | ✅ M·P (Phương bật Chế độ tối 17/11; Theme trong app tạm để System rồi trả về Light như cũ): Home, Sort + Split, Miles, chi tiết chuyến, A → B, S-19 Pro, S-07d, S-08b, Reports đúng màu tối, chữ đọc rõ |
 | TC-347 | Offline | Mọi luồng trừ A → B / bản đồ | Chạy bình thường | E | ⏳ |
 
 ## Bản 2 — S6 Ý từ thử đối thủ (Q28–Q31, F-23, nhánh `s6-competitor-ideas`)

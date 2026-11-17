@@ -365,7 +365,13 @@ function SplitPanel({
               accessibilityLabel={`${t('sortV2.partCategory', { n: i + 1 })}, ${cat?.name ?? t('common.unsorted')}`}
               onPress={() => setPicking(p.key)}
               style={[styles.partCat, { backgroundColor: cat ? colors.primary : colors.surface, borderColor: cat ? colors.primary : colors.lineStrong }]}>
-              <Txt numberOfLines={1} maxFontSizeMultiplier={1.4} style={{ fontSize: 15, fontFamily: fonts.semibold, color: cat ? colors.onPrimary : colors.text, flexShrink: 1 }}>
+              {/* B-52: shrinks to fit ("Choose", a category name) instead of "Choo..". */}
+              <Txt
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
+                maxFontSizeMultiplier={1.4}
+                style={{ fontSize: 15, fontFamily: fonts.semibold, color: cat ? colors.onPrimary : colors.text, flexShrink: 1 }}>
                 {cat?.name ?? t('sortV2.choose')}
               </Txt>
               {cat ? null : <ChevronDown size={16} color={colors.text} />}

@@ -175,7 +175,9 @@
   → không mở được menu Automatic trips / NFC tag / Odometer check; (2) 🟡 Miles: dòng chuyến cắt "Fri 13 Nov ·.." mất số dặm;
   (3) 🟡 A → B: chip nơi hay đến "Wakefield Westgate Railwa…" tràn quá mép phải, công tắc "Odometer | Distance | A → B" ép
   sát; (4) 🟡 Sort → Split: nút danh mục từng phần còn "Choo.." (mất chữ "Choose"). Ảnh bằng chứng: thư mục scratchpad P5-3
-  (tc345/miles.png, ab.png, split.png).
+  (tc345/miles.png, ab.png, split.png). — sửa (code, chờ thử lại ở chữ 200% cuối phần C): Miles nhãn năm co lại
+  (`flex: 1, minWidth: 0` + `numberOfLines={1}`), tiêu đề dòng chuyến 2 dòng; `Chip` `maxWidth: '100%'` + chữ `flexShrink`;
+  nút danh mục ở Split `adjustsFontSizeToFit` + test `src/ui/__tests__/largeText.test.ts`
 
 ### S6 (nhánh `s6-competitor-ideas`, thử trên giả lập theo Phương 2026-11-16)
 - [x] **B-S6a** 🟠 Ô "Parking & tolls" ở Thêm / Sửa chuyến: bấm vào thì ô và hàng "+ − × ÷" nằm sau nút Save + bàn phím →

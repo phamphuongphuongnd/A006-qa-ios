@@ -37,6 +37,8 @@ export function Chip({
       style={({ pressed }) => [
         styles.chip,
         {
+          // B-52: never wider than its row — a long place name ends in "…" instead of running off the screen.
+          maxWidth: '100%',
           height: h,
           borderRadius: h / 2,
           paddingHorizontal: size === 's' ? 12 : size === 'lg' ? 18 : 16,
@@ -50,7 +52,7 @@ export function Chip({
       <Text
         numberOfLines={1}
         maxFontSizeMultiplier={1.6}
-        style={{ color: fg, fontSize: size === 's' ? 14 : size === 'lg' ? 16 : 15, fontFamily: state === 'best' ? fonts.bold : fonts.semibold }}>
+        style={{ flexShrink: 1, color: fg, fontSize: size === 's' ? 14 : size === 'lg' ? 16 : 15, fontFamily: state === 'best' ? fonts.bold : fonts.semibold }}>
         {label}
       </Text>
     </Pressable>

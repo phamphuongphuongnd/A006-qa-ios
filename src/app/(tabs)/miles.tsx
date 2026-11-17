@@ -165,11 +165,12 @@ export default function MilesScreen() {
             accessibilityRole="button"
             accessibilityLabel={`${t('miles.title')} ${t('miles.header', { label: year.label })}`}
             onPress={() => setPickYear(true)}
-            style={styles.flex}>
+            // B-52: shrink before the ⋯ button does — at 200% text it was pushed off the screen.
+            style={[styles.flex, { flex: 1, minWidth: 0 }]}>
             <Txt v="h1" accessibilityRole="header">
               {t('miles.title')}
             </Txt>
-            <Txt v="small" c="textSecondary" style={{ marginLeft: 6 }}>
+            <Txt v="small" c="textSecondary" numberOfLines={1} style={{ marginLeft: 6, flexShrink: 1 }}>
               {t('miles.header', { label: year.label })}
             </Txt>
             <ChevronDown size={20} color={colors.textSecondary} strokeWidth={2} />
@@ -465,7 +466,8 @@ function TripRowView({
         </View>
       )}
       <View style={{ flex: 1, minWidth: 0 }}>
-        <Txt v="h3" numberOfLines={1}>
+        {/* B-52: two lines so large text keeps the miles ("Fri 13 Nov · 2.9 mi"). */}
+        <Txt v="h3" numberOfLines={2}>
           {title}
         </Txt>
         <View style={[styles.flex, { gap: 6 }]}>
