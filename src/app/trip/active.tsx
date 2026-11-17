@@ -66,6 +66,10 @@ export default function ActiveTripScreen() {
         router.replace('/trip/permission?next=start');
         return;
       }
+      if (blocker === 'needs_precise') {
+        router.replace('/trip/permission?next=start&step=precise');
+        return;
+      }
       if (blocker === 'gps_off') {
         setGpsOff(true);
         return;

@@ -152,8 +152,9 @@ export default function CaptureScreen() {
   }, []);
   // QA-100 OLD-1: on short screens (360×640dp) the number pad leaves ~390dp; the helper lines go while it is up so the
   // amount keeps its room (it had shrunk to ~4px).
-  const { height: windowHeight } = useWindowDimensions();
-  const tight = keyboardUp && windowHeight < 720;
+  // QA-100 MOD-2: big text on a tall phone (997dp at 200%) squeezes the same way — compare in text-scaled units.
+  const { height: windowHeight, fontScale } = useWindowDimensions();
+  const tight = keyboardUp && windowHeight / Math.max(1, fontScale) < 720;
   // QA-100 OLD-2: before Android 11 the keyboard height RN reports leaves out the nav bar the app draws behind
   // (edge-to-edge), so the calculator row ended up half under the keyboard.
   const keyboardOffset = Platform.OS === 'android' && Number(Platform.Version) < 30 ? insets.bottom : 0;

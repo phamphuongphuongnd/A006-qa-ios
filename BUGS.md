@@ -253,3 +253,11 @@
 - [ ] **B-62** 🟡 (QA phiên A) Xuất file rồi huỷ bảng chia sẻ (Back) → khoản vẫn "Exported on …" (đánh dấu khi tạo file, trước khi chia sẻ).
   Phương chốt **hỏi lại như sao lưu**: `ExportPanel.tsx` sau bảng chia sẻ hiện "Did you send or save the files?" → chỉ "Yes, sent" mới
   `markExported`; product.md Q29 sửa theo. ⏳ thử máy (cả Export từ tab Reports lẫn S-10).
+- [ ] **B-63** 🟠 (QA MOD-1, phiên F) Người dùng chọn vị trí **"Approximate"** (Android 12+, kể cả "Only this time") / tắt "Precise" (iOS) →
+  chuyến GPS kẹt "Finding GPS…", lưu 0.0 mi, không báo gì (Fold API 37, P039; đối chứng Precise cùng tuyến = 1.9 mi). Gốc: chỉ xem
+  `fg.granted`, điểm sai số km bị lọc ở `MAX_ACCURACY_M`. Sửa: `isApproximate()` (`features/trips/controller.ts`) → `startBlocker`
+  trả `needs_precise` → màn quyền bước "Turn on precise location" (Android hỏi nâng lên Precise, không được thì mở Cài đặt; iOS mở Cài
+  đặt); chuyến tự động (`setup.tsx`) cũng đòi Precise; đang chạy chuyến mà hạ xuống Approximate → chuyến bị ngắt có thông báo (không ghi
+  0 mi âm thầm). ⏳ phiên F thử lại.
+- [ ] **B-64** 🟠 (QA MOD-2, mở rộng B-57) Máy cao (Pixel 9 Pro XL 997dp) + chữ 200% → số tiền đang gõ co ~6px vì điều kiện B-57 chỉ xét
+  chiều cao < 720dp. Sửa: so theo chiều cao chia `fontScale` (`capture.tsx`); `minHeight` vùng số tiền giữ nguyên. ⏳ phiên F thử lại.

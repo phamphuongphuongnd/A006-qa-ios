@@ -41,12 +41,20 @@ import {
 
 const distanceText = (trip: TripRow) => formatDistance(trip.distanceM, getSettings(db).distanceUnit);
 
-export type StartBlocker = 'gps_off' | 'needs_permission' | null;
+export type StartBlocker = 'gps_off' | 'needs_permission' | 'needs_precise' | null;
+
+/**
+ * QA-100 MOD-1: "Approximate" (Android) / Precise off (iOS) still counts as granted, but fixes are ~1–3 km apart and
+ * fail the accuracy filter (`MAX_ACCURACY_M`) — the trip sat on "Finding GPS…" and saved 0.0 mi without a word.
+ */
+export const isApproximate = (p: Pick<Location.LocationPermissionResponse, 'granted' | 'android' | 'ios'> | null | undefined): boolean =>
+  !!p?.granted && (p.android?.accuracy === 'coarse' || p.ios?.accuracy === 'reduced');
 
 /** What stands between the user and a recording trip. Background ("all the time") is optional on Android. */
 export async function startBlocker(): Promise<StartBlocker> {
   const fg = await Location.getForegroundPermissionsAsync();
   if (!fg.granted) return 'needs_permission';
+  if (isApproximate(fg)) return 'needs_precise';
   if (!(await Location.hasServicesEnabledAsync())) return 'gps_off';
   return null;
 }
@@ -208,7 +216,8 @@ export async function detectInterruptedTrip(): Promise<boolean> {
     Location.hasStartedLocationUpdatesAsync(TRIP_TASK).catch(() => false),
     Location.getForegroundPermissionsAsync().catch(() => null),
   ]);
-  if (started && fg?.granted) {
+  // Switched to approximate mid-trip counts as stopped recording (MOD-1): nothing usable arrives any more.
+  if (started && fg?.granted && !isApproximate(fg)) {
     await showTripNotification(trip, distanceText(trip));
     return false;
   }

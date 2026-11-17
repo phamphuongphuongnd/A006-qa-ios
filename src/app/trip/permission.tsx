@@ -7,6 +7,7 @@ import { Linking, Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect, Text as SvgText } from 'react-native-svg';
 
+import { isApproximate } from '@/features/trips/controller';
 import { markBackgroundStepShown } from '@/features/trips/permissionState';
 import { ModalHeader } from '@/features/trips/ModalHeader';
 import { t } from '@/i18n';
@@ -19,7 +20,7 @@ import { Button, Card, Screen, Tag, Txt } from '@/ui';
  */
 export default function PermissionScreen() {
   const { next, step: stepParam } = useLocalSearchParams<{ next?: string; step?: string }>();
-  const [step, setStep] = useState<1 | 2>(stepParam === '2' ? 2 : 1);
+  const [step, setStep] = useState<1 | 2 | 'precise'>(stepParam === '2' ? 2 : stepParam === 'precise' ? 'precise' : 1);
   const [busy, setBusy] = useState(false);
   // The buttons end the scrolling content: keep "Not now" clear of the system navigation bar (B-28).
   const bottomPad = { paddingBottom: useSafeAreaInsets().bottom + 20 };
@@ -43,17 +44,44 @@ export default function PermissionScreen() {
         else close();
         return;
       }
+      if (isApproximate(fg)) {
+        setStep('precise');
+        return;
+      }
+      await afterForeground();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /** Foreground (precise) granted: Android asks for "all the time" once, iOS later by itself. */
+  const afterForeground = async () => {
+    if (Platform.OS === 'android') {
+      const bg = await Location.getBackgroundPermissionsAsync();
+      if (!bg.granted) {
+        setStep(2);
+        return;
+      }
+    } else {
+      // iOS shows its own "Change to Always Allow" prompt later; recording works with "While Using" + indicator.
+      Location.requestBackgroundPermissionsAsync().catch(() => {});
+    }
+    proceed();
+  };
+
+  // MOD-1: approximate only → Android shows its "Change to precise" dialog when asked again; otherwise (and on iOS)
+  // only the app's settings page can switch "Precise" on.
+  const allowPrecise = async () => {
+    setBusy(true);
+    try {
       if (Platform.OS === 'android') {
-        const bg = await Location.getBackgroundPermissionsAsync();
-        if (!bg.granted) {
-          setStep(2);
+        const fg = await Location.requestForegroundPermissionsAsync();
+        if (fg.granted && !isApproximate(fg)) {
+          await afterForeground();
           return;
         }
-      } else {
-        // iOS shows its own "Change to Always Allow" prompt later; recording works with "While Using" + indicator.
-        Location.requestBackgroundPermissionsAsync().catch(() => {});
       }
-      proceed();
+      await Linking.openSettings();
     } finally {
       setBusy(false);
     }
@@ -69,6 +97,20 @@ export default function PermissionScreen() {
       setBusy(false);
     }
   };
+
+  if (step === 'precise') {
+    return (
+      <Screen header={<ModalHeader icon={X} iconLabel={t('trip.close')} onIcon={close} />} contentStyle={[{ gap: 20, flexGrow: 1 }, bottomPad]}>
+        <Txt v="h1" accessibilityRole="header">
+          {t('trip.preciseTitle')}
+        </Txt>
+        <Txt v="body" c="textSecondary" size={17} style={{ lineHeight: 26 }}>
+          {t('trip.preciseBody')}
+        </Txt>
+        <Bottom primary={t('trip.preciseAllow')} onPrimary={allowPrecise} onSecondary={close} busy={busy} />
+      </Screen>
+    );
+  }
 
   if (step === 2) {
     return (
