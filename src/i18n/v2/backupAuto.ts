@@ -16,7 +16,7 @@ export const backupAuto = {
   statusOff: 'Nightly backup off',
   statusOffLast: 'Last backup {when}',
   neverTitle: 'Never backed up',
-  neverBody: 'Your data only lives on this phone. A lost phone means lost records.',
+  neverBody: 'Your data is kept on this phone. Without a backup, a lost phone means lost records.',
   failedTitle: 'Last {count} backups failed',
   failedBodyFolder: "We can't reach your backup folder. Choose it again.",
   failedBodySpace: 'Your phone is out of space for the backup file.',

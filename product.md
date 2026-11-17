@@ -203,7 +203,7 @@ bất kỳ dữ liệu, ảnh, luật nào**; xuất CSV thô luôn mở.
 ### F-01 · Onboarding — S-01a…S-01f **[Đổi]**
 
 **S-01a Welcome** — minh hoạ van + mặt trời. "Log it in 10 seconds. Sort it on Sunday." · "A simple money and mileage log
-for self-employed drivers. No account. No bank link. Your data stays on your phone." · nút "Get started".
+for self-employed drivers. No account. No bank link. No Sunday Sort servers: we never see your data." · nút "Get started".
 
 **S-01b Choose your region** — "Where do you file your taxes?" · 2 thẻ có cờ: "United Kingdom" ("£ · Tax year 6 Apr – 5 Apr ·
 Self Assessment & MTD") / "United States" ("$ · Calendar year · Schedule C"). Mặc định theo vùng máy; ngoài UK/US không
@@ -453,7 +453,7 @@ Personal" · "Purpose" ("e.g. Amazon route DLS4") · "Save trip". Lỗi: End < S
 - **[Mới] Odometer check (Q27):** nhập số đồng hồ định kỳ (S-08b) → lệch với tổng dặm app ghi ≥ max(10 mi, 5%) → thẻ Home.
 
 **S-07a Location permission explainer** (2 bước): "Track business miles with GPS" · "Sunday Sort records your route only while
-a trip is running." · "Location stays on your phone." · "Allow location" / "Not now"; bước 2 Android "To keep recording with the
+a trip is running." · "Your route is never sent to us." · "Allow location" / "Not now"; bước 2 Android "To keep recording with the
 screen off, choose 'Allow all the time'." · "Open settings".
 
 **S-07b Active trip** — số dặm rất lớn · thời gian · **bản đồ thật nhỏ** (Q25: đường vẽ dần, chấm vàng vị trí hiện tại; không
@@ -785,6 +785,7 @@ giá "$31.99 / year".
 - Không Android Auto / CarPlay (dễ bị store từ chối — Q18).
 - Không nhiều xe / nhiều sổ / nhiều doanh nghiệp ở bản 2 (một xe, một cách tính xe).
 - Không quảng cáo; không gói tháng, không trọn đời; không thông báo bán hàng; không khoá / xoá dữ liệu khi hết Pro.
-- Không gửi tuyến GPS, ảnh hay dữ liệu OCR ra khỏi máy (bản đồ nền + A → B dùng mạng từ Q25 — xem §0; P6 sửa privacy
-  policy + Data safety).
+- Không gửi tuyến GPS, ảnh hay dữ liệu OCR về server nào của mình (bản đồ nền + A → B dùng mạng từ Q25 — xem §0).
+  **Giữ sao lưu hệ thống** (Android `allowBackup`, iCloud Backup) — Phương chốt 2026-11-17 (QA-100): lời hứa trong app
+  là "we never see your data", không hứa "dữ liệu không rời máy"; `docs/privacy.html` đã sửa theo, Data safety khai theo.
 - Chỉ tiếng Anh (i18n dựng sẵn).

@@ -221,3 +221,13 @@
   không thấy số đang gõ, bấm "+" trúng Save (lưu £2.50 thay vì 2.50+1.00). Sửa: khi đang gõ, thanh dưới (trên nút Save) hiện
   "Parking & tolls  2.50+1.00 = £3.50" + hàng "+ − × ÷" (`ParkingKeyBar`); sheet End trip giữ hàng phép tính ngay dưới ô —
   thử giả lập: £3.50 lưu đúng.
+
+## QA-100 — 100 người dùng mô phỏng (2026-11-17, `dev` `dc6d0a6`; T1 logic Jest 100 persona, Android API 37/8/11, iOS sim GH Actions, chuyên đề)
+> Bằng chứng: `qa-runs/<phiên>/` (máy local, gitignore). Lỗi phiên con: `qa/findings/*.md` → phiên điều phối chép vào đây khi xác nhận.
+- [x] **B-56** 🟠 Lời hứa riêng tư sai: bản release khai `allowBackup="true"` (`dumpsys package` → `ALLOW_BACKUP`) → Android tự sao lưu
+  DB + ảnh lên Google của người dùng, trong khi onboarding ghi "Your data stays on your phone", màn quyền "Location stays on your
+  phone", `docs/privacy.html` ghi "does not connect to the internet … nothing is sent to anyone" (sai từ bản 2: OpenFreeMap,
+  openrouteservice, Play Billing, sao lưu thư mục). Phương chốt **giữ sao lưu hệ thống, sửa lời hứa** — sửa: chữ welcome "No Sunday
+  Sort servers: we never see your data", permStays "Your route is never sent to us", 4 câu "lives only on this phone" → "kept on this
+  phone", `docs/privacy.html` thêm mục "Outside services" + System backup + nightly folder; product.md §F-01/S-07a/§11.
+  ⏳ Đăng bản privacy mới lên trang công khai + Data safety: phần store, chờ Phương.
