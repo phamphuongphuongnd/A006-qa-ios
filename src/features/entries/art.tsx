@@ -4,12 +4,13 @@ import { useTheme } from '@/theme';
 
 /** Line illustrations copied from the Hi-Fi mockup SVGs. Navy strokes follow the theme text colour in dark mode. */
 
-export function WelcomeArt() {
+/** `scale` < 1 on short screens / big text (QA-100 iOS: iPhone SE + large Dynamic Type cut the welcome text off). */
+export function WelcomeArt({ scale = 1 }: { scale?: number } = {}) {
   const { colors, dark } = useTheme();
   const ink = dark ? colors.text : '#1F2A44';
   const paper = dark ? colors.surface : '#fff';
   return (
-    <Svg width={320} height={220} viewBox="0 0 320 220" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+    <Svg width={320 * scale} height={220 * scale} viewBox="0 0 320 220" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       <Circle cx={236} cy={72} r={34} fill="#F5B841" />
       <Path d="M236 20v10M236 114v10M184 72h10M278 72h10M199 35l7 7M266 102l7 7M199 109l7-7M266 42l7-7" stroke="#F5B841" strokeLinecap="round" strokeWidth={5} />
       <Path d="M20 186h280" stroke={ink} strokeLinecap="round" strokeWidth={3} />

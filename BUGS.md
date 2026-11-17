@@ -266,3 +266,8 @@
   khi app vào nền. Sửa: `modules/system-bars` thêm `setHideInRecents` — Android 13+ `setRecentsScreenshotEnabled(false)` (vẫn chụp màn hình
   được), Android < 13 `FLAG_SECURE` cho cửa sổ app + cửa sổ Modal (chặn cả chụp màn hình khi App lock bật — giới hạn của Android cũ);
   iOS: phủ màn nền khi app rời `active` (`services/recentsPrivacy.ts`, `LockGate`). ⏳ cần build native mới; thử API 26 + API 37 + A13 + iOS.
+- [ ] **B-66** 🟡 (QA iOS lượt 1, phiên C) iPhone SE + Dynamic Type lớn (P016, P031): màn chào "Log it in 10 seconds" — hình minh hoạ 220pt +
+  đệm 48 đẩy tiêu đề/đoạn mô tả xuống dưới mép vùng nút, không thấy gợi ý cuộn (cuộn được). Sửa (`onboarding/index.tsx`, `art.tsx`): màn
+  thấp hoặc chữ lớn (chiều cao / fontScale < 700) → hình còn 55%, đệm 16; tiêu đề `maxFontSizeMultiplier 1.6`. ⏳ iOS lượt 2.
+  Ghi nhận (không sửa): log iOS "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện đọc đăng ký
+  push từ keychain, app chỉ dùng thông báo local; theo dõi ở lượt 2 xem thông báo nhắc có hiện không.
