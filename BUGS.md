@@ -170,6 +170,10 @@
   patch-package `IntentModule.kt` — trong `onHostResume` nếu Activity vẫn null thì `resolve(null)` thay vì chờ lại; build
   native mới, để máy chạy nền qua đêm rồi đo `top -H`. **P6:** `android/` cục bộ sinh ngày 13/11 (manifest release cũ còn gỡ
   INTERNET) → trước khi build native / release cục bộ chạy `npx expo prebuild --clean` (EAS tự prebuild).
+  **Chốt 2026-11-17 (phiên chính): bản 1.0 = (c) giới hạn đã biết**, chưa sửa: không có patch-package; RN Android là AAR
+  `react-android` dựng sẵn nên vá `IntentModule.kt` trong node_modules không vào bản build. Theo dõi: sau ca chạy xe đọc
+  `adb shell dumpsys batterystats com.phiotron.sundaysort` + `top -H` trên bản release; nếu release cũng bị → làm (b) module
+  native nhỏ ghi đè "IntentAndroid" (hoặc (a) patch-package + build RN từ nguồn).
 - [x] **B-52** 🟠 Chữ 200% (font_scale 2.0, Phương bật) — case TC-345 — S-19, S-07d, S-08b, Backup, thẻ Sort (hàng hành động
   ghim đáy, B-43) đạt. Sai: (1) 🟠 Miles: tiêu đề "Miles · Tax year 2026/27 ⌄" đẩy nút ⋯ "More" ra ngoài mép phải (còn 14 px)
   → không mở được menu Automatic trips / NFC tag / Odometer check; (2) 🟡 Miles: dòng chuyến cắt "Fri 13 Nov ·.." mất số dặm;
