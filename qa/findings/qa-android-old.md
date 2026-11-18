@@ -183,6 +183,17 @@ Log `[B98v4]`: API 26 `top=363 y=216 h=200.5 covered=54 cramped=false` → `y=32
 Android 7 `top=305 … covered=68` → `y=263 h=66 cramped=true`. (`covered=24` còn lại ở trạng thái gọn là phần đệm dưới của khối; ảnh cho thấy Save
 nằm trọn trên bàn phím, cách mép 27 px.) Ảnh: `api26/v4_strip.png`, `api24/v4_strip.png`.
 
+### Bản cuối ef470b7 (B-114 v3, B-109 v3, B-115, B-116), API 26 360×640dp, 2026-11-18 16:19–16:30 · `qa-runs/android-old/verify-ef470b7/` — ✅
+| Kiểm | Kết quả |
+|---|---|
+| P016 (US, chữ 2.0) | ✅ 10/10: onboarding, khôi phục, 5 tab, **Split "Split into 2 entries"**, Merge, mở lại, log sạch |
+| B-114 v3 chữ 2.0 | ✅ "Sort your / week" không bẻ giữa chữ; List view dòng riêng dưới tiêu đề; tiêu đề cuộn cùng thẻ; FAB ẩn ở Sort; Edit/Split/Merge/Skip tới được; Skip → thẻ kế ($170.16 → $16.72). 🟡 khi đã cuộn, chữ của thẻ chạy dưới thanh trạng thái (không chừa mép trên); nhãn nút vẫn cắt "E… Sp.. Mer… Sk..". |
+| OLD-16 chữ 1.3 | ✅ bố cục thường; Split → "Split & sort" thấy sau 1 lần vuốt trong thẻ |
+| B-109 v3 | ✅ cả 3 đường (Entries cuộn ~4 trang mỗi lần): FAB + ✓ → TODAY + −$3.21 trên cùng; FAB + nút Save → −$4.56; Home → Expense → ✓ → tab Entries → −$6.54 |
+| B-115 | ✅ hỏi "photos, media, files" → CaptureActivity → ✓ → "1 of 3" → Save → `files/receipts` 1080×1080 khớp khung duyệt, không FATAL |
+| B-116 (trên 07f4aac) | ✅ chip 1 dòng "18 Nov 2025, 04:18"; 🟡 nút Expense hơi chật (chữ chạm mép viên) nhưng không cắt |
+| B-100 "More below" | ✅ nhãn ở góc phải dưới, vuốt bắt đầu trên nhãn vẫn cuộn trang |
+
 ### Kiểm B-114 (04fa4f9) và B-115 / B-109 v2 (07f4aac), API 26 360×640dp, 2026-11-18 15:45–16:07 · `verify-04fa4f9/`, `verify-07f4aac/`
 | Kiểm | Kết quả |
 |---|---|
