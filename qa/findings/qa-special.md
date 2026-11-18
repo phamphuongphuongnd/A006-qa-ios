@@ -35,7 +35,7 @@ Ký hiệu: ✅ kiểm thật, đạt · ❌ kiểm thật, lỗi · ⏭ chưa k
 |---|---|---|
 | 34 deep link lạ (đường dẫn không có, entry/split/trip id giả, chuỗi 5.000 ký tự, `' OR 1=1--`, `%00%0A`, `..%2F`, RTL override, `/////`, `exp+sundaysort://`, `dev/probe`, `dev/ocr`, `dev/gallery`, `locked`, `onboarding`, `backup?run=1`, tham số NaN cho export/auto-sorted/entries/capture/pro) | không crash, không lộ dữ liệu; id giả → "This entry/trip no longer exists"; `dev/*` về Home (release); `onboarding` bị `Stack.Protected` chặn. (Dòng "crash" ở `backup?run=1` trong log là của công cụ `uiautomator`, không phải app) | ✅ |
 | `reports?from=&to=` khoảng ngày lạ | **treo app** — SPE-1 | ❌ |
-| App lock + deep link/widget/thông báo; Recents khi App lock (B-65) | ⏭ App lock cần khoá màn hình máy (đặt PIN = đổi bảo mật hệ thống, phiên D không tự làm). Thông báo chuyến có `vis=PRIVATE` (màn khoá không lộ nội dung) ✅ | ⏭ |
+| App lock + deep link/widget/thông báo; Recents khi App lock (B-65) | ⏭ App lock cần khoá màn hình máy (đặt PIN = đổi bảo mật hệ thống, phiên D không tự làm) — **đã giao phiên B (API 26) và E (A13)**. Thông báo chuyến có `vis=PRIVATE` (màn khoá không lộ nội dung) ✅ | ⏭ |
 | Ảnh Recents | hiện rõ số tiền — SPE-3 | ❌ (🟡) |
 | File sao lưu độc — từ chối đúng (28 file): 0 byte, không phải zip, zip không manifest, cụt, JSON hỏng, `format` khác, `tables` là mảng, version 99, zip-slip `receipts/../x.jpg` / `receipts/../../../../data/...` / `receipts//sdcard/..`, tên ảnh `a b$;\`x\`.jpg`, hàng receipt `filePath: ../../databases/x.db`, `counts.entries` sai, `counts.photos` sai, amount âm, entry không phải object, `type: refund`, categoryId không tồn tại (FK), trùng id | thông báo đúng ("This isn't a Sunday Sort backup file." / "This backup is damaged…" / "…from a newer version…" / "Couldn't restore this backup. Nothing was changed."), dữ liệu 20k nguyên vẹn (vân tay tổng Income/Expenses 5 năm không đổi), không crash | ✅ |
 | File hợp lệ nhưng lạ: amount 1e15 / 2^53+2, `occurredAt` 8.64e15+1 / năm 0, currency `XXX<script>` | khôi phục được, 11 màn không crash (UI giới hạn 99.999.999 minor nhưng file thì không — ghi chú trong SPE-4) | ✅ |
@@ -244,3 +244,13 @@ Ký hiệu: ✅ kiểm thật, đạt · ❌ kiểm thật, lỗi · ⏭ chưa k
   `return fail('damaged')` nhưng **không `f.terminate()`** → fflate vẫn giải nén hết mục 200 MB trong lần `push` hiện tại (khối nén 1 MB ≈ tới ~1 GB
   giải nén). Đường xem trước không hiện lỗi: cần xem `inspectBackupFile` trả gì khi `failed` mà manifest đã nhận một phần (`app/backup.tsx:164-167`).
 - **Gợi ý:** gọi `f.terminate()` (và ngừng `push`) ngay khi vượt trần; đẩy khối nhỏ hơn (64 KB); bảo đảm `inspectBackupFile` luôn trả `{ok:false,'damaged'}`.
+
+## Kiểm lại trên APK `bcc8c7a` (2026-11-18, emulator-5556 `-gpu host`) — B-91 (REG-1), B-92 (SPE-9)
+| Lỗi | Bước | Kết quả | |
+|---|---|---|---|
+| REG-1 (B-91) bom manifest 200 MB | chọn file, chụp liên tục trên máy + lấy mẫu PSS | "This backup is damaged and can't be restored." **< 1 s** sau khi chọn; PSS 116 → đỉnh **117 MB** (trước: im lặng, 515 MB giữ 2 phút) | ✅ |
+| REG-1 (B-91) bom ảnh 200 MB | như trên | bị từ chối **ngay ở bước chọn file** (không còn qua màn xem trước), "…damaged…" < 1 s, PSS đỉnh **118 MB** (trước 522 MB / bản đầu 1.133 MB) | ✅ |
+| Hồi quy khôi phục hợp lệ (nạp 64 KB/lần) | P024 (2.011 khoản, 12 chuyến), P096 (20.011) | đều thành công; P096 2 lần 17,5 / 16,6 s, PSS đỉnh 247 / 244 MB (5ce0626: 14,5 s, 225 MB) | ✅ |
+| SPE-9 (B-92) 2 máy chung thư mục | `Download/qa-shared2`: 7 bản máy B `…-0200-bbbbbb` (11–17/11, P002) + 1 bản cũ không mã `2026-11-10-0200` + index B → máy A chọn thư mục (ghi `…-11-18-0959-ax5dt9`) → 9 đêm 19–27/11 (đặt giờ 05:30, thêm 1 khoản/đêm, ép job khi app ở nền) | 9/9 đêm `[nightly] done 'written'`; cuối cùng thư mục: **7 bản B còn nguyên** + đúng 7 bản A (21–27/11); A chỉ tỉa bản của mình (18-0959, 19, 20) và bản cũ không mã (10/11) đúng thiết kế. "Restore from backup": bản A ghi "20,0xx entries", bản B ghi "131 entries · 1 photo · **another phone**" (`shared-folder-bcc8c7a.txt`, `shared2-restore-list*.png`). Trùng tên cùng phút: không còn (tên có mã máy) — chưa thử 2 máy thật cùng lúc | ✅ |
+
+Giả lập: giờ máy / auto_time / múi giờ / font / density / chế độ tối / máy bay / mạng emu / trợ năng đã trả về như đầu phiên; file đẩy lên đã xoá; emulator-5556 đã tắt.
