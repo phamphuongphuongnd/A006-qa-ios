@@ -354,4 +354,7 @@
 - [ ] **B-88** 🟠 (QA A13-2, phiên E — chạy xe thật tối 17/11) Bản 538ede9, Automatic trips bật, đủ quyền, pin Unrestricted: cả ca **không sinh chuyến
   tự động nào** (Phương: "chạy chậm, dừng nhiều"). Sao lưu thật sau ca 18/11 08:30: chuyến mới nhất 16/11. Không còn lịch sử tín hiệu để soi (vòng
   `EventLog` 200 dòng native nhiều khả năng bị mẫu 'sample' đè). Nghi: `features/trips/auto/engine.ts` chỉ mở chuyến khi Activity Recognition báo
-  'driving' (IN_VEHICLE, mẫu ≥ 75%) — không có dự phòng; xe máy / đi chậm thường bị báo ON_BICYCLE / ON_FOOT. ⏳ chờ Phương: xe máy hay ô tô.
+  'driving' (IN_VEHICLE, mẫu ≥ 75%) — không có dự phòng. Phương: **ô tô**. Phương chọn **nhật ký trước, sửa sau** (2026-11-18): Settings → giữ lâu dòng
+  Version → "Share trip diagnostics" (JSON: tín hiệu native 7 ngày, trạng thái engine, quyền, Pro, cài đặt, 30 chuyến gần nhất —
+  `features/trips/auto/diagnostics.ts`); vòng nhật ký native 200 → 1.000 dòng. Bản release không ghi mẫu dày nên tín hiệu tối 17/11 có thể còn.
+  ⏳ phiên E lấy file từ A13 → phân tích → sửa engine.

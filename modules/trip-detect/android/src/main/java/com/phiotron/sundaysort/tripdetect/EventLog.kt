@@ -14,7 +14,8 @@ import org.json.JSONObject
 internal object EventLog {
   private const val PREFS = "sundaysort_trip_detect"
   private const val KEY = "events"
-  private const val MAX = 200
+  // B-88: a week of transitions, wake-ups and Bluetooth (not raw samples) — read back by "Share trip diagnostics".
+  private const val MAX = 1000
 
   /** Set by the module while JS is alive. */
   @Volatile
