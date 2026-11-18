@@ -9,7 +9,8 @@ export const backupAuto = {
   tryingTonight: 'Trying again tonight',
   folder: 'Backup folder',
   change: 'Change',
-  notReachable: '{folder} — not reachable',
+  // QA-100 B-111 (A13): the Drive folder was gone ("folder gone") — say so and how to fix it, the row opens the folder picker.
+  notReachable: "{folder} — can't be opened. Tap to choose it again.",
   // Status card (S-12)
   statusOn: 'Nightly backup on',
   statusLast: 'Last: {when} · {folder}',

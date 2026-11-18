@@ -306,7 +306,7 @@ export default function CaptureScreen() {
     if (!res.ok && !dirty) clearDraft(); // cancelled on an empty entry: nothing to bring back
     if (res.ok) photos.add(res.uris);
     else if (res.reason === 'denied') setCameraDenied(true);
-    else if (res.reason === 'failed') snack({ message: t('capture.photoFailed'), above: 'none' });
+    else if (res.reason === 'failed') snack({ message: t('capture.cameraFailed'), above: 'none' });
   };
 
   const reset = () => {

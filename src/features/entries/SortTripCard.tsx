@@ -57,6 +57,7 @@ export function SortTripCard({
       <Card style={[styles.card, { shadowColor: '#161D2B' }]}>
         {/* B-43: when the card scrolls, show it (Android keeps the bar; iOS flashes it once the content is taller). */}
         <ScrollView
+          nestedScrollEnabled
           ref={scrollRef}
           style={{ flex: 1 }}
           contentContainerStyle={styles.body}

@@ -103,6 +103,12 @@ def capture(r, digits, note=None, income=False, double=False, kill_after_ms=None
         sv = find_save_band(r)
         nb = find_note_button(r, r._save_top - 8) if sv else None
         if not nb:
+            # 4f297e1 (B-98 v4): on a small screen the Photo/Work/Note row is hidden while the keyboard is up
+            r.d.key(4)
+            time.sleep(1.0)
+            sv = find_save_band(r)
+            nb = find_note_button(r, r._save_top - 8) if sv else None
+        if not nb:
             raise RuntimeError('Note button not found in screenshot')
         r.d.tap_xy(*nb)
         time.sleep(1.2)
@@ -572,7 +578,17 @@ def split_merge_heavy(r):
             home(r)
             r.tab('Sort')
             time.sleep(1.5)
-        r.tap_vis('Split', exact=True)
+        # 04fa4f9 (B-114): at 640dp + font 2.0 the card scrolls — swipe inside it until the Split action is on screen
+        w, h = r.d.size()
+        for _ in range(8):
+            sp = next((n for n in r.visible() if (n['text'] or n['desc']) == 'Split' and n['b'][3] < h * 0.86 and n['b'][3] - n['b'][1] > 20), None)
+            if sp:
+                break
+            r.d.shell(f'input swipe {w // 6} {int(h * 0.8)} {w // 6} {int(h * 0.6)} 500')
+            time.sleep(0.8)
+        if not sp:
+            return 'fail', 'Split action not reachable on the Sort card'
+        r.d.tap_xy((sp['b'][0] + sp['b'][2]) // 2, (sp['b'][1] + sp['b'][3]) // 2)
         time.sleep(2)
         r.shot('split_panel')
         w, h = r.d.size()

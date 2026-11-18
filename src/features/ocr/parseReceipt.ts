@@ -485,7 +485,17 @@ function readDate(lines: Line[], region: Region, now: number): { date: number | 
   const withTime = usable.find((l) => findTime(l.text.replace(/(?<!\d)\d{1,4}[-/.]\d{1,2}[-/.]\d{2,4}(?!\d)/, ' ')) !== null);
   // r27 (car park): "Entry Time 03/18" then "Exit Time 03/20" — the stay is paid on the way out.
   const entry = (l: Line) => /\b(ENTRY|ENTERED|ARRIV\w*|TIME\s*IN)\b/.test(l.up);
-  const ordered = withTime ? [withTime, ...usable.filter((x) => x !== withTime)] : usable;
+  const timed = withTime ? [withTime, ...usable.filter((x) => x !== withTime)] : usable;
+  // QA-100 A13 (FreshHarvest on 3f26b33): a footer print stamp "5/25/2025, 12:53:23 PM" won over "Date/time 11/20/2019
+  // 11:09 AM". A date labelled "Date" — on its own line or by a label block on the same row — is the transaction date.
+  const dateLabelled = (l: Line) => {
+    if (/\bDATE/.test(l.up)) return true;
+    if (!l.box) return false;
+    const lh = l.box.h;
+    const cy = l.box.y + lh / 2;
+    return lines.some((o) => o !== l && o.box && /^DATE/.test(squash(o.up)) && Math.abs(o.box.y + o.box.h / 2 - cy) < Math.max(lh, o.box.h));
+  };
+  const ordered = [...timed.filter(dateLabelled), ...timed.filter((x) => !dateLabelled(x))];
   for (const l of [...ordered.filter((x) => !entry(x)), ...ordered.filter(entry)]) {
     const f = findDate(l.text, order);
     if (!f) continue;

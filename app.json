@@ -52,8 +52,8 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Sunday Sort records your route only while a trip you started is running. Location stays on your phone.",
-          "locationAlwaysAndWhenInUsePermission": "Allow all the time so a trip keeps recording with the screen off. Recording stops when you end the trip.",
+          "locationWhenInUsePermission": "Sunday Sort records the route of your trips to work out your mileage. Your routes stay on your phone.",
+          "locationAlwaysAndWhenInUsePermission": "Allow all the time so trips keep recording with the screen off. With Automatic trips on, Sunday Sort also notices when you leave a parking spot, so a drive starts recording on its own. Your routes stay on your phone.",
           "isIosBackgroundLocationEnabled": true,
           "isAndroidBackgroundLocationEnabled": true,
           "isAndroidForegroundServiceEnabled": true,

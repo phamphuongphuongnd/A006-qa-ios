@@ -28,7 +28,7 @@ import { Button, Card, Txt, useKeyboardUp, useSnackbar } from '@/ui';
  */
 export default function SortScreen() {
   const { colors } = useTheme();
-  const { height: windowHeight } = useWindowDimensions();
+  const { height: windowHeight, fontScale } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { settings } = useSettings();
   const [chosen, setChosen] = useState<number | null>(null);
@@ -45,9 +45,11 @@ export default function SortScreen() {
   // "Undo" on the sort that triggered the offer puts the entry back in the queue: the offer goes away with it.
   const offer = pendingOffer && !s.queue.some((i) => i.key === pendingOffer.entryId) ? pendingOffer : null;
 
+  // B-114 v2: at 1.5× text and up List view gets its own row — beside the title it broke "Sort your wee/k".
+  const bigText = fontScale >= 1.5;
   const header = (
-    <View style={[styles.top, { paddingTop: insets.top + 14, paddingHorizontal: GUTTER }]}>
-      <Txt v="h1" accessibilityRole="header" style={{ flex: 1 }}>
+    <View style={[styles.top, bigText && { flexDirection: 'column', alignItems: 'flex-start' }, { paddingTop: insets.top + 14, paddingHorizontal: GUTTER }]}>
+      <Txt v="h1" accessibilityRole="header" style={bigText ? undefined : { flexGrow: 1, flexShrink: 1, flexBasis: 180 }}>
         {t('sort.title')}
       </Txt>
       {top ? (
@@ -152,21 +154,29 @@ export default function SortScreen() {
     if (isLast) finish();
   };
 
-  const short = windowHeight < 520;
+  // QA-100 OLD-13: 360×640dp at text size 2.0 squeezed the card to 2px — the header, week chip and progress bar took the
+  // whole height. Big text needs as much room as a short window: count the height in "text lines" (dp ÷ font scale), and
+  // give the card more height when the text is large.
+  // v3 (phiên B): only from 1.8× text — at 1.3 the scrolling layout cut the split form, and 1.3–1.7 were fine in the
+  // normal one (3f26b33).
+  const short = windowHeight < 520 || (fontScale >= 1.8 && windowHeight / fontScale < 520);
+  const cardHeight = Math.round(360 * Math.min(Math.max(fontScale, 1), 1.6));
   const mergeEntry = mergeFor ? s.entries.find((e) => e.id === mergeFor) ?? null : null;
 
   return (
     // Typing in Edit / Split on the card: the screen shrinks above the keyboard and the FAB hides (B-38).
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, backgroundColor: colors.background }}>
-      {header}
+      {/* B-114 v2: when the screen scrolls (short window / large text) the header scrolls away with the card. */}
+      {short ? null : header}
       {/* Bottom padding keeps the card clear of the FAB. QA-100 MOD-11: in a short window (split screen) the FAB is
           gone and the card got squeezed to its button row — give it a real height and let the screen scroll. */}
       <Body
         short={short}
-        style={{ flexGrow: 1, paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: keyboardUp || short ? 12 : 96, gap: 12 }}>
+        style={{ flexGrow: 1, paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: keyboardUp || windowHeight < 520 ? 12 : 96, gap: 12 }}>
+        {short ? <View style={{ marginHorizontal: -GUTTER, marginTop: -6 }}>{header}</View> : null}
         <WeekProgress week={week} done={s.done} total={s.total} onPick={() => setWeekSheet(true)} />
         {autoLine}
-        <View style={short ? { height: 360, marginTop: 6 } : { flex: 1, marginTop: 6 }}>
+        <View style={short ? { height: cardHeight, marginTop: 6 } : { flex: 1, marginTop: 6 }}>
           {s.queue.length > 2 ? <Card style={[styles.ghost, { left: 24, right: 24, top: 0, opacity: 0.5 }]}>{null}</Card> : null}
           {s.queue.length > 1 ? <Card style={[styles.ghost, { left: 12, right: 12, top: 8, opacity: 0.8 }]}>{null}</Card> : null}
           {top.kind === 'entry' ? (
@@ -198,7 +208,8 @@ export default function SortScreen() {
           )}
         </View>
       </Body>
-      {keyboardUp ? null : <CaptureFab />}
+      {/* B-114 v2: in the scrolling layout the floating + sat on the card's Skip button. */}
+      {keyboardUp || short ? null : <CaptureFab />}
       <WeekPickerSheet
         visible={weekSheet}
         onClose={() => setWeekSheet(false)}
@@ -223,7 +234,8 @@ export default function SortScreen() {
 }
 
 const styles = StyleSheet.create({
-  top: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingBottom: 6 },
+  // OLD-13: "Sort your wee/k" broke mid-word next to List view at 200% — List view wraps under the title instead.
+  top: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 12, rowGap: 8, paddingBottom: 6 },
   sunCircle: { width: 112, height: 112, borderRadius: 56, alignItems: 'center', justifyContent: 'center' },
   ghost: { position: 'absolute', height: 60 },
   autoLine: { minHeight: 36, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

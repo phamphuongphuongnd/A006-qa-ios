@@ -2,7 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { router } from '@/services/router';
 import { Briefcase, Check, ChevronDown, Flag, LocateFixed, MapPin, Pause, Play, Square, User } from '@/ui/icons';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { db } from '@/db/client';
@@ -136,8 +136,12 @@ export default function ActiveTripScreen() {
   const ended = useLive(() => (endedId ? getTrip(db, endedId) : undefined), [endedId], ['trips']);
   const paused = trip?.status === 'paused';
 
+  // QA-100 (iOS, Appetize): the overlays sit at different child positions in the two branches below (trip running /
+  // trip ended). Ending a trip switched branch, React re-mounted the open Sheet, and iOS refused to present a modal while
+  // the old one was still closing → screen stuck on "0.0". Fixed keys keep each overlay mounted across the switch.
   const shortDialog = (
     <Dialog
+      key="short-trip"
       visible={shortTrip !== null}
       title={t('trip.shortTitle', { distance: formatDistance(shortTrip?.distanceM ?? 0, unit) })}
       body={t('trip.shortBody')}
@@ -145,7 +149,7 @@ export default function ActiveTripScreen() {
         // Closing without a choice keeps it (nothing is lost by accident).
         const keep = shortTrip;
         setShortTrip(null);
-        if (keep) setEndedId(keep.id);
+        if (keep) setTimeout(() => setEndedId(keep.id), Platform.OS === 'ios' ? 400 : 0);
       }}
       actions={[
         {
@@ -164,7 +168,7 @@ export default function ActiveTripScreen() {
           onPress: () => {
             const keep = shortTrip;
             setShortTrip(null);
-            if (keep) setEndedId(keep.id);
+            if (keep) setTimeout(() => setEndedId(keep.id), Platform.OS === 'ios' ? 400 : 0);
           },
         },
       ]}
@@ -173,6 +177,7 @@ export default function ActiveTripScreen() {
 
   const gpsDialog = (
     <Dialog
+      key="gps-off"
       visible={gpsOff}
       title={t('trip.gpsOffTitle')}
       body={t('miles.gpsOff')}
@@ -193,6 +198,7 @@ export default function ActiveTripScreen() {
 
   const endSheet = ended ? (
     <EndTripSheet
+      key="end-trip"
       trip={ended}
       unit={unit}
       onDone={(saved) => {

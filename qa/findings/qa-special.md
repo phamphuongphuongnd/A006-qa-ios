@@ -254,3 +254,44 @@ Ký hiệu: ✅ kiểm thật, đạt · ❌ kiểm thật, lỗi · ⏭ chưa k
 | SPE-9 (B-92) 2 máy chung thư mục | `Download/qa-shared2`: 7 bản máy B `…-0200-bbbbbb` (11–17/11, P002) + 1 bản cũ không mã `2026-11-10-0200` + index B → máy A chọn thư mục (ghi `…-11-18-0959-ax5dt9`) → 9 đêm 19–27/11 (đặt giờ 05:30, thêm 1 khoản/đêm, ép job khi app ở nền) | 9/9 đêm `[nightly] done 'written'`; cuối cùng thư mục: **7 bản B còn nguyên** + đúng 7 bản A (21–27/11); A chỉ tỉa bản của mình (18-0959, 19, 20) và bản cũ không mã (10/11) đúng thiết kế. "Restore from backup": bản A ghi "20,0xx entries", bản B ghi "131 entries · 1 photo · **another phone**" (`shared-folder-bcc8c7a.txt`, `shared2-restore-list*.png`). Trùng tên cùng phút: không còn (tên có mã máy) — chưa thử 2 máy thật cùng lúc | ✅ |
 
 Giả lập: giờ máy / auto_time / múi giờ / font / density / chế độ tối / máy bay / mạng emu / trợ năng đã trả về như đầu phiên; file đẩy lên đã xoá; emulator-5556 đã tắt.
+
+## Kiểm lại nhanh trên APK `3f26b33` (2026-11-18 15:06–16:30, emulator-5556 `-gpu host -memory 3072 -cores 4`, cài đè lên bản cũ)
+| Mục | Bước | Kết quả | |
+|---|---|---|---|
+| (1) Manifest release — quyền | `aapt2 dump badging` | **Không có RECORD_AUDIO**; CAMERA có (B-106 giữ camera điện thoại). Danh sách quyền **giống hệt** `bcc8c7a` và `e6bb124` (diff rỗng). NFC `required=false` | ✅ |
+| (1) Manifest release — exported | `aapt2 dump xmltree` | exported không quyền: `MainActivity` (deep link), `RNWidgetImageProvider` (đã thử trước: không đọc được file ngoài), `tripdetect.BluetoothReceiver` / `BootReceiver` — cả hai lọc đúng action (`BluetoothReceiver.kt:14-18`, `BootReceiver.kt:11-13`) và các action đó là protected broadcast (app khác không gửi được). Còn lại có quyền hệ thống (`BIND_JOB_SERVICE`, `DUMP`, `c2dm.SEND`). Không `debuggable`, không cleartext | ✅ |
+| (2) File chẩn đoán — mục `backup` | Settings → giữ "Version 1.0.0" → chia sẻ → QA Receiver; 3 lần: chưa đặt thư mục / thư mục `Download/qa-nightly` OK / thư mục bị xoá | chỉ `provider: "com.android.externalstorage.documents"`, `folderSet`, `nightly`, `failCount`, `lastError` (enum), `probe {ok, error: "folder gone", ms}` — **không có URI đầy đủ, không tên thư mục, không tên file** (`diag-3f26b33-a/b/c.json`) | ✅ |
+| (2) File chẩn đoán — mục khác | đọc code + file thật | `trips` không toạ độ; `settings.vanBtDevice` chỉ "set"; `receipts` = dòng OCR thô 3 hoá đơn gần nhất (cố ý, A13-4). Xem 🟡 SPE-10 về Bluetooth | 🟡 |
+| (2) logcat release | nhập khoản `77.31` + ghi chú `ZZPIINOTE MerchantQA` / `QQNOTE`, đi Entries/Reports/Settings/Backup/Trip, xuất file | 0 dòng của app chứa số tiền / ghi chú / `content://` / `qa-nightly` (dòng khớp duy nhất là lệnh `adb input` và `uiautomator` của công cụ). Bản release không in `[B98v4]` (`logcat-3f26b33*.txt`) | ✅ |
+| (3) Monkey 10.000 sự kiện | `monkey -s 4404 --throttle 50 --pct-syskeys 0 --pct-appswitch 0`, dữ liệu P096 20k, 16:07–16:10 | 10.000/10.000 sự kiện, **0 crash, 0 ANR**, cùng pid suốt lượt, crash buffer rỗng, app vẫn ở trên cùng; dữ liệu sau: 20.015 khoản (monkey thêm 4), 0 trùng id, 0 số tiền hỏng, 0 hạng mục mồ côi; trợ năng không bị bật (`monkey-3f26b33.txt`, `after-monkey-3f26b33.sundaysort`) | ✅ |
+| (4) Mở nguội 20k (P096, 20.011 khoản) | `am start -W` ×5 sau force-stop; `perf_ttc` ×5 | TotalTime trung vị **1.035 ms** (916/834/1.042/1.396/1.035; `bcc8c7a` 1.452); tới khi có Home trung vị **3,93 s** (trước 4,06), JS 510 ms/15 s (trước 560); PSS sau mở 109 MB | ✅ |
+| (5) Deep link lạ | `deeplink_run.py` 34 link (lượt này không bị kẹt màn trước như lượt đầu) | 34/34 không crash, cùng pid, 0 lỗi JS; id giả → "no longer exists"; `reports?from=&to=` lạ → năm hiện tại (SPE-1 vẫn ✅); `dev/probe`, `dev/ocr` → Home. Xem 🟡 SPE-11 (`dev/gallery`, Sitemap) và SPE-12 (export NaN) | ✅ |
+| (5) File sao lưu độc — chọn file | 21 file: not-zip, 0 byte, cụt, JSON hỏng, sai format, version mới hơn, thiếu manifest, tables mảng, 3 zip-slip, 2 bom 200 MB, đếm sai, entry không phải object / sai kiểu / ngày lỗi / > 2^53 / trùng id, receipt-row-path | 21/21 không crash, cùng pid, dữ liệu trước/sau giống hệt; not-zip → "This isn't a Sunday Sort backup file."; 2 bom → "This backup is damaged and can't be restored." (`evil-shots/*.png`) | ✅ |
+| (5) File sao lưu độc — khôi phục hết | `pro-trial-2100`, `pro-active-2100`, `settings-lockAfter-str`, `settings-region-ZZ`, `csv-injection`; rồi P096 | không crash; sau 2 file Pro màn Pro vẫn "Trial · 6 days left" (không lên 2100 — SPE-2 vẫn ✅); P096 khôi phục 13,7 s | ✅ |
+| Export khoảng ngày cực lớn | `export?mode=custom&start=1&end=99999999999999999` → Export anyway (20k) | **không treo**: ~10 s ra bảng chia sẻ, PSS ~206 MB. Chỉ sai nhãn (SPE-12) | ✅ |
+
+Lưu ý môi trường: lượt đầu chạy file độc bị kẹt vì tôi đã xoá thư mục sao lưu để thử chẩn đoán → "Restore from backup" mở màn thư mục ("We can't reach your backup folder…") thay vì bộ chọn file; script đã thêm bước "Choose a file instead" và chạy lại toàn bộ — không phải lỗi app.
+
+### SPE-10 🟡 File chẩn đoán ghi địa chỉ MAC + tên của MỌI thiết bị Bluetooth điện thoại kết nối trong 7 ngày (không chỉ xe)
+- **Bước (đọc code; giả lập không có Bluetooth nên chưa thấy trên máy):** điện thoại nối tai nghe / đồng hồ / xe khác → Settings → giữ "Version" → chia sẻ chẩn đoán.
+- **Kỳ vọng:** chẩn đoán chỉ cần biết "có phải xe đã chọn không". **Thực tế:** `BluetoothReceiver.kt:30` ghi `{address, name}` của mọi lần ACL connect/disconnect vào nhật ký;
+  `diagnostics.ts:69` đưa nguyên `readRawSignals` 7 ngày vào file → MAC + tên thiết bị kiểu "Phuong's AirPods" đi theo file người dùng gửi hỗ trợ.
+- **Gợi ý:** ghi `van: true/false` (so với `AutoConfig.vanAddress`) thay vì address/name; hoặc che MAC còn 4 ký tự cuối và bỏ tên khi không phải xe.
+
+### SPE-11 🟡 Bản release vẫn mở được trang dev `sundaysort://dev/gallery` (UI kit) và màn "Unmatched Route" có nút "Sitemap" liệt kê mọi route
+- **Bước:** `adb shell am start -a android.intent.action.VIEW -d sundaysort://dev/gallery com.phiotron.sundaysort` → màn "UI kit · design/sunday.css" (số mẫu £1,053.60, không dữ liệu thật).
+  `sundaysort://does/not/exist` → "Unmatched Route · Page could not be found · Go back · Sitemap".
+- **Kỳ vọng:** như `dev/probe`, `dev/ocr` (về Home). **Thực tế:** `src/app/dev/gallery.tsx:36` thiếu `if (!__DEV__) return <Redirect href="/" />`; app không có `+not-found.tsx`
+  nên expo-router dùng màn mặc định kèm Sitemap. Không lộ dữ liệu, chỉ trông "chưa xong" nếu link lạ tới tay người dùng (NFC tag / Shortcuts gõ sai).
+- **Sửa lại ghi chép cũ:** bảng nhóm 2 ở trên ghi "`dev/*` về Home" — lượt đó màn bị kẹt ở Reports nên không thấy; thực tế `dev/gallery` mở được từ trước (file không đổi từ `3304de9`).
+- **Gợi ý:** thêm guard `__DEV__` cho gallery; thêm `src/app/+not-found.tsx` đơn giản (Redirect về Home hoặc "Link not found · Go home").
+
+### SPE-12 🟡 `sundaysort://export?mode=custom&start=1&end=99999999999999999` → nhãn kỳ "1 Jan 1970 – NaN undefined NaN", tên file `SundaySort-export-1970-01-01_NaN-NaN-NaN.zip`
+- **Thực tế:** không treo, không crash (khác SPE-1), xuất trong ~10 s; chỉ nhãn và tên file hỏng. `export?year=999999` / `year=-5` hiện "Tax year 999999 / -5".
+- **Nguyên nhân:** `src/app/export.tsx:26-27` nhận `start/end/year` từ link không giới hạn (B-67 mới chặn ở Reports).
+- **Gợi ý:** dùng chung hàm chặn khoảng ngày của B-67 cho `export` (sai → về năm thuế hiện tại).
+
+### Ghi chú thêm (không phải lỗi mới, có từ các bản trước)
+- Manifest: CAMERA / BLUETOOTH / ACCESS_*_LOCATION làm Play **ngầm coi camera, bluetooth, location là bắt buộc** (`uses-implied-feature`) → máy không camera/Bluetooth
+  (một số tablet, Chromebook) sẽ không thấy app trên Play. Nếu muốn, thêm `<uses-feature android:name="android.hardware.camera" android:required="false"/>` (và bluetooth).
+- `android:allowBackup="true"` không có `dataExtractionRules` → CSDL đi vào Google Auto Backup / chuyển máy (đã mã hoá theo tài khoản). Nên ghi trong chính sách riêng tư.

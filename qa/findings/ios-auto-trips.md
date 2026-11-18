@@ -62,3 +62,18 @@ Cần chạy xe thật trên iPhone, ghi "Share trip diagnostics" sau mỗi lư�
 - Lần thức chỉ bằng đổi vị trí (không rời vùng) → đoạn trước điểm GPS đầu không tính; khoảng trống giữa 2 chuyến hiện "Missing trip?" (Q26).
 - Không có Bluetooth xe / cắm sạc trên iOS (`isCharging` luôn false để "Start when charging" không bật chuyến ở nhà).
 - Precise Location tắt: engine vẫn bật chuyến nhưng GPS thô → 0 mi (như MOD-1); health iOS chưa báo riêng.
+
+## Thử trên Appetize (iPhone 14 Pro ảo, iOS 17.2) · 2026-11-18
+Bản build simulator `55db0eb` (chưa có B-96). Gói Appetize miễn phí: mỗi phiên tối đa 3 phút, hết giờ thì hình đứng (không phải lỗi app).
+- ✅ Onboarding UK chạy; màn Automatic trips: "This phone can't recognise driving. Use Start trip or an NFC tag." + `iosNote` hiển thị đúng, không có "Working".
+- ✅ Start trip → màn xin quyền của app → iOS "While Using" → thông báo → iOS hỏi "Always" → màn ghi chuyến (RECORDING, Finding GPS).
+- 🔴 **Mới — End trip treo màn hình trên iOS** (lặp 3/3 lần, chuyến tay 0 mi): sau khi bấm End trip chỉ còn chữ "0.0", tấm
+  "kết thúc chuyến" không hiện, nút thu nhỏ không bấm được → phải tắt app. Nhật ký iOS:
+  `[Presentation] Attempt to present <RCTFabricModalHostViewController> on <ExpoRootViewController> (from <RNSScreen>) while a presentation is in progress.`
+  Nguyên nhân (đọc code `src/app/trip/active.tsx`): `{gpsDialog}{shortDialog}{endSheet}` nằm ở 2 nhánh render khác vị trí
+  (đang có chuyến: con thứ 4–6; hết chuyến: con thứ 3–5) → khi `ended` có trước lúc `trip` về undefined, Sheet (RN `Modal`)
+  được mở ở nhánh 1 rồi bị gỡ + mở lại ở nhánh 2 → iOS từ chối mở Modal khi Modal cũ đang đóng. Android không bị (Modal = Dialog).
+  Cùng kiểu rủi ro: B-107 "Keep" (Dialog đang mờ dần đóng thì mở Sheet ngay). Còn có trên `dev` hiện tại.
+- 🟠 **Mới — câu xin quyền vị trí iOS sai từ khi có chuyến tự động** (`app.json`): "records your route only while a trip you
+  started is running" và "Recording stops when you end the trip" — nhưng bật chuyến tự động thì app theo dõi đổi vị trí /
+  vùng 150 m ở nền cả khi không có chuyến. Apple 5.1.1 yêu cầu câu mục đích đúng → cần sửa trước khi nộp App Store.

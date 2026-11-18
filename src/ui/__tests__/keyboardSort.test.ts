@@ -12,7 +12,8 @@ const read = (p: string) => fs.readFileSync(path.join(SRC, p), 'utf8');
 test('Sort screen avoids the keyboard and hides the FAB while typing', () => {
   const sort = read('app/(tabs)/sort.tsx');
   expect(sort).toMatch(/<KeyboardAvoidingView[^>]*behavior=/);
-  expect(sort).toMatch(/keyboardUp \? null : <CaptureFab \/>/);
+  // B-114 v2: also hidden while the Sort screen scrolls (short window / large text).
+  expect(sort).toMatch(/keyboardUp( \|\| short)? \? null : <CaptureFab \/>/);
 });
 
 test('Sort card scrolls Edit / Split into view when the keyboard opens', () => {

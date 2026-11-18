@@ -1,3 +1,5 @@
+import { Redirect } from 'expo-router';
+
 import { router } from '@/services/router';
 import { Camera, Flag, FileText, Fuel, Minus, Plus, Settings, X } from '@/ui/icons';
 import { useState } from 'react';
@@ -32,7 +34,13 @@ import {
 } from '@/ui';
 
 /** Dev-only: every UI-kit primitive on one screen, to compare against design/boards/00-main.html. */
+/** QA-100 SPE-11: a dev screen — a link must not open it in a release build (same as dev/ocr, dev/probe). */
 export default function Gallery() {
+  if (!__DEV__) return <Redirect href="/" />;
+  return <GalleryScreen />;
+}
+
+function GalleryScreen() {
   const { colors } = useTheme();
   const snack = useSnackbar();
   const [seg, setSeg] = useState<'expense' | 'income'>('expense');
