@@ -64,7 +64,7 @@ describe('format', () => {
   });
   it('formats dates and times', () => {
     expect(dateTimeLabel(at(2026, 11, 10, 13, 5), at(2026, 11, 18, 9, 0))).toBe('Tue 10 Nov, 13:05');
-    expect(dateTimeLabel(at(2019, 11, 20, 11, 9), at(2026, 11, 18, 9, 0))).toBe('Wed 20 Nov 2019, 11:09');
+    expect(dateTimeLabel(at(2019, 11, 20, 11, 9), at(2026, 11, 18, 9, 0))).toBe('20 Nov 2019, 11:09');
     expect(dateDotTime(at(2026, 11, 9, 6, 12))).toBe('Mon 9 Nov · 06:12');
     expect(weekdayTime(at(2026, 11, 14, 9, 15))).toBe('Sat 09:15');
   });

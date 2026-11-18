@@ -87,6 +87,7 @@ export const en = {
     cameraOffTitle: 'Camera access is off',
     cameraOffBody: 'Sunday Sort needs the camera to photograph receipts.',
     photoFailed: "Couldn't save the photo. Your entry was saved without it.",
+    cameraFailed: "Couldn't open the camera. Try again, or hold Photo to choose from your library.",
     saveFailed: "Couldn't save. Free up some storage on your phone and try again.",
     typeExpense: 'expense',
     typeIncome: 'income',

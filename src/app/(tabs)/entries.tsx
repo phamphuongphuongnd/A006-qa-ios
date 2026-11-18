@@ -1,5 +1,5 @@
 import { FlashList, type FlashListRef } from '@shopify/flash-list';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useIsFocused, useLocalSearchParams, useNavigation } from 'expo-router';
 import { router } from '@/services/router';
 import { ArrowDownUp, Briefcase, ChevronDown, Combine, Plus, Search, SearchX, Tags, Trash2, X } from '@/ui/icons';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -140,10 +140,18 @@ export default function EntriesScreen() {
   // entry (newest first) brings the list back to the top so the driver sees it.
   const listRef = useRef<FlashListRef<ListItem>>(null);
   const lastTotal = useRef(total);
+  // B-109 v2 (phiên B, API 26): the entry is saved while Quick capture (or another tab) covers Entries, and a scroll on a
+  // hidden list is ignored — so the count is compared when Entries is on screen again.
+  const focused = useIsFocused();
   useEffect(() => {
-    if (total > lastTotal.current && !oldestFirst) listRef.current?.scrollToOffset({ offset: 0, animated: true });
+    if (!focused) return;
+    if (total > lastTotal.current && !oldestFirst) {
+      const id = setTimeout(() => listRef.current?.scrollToOffset({ offset: 0, animated: true }), 50);
+      lastTotal.current = total;
+      return () => clearTimeout(id);
+    }
     lastTotal.current = total;
-  }, [total, oldestFirst]);
+  }, [total, oldestFirst, focused]);
   const cats = useLive(() => listCategories(db, { includeHidden: true }), [], ['categories']);
   // Load in pages of ~PAGE entries (whole days); scrolling near the end loads the next page.
   // A new filter / sort order starts again from page 1.

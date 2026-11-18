@@ -471,8 +471,10 @@
   hôm nay = **sai năm thuế**. Phương: bỏ giới hạn (năm "94" = 1994, "22/04/12" = 2012 là ngày thật). Sửa: bỏ luật 400 ngày ở `parseReceipt.readDate` và
   `fill.receiptAt`; vẫn chặn ngày tương lai; vẫn bỏ dòng hạn điểm / hết hạn / "TOTAL UP TO". Bộ 20 hoá đơn: mọi hoá đơn có in ngày đều điền đúng ngày
   (r11 OCR đọc rác → không điền). ⏳ kiểm trên máy.
-- [x] **B-109** 🟡 (QA A13-8, phiên E) Sau Save, tab Entries giữ vị trí cuộn cũ → mục TODAY + khoản mới nằm trên mép màn hình. Sửa: số khoản tăng (xếp
+- [ ] **B-109** 🟡 (QA A13-8, phiên E) Sau Save, tab Entries giữ vị trí cuộn cũ → mục TODAY + khoản mới nằm trên mép màn hình. Sửa: số khoản tăng (xếp
   mới nhất trước) → cuộn danh sách lên đầu. ✅ A13 (3f26b33): khoản mới hiện ngay đầu Entries.
+  ❌ phiên B (API 26, 3f26b33): cuộn xuống rồi ghi khoản (FAB / tab Home) → Entries vẫn ở chỗ cũ — lệnh cuộn chạy lúc Entries bị che, FlashList bỏ qua
+  (A13 đạt vì danh sách đang ở đầu). Sửa lần 2: so số khoản khi Entries hiện lại (useIsFocused) rồi mới cuộn. ⏳ phiên B.
 - [ ] **B-110** 🟡 (QA A37-8/A37-9, phiên A — 320dp + chữ 200%) Reports: "Profit" cắt "−$1,073,09…", "By tax form line" bẻ chữ từng âm tiết + cắt số,
   "Expenses by category" cắt tên còn "Eq..". Sửa: số tiền xuống dòng dưới nhãn khi không đủ chỗ (bỏ adjustsFontSizeToFit), tên danh mục 2 dòng,
   số + % xuống dòng. ⏳ phiên A.
@@ -502,4 +504,7 @@
   CAMERA rồi vẫn không); "Choose from library" vẫn được. Gốc: trên SDK < Q expo-image-picker đòi cả WRITE_EXTERNAL_STORAGE lẫn CAMERA
   (`ensureCameraPermissionsAreGranted`), mà `plugins/withReleasePermissions.js` xoá WRITE_EXTERNAL_STORAGE khỏi manifest release (B-19) → không xin
   được → 'failed'. Android 10+ (A13) không bị. Sửa: giữ WRITE_EXTERNAL_STORAGE với `maxSdkVersion="28"` trong manifest release. ⏳ phiên B.
+- [ ] **B-116** 🟡 (QA OLD-15, phiên B — 360dp chữ 1.0) Chip ngày có năm "Tue 18 Nov 2025, 03:33" xuống 2 dòng, đẩy chữ "Expense" tràn khỏi nút. Sửa: khác
+  năm thì bỏ thứ ("18 Nov 2025, 03:33"). Kèm OLD-14 phụ: camera không mở báo nhầm "Couldn't save the photo. Your entry was saved without it." → câu
+  riêng "Couldn't open the camera. Try again, or hold Photo to choose from your library." ⏳ phiên B.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
