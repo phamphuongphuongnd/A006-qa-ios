@@ -455,8 +455,9 @@
 - [ ] **B-105** 🟠 (QA A13-6, phiên E — A13 bản 08cdb7b) Tesco Shrewsbury chụp thẳng: OCR thấy nhãn TOTAL/CASH/CHANGE DUE nhưng sót cả cột số → app
   **tự điền £7.00** (giá 1 món, đúng là £55.30). Gốc: `readAmount` nhánh "không có nhãn" vẫn chạy khi đã thấy nhãn TOTAL; còn đúng 1 số → 0,65 ≥ 0,6.
   Sửa: đã thấy nhãn tổng mà không đọc được số → 0,4 (gợi ý, không điền). 3 lần đọc mới thành fixture (`a13-receipts.json`). ⏳ A13.
-- [ ] **B-106** 🟠 (QA A13-7, phiên E — A13, 3/3 lần) Bấm Take photo → camera Samsung mở bằng **camera trước** (chế độ làm đẹp) dù expo-image-picker xin
-  camera sau; Phương phải tự đổi 3–14 s ("ấn 3–4 lần mới được"). Samsung bỏ qua CAMERA_FACING/LENS_FACING. ⏳ chờ Phương chọn cách chụp.
+- [x] **B-106** 🟠 (QA A13-7, phiên E — A13, 3/3 lần) Bấm Take photo → camera Samsung mở bằng **camera trước** (chế độ làm đẹp) dù expo-image-picker xin
+  camera sau; Phương phải tự đổi 3–14 s ("ấn 3–4 lần mới được"). Samsung bỏ qua CAMERA_FACING/LENS_FACING. **Phương (18/11): giữ camera hệ
+  thống như hiện tại** → giới hạn đã biết (máy quét tài liệu / camera trong app là hướng sau nếu người dùng phàn nàn).
 - [ ] **B-107** 🟡 (QA A13, phiên E — dữ liệu thật) Cắm cáp vào máy tính + cầm máy → chuyến tự động "Start when charging" bắt đầu (đúng thiết kế: không phân
   biệt sạc xe / sạc máy tính); Phương bấm End trip → **"Trip saved · 0.0 km"** (bộ tự động tự bỏ chuyến < 500 m, nhưng kết thúc tay thì lưu). Sửa:
   `trip/active.tsx` kết thúc tay chuyến startedBy=auto < 500 m → bỏ + "Trip discarded" (giống NFC B-50). Chuyến 0 km đang nằm trong dữ liệu thật
