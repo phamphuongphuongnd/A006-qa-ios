@@ -519,7 +519,8 @@
   không bẻ chữ, List view dòng riêng, tiêu đề cuộn cùng thẻ, FAB ẩn, Edit/Split/Merge/Skip bấm được, Skip không mở Ghi nhanh, P016 10/10 (split +
   merge); chữ 1.3 bố cục thường, "Split & sort" tới được; A13 chữ 2.0 ✅ (phiên E). ⏳ iOS (lượt 4g). 🟡 còn lại: chữ 2.0 khi cuộn thẻ trượt dưới
   thanh trạng thái (thiếu inset trên); nhãn nút "E… Sp.. Mer… Sk.." vẫn cắt. → lần 4 (Phương 18/11 "đã sửa đâu"): màn cuộn giữ inset trên ở
-  màn (chữ không trượt dưới thanh trạng thái); chữ ≥ 1.3 → nút thẻ icon trên + nhãn nhỏ dưới (4 nút vừa 1 hàng). ⏳ kiểm trên máy.
+  màn (chữ không trượt dưới thanh trạng thái); chữ ≥ 1.3 → nút thẻ icon trên + nhãn nhỏ dưới (4 nút vừa 1 hàng). ✅ A13 (b843037, chữ 2.0):
+  đủ chữ Edit / Split / Merge / Skip, cuộn không chui dưới thanh trạng thái.
 - [x] **B-115** 🔴 (QA OLD-14, phiên B — 3f26b33, API 26) Android 7/8/9 (API 24–28): Ghi nhanh → Photo → "Take photo" **không bao giờ mở camera** (cấp quyền
   CAMERA rồi vẫn không); "Choose from library" vẫn được. Gốc: trên SDK < Q expo-image-picker đòi cả WRITE_EXTERNAL_STORAGE lẫn CAMERA
   (`ensureCameraPermissionsAreGranted`), mà `plugins/withReleasePermissions.js` xoá WRITE_EXTERNAL_STORAGE khỏi manifest release (B-19) → không xin
@@ -541,7 +542,7 @@
   dev/probe. Link lạ khác ra màn "Unmatched Route" + nút Sitemap → thêm `src/app/+not-found.tsx` chuyển về Home. ⏳ phiên D.
 - [ ] **B-120** 🟡 (QA SPE-12, phiên D) `export?mode=custom&end=1e17` hiện "NaN undefined NaN", tên file "…NaN-NaN-NaN.zip". Sửa: khoảng ngày qua `saneReportRange`
   như Reports (B-67); sai thì về năm thuế. ⏳ phiên D.
-- [ ] **B-121** 🟡 (QA SPE-10, phiên D — đọc code) File chẩn đoán ghi MAC + tên mọi thiết bị Bluetooth đã nối trong 7 ngày, không chỉ xe (BluetoothReceiver.kt:30).
+- [x] **B-121** 🟡 (QA SPE-10, phiên D — đọc code) File chẩn đoán ghi MAC + tên mọi thiết bị Bluetooth đã nối trong 7 ngày, không chỉ xe (BluetoothReceiver.kt:30).
   File chỉ rời máy khi người dùng tự chia sẻ. Sửa (JS, không cần native): file chẩn đoán chỉ ghi "van" cho thiết bị xe đã chọn, mọi thiết bị khác
-  thành "other device", bỏ tên. ⏳ kiểm file chẩn đoán.
+  thành "other device", bỏ tên. ✅ A13 (b843037): 6 tín hiệu bt chỉ ghi "van", không MAC / tên (mẫu chưa có thiết bị khác ngoài xe).
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
