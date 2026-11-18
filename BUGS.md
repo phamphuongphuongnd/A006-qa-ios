@@ -407,7 +407,9 @@
 > phím ẩn, "Couldn't save…" thấy rõ, số giữ nguyên) → tick B-57/B-58/B-72 (thay bằng B-93 + B-72 phần số tiền ✅).
 - [ ] **B-98** 🟡 (QA OLD-12, phiên B) Android 8/7: nút **Save** ở Ghi nhanh vẫn nằm sau bàn phím khi đang gõ (API 26 chữ 0.85 lộ 65/112px; chữ 1.3 lộ 43px;
   Android 7 che hết) — thiếu đúng ~24dp = thanh trạng thái (cùng gốc B-58). Sửa: bù `insets.top + insets.bottom` cho Android < 11 (`capture.tsx`); phím ✓ của
-  bàn phím số giờ lưu khi số tiền > 0. ⏳ phiên B.
+  bàn phím số giờ lưu khi số tiền > 0. Phiên B (1dd73db): phím ✓ lưu ✅; nút Save **không nhích pixel nào** (offset không có tác dụng trên Android < 11).
+  Sửa lần 2: bỏ offset; Android < 11 đo khối nút Save (`measureInWindow`) so với mép trên bàn phím **quy về toạ độ cửa sổ** (`screenY − StatusBar.currentHeight`)
+  rồi đệm thêm đúng phần bị che (≤ 200dp). ⏳ phiên B (`qa/tools/oldb98.py`).
 > Phiên E (A13 thật, 8cb9c8f, dữ liệu thật + vân tay thật, 18/11): **B-62 ✅**, B-63 ✅, B-65 ✅ (Recents trắng; deep link khi khoá chỉ hiện Unlock), B-73 ✅,
 > B-84 ✅, widget cập nhật ✅, CPU nền 10 phút 0,01% (B-51 không tái hiện), 20.000 khoản: cuộn giật 12%.
 - [ ] **B-99** 🟠 (QA A13-3, phiên E — A13 thật, vân tay thật) App lock (Lock after 1 minute) → Ghi nhanh → Take photo → chụp hoá đơn > 1 phút → quay lại app

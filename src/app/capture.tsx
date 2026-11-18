@@ -4,7 +4,7 @@ import { useLocalSearchParams, useNavigation, usePreventRemove } from 'expo-rout
 import { router } from '@/services/router';
 import { Briefcase, FileText, User, X } from '@/ui/icons';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { AppState, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { AppState, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StatusBar, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { db } from '@/db/client';
@@ -198,6 +198,10 @@ export default function CaptureScreen() {
   // QA-100 OLD-9: measured, not guessed — where the keyboard starts and how much the calculator row still sits under it.
   const keyboardTop = useRef<number | null>(null);
   const [calcLift, setCalcLift] = useState(0);
+  // QA-100 B-98: on Android < 11 the Save row stayed partly under the keyboard whatever offset KeyboardAvoidingView got —
+  // measure it and lift it by what is still covered.
+  const [saveLift, setSaveLift] = useState(0);
+  const bottomRef = useRef<ComponentRef<typeof View>>(null);
   const calcRef = useRef<ComponentRef<typeof View>>(null);
   const [middleHeight, setMiddleHeight] = useState(0);
   useEffect(() => {
@@ -210,6 +214,7 @@ export default function CaptureScreen() {
       setKeyboardUp(false);
       setSqueezed(false);
       setCalcLift(0);
+      setSaveLift(0);
     });
     return () => {
       show.remove();
@@ -227,7 +232,14 @@ export default function CaptureScreen() {
   // (edge-to-edge), so the calculator row ended up half under the keyboard.
   // QA-100 OLD-12: the shortfall measured on Android 8/7 is exactly the status bar (24dp) — the keyboard height RN reports
   // there is short by the bars the app draws behind. Add both bars (too much only leaves a gap; too little hid Save).
-  const keyboardOffset = Platform.OS === 'android' && Number(Platform.Version) < 30 ? insets.top + insets.bottom : 0;
+  const keyboardOffset = 0;
+  const oldAndroid = Platform.OS === 'android' && Number(Platform.Version) < 30;
+  /** Keyboard top in window coordinates: before Android 11 the window starts under the status bar, screenY doesn't. */
+  const keyboardTopInWindow = () => {
+    const top = keyboardTop.current;
+    if (top === null) return null;
+    return oldAndroid ? top - (StatusBar.currentHeight ?? 0) : top;
+  };
   // QA-100 B-58/B-72: before Android 11 the window doesn't shrink for the keyboard the way RN measures, and the row
   // at the bottom stayed half under it (19dp ≈ the status bar). There the calculator row sits right under the amount.
   const calcUnderAmount = Platform.OS === 'android' && Number(Platform.Version) < 30;
@@ -465,7 +477,18 @@ export default function CaptureScreen() {
           </View>
         ) : null}
 
-        <View style={{ paddingHorizontal: GUTTER, paddingBottom: keyboardUp ? 10 : 12 + insets.bottom, gap: tight ? 8 : 12 }}>
+        <View
+          ref={bottomRef}
+          onLayout={() => {
+            if (!oldAndroid || !keyboardUp) return;
+            bottomRef.current?.measureInWindow((_x, y, _w, h) => {
+              const top = keyboardTopInWindow();
+              if (top === null) return;
+              const covered = Math.round(y + h - top);
+              if (covered > 1) setSaveLift((l) => Math.min(l + covered, 200));
+            });
+          }}
+          style={{ paddingHorizontal: GUTTER, paddingBottom: keyboardUp ? 10 + saveLift : 12 + insets.bottom, gap: tight ? 8 : 12 }}>
           {chipMinor !== null ? (
             <ReceiptSaysChip
               minor={chipMinor}
