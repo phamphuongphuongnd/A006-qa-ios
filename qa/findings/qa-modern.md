@@ -29,6 +29,36 @@ Cài đặt gốc từng máy: `qa-runs/modern/_baseline/`.
 - Lưu ý vận hành: máy chủ Windows chạm trần commit (7 máy ảo) nên phải tạm tắt XL để chạy máy 16 KB; lần đầu `adb install` (stream) làm
   máy 16 KB rơi offline — cài bằng `adb push` + `pm install` thì ổn.
 
+## 2c. Chạy lại trên APK `sundaysort-qa-8cb9c8f-all.apk` (dev 8cb9c8f, gồm B-89 50974d7) — 2026-11-18 09:39–09:46
+
+Bằng chứng: `qa-runs/modern/regress-8cb9c8f/`.
+
+| Lỗi | Kiểm | Kết quả |
+|---|---|---|
+| B-89 (MOD-10) | XL: Ghi nhanh $3.21 + 1 ảnh chụp thường → Take photo → mở Settings (app *cached*) → `am kill` (pid mất) → Recents về camera → chụp → Done → chờ 6 s và 12 s | ❌ **vẫn "1 of 3"**, ảnh thứ 2 mất (`r1-2-after6s.png`, `r1-3-after12s.png`). Nháp số tiền + ảnh cũ vẫn được mở lại ✅ |
+| B-89 (nút +) | Fold chia đôi ngang 852×436dp | ✅ Reports: nút "+" ẩn, "Sort now" không bị đè. 🟡 Entries/Sort/Home cùng cửa sổ 436dp vẫn hiện "+" — ở Entries đè số tiền dòng thứ 2 (cuộn được) (`fold-mw-b89-montage.png`) |
+| | Fold chia dọc 423dp, toàn màn | ✅ "+" hiện bình thường |
+
+### MOD-10 — nguyên nhân gốc thật (gọi lại `getPendingResultAsync` từ JS không đủ)
+- Logcat tiến trình mới (`regress-8cb9c8f/logcat-b89-pid4175.txt`):
+  `09:41:22.573 W BridgelessReact: ReactHost{0}.raiseSoftException(onActivityResult(… requestCode = "1415501858", resultCode = "-1" …))`
+  → `ReactNoCrashSoftException … Tried to access onActivityResult while context is not ready`; mãi tới `09:41:23.675 ReactNativeJS:
+  Running "main"` React mới sẵn sàng.
+- Đường đi: `MainActivity` → `expo.modules.ReactActivityDelegateWrapper.onActivityResult` (node_modules/expo …/ReactActivityDelegateWrapper.kt:244-261)
+  chỉ chờ `loadAppReady` (hoàn tất ở dòng 147 ngay sau `awaitDelayLoadAppWhenReady`, **trước** khi ReactHost có context) rồi chuyển cho
+  `ReactHostImpl.onActivityResult` (react-native 0.88.1, ReactHostImpl.kt:654-668) → `currentReactContext == null` → bỏ kết quả. Do đó
+  `AppContext.onActivityResult` → `ActivityResultsManager.dispatchResult` không bao giờ chạy, `ImagePickerModule.pendingMediaPickingResult`
+  luôn `null`; JS gọi `getPendingResultAsync` bao nhiêu lần cũng ra `null`. (Bản sửa đường cũ của Expo viết cho kiến trúc bridge,
+  không còn đúng với bridgeless.)
+- Gợi ý sửa (chọn 1):
+  1. **Native, trong app:** `MainActivity.onActivityResult` — nếu `reactHost.currentReactContext == null` thì giữ (requestCode, resultCode, data)
+     và phát lại khi context sẵn sàng (`reactHost.addReactInstanceEventListener { onReactContextInitialized → super.onActivityResult(...) }`),
+     qua config plugin để prebuild không mất.
+  2. **JS, không đụng native:** trước `launchCameraAsync` ghi `cameraStartedAt` vào nháp; khi mở lại nháp mà có `cameraStartedAt` thì liệt kê
+     thư mục ảnh của expo-image-picker trong cache (`FileSystem.cacheDirectory + 'ImagePicker/'`) lấy file mới hơn `cameraStartedAt`, kích
+     thước > 0 → gắn vào. Camera vẫn ghi file (logcat: tiến trình được dựng lại vì `ImagePickerFileProvider`).
+- Chưa chạy lượt 2 (không ảnh sẵn) trên 8cb9c8f vì nguyên nhân gốc giống hệt; sẽ chạy cả 2 lượt khi có bản sửa mới.
+
 ## 2b. Chạy lại trên APK `sundaysort-qa-5ce0626-all.apk` (dev 5ce0626, B-56…B-87) — 2026-11-18 08:55–09:12
 
 Bằng chứng: `qa-runs/modern/regress-5ce0626/`. XL (`-gpu host`) rồi Fold (`-gpu swiftshader_indirect`), từng máy một, 3072 MB, khởi động lại giữa 2 lô.
