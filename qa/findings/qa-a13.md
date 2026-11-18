@@ -107,7 +107,9 @@ Cập nhật: điều phối gỡ camera riêng (revert 147d3e2) → bản build
   không tên thiết bị ✅. backup.probe ok:true, nightly true ✅. Bản Download xoá; Drive → thùng rác.
 - Sao lưu 16:58 → `real-backup/SundaySort-REAL-2026-11-18-1658-b843037.sundaysort`: **233/266/8/12**, id không thêm/bớt ✅;
   appLock false, autoTrips true, km, backupNightly true. Quyền CAMERA chưa cấp (như gốc). App mở lại → màn hình chính 16:59.
-- Không thử: link lạ về Home (+not-found) — chưa có kịch bản deep link an toàn trên máy thật trong thời gian còn lại.
+- 17:00 link lạ: `am start -a VIEW -d sundaysort://abc` → app mở **Home** ("Afternoon, driver") ✅; `sundaysort://abc/xyz?q=1`
+  → Home ✅; logcat không lỗi. (Chỉ thử khi app đang chạy: `am kill` không tắt được vì dịch vụ chuyến tự động giữ tiến trình —
+  không force-stop để khỏi tắt chuyến tự động.) Máy về màn hình chính.
 
 ## BẢN CUỐI ef470b7 (cài đè 16:21, B-56..B-121) — máy trả Phương 16:26
 - 5 tab mở được; logcat không FATAL / lỗi ReactNativeJS ✅.
