@@ -23,6 +23,7 @@ import {
   FromReceiptTag,
   PendingThumbs,
   PhotoButton,
+  PhotoSourceSheet,
   PhotosLeft,
   PhotosUsedUpSheet,
   ReadingChip,
@@ -143,6 +144,7 @@ export default function CaptureScreen() {
 
   // With the keyboard down the bottom row must clear the system nav bar (B-21); with it up the keyboard covers it.
   const [keyboardUp, setKeyboardUp] = useState(false);
+  const [photoAsk, setPhotoAsk] = useState(false);
   const [squeezed, setSqueezed] = useState(false);
   // QA-100 OLD-9: measured, not guessed — where the keyboard starts and how much the calculator row still sits under it.
   const keyboardTop = useRef<number | null>(null);
@@ -448,7 +450,7 @@ export default function CaptureScreen() {
               count={photos.photos.length}
               max={MAX_PHOTOS_PER_ENTRY}
               locked={slots.locked}
-              onPress={() => addPhotos('camera')}
+              onPress={() => (slots.locked ? addPhotos('camera') : setPhotoAsk(true))}
               onLongPress={() => addPhotos('library')}
             />
             <View style={{ alignItems: 'center', gap: 6 }}>
@@ -522,6 +524,14 @@ export default function CaptureScreen() {
       </KeyboardAvoidingView>
 
       <CameraDeniedDialog visible={cameraDenied} onClose={() => setCameraDenied(false)} />
+      <PhotoSourceSheet
+        visible={photoAsk}
+        onClose={() => setPhotoAsk(false)}
+        onPick={(source) => {
+          setPhotoAsk(false);
+          addPhotos(source);
+        }}
+      />
       <PhotosUsedUpSheet
         visible={usedUp}
         onClose={() => setUsedUp(false)}

@@ -338,5 +338,6 @@
   **sửa** (2026-11-18).
 - [ ] **B-85** 🟡 (QA MOD-4, phiên F) Tablet / máy gập mở: bố cục điện thoại kéo giãn hết bề ngang. Phương chọn **sửa** (2026-11-18).
 - [ ] **B-86** 🟡 (QA MOD-5, phiên F) Thư viện ảnh chỉ mở được bằng giữ lâu nút Photo (khó phát hiện). Phương chọn **sửa** (2026-11-18).
+  Sửa: chạm Photo (Ghi nhanh + Sửa khoản) mở bảng "Add a receipt photo": Take photo / Choose from library (`PhotoSourceSheet`); giữ lâu vẫn vào thư viện.
 - [ ] **B-87** 🟡 (QA SPE-5 phần còn lại, phiên D) Khôi phục bản sao lưu thật có rất nhiều ảnh nạp cả file + mọi ảnh vào RAM. Phương chọn **sửa**
   (2026-11-18).

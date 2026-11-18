@@ -27,7 +27,7 @@ import { entryOrigin, fillEntryOcr, setReceiptOcrText } from '@/features/ocr/rep
 import { afterSave } from '@/features/ocr/rulesHook';
 import { LinkedLines } from '@/features/entries/LinkedLines';
 import { formatDay } from '@/features/trips/format';
-import { CalcBar, ExprLine, PhotosUsedUpSheet, trialOffered } from '@/features/ocr/ui';
+import { CalcBar, ExprLine, PhotoSourceSheet, PhotosUsedUpSheet, trialOffered } from '@/features/ocr/ui';
 import { useAmountExpr } from '@/features/ocr/useAmountExpr';
 import { openPro } from '@/features/pro/openPro';
 import { receiptUri, saveReceipt } from '@/files/receipts';
@@ -91,6 +91,7 @@ function Editor({ entry }: { entry: EntryRowT }) {
   const [draft, setDraft] = useState<Draft>(() => draftOf(entry));
   const [editingAmount, setEditingAmount] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [photoAsk, setPhotoAsk] = useState(false);
   const [sheet, setSheet] = useState<'category' | 'siblings' | null>(null);
   const [dialog, setDialog] = useState<'delete' | 'discard' | null>(null);
   const [viewer, setViewer] = useState<{ id: string; entryId: string; filePath: string } | null>(null);
@@ -367,7 +368,7 @@ function Editor({ entry }: { entry: EntryRowT }) {
                   accessibilityRole="button"
                   accessibilityLabel={t('common.addPhoto')}
                   accessibilityHint={t('capture.photoHint')}
-                  onPress={() => addPhoto('camera')}
+                  onPress={() => setPhotoAsk(true)}
                   onLongPress={() => addPhoto('library')}
                   style={[styles.addPhoto, { borderColor: colors.lineStrong }]}>
                   <ImagePlus size={22} color={colors.textSecondary} />
@@ -446,6 +447,15 @@ function Editor({ entry }: { entry: EntryRowT }) {
           ))}
         </View>
       </Sheet>
+
+      <PhotoSourceSheet
+        visible={photoAsk}
+        onClose={() => setPhotoAsk(false)}
+        onPick={(source) => {
+          setPhotoAsk(false);
+          addPhoto(source);
+        }}
+      />
 
       <Dialog
         visible={dialog === 'discard'}
