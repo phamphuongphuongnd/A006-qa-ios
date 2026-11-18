@@ -395,3 +395,7 @@
   chỉ là khung — `getRecentEvents` trả `[]`, `startTransitions` chỉ phát `onSignal` khi app đang mở, và JS không nghe `onSignal` → `readSignals` luôn rỗng →
   engine không bao giờ thấy 'driving'. Chưa có "significant location change" để đánh thức app nền (PLAN-v2 §Rủi ro). Màn Automatic trips trên iOS vẫn bật
   được ("iPhone starts trips from motion") → người dùng tưởng đang chạy. Chưa thử được trên iPhone thật (không có Apple Developer + iPhone, TC-340).
+- [ ] **B-96** 🟠 (đọc code, phiên hỏi đáp của Phương 18/11) iPhone thiếu báo nghi sót của chuyến **tay** (miễn phí, F-12/Q2): "Still on a trip?" (đứng yên
+  ≥ 45 phút) và "Trip isn't recording" (mất vị trí ≥ 10 phút khi đang lái) chạy nhờ báo thức đánh thức (`sync.ts` `scheduleWake`, `native.ts`
+  `configureNative`/`cancelWake`/`health`) — module iOS không có các hàm này (`native.ts` nuốt lỗi) → trên iPhone chỉ hiện khi mở app. Nhắc 12 giờ vẫn chạy.
+  Phương duyệt làm chung phiên B-95.
