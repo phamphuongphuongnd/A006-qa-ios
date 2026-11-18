@@ -127,7 +127,9 @@ function columnShift(lines: Line[]): number {
   const hs = boxed.map((l) => l.box!.h).sort((a, b) => a - b);
   const h = hs[Math.floor(hs.length / 2)];
   const shifts = figs.map((f) => labels.filter((l) => l.box!.x < f.box!.x).map((l) => centre(f) - centre(l)));
-  const cands = [0, ...shifts.flat().filter((d) => Math.abs(d) <= 1.5 * h)];
+  // At most ~0.9 of a line: real tilted photos shifted 0.55–0.7 line. On an evenly spaced till roll a shift of 1.5 lines
+  // lines up just as many pairs — every figure with the label one row off (r03 took "£0.95" as its TOTAL that way).
+  const cands = [0, ...shifts.flat().filter((d) => Math.abs(d) <= 0.9 * h)];
   let best = 0;
   let bestScore = -1;
   for (const s of cands) {
