@@ -183,6 +183,17 @@ Log `[B98v4]`: API 26 `top=363 y=216 h=200.5 covered=54 cramped=false` → `y=32
 Android 7 `top=305 … covered=68` → `y=263 h=66 cramped=true`. (`covered=24` còn lại ở trạng thái gọn là phần đệm dưới của khối; ảnh cho thấy Save
 nằm trọn trên bàn phím, cách mép 27 px.) Ảnh: `api26/v4_strip.png`, `api24/v4_strip.png`.
 
+### Kiểm B-114 (04fa4f9) và B-115 / B-109 v2 (07f4aac), API 26 360×640dp, 2026-11-18 15:45–16:07 · `verify-04fa4f9/`, `verify-07f4aac/`
+| Kiểm | Kết quả |
+|---|---|
+| B-115 (OLD-14) Take photo | ✅ 07f4aac: `dumpsys package` có WRITE_EXTERNAL_STORAGE; hỏi Camera → hỏi "photos, media, files" → camera mở → chụp → ✓ → "1 of 3" → Save → `files/receipts/*.jpeg` 1080×1080, mốc xanh ở góc trên-trái như khung ngắm (đúng chiều), không FATAL. Lần đầu app Camera của máy ảo hiện màn giới thiệu (gắn vị trí) rồi về chế độ chụp thường, không trả ảnh — lỗi của app Camera máy ảo; lần 2 mở CaptureActivity đúng. Ảnh nhỏ + đứng đúng → giữ nguyên (theo thiết kế); bản tạm ImagePicker 28 KB còn trong cache. |
+| B-114 (OLD-13) Sort chữ 2.0 | ⚠️ Một phần: Edit/Split/Merge/Skip cuộn tới được, bấm được (cao 96 px); Merge ✅. Còn: tiêu đề + List view đứng yên chiếm y=76–632 (nửa màn), "Sort your wee/k" vẫn bẻ giữa chữ, List view vẫn **cạnh** tiêu đề; chip tuần "This week · 1.."; nhãn nút "E… Sp.. Mer…"; nút + che Skip (chạm Skip mở Ghi nhanh). |
+| **OLD-16** 🟠 Split ở chữ 1.3 và 2.0 | ❌ 04fa4f9 và 07f4aac: mở Split → thẻ cắt ở đáy (y≈842–864) dưới "Left to assign", **không tới được "Split & sort"** — vuốt trong thẻ / ngoài thẻ đều không cuộn thêm, thanh cuộn của thẻ đứng ở nửa trên. Chữ 1.0 ✅ (thấy Split & sort sau 1 lần vuốt). P016 "split an entry" ❌ vì lỗi này. Ảnh `split_f13*.png`, `split_f2_*.png`, `split_f10.png`. |
+| B-109 v2 | ❌ 07f4aac: đường FAB ở Entries + ✓ → danh sách chỉ nhảy lên một đoạn (dừng ở "M6 toll / TUE 12 MAY", trên đó còn 25 MAY, 20 MAY…), không về TODAY; đường Home → Expense → ✓ → tab Entries → vẫn ở quanh "SUN 26 APR". `b109_*.png`. |
+| 🟡 B-100 viên "More below" | Vuốt bắt đầu **trên** viên thì trang onboarding không cuộn; vuốt cạnh viên thì cuộn. Viên che chữ "United States". |
+| Persona P016 (chữ 2.0) | onboarding ✅ (runner vuốt ở x=w/6), khôi phục ✅, 5 tab ✅, Merge ✅, Split ❌ = OLD-16, log sạch. |
+Runner: `scroll_vis` vuốt ở x = w/6 (tránh viên "More below"); bước Split cuộn trong thẻ tới khi thấy nút Split.
+
 ### Hồi quy APK 3f26b33 (bản ứng viên cuối), 2026-11-18 15:06–15:45 · `qa-runs/android-old/verify-3f26b33/`
 | Kiểm | API 26 (360×640dp) | Android 7 |
 |---|---|---|

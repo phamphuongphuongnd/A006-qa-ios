@@ -133,10 +133,11 @@ class Run:
             for n in self.visible():
                 if label.lower() in (n['text'] + ' ' + n['desc']).lower() and n['b'][3] < h * 0.88 and n['b'][1] > h * 0.08:
                     return n
+            # x = w/6: a swipe that starts on the centred "More below" pill (B-100, 04fa4f9) does not scroll
             if up:
-                self.d.shell(f'input swipe {w // 2} {int(h * 0.3)} {w // 2} {int(h * 0.75)} 400')
+                self.d.shell(f'input swipe {w // 6} {int(h * 0.3)} {w // 6} {int(h * 0.75)} 400')
             else:
-                self.d.shell(f'input swipe {w // 2} {int(h * 0.7)} {w // 2} {int(h * 0.35)} 400')
+                self.d.shell(f'input swipe {w // 6} {int(h * 0.7)} {w // 6} {int(h * 0.35)} 400')
             time.sleep(0.8)
         raise TimeoutError(f'"{label}" not found after scrolling')
 
