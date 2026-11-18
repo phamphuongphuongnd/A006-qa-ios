@@ -487,7 +487,10 @@
 - [ ] **B-113** 🟠 (QA A13-10, phiên E, bản 3f26b33 — dữ liệu thật) Có khoản "FreshHarvest Market −£21.74, **Fri 20 Nov 2020**, 11:09" (hoá đơn ghi 2019) mà
   phiên E không bấm Save (nháp trước đó đã Discard lúc 14:41). Kiểm: Discard chỉ xoá nháp, không tạo khoản; 2 đường tạo khoản ở Ghi nhanh là Save và phím
   ✓ bàn phím số (B-98); cả 2 lần OCR FreshHarvest trong chẩn đoán ra 20/11/**2019**; khoản không có trong backup 14:28. Phiên E đã xoá khoản (mất
-  createdAt). **Chưa rõ nguyên nhân** — chờ trả lời phiên E (✓ bàn phím? chọn ngày trong lịch?) / tái hiện + chẩn đoán trước khi xoá.
+  createdAt). Phiên E trả lời: khoản tạo trong 14:28–15:19; script của E chạm theo **toạ độ cố định** trên Ghi nhanh ((95,165) "X", (185,1745)
+  Photo, (540,1990) Take photo) kể cả lúc nháp được khôi phục / bàn phím số mở — chạm có thể rơi vào chip ngày (lịch Samsung → đổi năm) và phím ✓ /
+  Save; một khoản Tesco £55.30 lúc 15:08 cũng tự lưu sau chuỗi chạm y hệt. **Kết luận tạm: nghi do script chạm mù, không phải người dùng** — chưa tái
+  hiện được bằng thao tác người; để mở theo dõi (gặp lại: chụp màn + chẩn đoán trước khi xoá). Phiên E bỏ chạm theo toạ độ (luật xưởng: chờ chữ rồi bấm).
 - [ ] **B-114** 🟠 (QA OLD-13, phiên B — 3f26b33, API 26, 360×640dp, chữ 2.0) Tab Sort: thẻ bị ép còn ~2px (header "Sort your wee/k" bẻ giữa chữ cạnh
   List view + chip tuần + thanh tiến độ chiếm hết chiều cao) → không thấy / không dùng được thẻ; List view vẫn sort được. Chữ 1.3–1.7 ổn. Gốc: chế độ
   cuộn (MOD-11) chỉ bật khi cửa sổ < 520dp, không tính cỡ chữ. Sửa: tính theo dp ÷ cỡ chữ, thẻ cao 360 × cỡ chữ (≤ 1.6), List view xuống dòng dưới
