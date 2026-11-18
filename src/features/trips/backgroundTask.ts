@@ -37,6 +37,15 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
     return;
   }
   if (active.status !== 'running') return;
+  if (Platform.OS === 'ios' && active.startedBy === 'auto') {
+    // B-95 backstop: the end-of-trip wake timer should have ended an automatic trip that stood still this long. If it
+    // didn't fire (phone asleep), let the engine end it now — before fixes of the next drive join it.
+    const mergeMs = getSettings(db).mergeStopMinutes * 60_000;
+    if (Date.now() - Math.max(active.lastPointAt ?? 0, active.startedAt) >= mergeMs) {
+      await processAutoSignals();
+      if (getActiveTrip(db)?.id !== active.id) return;
+    }
+  }
   // The first batch can carry the OS's cached fix from before this trip started (seen on A13: a trip started 18:06
   // showed "stopped recording at 17:57"); drop anything older than the trip.
   const locations = (data?.locations ?? []).filter((l) => l.timestamp >= active.startedAt);
