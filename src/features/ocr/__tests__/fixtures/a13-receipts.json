@@ -2280,5 +2280,739 @@
 "confidence": 0.9
 }
 ]
+},
+{
+"name": "freshharvest-08cdb7b",
+"expectMinor": 2174,
+"source": "Galaxy A13 camera (photo of a screen), app 08cdb7b, 2026-11-18",
+"lines": [
+{
+"text": "1",
+"box": {
+"x": 0.3667,
+"y": 0.3446,
+"w": 0.0061,
+"h": 0.0154
+},
+"confidence": 0.55
+},
+{
+"text": "FreshHarvest Market",
+"box": {
+"x": 0.5006,
+"y": 0.0925,
+"w": 0.2839,
+"h": 0.0413
+},
+"confidence": 0.86
+},
+{
+"text": "333 Chestnut Avenue",
+"box": {
+"x": 0.5094,
+"y": 0.1175,
+"w": 0.2711,
+"h": 0.0404
+},
+"confidence": 0.84
+},
+{
+"text": "Dover, DE 19901",
+"box": {
+"x": 0.5278,
+"y": 0.1442,
+"w": 0.2206,
+"h": 0.0342
+},
+"confidence": 0.79
+},
+{
+"text": "ww.freshharvestmarket ,com",
+"box": {
+"x": 0.4456,
+"y": 0.165,
+"w": 0.3783,
+"h": 0.0433
+},
+"confidence": 0.78
+},
+{
+"text": "2 MILK GALLON 895426",
+"box": {
+"x": 0.37,
+"y": 0.3162,
+"w": 0.2956,
+"h": 0.0333
+},
+"confidence": 0.85
+},
+{
+"text": "ORGANIC PRODUCE",
+"box": {
+"x": 0.4222,
+"y": 0.345,
+"w": 0.1983,
+"h": 0.0267
+},
+"confidence": 0.82
+},
+{
+"text": "Supermarket Rece ipt",
+"box": {
+"x": 0.5017,
+"y": 0.2354,
+"w": 0.2594,
+"h": 0.0333
+},
+"confidence": 0.8
+},
+{
+"text": "Receipt #: 555.357,6453",
+"box": {
+"x": 0.4711,
+"y": 0.2579,
+"w": 0.3133,
+"h": 0.0342
+},
+"confidence": 0.77
+},
+{
+"text": "3",
+"box": {
+"x": 0.3578,
+"y": 0.3933,
+"w": 0.0156,
+"h": 0.0158
+},
+"confidence": 0.82
+},
+{
+"text": "1 CEREAL BOX 120Z",
+"box": {
+"x": 0.3711,
+"y": 0.3683,
+"w": 0.2472,
+"h": 0.0275
+},
+"confidence": 0.76
+},
+{
+"text": "COFFEE GROUND 120Z 511478",
+"box": {
+"x": 0.4183,
+"y": 0.3937,
+"w": 0.335,
+"h": 0.0317
+},
+"confidence": 0.82
+},
+{
+"text": "1MILK GALLON 479831",
+"box": {
+"x": 0.3522,
+"y": 0.4154,
+"w": 0.2983,
+"h": 0.03
+},
+"confidence": 0.82
+},
+{
+"text": "Card number",
+"box": {
+"x": 0.3511,
+"y": 0.5808,
+"w": 0.1389,
+"h": 0.02
+},
+"confidence": 0.72
+},
+{
+"text": "Card type",
+"box": {
+"x": 0.3622,
+"y": 0.6029,
+"w": 0.1067,
+"h": 0.0183
+},
+"confidence": 0.83
+},
+{
+"text": "Card entry",
+"box": {
+"x": 0.3606,
+"y": 0.6233,
+"w": 0.1161,
+"h": 0.0192
+},
+"confidence": 0.82
+},
+{
+"text": "Date/time",
+"box": {
+"x": 0.3483,
+"y": 0.6442,
+"w": 0.1139,
+"h": 0.0171
+},
+"confidence": 0.82
+},
+{
+"text": "Reference #",
+"box": {
+"x": 0.3472,
+"y": 0.665,
+"w": 0.1383,
+"h": 0.0175
+},
+"confidence": 0.81
+},
+{
+"text": "Status",
+"box": {
+"x": 0.3461,
+"y": 0.6854,
+"w": 0.0756,
+"h": 0.015
+},
+"confidence": 0.83
+},
+{
+"text": "Subtotal",
+"box": {
+"x": 0.5183,
+"y": 0.4763,
+"w": 0.1044,
+"h": 0.0204
+},
+"confidence": 0.84
+},
+{
+"text": "ax",
+"box": {
+"x": 0.52,
+"y": 0.5029,
+"w": 0.04,
+"h": 0.0142
+},
+"confidence": 0.56
+},
+{
+"text": "Total",
+"box": {
+"x": 0.5117,
+"y": 0.5483,
+"w": 0.0656,
+"h": 0.0179
+},
+"confidence": 0.82
+},
+{
+"text": "$1,18",
+"box": {
+"x": 0.7922,
+"y": 0.3367,
+"w": 0.0722,
+"h": 0.0213
+},
+"confidence": 0.76
+},
+{
+"text": "$3,49",
+"box": {
+"x": 0.7911,
+"y": 0.3625,
+"w": 0.0694,
+"h": 0.0196
+},
+"confidence": 0.79
+},
+{
+"text": "$2.99",
+"box": {
+"x": 0.7783,
+"y": 0.3846,
+"w": 0.0761,
+"h": 0.0204
+},
+"confidence": 0.8
+},
+{
+"text": "proof of punchase for returns,",
+"box": {
+"x": 0.3856,
+"y": 0.7846,
+"w": 0.3478,
+"h": 0.0146
+},
+"confidence": 0.71
+},
+{
+"text": "exchanges, and warrantyclaims.",
+"box": {
+"x": 0.38,
+"y": 0.8013,
+"w": 0.3567,
+"h": 0.0129
+},
+"confidence": 0.74
+},
+{
+"text": "Returns or exchanges ane accepted",
+"box": {
+"x": 0.3678,
+"y": 0.8163,
+"w": 0.3811,
+"h": 0.0125
+},
+"confidence": 0.82
+},
+{
+"text": "within 14 days of punchasewith a",
+"box": {
+"x": 0.3667,
+"y": 0.83,
+"w": 0.3794,
+"h": 0.0142
+},
+"confidence": 0.77
+},
+{
+"text": "valid rece ipt.",
+"box": {
+"x": 0.4772,
+"y": 0.8454,
+"w": 0.1594,
+"h": 0.0133
+},
+"confidence": 0.76
+},
+{
+"text": "$8.37",
+"box": {
+"x": 0.7822,
+"y": 0.4088,
+"w": 0.0694,
+"h": 0.0204
+},
+"confidence": 0.79
+},
+{
+"text": "All purchases at FreshHarvest Market",
+"box": {
+"x": 0.3511,
+"y": 0.7333,
+"w": 0.4272,
+"h": 0.0179
+},
+"confidence": 0.78
+},
+{
+"text": "will be prov ided with a pr inted or",
+"box": {
+"x": 0.3633,
+"y": 0.7496,
+"w": 0.4028,
+"h": 0.0179
+},
+"confidence": 0.73
+},
+{
+"text": "digital rece ipt. Rece ipts serve as",
+"box": {
+"x": 0.3622,
+"y": 0.7662,
+"w": 0.4006,
+"h": 0.0179
+},
+"confidence": 0.78
+},
+{
+"text": "Thank you for choos ing FreshHarvest!",
+"box": {
+"x": 0.3483,
+"y": 0.8725,
+"w": 0.4,
+"h": 0.0158
+},
+"confidence": 0.83
+},
+{
+"text": "5/25/2025, 12:53 :23 PM",
+"box": {
+"x": 0.4239,
+"y": 0.8938,
+"w": 0.2439,
+"h": 0.0171
+},
+"confidence": 0.87
+},
+{
+"text": "$4.29",
+"box": {
+"x": 0.7811,
+"y": 0.4317,
+"w": 0.0628,
+"h": 0.0208
+},
+"confidence": 0.73
+},
+{
+"text": "$20,32",
+"box": {
+"x": 0.755,
+"y": 0.4838,
+"w": 0.0767,
+"h": 0.0192
+},
+"confidence": 0.81
+},
+{
+"text": "$21,74",
+"box": {
+"x": 0.6861,
+"y": 0.5483,
+"w": 0.1367,
+"h": 0.0304
+},
+"confidence": 0.86
+},
+{
+"text": "$1,42",
+"box": {
+"x": 0.7633,
+"y": 0.5067,
+"w": 0.0656,
+"h": 0.0183
+},
+"confidence": 0.66
+},
+{
+"text": "k kk kk 2296",
+"box": {
+"x": 0.6239,
+"y": 0.5871,
+"w": 0.1867,
+"h": 0.0208
+},
+"confidence": 0.63
+},
+{
+"text": "Debit",
+"box": {
+"x": 0.7422,
+"y": 0.6112,
+"w": 0.0667,
+"h": 0.0171
+},
+"confidence": 0.85
+},
+{
+"text": "Ch ip",
+"box": {
+"x": 0.7617,
+"y": 0.6312,
+"w": 0.04,
+"h": 0.0175
+},
+"confidence": 0.82
+},
+{
+"text": "11/20/2019 11:09 AM",
+"box": {
+"x": 0.5794,
+"y": 0.6467,
+"w": 0.2217,
+"h": 0.0213
+},
+"confidence": 0.82
+},
+{
+"text": "SX9BCMK93PGF",
+"box": {
+"x": 0.6494,
+"y": 0.6692,
+"w": 0.1433,
+"h": 0.0171
+},
+"confidence": 0.68
+},
+{
+"text": "APPROVED",
+"box": {
+"x": 0.6961,
+"y": 0.6904,
+"w": 0.0928,
+"h": 0.015
+},
+"confidence": 0.8
+}
+]
+},
+{
+"name": "tesco-bury-1997-08cdb7b",
+"expectMinor": null,
+"source": "Galaxy A13 camera (photo of a screen), app 08cdb7b, 2026-11-18",
+"lines": [
+{
+"text": "LESCO",
+"box": {
+"x": 0.3011,
+"y": 0.0058,
+"w": 0.4489,
+"h": 0.1138
+},
+"confidence": 0.51
+},
+{
+"text": "CHEESE LATTICE",
+"box": {
+"x": 0.3478,
+"y": 0.3275,
+"w": 0.2033,
+"h": 0.0238
+},
+"confidence": 0.47
+},
+{
+"text": "AT FO",
+"box": {
+"x": 0.3789,
+"y": 0.4254,
+"w": 0.06,
+"h": 0.0238
+},
+"confidence": 0.42
+},
+{
+"text": "TOTAL",
+"box": {
+"x": 0.3228,
+"y": 0.6796,
+"w": 0.06,
+"h": 0.0179
+},
+"confidence": 0.76
+},
+{
+"text": "SUITCH",
+"box": {
+"x": 0.3228,
+"y": 0.6987,
+"w": 0.0728,
+"h": 0.0171
+},
+"confidence": 0.42
+},
+{
+"text": "HAYOHNAISE",
+"box": {
+"x": 0.3539,
+"y": 0.6029,
+"w": 0.1256,
+"h": 0.0221
+},
+"confidence": 0.44
+},
+{
+"text": "CUE PORTION",
+"box": {
+"x": 0.3611,
+"y": 0.6233,
+"w": 0.1278,
+"h": 0.0187
+},
+"confidence": 0.58
+},
+{
+"text": "SAUSAGE ROLE",
+"box": {
+"x": 0.3606,
+"y": 0.6433,
+"w": 0.1439,
+"h": 0.0196
+},
+"confidence": 0.54
+},
+{
+"text": "CHANGE DUE",
+"box": {
+"x": 0.3228,
+"y": 0.7171,
+"w": 0.1206,
+"h": 0.0196
+},
+"confidence": 0.65
+},
+{
+"text": "CARD NC",
+"box": {
+"x": 0.3183,
+"y": 0.7533,
+"w": 0.0756,
+"h": 0.0163
+},
+"confidence": 0.53
+},
+{
+"text": "L",
+"box": {
+"x": 0.4761,
+"y": 0.4475,
+"w": 0.0072,
+"h": 0.0183
+},
+"confidence": 0.46
+},
+{
+"text": "vORS",
+"box": {
+"x": 0.4517,
+"y": 0.5713,
+"w": 0.0783,
+"h": 0.0183
+},
+"confidence": 0.38
+},
+{
+"text": "POINTS THIB UTU",
+"box": {
+"x": 0.3156,
+"y": 0.7696,
+"w": 0.1767,
+"h": 0.0213
+},
+"confidence": 0.45
+},
+{
+"text": "T0TAL, UP TO 240T97",
+"box": {
+"x": 0.3172,
+"y": 0.7854,
+"w": 0.2356,
+"h": 0.0275
+},
+"confidence": 0.44
+},
+{
+"text": "O Enhance",
+"box": {
+"x": 0.2694,
+"y": 0.9892,
+"w": 0.0856,
+"h": 0.0088
+},
+"confidence": 0.79
+},
+{
+"text": "THANK vou",
+"box": {
+"x": 0.42,
+"y": 0.8392,
+"w": 0.1017,
+"h": 0.0183
+},
+"confidence": 0.54
+},
+{
+"text": "FOR SHOPPTH0 AT TESCD:",
+"box": {
+"x": 0.3511,
+"y": 0.85,
+"w": 0.2467,
+"h": 0.0262
+},
+"confidence": 0.39
+},
+{
+"text": "BURY ST EDMUHDS BRANCH",
+"box": {
+"x": 0.3494,
+"y": 0.865,
+"w": 0.2528,
+"h": 0.0271
+},
+"confidence": 0.49
+},
+{
+"text": "TELEPHONE HO 01284Z65300",
+"box": {
+"x": 0.3411,
+"y": 0.8804,
+"w": 0.2833,
+"h": 0.0271
+},
+"confidence": 0.57
+},
+{
+"text": "UAT HMBER 2204301aT",
+"box": {
+"x": 0.3644,
+"y": 0.9104,
+"w": 0.2206,
+"h": 0.0262
+},
+"confidence": 0.43
+},
+{
+"text": "THIS IS HOTA UNT eCEIPT",
+"box": {
+"x": 0.3483,
+"y": 0.9229,
+"w": 0.2678,
+"h": 0.0304
+},
+"confidence": 0.4
+},
+{
+"text": "2 Extract Text",
+"box": {
+"x": 0.3972,
+"y": 0.99,
+"w": 0.0911,
+"h": 0.01
+},
+"confidence": 0.76
+},
+{
+"text": "0.48",
+"box": {
+"x": 0.6356,
+"y": 0.4242,
+"w": 0.06,
+"h": 0.0204
+},
+"confidence": 0.41
+},
+{
+"text": "0,48",
+"box": {
+"x": 0.6367,
+"y": 0.4462,
+"w": 0.0578,
+"h": 0.0183
+},
+"confidence": 0.38
+},
+{
+"text": "10.993",
+"box": {
+"x": 0.6222,
+"y": 0.5079,
+"w": 0.0728,
+"h": 0.025
+},
+"confidence": 0.36
+},
+{
+"text": "O.00",
+"box": {
+"x": 0.5994,
+"y": 0.7296,
+"w": 0.055,
+"h": 0.0171
+},
+"confidence": 0.36
+}
+]
 }
 ]

@@ -14,7 +14,7 @@ import { currencyOf, type EntryType, type Scope } from '@/domain/types';
 import { CameraDeniedDialog, takePhotos } from '@/features/entries/photo';
 import { useDateTimePicker } from '@/features/entries/DateTimePick';
 import { dateTimeLabel } from '@/features/entries/format';
-import { MAX_PHOTOS_PER_ENTRY, photoSlots, planFill } from '@/features/ocr/fill';
+import { MAX_PHOTOS_PER_ENTRY, photoSlots, planFill, readingHasAmount, type CaptureFields } from '@/features/ocr/fill';
 import type { ParsedReceipt } from '@/features/ocr/parseReceipt';
 import { attachReadings, ocrAvailable, ocrDev, type PendingRead } from '@/features/ocr/reader';
 import { afterSave, undoAfterSave } from '@/features/ocr/rulesHook';
@@ -94,12 +94,22 @@ export default function CaptureScreen() {
 
   // OCR is Pro (§6); free photos are still attached, just not read — and nothing here sells Pro.
   const ocrOn = (pro || (__DEV__ && ocrDev.forceOn)) && ocrAvailable();
-  const form = useRef({ amountMinor: 0, note: '', at: null as number | null });
+  const form = useRef<CaptureFields>({ amountMinor: 0, note: '', at: null });
+  // Note / date filled from a photo whose total wasn't read (see CaptureFields.weak).
+  const weakFill = useRef({ note: false, at: false });
   useEffect(() => {
-    form.current = { amountMinor: amount.minor, note, at };
+    form.current = {
+      amountMinor: amount.minor,
+      note,
+      at,
+      weak: { note: weakFill.current.note && fromReceipt.note, at: weakFill.current.at && fromReceipt.at },
+    };
   });
   const onReading = (r: ParsedReceipt) => {
     const plan = planFill(form.current, r, Date.now());
+    const weak = !readingHasAmount(r);
+    if (plan.note !== undefined) weakFill.current.note = weak;
+    if (plan.at !== undefined) weakFill.current.at = weak;
     if (plan.amountMinor !== undefined) {
       amount.setMinor(plan.amountMinor);
       setReceiptMinor(null);

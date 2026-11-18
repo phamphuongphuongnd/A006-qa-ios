@@ -59,11 +59,28 @@ describe('planFill (P1-12)', () => {
 });
 
 describe('mergeReadings (several photos)', () => {
-  it('takes each field from the first photo that read it', () => {
+  it('takes each field from the first photo that read it, the photo with the total first', () => {
     const a = reading({ amountMinor: null, confidence: { amount: 0, merchant: 0.92, date: 0.9 } });
     const b = reading({ amountMinor: 1500, merchant: 'Tesco', date: null, confidence: { amount: 0.9, merchant: 0.9, date: 0 } });
-    expect(mergeReadings([null, a, b])).toEqual({ ocrAmountMinor: 1500, ocrMerchant: 'Shell', ocrDate: NOV9 });
+    expect(mergeReadings([null, a, b])).toEqual({ ocrAmountMinor: 1500, ocrMerchant: 'Tesco', ocrDate: NOV9 });
+    expect(mergeReadings([null, a])).toEqual({ ocrAmountMinor: null, ocrMerchant: 'Shell', ocrDate: NOV9 });
     expect(mergeReadings([])).toEqual({ ocrAmountMinor: null, ocrMerchant: null, ocrDate: null });
+  });
+
+  it('shop and date come from the photo that gave the total (A13: Tesco photo without total + FreshHarvest)', () => {
+    const tesco = reading({ amountMinor: null, merchant: 'Tesco', confidence: { amount: 0.4, merchant: 0.92, date: 0.9 } });
+    const fresh = reading({ amountMinor: 2174, merchant: 'FreshHarvest Market', date: null, confidence: { amount: 0.9, merchant: 0.62, date: 0 } });
+    expect(mergeReadings([tesco, fresh])).toEqual({ ocrAmountMinor: 2174, ocrMerchant: 'FreshHarvest Market', ocrDate: NOV9 });
+  });
+});
+
+describe('planFill with a second photo', () => {
+  it('a photo with the total replaces the shop a photo without total put there, unless the driver edited it', () => {
+    const fresh = reading({ amountMinor: 2174, merchant: 'FreshHarvest Market', date: null, confidence: { amount: 0.9, merchant: 0.62, date: 0 } });
+    const form = { amountMinor: 0, note: 'Tesco', at: null };
+    expect(planFill({ ...form, weak: { note: true, at: false } }, fresh, NOW).note).toBe('FreshHarvest Market');
+    expect(planFill({ ...form, weak: { note: false, at: false } }, fresh, NOW).note).toBeUndefined();
+    expect(planFill(form, fresh, NOW).note).toBeUndefined();
   });
 });
 
