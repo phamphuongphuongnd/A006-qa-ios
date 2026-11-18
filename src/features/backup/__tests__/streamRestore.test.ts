@@ -82,4 +82,12 @@ describe('QA-100 B-87: streamed restore', () => {
     const evil = zipSync({ [MANIFEST_NAME]: strToU8(JSON.stringify({ ...manifest, counts: { ...manifest.counts, photos: 1 } })), 'receipts/../x.jpg': photo(10, 1) });
     expect(await readBackupStream(bytesSource(evil), memorySink().sink)).toEqual({ ok: false, error: 'damaged' });
   });
+
+  it('REG-1: a manifest that inflates past 64 MB stops early with "damaged"', async () => {
+    const bomb = zipSync({ [MANIFEST_NAME]: new Uint8Array(70 * 1024 * 1024).fill(32) }, { level: 9 });
+    const before = process.memoryUsage().heapUsed;
+    expect(await readBackupStream(bytesSource(bomb, 1024 * 1024), null)).toEqual({ ok: false, error: 'damaged' });
+    // Refused from the declared size: nothing near 70 MB was held.
+    expect(process.memoryUsage().heapUsed - before).toBeLessThan(40 * 1024 * 1024);
+  });
 });

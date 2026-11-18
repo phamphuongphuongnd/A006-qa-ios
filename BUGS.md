@@ -366,3 +366,7 @@
   chưa sort), "End trip" (Home khi đang có chuyến), "Back up now"/"Choose again", "Subscribe now"/"Try free", "See Pro", Save chi tiết chuyến, "Always"…
   Gốc: `ui/Button.tsx` `sun: { fg: 'primary' }`, mà ở theme tối `primary` = `sun` = #F5B841. Sửa: chữ dùng token `onSun` có sẵn (sáng #18202F, tối
   #12161C). ⏳ phiên A: chụp lại 2 màn trên ở chế độ tối.
+- [ ] **B-91** 🟡 (QA REG-1, phiên D — B-81/B-87 chưa trọn) Chọn file "bom" có `backup.json` 200 MB: không báo gì, RAM giữ ~515 MB 2 phút; bom ảnh báo
+  "damaged" đúng nhưng RAM vẫn lên ~520 MB. Gốc: `fail()` chỉ ghi lỗi, mục đang giải nén không dừng, mỗi lần nạp 1 MB nén có thể nở hàng trăm MB.
+  Sửa (`streamRestore.ts`): kích thước khai báo trong header vượt giới hạn → từ chối trước khi giải nén; nạp 64 KB/lần; vượt → `terminate()`.
+  Test "REG-1". ⏳ phiên D đo lại PSS.
