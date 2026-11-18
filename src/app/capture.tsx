@@ -226,6 +226,9 @@ export default function CaptureScreen() {
   // QA-100 OLD-2: before Android 11 the keyboard height RN reports leaves out the nav bar the app draws behind
   // (edge-to-edge), so the calculator row ended up half under the keyboard.
   const keyboardOffset = Platform.OS === 'android' && Number(Platform.Version) < 30 ? insets.bottom : 0;
+  // QA-100 B-58/B-72: before Android 11 the window doesn't shrink for the keyboard the way RN measures, and the row
+  // at the bottom stayed half under it (19dp ≈ the status bar). There the calculator row sits right under the amount.
+  const calcUnderAmount = Platform.OS === 'android' && Number(Platform.Version) < 30;
 
   // QA-100 OLD-9: Android's adjustsFontSizeToFit sized the amount once, while its area was still ~0 under the opening
   // keyboard, and never grew it back (4px on Android 8). Size it from the measured height and the text's length instead.
@@ -278,6 +281,8 @@ export default function CaptureScreen() {
     } catch {
       // QA-100 OLD-8: a full phone (SQLITE_FULL) failed silently — the driver thought it was saved. Keep the amount.
       savingRef.current = false;
+      // OLD-10: on old Android the snackbar sat behind the keyboard — put the keyboard away first.
+      Keyboard.dismiss();
       snack({ message: t('capture.saveFailed'), tone: 'error', above: 'none' });
     }
   };
@@ -446,6 +451,11 @@ export default function CaptureScreen() {
             style={styles.hiddenInput}
           />
         </Pressable>
+        {calcUnderAmount && keyboardUp && !noteOpen ? (
+          <View style={{ paddingHorizontal: GUTTER, paddingBottom: 4 }}>
+            <CalcBar onOp={amount.op} />
+          </View>
+        ) : null}
 
         <View style={{ paddingHorizontal: GUTTER, paddingBottom: keyboardUp ? 10 : 12 + insets.bottom, gap: tight ? 8 : 12 }}>
           {chipMinor !== null ? (
@@ -558,7 +568,7 @@ export default function CaptureScreen() {
             </Txt>
           )}
         </View>
-        {keyboardUp && !noteOpen ? (
+        {!calcUnderAmount && keyboardUp && !noteOpen ? (
           <View
             ref={calcRef}
             style={{ marginBottom: calcLift }}

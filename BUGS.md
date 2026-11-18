@@ -380,3 +380,7 @@
   bản 2 máy không ghi máy nào; 2 máy cùng phút → trùng tên ghi đè. Sửa: tên file đêm có mã máy 6 ký tự (`SundaySort-backup-…-HHMM-<tag>`,
   `features/backup/deviceTag.ts`, lưu file riêng — không theo bản sao lưu sang máy khác); mỗi máy chỉ tỉa file của mình (+ file không mã cũ); danh sách
   Khôi phục ghi "· another phone". Test `nightly.test.ts` "SPE-9". ⏳ phiên D mô phỏng lại.
+- [ ] **B-93** 🟠 (QA phiên B, kiểm lại B-58/B-72 trên 5ce0626) Android 8 360dp: hàng + − × ÷ vẫn bị bàn phím che ~19dp (chữ 1.3: không thấy ký hiệu
+  nào) — phép đo B-72 trộn toạ độ cửa sổ (`measureInWindow`) với toạ độ màn hình (`screenY`), lệch đúng thanh trạng thái. Sửa: Android < 11 đặt hàng
+  phép tính ngay dưới vùng số tiền (không thể nằm dưới bàn phím); Android 11+ giữ như cũ. Kèm OLD-10 🟡: báo "Couldn't save…" nằm sau bàn phím
+  trên Android cũ → ẩn bàn phím trước khi báo. ⏳ phiên B API 26 + Android 7.
