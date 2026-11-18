@@ -172,6 +172,17 @@ Ghi chú: ở 16 MB trống lưu vẫn được (lần đầu "Saved · £9.99")
 - **Gợi ý:** khi `keyboardUp && API < 30` thu gọn phần trên khối Save (ẩn hàng Photo/Work/Note hoặc hàng gợi ý ghi chú, chỉ giữ số tiền + hàng
   phép tính + Save) hoặc đặt khối Save `position: 'absolute', top: top − h` đè lên vùng số tiền; bỏ cộng dồn (`setSaveLift(covered)` một lần).
 
+### Kiểm lại B-98 lần 4 trên APK 4f297e1 (thu gọn khi thiếu chỗ), 2026-11-18 · `qa-runs/android-old/verify-4f297e1/` (`qa/tools/oldb98v4.py`) — ✅ OLD-12 hết
+| | (1) Save khi gõ số tiền | (2) mở Note, gõ chữ | (3) đóng bàn phím | (4) phím ✓ |
+|---|---|---|---|---|
+| API 26, P003 có hàng gợi ý, chữ 0.85 | ✅ trọn trên bàn phím (y=651–744, bàn phím 771) | ✅ ô Note "QA note" + Save trọn (bàn phím chữ y=683) | ✅ Photo/Work/Note, gợi ý, dòng phụ hiện lại | ✅ Saved · £12.50 |
+| API 26, chữ 1.3 | ✅ (651–744 / 771) | ✅ | ✅ | ✅ |
+| Android 7 (dữ liệu mới), chữ 0.85 | ✅ (535–628 / 655) | ✅ (bàn phím chữ y=655) | ✅ | ✅ |
+| Android 7, chữ 1.3 | ✅ | ✅ | ✅ | ✅ |
+Log `[B98v4]`: API 26 `top=363 y=216 h=200.5 covered=54 cramped=false` → `y=321 h=66 covered=24 cramped=true`; Note mở: `top=319 … cramped=true`.
+Android 7 `top=305 … covered=68` → `y=263 h=66 cramped=true`. (`covered=24` còn lại ở trạng thái gọn là phần đệm dưới của khối; ảnh cho thấy Save
+nằm trọn trên bàn phím, cách mép 27 px.) Ảnh: `api26/v4_strip.png`, `api24/v4_strip.png`.
+
 ### OLD-12 🟡 Android < 11: nút Save ở Ghi nhanh nằm (một phần / hoàn toàn) sau bàn phím khi đang gõ
 - **Máy/APK:** API 26 360dp và Android 7, APK 97ceb60. Bảng trên. Nút ✓ của bàn phím chỉ ẩn bàn phím (không lưu); sau đó Save hiện đủ.
 - **Nguyên nhân gốc nghi ngờ:** vẫn lệch đúng ~24dp: Save đỉnh y=709 + cao 112 px = 821 so với bàn phím y=774 → 47 px = 23,5dp ≈ chiều cao thanh
