@@ -414,3 +414,7 @@
   đòi mở khoá → vân tay OK → về **Home, mất ảnh hoá đơn + khoản đang nhập**. Gốc: `features/entries/photo.tsx` gọi camera / thư viện ảnh KHÔNG bọc
   `withLockSuspended` (share sheet, bộ chọn file, bộ chọn thư mục đều có). Sửa: bọc cả 3 lời gọi ImagePicker. (B-84/B-89 v2 cũng giữ lại nháp + ảnh nếu
   app bị tắt.) ⏳ phiên E thử lại với vân tay thật.
+> **B-95 + B-96 — đã viết code (phiên H, nhánh `ios-auto-trips`, merge vào `dev` de75d74 theo Phương 18/11)**: iOS đánh thức bằng significant location change
+> + vùng 150 m quanh chỗ đỗ cuối, CoreMotion → vòng nhật ký bền `TripEventLog` → cùng `engine.step` với Android; kết thúc chuyến theo luật cũ; B-96: hẹn sẵn
+> thông báo cục bộ "Still on a trip?" / "Trip isn't recording". jest 915/915, tsc, lint, build EAS iOS simulator xanh. **CHƯA thử iPhone thật** — 8 điểm cần chạy
+> xe + giới hạn đã biết ở `qa/findings/ios-auto-trips.md`. Rủi ro lớn nhất: hẹn giờ không nổ khi máy ngủ → có thể gộp 2 chuyến. B-95/B-96 để mở tới khi thử thật.
