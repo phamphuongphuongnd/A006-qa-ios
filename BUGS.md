@@ -479,7 +479,8 @@
 - [ ] **B-109** 🟡 (QA A13-8, phiên E) Sau Save, tab Entries giữ vị trí cuộn cũ → mục TODAY + khoản mới nằm trên mép màn hình. Sửa: số khoản tăng (xếp
   mới nhất trước) → cuộn danh sách lên đầu. ✅ A13 (3f26b33): khoản mới hiện ngay đầu Entries.
   ❌ phiên B (API 26, 3f26b33): cuộn xuống rồi ghi khoản (FAB / tab Home) → Entries vẫn ở chỗ cũ — lệnh cuộn chạy lúc Entries bị che, FlashList bỏ qua
-  (A13 đạt vì danh sách đang ở đầu). Sửa lần 2: so số khoản khi Entries hiện lại (useIsFocused) rồi mới cuộn. ⏳ phiên B.
+  (A13 đạt vì danh sách đang ở đầu). Sửa lần 2: so số khoản khi Entries hiện lại (useIsFocused) rồi mới cuộn. Phiên B (07f4aac): vẫn chỉ cuộn được
+  một đoạn (dòng phía trên chưa đo) → lần 3: `scrollToIndex(0)` không hiệu ứng, lặp lại sau 400 ms. ⏳ phiên B / A13.
 - [ ] **B-110** 🟡 (QA A37-8/A37-9, phiên A — 320dp + chữ 200%) Reports: "Profit" cắt "−$1,073,09…", "By tax form line" bẻ chữ từng âm tiết + cắt số,
   "Expenses by category" cắt tên còn "Eq..". Sửa: số tiền xuống dòng dưới nhãn khi không đủ chỗ (bỏ adjustsFontSizeToFit), tên danh mục 2 dòng,
   số + % xuống dòng. ⏳ phiên A.
@@ -507,7 +508,8 @@
   tiêu đề, đệm dưới giữ chỗ FAB khi FAB còn hiện. Phiên B (04fa4f9): một phần — Edit/Split/Merge/Skip tới được, nhưng form Split bị cắt, không tới
   được "Split & sort" (ScrollView của thẻ lồng trong ScrollView màn → Android cần `nestedScrollEnabled`); tiêu đề vẫn chiếm nửa màn, List view cạnh
   tiêu đề, FAB che Skip. Sửa lần 2: `nestedScrollEnabled` ở thẻ khoản + thẻ chuyến; màn cuộn → tiêu đề cuộn cùng thẻ; chữ ≥ 1.5 → List view dòng riêng;
-  ẩn FAB ở Sort khi màn cuộn. ⏳ phiên B.
+  ẩn FAB ở Sort khi màn cuộn. Phiên B (07f4aac = bản lần 1): ở chữ **1.3** trên 640dp form Split cũng không tới được "Split & sort" (lần 1 bật bố
+  cục cuộn từ 1.3) — hồi quy cho cỡ "Large". Lần 3: bố cục cuộn chỉ khi chữ ≥ 1.8 (1.3–1.7 về bố cục thường đã chạy đúng ở 3f26b33). ⏳ phiên B.
 - [ ] **B-115** 🔴 (QA OLD-14, phiên B — 3f26b33, API 26) Android 7/8/9 (API 24–28): Ghi nhanh → Photo → "Take photo" **không bao giờ mở camera** (cấp quyền
   CAMERA rồi vẫn không); "Choose from library" vẫn được. Gốc: trên SDK < Q expo-image-picker đòi cả WRITE_EXTERNAL_STORAGE lẫn CAMERA
   (`ensureCameraPermissionsAreGranted`), mà `plugins/withReleasePermissions.js` xoá WRITE_EXTERNAL_STORAGE khỏi manifest release (B-19) → không xin
@@ -523,4 +525,10 @@
 - [ ] **B-118** 🟠 (QA iOS — phiên H) Câu xin quyền vị trí iOS (app.json) hứa "only while a trip you started is running" / "Recording stops when you end the
   trip" — sai từ khi có chuyến tự động (theo dõi rời chỗ đỗ / vùng 150 m ở nền) → Apple 5.1.1. Sửa: câu mới nói rõ chuyến tự động; câu trong app
   (`trip.permBody`) cũng sửa. Cần build iOS mới mới có hiệu lực. ⏳ Phương xem chữ trước khi nộp.
+- [ ] **B-119** 🟡 (QA SPE-11, phiên D) `sundaysort://dev/gallery` mở được trong bản release (gallery.tsx thiếu chặn `__DEV__`). Sửa: chuyển về Home như dev/ocr,
+  dev/probe. Link lạ khác ra màn "Unmatched Route" + nút Sitemap (chưa có `+not-found`) — 🟡 để sau. ⏳ phiên D.
+- [ ] **B-120** 🟡 (QA SPE-12, phiên D) `export?mode=custom&end=1e17` hiện "NaN undefined NaN", tên file "…NaN-NaN-NaN.zip". Sửa: khoảng ngày qua `saneReportRange`
+  như Reports (B-67); sai thì về năm thuế. ⏳ phiên D.
+- [ ] **B-121** 🟡 (QA SPE-10, phiên D — đọc code) File chẩn đoán ghi MAC + tên mọi thiết bị Bluetooth đã nối trong 7 ngày, không chỉ xe (BluetoothReceiver.kt:30).
+  File chỉ rời máy khi người dùng tự chia sẻ, nhưng nên chỉ giữ thiết bị xe / băm địa chỉ. **Để sau (sửa native)**.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.

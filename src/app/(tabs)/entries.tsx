@@ -146,9 +146,16 @@ export default function EntriesScreen() {
   useEffect(() => {
     if (!focused) return;
     if (total > lastTotal.current && !oldestFirst) {
-      const id = setTimeout(() => listRef.current?.scrollToOffset({ offset: 0, animated: true }), 50);
+      // v3 (phiên B, API 26): an animated scroll to offset 0 stopped part way — the rows above weren't measured yet.
+      // Jump to the first row without animation, and again once the list has laid out the new rows.
+      const top = () => listRef.current?.scrollToIndex({ index: 0, animated: false });
+      const a = setTimeout(top, 50);
+      const b = setTimeout(top, 400);
       lastTotal.current = total;
-      return () => clearTimeout(id);
+      return () => {
+        clearTimeout(a);
+        clearTimeout(b);
+      };
     }
     lastTotal.current = total;
   }, [total, oldestFirst, focused]);

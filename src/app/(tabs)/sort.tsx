@@ -157,7 +157,9 @@ export default function SortScreen() {
   // QA-100 OLD-13: 360×640dp at text size 2.0 squeezed the card to 2px — the header, week chip and progress bar took the
   // whole height. Big text needs as much room as a short window: count the height in "text lines" (dp ÷ font scale), and
   // give the card more height when the text is large.
-  const short = windowHeight / Math.max(1, fontScale) < 520;
+  // v3 (phiên B): only from 1.8× text — at 1.3 the scrolling layout cut the split form, and 1.3–1.7 were fine in the
+  // normal one (3f26b33).
+  const short = windowHeight < 520 || (fontScale >= 1.8 && windowHeight / fontScale < 520);
   const cardHeight = Math.round(360 * Math.min(Math.max(fontScale, 1), 1.6));
   const mergeEntry = mergeFor ? s.entries.find((e) => e.id === mergeFor) ?? null : null;
 
