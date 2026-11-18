@@ -29,6 +29,34 @@ Cài đặt gốc từng máy: `qa-runs/modern/_baseline/`.
 - Lưu ý vận hành: máy chủ Windows chạm trần commit (7 máy ảo) nên phải tạm tắt XL để chạy máy 16 KB; lần đầu `adb install` (stream) làm
   máy 16 KB rơi offline — cài bằng `adb push` + `pm install` thì ổn.
 
+## 2b. Chạy lại trên APK `sundaysort-qa-5ce0626-all.apk` (dev 5ce0626, B-56…B-87) — 2026-11-18 08:55–09:12
+
+Bằng chứng: `qa-runs/modern/regress-5ce0626/`. XL (`-gpu host`) rồi Fold (`-gpu swiftshader_indirect`), từng máy một, 3072 MB, khởi động lại giữa 2 lô.
+
+| Lỗi | Kiểm | Kết quả |
+|---|---|---|
+| B-79 (MOD-8) | XL, P098 5.006 khoản | ✅ "2,037 entries to sort" |
+| B-64/B-72 (MOD-2) | XL chữ 2.0 tối: gõ 1234 | ✅ "$12.34" to rõ; bàn phím số (`xl-f2-typed.png`) |
+| | Fold mở xoay ngang, chữ 1.0 và 2.0: gõ 750 | ✅ "$7.50" rõ ở cả hai (`fold-land-montage.png`) |
+| B-73 (MOD-9) | XL: Back ẩn bàn phím → chạm số tiền (2 lần liên tiếp); Fold ngang: như trên | ✅ bàn phím hiện lại (`mInputShown=true`), gõ tiếp nối vào số ($12.34 → $123.45) |
+| B-86 (MOD-5) | Chạm Photo ở Ghi nhanh và "Add photo" ở Sửa khoản | ✅ bảng "Add a receipt photo": Take photo / Choose from library |
+| B-82 (MOD-6 + Discard) | Sửa khoản chữ 2.0 và 1.3 | ✅ "Category" nguyên chữ, "Add photo" nằm trong khung (`xl-b82-detail-*.png`) |
+| | Discard khi có ảnh | ✅ "$123.45 expense won't be saved. The photo will be deleted too." |
+| B-84 (MOD-3) | Ghi nhanh gõ số (+1 ảnh) → Take photo → camera mở → mở Settings (app thành *cached*) → `am kill` (pid mất) → Recents về camera → chụp → Done | ✅ tiến trình mới mở lại Ghi nhanh với **số cũ + ảnh đã gắn trước đó**. ❌ **ảnh vừa chụp lúc app đã chết bị mất** — lặp 2 lần: lần 1 có sẵn 1 ảnh → vẫn "1 of 3"; lần 2 không có ảnh → mở lại không có ảnh (`xl-b84-after.png`, `xl-b84-run2.png`). Xem MOD-10 |
+| B-85 (MOD-4) | Fold mở 5 tab; xoay ngang; chia đôi 423dp dọc / 436dp ngang | ✅ cột ~640dp giữa màn khi rộng; nửa dọc dùng hết bề ngang (`fold-open-montage.png`, `fold-mw-montage.png`). 🟡 cửa sổ thấp 436dp: nút "+" đè lên nút "Sort now" của dải "99+ entries … aren't sorted" ở Reports (`fold-mw-bottom-reports.png`) |
+
+Ghi chú: `am kill` không giết được app khi app vừa rời sang camera (trạng thái *previous*, oom adj 700) — phải đưa app về *cached* (mở app
+khác) mới giống máy thật bị thu hồi bộ nhớ.
+
+### MOD-10 🟡 (phần còn lại của B-84) Ảnh chụp trong lúc app bị Android giết không được gắn lại vào Ghi nhanh
+- **Máy:** XL API 37, APK 5ce0626, P098. Bước như hàng B-84 ở trên. Logcat: `Start proc …sundaysort for content provider
+  {…expo.modules.imagepicker.fileprovider.ImagePickerFileProvider}` — tức camera vẫn ghi file vào app, nhưng màn Ghi nhanh mở lại
+  không nhận ảnh.
+- **Nguyên nhân nghi ngờ:** `src/app/capture.tsx:128-132` gọi `ImagePicker.getPendingResultAsync()` một lần khi màn mở; lúc đó kết quả
+  camera có thể chưa được giao cho Activity mới (Home đẩy sang Ghi nhanh trước khi `onActivityResult` tới), hoặc module chỉ giữ kết quả chờ
+  khi chính Activity (không phải tiến trình) bị dựng lại. Gợi ý: gọi lại `getPendingResultAsync` khi `AppState` → `active` lần đầu / sau
+  ~1 s; hoặc tự lưu đường dẫn file đích trước khi mở camera (`launchCameraAsync` với `uri` biết trước) để nháp tự nhặt file nếu có.
+
 ## 2a. Chạy lại trên APK `sundaysort-qa-538ede9-all.apk` (dev 538ede9, B-56…B-70) — 2026-11-17 15:30–15:55
 
 Bằng chứng: `qa-runs/modern/regress-538ede9/`. Máy: XL (`-gpu host`) rồi Fold (`-gpu swiftshader_indirect`), mỗi lúc 1 máy, 3072 MB.
