@@ -196,9 +196,11 @@ jobs:
 
       - name: Run personas
         env:
-          PERSONAS_IN: ${{ inputs.personas }}
-          IPAD_IN: ${{ github.event_name == 'workflow_dispatch' && inputs.ipad_personas || 'P002-ipad,P041-ipad' }}
-          BUDGET_MIN: ${{ inputs.test_budget_min || '50' }}
+          # Push runs: personas not covered yet (round 4 = the 13 left after run 44221266865).
+          PERSONAS_IN: ${{ github.event_name == 'workflow_dispatch' && inputs.personas || 'P001,P007,P022,P067,P076,P091,P011,P026,P041,P071,P077,P086,P092' }}
+          IPAD_IN: ${{ github.event_name == 'workflow_dispatch' && inputs.ipad_personas || 'P041-ipad' }}
+          BUDGET_MIN: ${{ inputs.test_budget_min || '48' }}
+          PER_PERSONA_TIMEOUT: '900'
           PARALLEL: ${{ inputs.parallel || 'true' }}
         run: |
           chmod +x qa/ios/run-lane.sh

@@ -95,8 +95,11 @@ for PIDX in ${PERSONAS//,/ }; do
     DUR=$(( $(date +%s) - T0 ))
     log "$PIDX maestro exit $CODE in ${DUR}s"
 
+    # Two lanes calling `log show` at once gave empty logs (run 44221266865) → one at a time.
+    until mkdir "$OUT_ROOT/.logshow.lock" 2>/dev/null; do sleep 2; done
     xcrun simctl spawn "$UDID" log show --start "$LOG_START" --style compact \
       --predicate 'process == "SundaySort" AND subsystem != "com.apple.dt.xctest"' 2>"$OUT/log-show.err" | tail -n 20000 > "$OUT/app.log"
+    rmdir "$OUT_ROOT/.logshow.lock"
     find "$HOME/Library/Logs/DiagnosticReports" -newer "$MARKER" -type f 2>/dev/null | while read -r c; do
       if grep -q "SundaySort\|$BUNDLE" "$c" 2>/dev/null; then cp "$c" "$OUT/crash/"; fi
     done
