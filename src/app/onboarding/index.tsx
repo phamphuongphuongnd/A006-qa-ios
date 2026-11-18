@@ -1,5 +1,5 @@
 import { router } from '@/services/router';
-import { ScrollView, useWindowDimensions, View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { WelcomeArt } from '@/features/entries/art';
@@ -7,6 +7,7 @@ import { StepDots } from '@/features/entries/OnboardingTop';
 import { t } from '@/i18n';
 import { GUTTER, useTheme } from '@/theme';
 import { Button, Txt } from '@/ui';
+import { HintScroll } from '@/ui/HintScroll';
 
 /** S-01a Welcome. No sign-in, by design. */
 export default function Welcome() {
@@ -17,7 +18,7 @@ export default function Welcome() {
   const roomy = height / Math.max(1, fontScale) >= 700;
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingHorizontal: GUTTER, paddingTop: roomy ? 48 : 16, gap: roomy ? 28 : 16 }}>
+      <HintScroll contentContainerStyle={{ flexGrow: 1, paddingHorizontal: GUTTER, paddingTop: roomy ? 48 : 16, gap: roomy ? 28 : 16 }}>
         <View style={{ alignItems: 'center' }}>
           <WelcomeArt scale={roomy ? 1 : 0.55} />
         </View>
@@ -29,7 +30,7 @@ export default function Welcome() {
             {t('onboarding.welcomeBody')}
           </Txt>
         </View>
-      </ScrollView>
+      </HintScroll>
       <View style={{ paddingHorizontal: GUTTER, paddingBottom: Math.max(insets.bottom, 16) + 20, paddingTop: 12, gap: 20 }}>
         <StepDots step={1} />
         <Button label={t('onboarding.getStarted')} full onPress={() => router.push('/onboarding/region')} />

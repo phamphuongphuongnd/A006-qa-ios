@@ -13,6 +13,8 @@ import { getProStatus } from '@/db/proRepo';
 import { getSettings } from '@/db/settingsRepo';
 import { listTrips } from '@/db/tripsRepo';
 
+import { lastReceiptReadings } from '@/features/ocr/reader';
+
 import { getAutoFlags } from './runner';
 import { hasActivityPermission, nativeHealth, readRawSignals, readSignals } from './native';
 import { getKV } from './repo';
@@ -67,6 +69,8 @@ export async function buildTripDiagnostics(now = Date.now()) {
             .map((x) => ({ ...x, time: new Date('eventAt' in x ? x.eventAt : x.at).toISOString() }))
         : undefined,
     trips,
+    // A13-4: last receipt readings (raw OCR lines + parse) — read on the phone only, shared only with this file.
+    receipts: lastReceiptReadings(),
   };
 }
 

@@ -2,7 +2,7 @@ import { getLocales } from 'expo-localization';
 import { router } from '@/services/router';
 import { Info } from '@/ui/icons';
 import { useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import type { Region } from '@/domain/types';
 import { FlagUK, FlagUS } from '@/features/entries/art';
@@ -11,6 +11,7 @@ import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { GUTTER, radius, useTheme } from '@/theme';
 import { Button, SelectCircle, Txt } from '@/ui';
+import { HintScroll } from '@/ui/HintScroll';
 
 function deviceRegion(): Region | null {
   const code = getLocales()[0]?.regionCode;
@@ -43,7 +44,7 @@ export default function RegionStep() {
           }}
         />
       }>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 14, paddingBottom: 20, gap: 18 }}>
+      <HintScroll contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 14, paddingBottom: 20, gap: 18 }}>
         <Txt v="h1" accessibilityRole="header">
           {t('onboarding.regionTitle')}
         </Txt>
@@ -88,7 +89,7 @@ export default function RegionStep() {
             {t('onboarding.regionLater')}
           </Txt>
         </View>
-      </ScrollView>
+      </HintScroll>
     </OnboardingPage>
   );
 }
