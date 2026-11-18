@@ -476,11 +476,12 @@
   hôm nay = **sai năm thuế**. Phương: bỏ giới hạn (năm "94" = 1994, "22/04/12" = 2012 là ngày thật). Sửa: bỏ luật 400 ngày ở `parseReceipt.readDate` và
   `fill.receiptAt`; vẫn chặn ngày tương lai; vẫn bỏ dòng hạn điểm / hết hạn / "TOTAL UP TO". Bộ 20 hoá đơn: mọi hoá đơn có in ngày đều điền đúng ngày
   (r11 OCR đọc rác → không điền). ⏳ kiểm trên máy. ✅ phiên F (3f26b33, 32 ảnh): ngày cũ điền đúng kèm năm (30/32); A13: FreshHarvest 2019 điền ngày có năm.
-- [ ] **B-109** 🟡 (QA A13-8, phiên E) Sau Save, tab Entries giữ vị trí cuộn cũ → mục TODAY + khoản mới nằm trên mép màn hình. Sửa: số khoản tăng (xếp
+- [x] **B-109** 🟡 (QA A13-8, phiên E) Sau Save, tab Entries giữ vị trí cuộn cũ → mục TODAY + khoản mới nằm trên mép màn hình. Sửa: số khoản tăng (xếp
   mới nhất trước) → cuộn danh sách lên đầu. ✅ A13 (3f26b33): khoản mới hiện ngay đầu Entries.
   ❌ phiên B (API 26, 3f26b33): cuộn xuống rồi ghi khoản (FAB / tab Home) → Entries vẫn ở chỗ cũ — lệnh cuộn chạy lúc Entries bị che, FlashList bỏ qua
   (A13 đạt vì danh sách đang ở đầu). Sửa lần 2: so số khoản khi Entries hiện lại (useIsFocused) rồi mới cuộn. Phiên B (07f4aac): vẫn chỉ cuộn được
-  một đoạn (dòng phía trên chưa đo) → lần 3: `scrollToIndex(0)` không hiệu ứng, lặp lại sau 400 ms. ⏳ phiên B / A13.
+  một đoạn (dòng phía trên chưa đo) → lần 3: `scrollToIndex(0)` không hiệu ứng, lặp lại sau 400 ms. ✅ phiên B (ef470b7, API 26): cả 3 đường (FAB+✓,
+  FAB+Save, Home) với danh sách đã cuộn ~4 trang → TODAY + khoản mới ở đầu; A13 (07f4aac) ✅.
 - [ ] **B-110** 🟡 (QA A37-8/A37-9, phiên A — 320dp + chữ 200%) Reports: "Profit" cắt "−$1,073,09…", "By tax form line" bẻ chữ từng âm tiết + cắt số,
   "Expenses by category" cắt tên còn "Eq..". Sửa: số tiền xuống dòng dưới nhãn khi không đủ chỗ (bỏ adjustsFontSizeToFit), tên danh mục 2 dòng,
   số + % xuống dòng. ⏳ phiên A.
@@ -502,7 +503,7 @@
   Photo, (540,1990) Take photo) kể cả lúc nháp được khôi phục / bàn phím số mở — chạm có thể rơi vào chip ngày (lịch Samsung → đổi năm) và phím ✓ /
   Save; một khoản Tesco £55.30 lúc 15:08 cũng tự lưu sau chuỗi chạm y hệt. **Kết luận tạm: nghi do script chạm mù, không phải người dùng** — chưa tái
   hiện được bằng thao tác người; để mở theo dõi (gặp lại: chụp màn + chẩn đoán trước khi xoá). Phiên E bỏ chạm theo toạ độ (luật xưởng: chờ chữ rồi bấm).
-- [ ] **B-114** 🟠 (QA OLD-13, phiên B — 3f26b33, API 26, 360×640dp, chữ 2.0) Tab Sort: thẻ bị ép còn ~2px (header "Sort your wee/k" bẻ giữa chữ cạnh
+- [x] **B-114** 🟠 (QA OLD-13, phiên B — 3f26b33, API 26, 360×640dp, chữ 2.0) Tab Sort: thẻ bị ép còn ~2px (header "Sort your wee/k" bẻ giữa chữ cạnh
   List view + chip tuần + thanh tiến độ chiếm hết chiều cao) → không thấy / không dùng được thẻ; List view vẫn sort được. Chữ 1.3–1.7 ổn. Gốc: chế độ
   cuộn (MOD-11) chỉ bật khi cửa sổ < 520dp, không tính cỡ chữ. Sửa: tính theo dp ÷ cỡ chữ, thẻ cao 360 × cỡ chữ (≤ 1.6), List view xuống dòng dưới
   tiêu đề, đệm dưới giữ chỗ FAB khi FAB còn hiện. Phiên B (04fa4f9): một phần — Edit/Split/Merge/Skip tới được, nhưng form Split bị cắt, không tới
@@ -511,7 +512,10 @@
   ẩn FAB ở Sort khi màn cuộn. Phiên B (07f4aac = bản lần 1): ở chữ **1.3** trên 640dp form Split cũng không tới được "Split & sort" (lần 1 bật bố
   cục cuộn từ 1.3) — hồi quy cho cỡ "Large". Lần 3: bố cục cuộn chỉ khi chữ ≥ 1.8 (1.3–1.7 về bố cục thường đã chạy đúng ở 3f26b33).
   iOS QI-4 (phiên C, lượt 4d trên 322acd6 — chưa có sửa nào): AX-Large → thẻ Sort cắt mất danh mục / Work-Personal (P041 Pro Max), còn "Expense" +
-  nút cắt (P016 SE) — cùng gốc; lần 3 áp cho iOS (fontScale AX > 1.8 → màn cuộn). ⏳ phiên B (Android) + iOS bản mới.
+  nút cắt (P016 SE) — cùng gốc; lần 3 áp cho iOS (fontScale AX > 1.8 → màn cuộn). ✅ Android — phiên B (ef470b7, API 26 360×640): chữ 2.0 tiêu đề
+  không bẻ chữ, List view dòng riêng, tiêu đề cuộn cùng thẻ, FAB ẩn, Edit/Split/Merge/Skip bấm được, Skip không mở Ghi nhanh, P016 10/10 (split +
+  merge); chữ 1.3 bố cục thường, "Split & sort" tới được; A13 chữ 2.0 ✅ (phiên E). ⏳ iOS (lượt 4g). 🟡 còn lại: chữ 2.0 khi cuộn thẻ trượt dưới
+  thanh trạng thái (thiếu inset trên); nhãn nút "E… Sp.. Mer… Sk.." vẫn cắt.
 - [x] **B-115** 🔴 (QA OLD-14, phiên B — 3f26b33, API 26) Android 7/8/9 (API 24–28): Ghi nhanh → Photo → "Take photo" **không bao giờ mở camera** (cấp quyền
   CAMERA rồi vẫn không); "Choose from library" vẫn được. Gốc: trên SDK < Q expo-image-picker đòi cả WRITE_EXTERNAL_STORAGE lẫn CAMERA
   (`ensureCameraPermissionsAreGranted`), mà `plugins/withReleasePermissions.js` xoá WRITE_EXTERNAL_STORAGE khỏi manifest release (B-19) → không xin

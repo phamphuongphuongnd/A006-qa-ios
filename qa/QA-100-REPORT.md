@@ -18,11 +18,11 @@ iOS: SE / 16 Pro Max / iPad · mạng: online / 3G / EDGE trễ / mất mạng /
 | Tầng | Ở đâu | Kết quả |
 |---|---|---|
 | T1 logic 100 persona | Jest + SQLite thật (`personas100.test.ts`) | **100/100** hành trình, bất biến tiền / năm thuế / sao lưu↔khôi phục / CSV injection ✅ (nằm trong 939 test) |
-| Android 8 + 11 (40 persona) | phiên B, giả lập API 26 / 30 | **39/40 ✅** trên 538ede9; ❌ P074 "ghi khi bộ nhớ đầy" = B-74 (Save im lặng khi SQLITE_FULL) → đã sửa ("Couldn't save…" + giữ số tiền) và ✅ ở lượt kiểm lại · + Android 7 8/8 · regression 3f26b33/07f4aac: P003 ✅ P041 ✅, P016 ❌ ở bước split = B-114 (sửa lần 3 trong bản cuối) |
+| Android 8 + 11 (40 persona) | phiên B, giả lập API 26 / 30 | **39/40 ✅** trên 538ede9; ❌ P074 "ghi khi bộ nhớ đầy" = B-74 (Save im lặng khi SQLITE_FULL) → đã sửa ("Couldn't save…" + giữ số tiền) và ✅ ở lượt kiểm lại · + Android 7 8/8 · regression 3f26b33/07f4aac: P003 ✅ P041 ✅ · **bản cuối ef470b7: P016 (chữ 2.0) 10/10 ✅**, B-109 / B-114 / B-115 ✅ |
 | Android 17 (60 persona: phone / 320dp / tablet) | phiên A, giả lập API 37 | ⏳ điền khi phiên A chốt `qa-runs/android37/summary.json` |
 | Điện thoại đời mới (Pixel 9, gập, 16 KB) | phiên F | ✅ (MOD-1…12, 16 KB page size đạt) |
 | Máy thật Firebase Test Lab | phiên G | Galaxy S26 (A16), Pixel 11 (A17), Galaxy S9 (A10), OPPO A38 (ColorOS 14): onboarding → 5 tab → ghi khoản → Settings + Robo: **0 crash, 0 ANR, 0 lỗi JS, 0 byte mạng**. Xiaomi 14 HyperOS: cài + mở ✅, thao tác ⏭ (HyperOS chặn bơm sự kiện). Máy ảo A8 / A14 / tablet A15 / A17 16 KB ✅; khôi phục 20.011 khoản ~3 s |
-| Galaxy A13 của Phương (dữ liệu thật) | phiên E | Dữ liệu thật **nguyên vẹn** qua mọi lần cài đè (233 khoản / 266 chuyến / 8 ảnh / 12 danh mục, id khớp); hoá đơn thật, App lock vân tay thật, sao lưu Drive thật |
+| Galaxy A13 của Phương (dữ liệu thật) | phiên E | **Bản cuối ef470b7 đã cài 16:21** (Phương yêu cầu trước 17:30); 5 tab không lỗi, Sort chữ 2.0 ✅. Dữ liệu thật **nguyên vẹn** qua mọi lần cài đè (233 khoản / 266 chuyến / 8 ảnh / 12 danh mục, id khớp); hoá đơn thật, App lock vân tay thật, sao lưu Drive thật |
 | Bảo mật / hiệu năng / mạng / bất thường | phiên D | Monkey 10.000 sự kiện **0 crash 0 ANR**; mở nguội 20k khoản trung vị **1,04 s**; 34 deep link lạ 0 crash; 21+28 file sao lưu độc đều bị từ chối, dữ liệu không đổi; manifest release không RECORD_AUDIO, không debuggable; logcat không lộ số tiền / ghi chú |
 | iOS (GitHub Actions macOS, simulator) | phiên C | Lượt 3: 14/27, 0 crash · lượt 4d: 0 crash, B-90 ✅ tối; QI-4 → B-114 · lượt 4e/4g ⏳ (B-117 End trip, B-100, B-101) |
 | iOS thật trên Appetize | phiên H | onboarding, màn chuyến tự động, quyền vị trí ✅; tìm **B-117 🔴** (End trip treo) + B-118 |
