@@ -99,6 +99,16 @@ thử liệt kê thư mục) → End trip chuyến tự động ngắn CHỈ khi
 Cập nhật: điều phối gỡ camera riêng (revert 147d3e2) → bản build kế tiếp dùng camera điện thoại cả Android/iOS; thêm B-112
 (chip ngày có năm khi khác năm nay). Kiểm thêm khi cài: Take photo mở camera Samsung (không phải màn camera của app).
 
+## BẢN CUỐI MỚI b843037 (cài đè 16:52, thay ef470b7) — máy trả Phương 16:59
+- 5 tab mở được; logcat không FATAL / lỗi ReactNativeJS ✅.
+- Sort ở chữ 2.0: nút thẻ xếp icon trên + nhãn dưới, đủ chữ Edit/Split/Merge/Skip ✅; cuộn xuống: nội dung không chui dưới thanh
+  trạng thái ✅ (`manual/a13-b843037-sort-font2-top.png`, `-scrolled.png`). Cỡ chữ trả 0.8.
+- B-121 chẩn đoán `diagnostics/SundaySort-trip-diagnostics-2026-11-18-09-54.json`: 6 tín hiệu bt, address chỉ "van"; không có MAC,
+  không tên thiết bị ✅. backup.probe ok:true, nightly true ✅. Bản Download xoá; Drive → thùng rác.
+- Sao lưu 16:58 → `real-backup/SundaySort-REAL-2026-11-18-1658-b843037.sundaysort`: **233/266/8/12**, id không thêm/bớt ✅;
+  appLock false, autoTrips true, km, backupNightly true. Quyền CAMERA chưa cấp (như gốc). App mở lại → màn hình chính 16:59.
+- Không thử: link lạ về Home (+not-found) — chưa có kịch bản deep link an toàn trên máy thật trong thời gian còn lại.
+
 ## BẢN CUỐI ef470b7 (cài đè 16:21, B-56..B-121) — máy trả Phương 16:26
 - 5 tab mở được; logcat không FATAL / lỗi ReactNativeJS ✅.
 - B-114 v3 Sort ở chữ 2.0: nút + ẩn, hàng Edit/Split/Merge/**Skip** đủ ✅ (`manual/a13-ef470b7-sort-font2.png`). Lưu ý: đổi cỡ chữ
