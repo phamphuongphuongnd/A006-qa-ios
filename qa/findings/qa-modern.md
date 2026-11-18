@@ -113,7 +113,51 @@ bộ đọc ra nhưng dưới ngưỡng (@ độ tin cậy). Ở hai cột sửa
 - **r11:** vẫn 69.83 (dòng OCR đọc nhầm, như điều phối đã kết luận).
 - **Thời gian:** thu nhỏ 7–397 ms, OCR 632–2019 ms.
 
-r21–r32: vẫn chưa có thư mục `qa-runs/receipts/new/`.
+### r21–r32 (12 hoá đơn thêm: hoá đơn công ty, gửi xe, đổ xăng) — APK e6bb124, 14:25–14:45
+
+- **Nguồn ảnh:** Phương dán 12 ảnh vào chat phiên điều phối (05:01 UTC). Tôi trích từ lịch sử phiên đó ra
+  `qa-runs/receipts/new/r21…r32.png`; thứ tự đã đối chiếu với `qa/receipts-expected.json`.
+- **APK:** e6bb124 **chưa có 379001d** (sửa r03). `parsed` ở đây là parser 08cdb7b + B-105.
+- **Dòng thô:** `qa-runs/receipts/ocr-raw-e6bb124.json` (có `timing`).
+- **Luật chấm nơi bán:** từ đợt này phải chứa đủ tên đúng (trước đây chấp nhận cả chuỗi con, nên "lexnet" từng bị chấm ✅). Ba bản
+  trên chấm lại vẫn giữ nguyên điểm.
+
+| Ảnh | Số tiền app điền | Đáp án | | Nơi bán app điền | Đáp án | | Ngày bộ đọc ra (≥0.6) · màn ghi | Đáp án | | Dòng OCR |
+|---|---|---|---|---|---|---|---|---|---|---|
+| r21 | 225.00 | 225.00 | ✅ | Acme Inc | Acme Inc. | ✅ | — (đọc 2013-03-08 @0.3) · giữ Now | 2013-03-08 | ❌ | 44 |
+| r22 | 1575.01 | 1575.01 | ✅ | lexnet | Flexnet | ❌ | — (đọc 2016-06-13 @0.3) · giữ Now | 2016-06-13 | ❌ | 35 |
+| r23 | — (đọc 3025.00 @0.4) | 3025.00 | ❌ | Jane Smith | Smith & Co | ❌ | — (đọc 2023-05-10 @0.3) · giữ Now | 2023-05-10 | ❌ | 22 |
+| r24 | 5400.00 | 5400.00 | ✅ | Sample | Stark Industries | ❌ | — (đọc 2023-01-01 @0.3) · giữ Now | 2023-01-01 | ❌ | 59 |
+| r25 | 7.00 | 7.00 | ✅ | Address | — | ❌ | — (đọc 2018-07-28 @0.3) · giữ Now | 2018-07-28 | ❌ | 9 |
+| r26 | 5.00 | 5.00 | ✅ | Pe NAME | — | ❌ | — · giữ Now | — | ✅ | 18 |
+| r27 | 150.00 | 150.00 | ✅ | Parking Garage | Parking Garage | ✅ | — (đọc 2020-03-18 @0.3) · giữ Now | 2020-03-20 | ❌ | 25 |
+| r28 | — (đọc 96.80 @0.4) | 81.80 | ❌ | Ala Moana Center | Glideparcs | ❌ | — (đọc 2028-05-09 @0.2) · giữ Now | 2026-05-09 | ❌ | 40 |
+| r29 | 42.00 | 42.00 | ✅ | Fuelmax Station | Fuelmax Station | ✅ | — (đọc 2025-01-10 @0.3) · giữ Now | 2025-01-10 | ❌ | 32 |
+| r30 | 19.75 | 19.75 | ✅ | H-E-B | H-E-B | ✅ | — · giữ Now | — | ✅ | 18 |
+| r31 | 48.40 | 48.40 | ✅ | Pin Used | — | ❌ | — · giữ Now | — | ✅ | 15 |
+| r32 | 200.00 | 200.00 | ✅ | Speedway | Speedway | ✅ | — (đọc 2020-04-02 @0.3) · giữ Now | 2020-02-04 | ❌ | 21 |
+
+**Đúng:** số tiền 10/12 · nơi bán 5/12 · ngày 3/12. Ảnh màn ghi khớp (r22, r23, r28, r31).
+
+**Số tiền:**
+- **r23:** `$3025.00` cạnh dòng `Total` nhưng chỉ @0.4, nên không điền.
+- **r28 (bảng gửi xe):** bộ đọc chọn `$96.80" due 05/24/26` (@0.4), trong khi `SUBTOTAL` → `$81.80**`.
+
+**Nơi bán:**
+- r22: `lexnet`, trong khi có dòng `Flexnet VS`.
+- r23: `Jane Smith`, trong khi có `Smith & Ge`.
+- r24: `Sample` (chữ mẫu), trong khi có `Stark Industries`.
+- r28: `Ala Moana Center` (địa điểm), đáp án Glideparcs.
+- Lấy chữ mẫu / chữ rác thay vì để trống:
+  - r25 "Address";
+  - r26 "Pe NAME";
+  - r31 "Pin Used".
+
+**Ngày:**
+- **r32 `Date: 02/04/2020`:** hoá đơn `$` nhưng đọc thành 2 Apr (@0.3). Đáp án 4 Feb.
+- **r27:** lấy `Entry Time : 03/18/2020` thay vì `Exit Time: 03/20/2020`.
+- **r28:** năm `26` đọc thành 2028 (@0.2).
+- Các ngày còn lại đọc đúng nhưng @0.3, nên không điền.
 
 **Ghi chú cho `parseReceipt.ts` (từ dòng thô, bản 322acd6):**
 - **Ngày đọc đúng nhưng chỉ @0.3** (r01, r03, r07, r13–r18) → không bao giờ điền. Dòng dạng `06/06/2017 8:46 …`, `03/15/2024 21162400`.
