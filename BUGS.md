@@ -358,3 +358,6 @@
   Version → "Share trip diagnostics" (JSON: tín hiệu native 7 ngày, trạng thái engine, quyền, Pro, cài đặt, 30 chuyến gần nhất —
   `features/trips/auto/diagnostics.ts`); vòng nhật ký native 200 → 1.000 dòng. Bản release không ghi mẫu dày nên tín hiệu tối 17/11 có thể còn.
   ⏳ phiên E lấy file từ A13 → phân tích → sửa engine.
+- [ ] **B-89** 🟡 (QA MOD-10, phiên F — hồi quy một phần B-84) Nháp được mở lại nhưng **ảnh chụp trong lúc app đã bị giết** vẫn mất: `getPendingResultAsync`
+  gọi 1 lần lúc màn mở, trước khi kết quả camera tới Activity mới. Sửa (`capture.tsx`): gọi lại sau 1 s, 3 s và mỗi khi app trở lại active, bỏ ảnh trùng.
+  Kèm: cửa sổ thấp < 520dp (chia đôi màn 436dp) → ẩn nút nổi "+" (`ui/Layout.tsx`) vì nó đè "Sort now" ở Reports.

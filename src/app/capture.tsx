@@ -4,7 +4,7 @@ import { useLocalSearchParams, useNavigation, usePreventRemove } from 'expo-rout
 import { router } from '@/services/router';
 import { Briefcase, FileText, User, X } from '@/ui/icons';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { AppState, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { db } from '@/db/client';
@@ -125,11 +125,27 @@ export default function CaptureScreen() {
       if (draft.photoUris.length) photos.add(draft.photoUris);
       snack({ message: t('capture.draftRestored'), above: 'none' });
     }
-    ImagePicker.getPendingResultAsync()
-      .then((r) => {
-        if (r && 'assets' in r && !r.canceled && r.assets?.length) photos.add(r.assets.map((a) => a.uri));
-      })
-      .catch(() => {});
+    // QA-100 MOD-10: the camera result reaches the recreated Activity a moment after this screen opens — ask again
+    // shortly after and whenever the app comes back to the front, and take each photo once.
+    const taken = new Set<string>();
+    const fetchPending = () =>
+      ImagePicker.getPendingResultAsync()
+        .then((r) => {
+          if (!r || !('assets' in r) || r.canceled || !r.assets?.length) return;
+          const uris = r.assets.map((x) => x.uri).filter((u) => !taken.has(u));
+          uris.forEach((u) => taken.add(u));
+          if (uris.length) photos.add(uris);
+        })
+        .catch(() => {});
+    fetchPending();
+    const timers = [setTimeout(fetchPending, 1000), setTimeout(fetchPending, 3000)];
+    const sub = AppState.addEventListener('change', (st) => {
+      if (st === 'active') fetchPending();
+    });
+    return () => {
+      timers.forEach(clearTimeout);
+      sub.remove();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on open
   }, []);
 
