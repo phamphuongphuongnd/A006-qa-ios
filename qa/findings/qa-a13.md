@@ -106,6 +106,18 @@ Cập nhật: điều phối gỡ camera riêng (revert 147d3e2) → bản build
 - Sao lưu: "Nightly backup on. Last: today 16:17 · Google Drive" ✅. Back up now → `real-backup/SundaySort-REAL-2026-11-18-1624-ef470b7.sundaysort`:
   **233/266/8/12**, id không thêm/bớt ✅; appLock false, autoTrips true, km, backupNightly true. Bản Download máy xoá; Drive giữ.
 - Quyền CAMERA chưa cấp (như gốc). App mở lại rồi về màn hình chính.
+- **16:30–16:51 thử cùng Phương các phần chưa chắc (Phương bấm ở Ghi nhanh, không chạm toạ độ):**
+  - Tesco Cradley (ảnh màn hình) → **£33.50 + Thu 7 May 15:25 ✅** (trước đây để trống).
+  - B-89 chờ lâu ở camera: ⏭ — camera chỉ mở 14 s (16:30:49→16:31:03), Phương bỏ bài làm lại 90 s. Lưu ý: lần này Phương cấp camera
+    "khi dùng app" (USER_SET, không ONE_TIME) → Android không tắt app sau 1 phút, nên muốn thử phải chọn "Chỉ lần này".
+  - Nháp có ảnh: chụp FreshHarvest → Home → `am kill` (giả lập Android tắt app) → mở lại → nháp khôi phục **£21.74, FreshHarvest
+    Market, ảnh, chip "20 Nov 2019, 11:09" ✅** (`manual/a13-ef470b7-draft-restored.png`). X → Discard → tìm "21.74" trong Entries:
+    **không có khoản nào ✅** (củng cố B-113: khoản 2020 do chạm nhầm của script).
+  - B-109 v3: Entries cuộn xuống tháng 10 → New expense £1.50 → Save → Entries mở ra **TODAY −£1.50 ngay đầu ✅**. Đã xoá.
+  - B-107 Bỏ/Giữ: Phương rút–cắm cáp → không có chuyến tự bật (engine.ts:103 cần sạc + thoát "still" = phải di chuyển) → ⏭ chờ
+    chuyến ngắn thật.
+  - Sao lưu 16:49 → `real-backup/SundaySort-REAL-2026-11-18-1649-ef470b7.sundaysort`: **233/266/8/12**, id không thêm/bớt ✅;
+    nightly true. Quyền CAMERA trả về chưa cấp; cỡ chữ 0.8; về màn hình chính 16:51.
 
 ## Bản 07f4aac (cài đè 15:55, bản mới nhất lúc đó — B-56..B-116)
 - Cài đè giữ dữ liệu ✅. Backup & restore: "Nightly backup on. Last: today 15:34 · Google Drive", không còn "not reachable" ✅.
