@@ -232,3 +232,42 @@ describe('parseReceipt — US', () => {
     expect(r.minutes).toBe(7 * 60 + 15);
   });
 });
+
+describe('parseReceipt — QA-100 B-102 layouts from the receipt set Phương collected', () => {
+  const at = (text: string, y: number, x: number, w = 0.3, h = 0.03): RawLine => ({ text, box: { x, y, w, h } });
+
+  it('reads dot-thousands with a decimal comma and whole amounts after a currency sign', () => {
+    expect(moneyIn('Total 1.575,01').map((m) => m.minor)).toEqual([157501]);
+    expect(moneyIn('Amount Due $5400').map((m) => m.minor)).toEqual([540000]);
+    expect(moneyIn('$5,000').map((m) => m.minor)).toEqual([500000]);
+    expect(moneyIn('PRICE/GAL $4.269')).toEqual([]);
+    expect(moneyIn('$2.969')).toEqual([]);
+    expect(moneyIn('12.11.26')).toEqual([]);
+  });
+
+  it('takes the figure printed under its label (Shell "FUEL TOTAL" over "$ 20.00")', () => {
+    const raw: RawOcr = {
+      text: '',
+      lines: [
+        at('SHELL', 0.2, 0.1),
+        at('PUMP PRODUCT $/G', 0.5, 0.05, 0.8),
+        at('04 UNLD $2.969', 0.54, 0.05, 0.8),
+        at('GALLONS FUEL TOTAL', 0.62, 0.05, 0.85),
+        at('6.736', 0.66, 0.08, 0.2),
+        at('$ 20.00', 0.66, 0.55, 0.3),
+      ],
+    };
+    const r = parseReceipt(raw, 'US', NOW);
+    expect(r.amountMinor).toBe(2000);
+    expect(r.confidence.amount).toBeGreaterThanOrEqual(OCR_FILL_CONFIDENCE);
+  });
+
+  it('never takes the next row\'s figure as the one under a label', () => {
+    const raw: RawOcr = {
+      text: '',
+      lines: [at('MILK', 0.45, 0.05, 0.2), at('£1.20', 0.45, 0.7, 0.2), at('TOTAL', 0.5, 0.05, 0.2), at('CASH', 0.55, 0.05, 0.2), at('£80.00', 0.55, 0.7, 0.2)],
+    };
+    const r = parseReceipt(raw, 'UK', NOW);
+    expect(r.amountMinor === 8000 && r.confidence.amount >= OCR_FILL_CONFIDENCE).toBe(false);
+  });
+});

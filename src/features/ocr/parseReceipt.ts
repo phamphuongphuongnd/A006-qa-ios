@@ -60,7 +60,10 @@ interface Money {
   at: number;
 }
 
-const MONEY_RE = /([£$€]?)\s?(\d{1,3}(?:,\d{3})+|\d{1,6})(?:\.\s?|,)(\d{2})(?!\d)/g;
+// Whole part: "1,250" (comma thousands), "1.575" before ",01" (dot thousands, comma decimal — QA-100 B-102 r22), or plain.
+const MONEY_RE = /([£$€]?)\s?(\d{1,3}(?:,\d{3})+|\d{1,3}(?:\.\d{3})+(?=,\d{2}(?!\d))|\d{1,6})(?:\.\s?|,)(\d{2})(?!\d)/g;
+/** Whole amounts after a currency sign ("$5400", "$5,000", "£5") — never a bare number, never one with decimals. */
+const WHOLE_RE = /([£$€])\s?(\d{1,3}(?:,\d{3})+|\d{1,6})(?![\dOoA-Za-z]|[.,][\dOo])/g;
 
 /** Amounts in one line, skipping dates (12.11.26), litres (45.20L), rates (20.00%) and per-unit prices. */
 export function moneyIn(raw: string): Money[] {
@@ -78,11 +81,17 @@ export function moneyIn(raw: string): Money[] {
     const after = text.slice(end, end + 6);
     if (/\d[./-]$/.test(before) || /^[./-]\d/.test(after)) continue;
     if (/^\s?(%|l\b|ltr|lit|gal|kg|p\/|\/)/i.test(after)) continue;
-    // "1,250.50" groups thousands; a lone "72,40" is a decimal comma.
-    const whole = Number(m[2].replace(/,/g, ''));
+    // "1,250.50" groups thousands; a lone "72,40" is a decimal comma; "1.575,01" groups with dots.
+    const whole = Number(m[2].replace(/[.,]/g, ''));
     out.push({ minor: whole * 100 + Number(m[3]), at: start });
   }
-  return out.filter((x) => x.minor > 0);
+  for (const m of text.matchAll(WHOLE_RE)) {
+    const start = m.index ?? 0;
+    const after = text.slice(start + m[0].length, start + m[0].length + 6);
+    if (/^\s?(%|l\b|ltr|lit|gal|kg|p\/|\/|[:\/-]\d)/i.test(after)) continue;
+    out.push({ minor: Number(m[2].replace(/,/g, '')) * 100, at: start });
+  }
+  return out.filter((x) => x.minor > 0).sort((a, b) => a.at - b.at);
 }
 
 const TOTAL_STRONG = /\b(GRAND\s*TOTAL|AMOUNT\s*DUE|BALANCE\s*DUE|TOTAL\s*(TO\s*PAY|DUE|PAID)|AMOUNT\s*TO\s*PAY|TO\s*PAY)\b/;
@@ -111,12 +120,37 @@ function rowAmounts(line: Line, lines: Line[]): Money[] {
   const near = lines
     .filter((o) => o !== line && o.box && dy(o) <= tol && o.box.x >= right && moneyIn(o.text).length > 0)
     .sort((a, b) => dy(a) - dy(b))[0];
-  if (!near) return [];
+  if (!near) return figureBelow(line, lines);
   const nearCy = near.box!.y + near.box!.h / 2;
   const closerLabel = lines.some(
     (o) => o !== line && o.box && o.box.x < right && !moneyIn(o.text).length && Math.abs(o.box.y + o.box.h / 2 - nearCy) < dy(near) * 0.6,
   );
   return closerLabel ? [] : moneyIn(near.text);
+}
+
+/**
+ * QA-100 B-102: a label with its figure printed underneath ("FUEL TOTAL" over "$ 20.00", "TOTAL :" over "$ 150.00").
+ * Only a figure-only line starting within about two line heights below the label and overlapping its column (or to
+ * its right); a line that carries its own words is another row, not this one.
+ */
+function figureBelow(line: Line, lines: Line[]): Money[] {
+  const b = line.box!;
+  const bottom = b.y + b.h;
+  const below = lines
+    .filter((o) => {
+      if (o === line || !o.box) return false;
+      const gap = o.box.y - bottom;
+      if (gap < -b.h * 0.3 || gap > b.h * 2) return false;
+      if (o.box.x + o.box.w < b.x) return false;
+      const words = o.up.replace(/GBP|USD|EUR|[£$€]/g, '').replace(/[^A-Z]/g, '');
+      if (words.length > 1 || !moneyIn(o.text).length) return false;
+      // The figure of the next row ("CASH  £80.00" under a tilted "TOTAL") has its own label beside it: not ours.
+      const ob = o.box;
+      const cy = ob.y + ob.h / 2;
+      return !lines.some((l) => l !== line && l.box && /[A-Z]{2}/.test(l.up) && !moneyIn(l.text).length && Math.abs(l.box.y + l.box.h / 2 - cy) < ob.h * 0.6);
+    })
+    .sort((p, q) => p.box!.y - q.box!.y);
+  return below.length ? moneyIn(below[0].text) : [];
 }
 
 const rightmost = (ms: Money[]) => ms.reduce((a, b) => (b.at > a.at ? b : a));
