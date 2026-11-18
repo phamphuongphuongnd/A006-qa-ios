@@ -7,6 +7,8 @@
 ## Bản cuối
 - **Android:** `C:\Users\Admin\qa-tools\apk\sundaysort-qa-b843037-all.apk` — dev `b843037`, build 2026-11-18 16:46, đủ 4 ABI (có armeabi-v7a cho A13).
   = `ef470b7` (16:18, đã cài A13 16:21 và kiểm trên API 26) + Sort giữ inset khi cuộn, nút thẻ xếp dọc ở chữ lớn, `+not-found`, B-121.
+  **Đang cài trên A13 (16:52):** `b843037`. Bản `2454233` (17:09) = cùng code app + manifest khai camera / Bluetooth / GPS
+  `required="false"` (aapt2: `uses-feature-not-required`) để Google Play không ẩn app trên máy thiếu phần cứng — không cần cài lại A13.
   Bản QA ký khoá debug — **không phải bản phát hành** (khoá ký / AAB / store chờ Phương).
 - **Kiểm tự động trên bản cuối:** `npx jest` **939/939** ✅ · `npx expo lint` ✅ · `npx tsc --noEmit` ✅.
 - **iOS:** chưa có bản iOS từ `ef470b7` (lượt 4g trên GitHub Actions chạy dev `4e4b030` = cùng code app).
