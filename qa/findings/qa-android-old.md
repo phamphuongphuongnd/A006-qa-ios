@@ -140,6 +140,23 @@ Ghi chú: ở 16 MB trống lưu vẫn được (lần đầu "Saved · £9.99")
   `Dimensions.get('screen').height - keyboard.endCoordinates.screenY`.
 - Ghi chú: lần này khôi phục P003 trên Android 7 lỗi do runner (DocumentsUI vừa bị đặt lại khi kiểm B-97) nên Android 7 chạy với dữ liệu mới.
 
+### Kiểm lại B-98 lần 2 trên APK 322acd6 (measureInWindow), 2026-11-18 · `qa-runs/android-old/verify-322acd6/`
+| | Save lộ (px) | Phím ✓ |
+|---|---|---|
+| API 26, P003 (có hàng gợi ý), chữ 0.85 | ❌ 64 (y=710→773, bàn phím 774) — chờ 2/5/8 s vẫn y nguyên (`wait_*s.png`) | ✅ Saved |
+| API 26, chữ 1.3 | ❌ 42 | ✅ |
+| Android 7, dữ liệu mới, chữ 0.85 | ❌ 36 (y=622→657, bàn phím 658) | ✅ |
+| Android 7, chữ 1.3 | ❌ 14 | ✅ |
+**Không đổi so với 1dd73db** → `covered` (`capture.tsx:494-499`) tính ra ≤ 1 nên không đệm. Số đo thật (720×1280 @320 = 2 px/dp, thanh trạng thái
+24dp, **thanh điều hướng 48dp** ở y=1184–1280):
+- API 26: mép bàn phím thật 774 px = 387dp màn hình = **363dp cửa sổ**; đáy khối Save ≈ 821 px = 410,5dp màn hình = 386,5dp cửa sổ → bị che 23,5dp.
+- Android 7: mép bàn phím 658 px = 329dp màn hình = **305dp cửa sổ**; đáy Save ≈ 734 px → bị che 38dp (bàn phím có dải gợi ý).
+- Khớp cả hai nếu `endCoordinates.screenY` RN báo = cao màn hình − cao bàn phím **không tính thanh điều hướng**: API 26 → 640 − 205 = 435dp,
+  trừ thanh trạng thái (24) = 411dp > 386,5 → covered âm. Mép thật = screenY − **48 (nav bar)** − 24 = 363 ✓; Android 7: 640 − 263 = 377 − 48 − 24 = 305 ✓.
+- Gợi ý: trên API < 30 lấy `keyboardTopInWindow = screenY − navBar − statusBar` (navBar = `Dimensions.get('screen').height −
+  Dimensions.get('window').height − StatusBar.currentHeight`, hoặc `insets.bottom` nếu khác 0), hoặc log `screenY`/`measureInWindow` ra logcat để
+  phiên B đọc được số thật.
+
 ### OLD-12 🟡 Android < 11: nút Save ở Ghi nhanh nằm (một phần / hoàn toàn) sau bàn phím khi đang gõ
 - **Máy/APK:** API 26 360dp và Android 7, APK 97ceb60. Bảng trên. Nút ✓ của bàn phím chỉ ẩn bàn phím (không lưu); sau đó Save hiện đủ.
 - **Nguyên nhân gốc nghi ngờ:** vẫn lệch đúng ~24dp: Save đỉnh y=709 + cao 112 px = 821 so với bàn phím y=774 → 47 px = 23,5dp ≈ chiều cao thanh
