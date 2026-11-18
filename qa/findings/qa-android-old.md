@@ -157,6 +157,21 @@ Ghi chú: ở 16 MB trống lưu vẫn được (lần đầu "Saved · £9.99")
   Dimensions.get('window').height − StatusBar.currentHeight`, hoặc `insets.bottom` nếu khác 0), hoặc log `screenY`/`measureInWindow` ra logcat để
   phiên B đọc được số thật.
 
+### Kiểm lại B-98 lần 3 trên APK 771234e (trừ nav bar, có log [B98v3]), 2026-11-18 · `qa-runs/android-old/verify-771234e/`
+| | Save lộ (px) | Phím ✓ | Log `[B98v3]` (dp) lần đầu → các lần sau |
+|---|---|---|---|
+| API 26 P003 chữ 0.85 | ❌ 64 (không đổi) | ✅ | `screenY=387 kb=205 top=363 y=216 h=200.5 covered=54` → h 254.5/362.5/400.5, covered 108/216/254 |
+| API 26 chữ 1.3 | ❌ 42 | ✅ | `y=216 h=211.5 covered=65` → h 276.5/406.5/411.5 |
+| Android 7 (dữ liệu mới) chữ 0.85 | ❌ 36 | ✅ | `screenY=329 kb=263 top=305 y=216 h=156.5 covered=68` → h 224.5/356.5 |
+| Android 7 chữ 1.3 | ❌ 14 | ✅ | `y=216 h=167.5 covered=79` → h 246.5/367.5 |
+- **Mép bàn phím giờ tính đúng** (`top` 363 / 305dp = đúng số đo ảnh) ✅.
+- **Nhưng đệm không đẩy khối lên:** `y` của khối nút luôn = 216dp (bị nội dung phía trên giữ lại), thêm `paddingBottom` chỉ làm khối dài xuống
+  (`h` tăng đúng bằng `covered` mỗi lần) → không dịch nút đi pixel nào; và `setSaveLift(l + covered)` cộng dồn mỗi `onLayout` tới trần 200.
+- **Gốc thật:** không đủ chỗ. API 26: vùng trên bàn phím chỉ 363dp, phần trên khối nút đã chiếm 216dp, khối nút cần 200–211dp → thiếu 54–65dp.
+  Android 7 (bàn phím có dải gợi ý): 305dp, khối cần 157–168dp từ y=216 → thiếu 68–79dp.
+- **Gợi ý:** khi `keyboardUp && API < 30` thu gọn phần trên khối Save (ẩn hàng Photo/Work/Note hoặc hàng gợi ý ghi chú, chỉ giữ số tiền + hàng
+  phép tính + Save) hoặc đặt khối Save `position: 'absolute', top: top − h` đè lên vùng số tiền; bỏ cộng dồn (`setSaveLift(covered)` một lần).
+
 ### OLD-12 🟡 Android < 11: nút Save ở Ghi nhanh nằm (một phần / hoàn toàn) sau bàn phím khi đang gõ
 - **Máy/APK:** API 26 360dp và Android 7, APK 97ceb60. Bảng trên. Nút ✓ của bàn phím chỉ ẩn bàn phím (không lưu); sau đó Save hiện đủ.
 - **Nguyên nhân gốc nghi ngờ:** vẫn lệch đúng ~24dp: Save đỉnh y=709 + cao 112 px = 821 so với bàn phím y=774 → 47 px = 23,5dp ≈ chiều cao thanh
