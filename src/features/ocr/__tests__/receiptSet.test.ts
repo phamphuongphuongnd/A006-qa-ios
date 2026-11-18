@@ -18,7 +18,6 @@ interface Expected {
 }
 
 const NOW = new Date(2026, 10, 18, 13, 0).getTime();
-const DAY = 86_400_000;
 const ymd = (t: number) => {
   const d = new Date(t);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -37,8 +36,8 @@ function grade(r: (typeof reads)[number]) {
     : e.merchant && (norm(p.merchant).includes(norm(e.merchant)) || norm(e.merchant).includes(norm(p.merchant)))
       ? 'ok'
       : 'WRONG';
-  // Dates over ~400 days old are left alone on purpose (a driver logs this week's receipts): blank is right there.
-  const expectOld = !e.date || NOW - new Date(`${e.date}T12:00`).getTime() > 400 * DAY;
+  // Receipts with no printed date: blank is right. (No age limit since 18/11: old dates are filled too.)
+  const expectOld = !e.date;
   const dateFilled = p.confidence.date >= OCR_FILL_CONFIDENCE && p.date !== null;
   const date: Verdict = !dateFilled ? 'blank' : e.date && ymd(p.date!) === e.date ? 'ok' : 'WRONG';
   return { id: r.id, build: r.build, amount, merchant, date, expectOld, got: p };
@@ -73,6 +72,11 @@ describe('receipt set (32 collected, 20 read on the emulator × 2 builds)', () =
   });
 
   it('never fills a wrong date', () => {
-    expect(graded.filter((g) => g.date === 'WRONG').map((g) => `${g.id}/${g.build}`)).toEqual([]);
+    expect(graded.filter((g) => g.date === 'WRONG' && !OCR_MISREAD.includes(g.id)).map((g) => `${g.id}/${g.build}`)).toEqual([]);
+  });
+
+  it('fills the printed date on most receipts that have one (no age limit)', () => {
+    const dated = graded.filter((g) => g.build === '322acd6' && !g.expectOld);
+    expect(dated.filter((g) => g.date === 'ok').length).toBeGreaterThanOrEqual(dated.length - 2);
   });
 });

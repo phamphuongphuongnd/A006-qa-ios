@@ -31,7 +31,6 @@ export interface FillPlan {
   chipMinor?: Minor;
 }
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 /** No printed time: put an older receipt at midday so it sits in the right day whatever the time zone quirks. */
 const NOON_MIN = 12 * 60;
 
@@ -46,8 +45,8 @@ export function receiptAt(date: number, minutes: number | null, now: number): nu
     return at <= now && now - at > 15 * 60_000 ? at : null;
   }
   const at = date + (minutes ?? NOON_MIN) * 60_000;
-  // A receipt "from the future" (wrong clock, misread year) never moves the entry.
-  return at <= now && now - at < 400 * DAY_MS ? at : null;
+  // A receipt "from the future" (wrong clock, misread year) never moves the entry. Old receipts do (no age limit, Phương 18/11).
+  return at <= now ? at : null;
 }
 
 export function planFill(form: CaptureFields, r: ParsedReceipt, now: number): FillPlan {

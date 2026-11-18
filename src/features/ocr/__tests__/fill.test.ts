@@ -55,6 +55,9 @@ describe('planFill (P1-12)', () => {
   it('older receipt without a time lands at midday; a future date never moves the entry', () => {
     expect(receiptAt(NOV9, null, NOW)).toBe(NOV9 + 12 * 3600_000);
     expect(receiptAt(new Date(2026, 10, 20).getTime(), null, NOW)).toBeNull();
+    // A receipt from the tax year before last (catching up before 31 Jan): keeps its own date, not "Now".
+    const may2025 = new Date(2025, 4, 2).getTime();
+    expect(receiptAt(may2025, 9 * 60, NOW)).toBe(may2025 + 9 * 3600_000);
   });
 });
 

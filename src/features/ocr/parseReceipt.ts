@@ -485,7 +485,8 @@ function readDate(lines: Line[], region: Region, now: number): { date: number | 
     const date = new Date(y, f.m - 1, f.d).getTime();
     let confidence = f.confidence;
     if (date > now + DAY_MS) confidence = 0.2;
-    else if (now - date > 400 * DAY_MS) confidence = 0.3;
+    // No age limit (Phương, 18/11): a driver catching up before the 31 Jan deadline enters receipts 600+ days old, and
+    // "Now" put them in the wrong tax year. An old date is filled like any other (highlighted "from receipt").
     // Time on the date line, else the first time on the line just below / above.
     const near = [l, lines[l.i + 1], lines[l.i - 1]].filter(Boolean) as Line[];
     const timeText = near.map((x) => (x === l ? x.text.replace(/\b\d{1,4}[-/.]\d{1,2}[-/.]\d{2,4}\b/, ' ') : x.text));

@@ -205,9 +205,11 @@ describe('parseReceipt — dates', () => {
     expect(dateOf('20 Dec').date).toBe(day(2025, 12, 20));
   });
 
-  it('future or very old dates are not trusted; card expiry lines are skipped', () => {
+  it('future dates are not trusted, old ones are (no age limit, 18/11); card expiry lines are skipped', () => {
     expect(dateOf('01/01/2027').confidence.date).toBeLessThan(OCR_FILL_CONFIDENCE);
-    expect(dateOf('01/01/2024').confidence.date).toBeLessThan(OCR_FILL_CONFIDENCE);
+    // A driver catching up before the 31 Jan deadline: a receipt from the tax year before last still gets its date.
+    expect(dateOf('01/01/2024').confidence.date).toBeGreaterThanOrEqual(OCR_FILL_CONFIDENCE);
+    expect(dateOf('19/04/94 19:04').date).toBe(new Date(1994, 3, 19).getTime());
     expect(dateOf('EXP 12/11/29').date).toBeNull();
     expect(dateOf('31/02/2026').date).toBeNull();
   });
