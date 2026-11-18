@@ -1,0 +1,370 @@
+[
+ {
+  "eventType": "WAIT",
+  "delayTime": 4000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Get started"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "United States. $ · Calendar year · Schedule C"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Continue"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Continue"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Looks good"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Continue free"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Not now"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Entries"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Sort"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Miles"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Reports"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Home"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "New expense"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2500
+ },
+ {
+  "eventType": "ADB_SHELL_COMMAND",
+  "command": "input text 1250"
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Save"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 3000
+ },
+ {
+  "eventType": "ADB_SHELL_COMMAND",
+  "command": "am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/Download/P096.sundaysort"
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Settings"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2000
+ },
+ {
+  "eventType": "ONE_POINT_GESTURE",
+  "coordinates": "(50%,80%)->(50%,25%)"
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1200
+ },
+ {
+  "eventType": "ONE_POINT_GESTURE",
+  "coordinates": "(50%,80%)->(50%,25%)"
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1200
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Backup & restore"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Restore from backup"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 4000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Show roots"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "text": "Downloads"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "text": "P096.sundaysort"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 15000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Replace this phone's data"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Restore"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 45000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Back"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Home"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 3000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Entries"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 4000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Reports"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 4000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Sort"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 3000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Home"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2000
+ }
+]
