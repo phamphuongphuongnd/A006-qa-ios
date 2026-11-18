@@ -290,7 +290,7 @@
   Snapshotter) — API 30 GPU phần mềm, P023; mỗi lần mở Miles đều sập lại. Cùng máy GPU host thì bình thường → phụ thuộc EGL của máy (máy thật
   GPU lạ có thể gặp). JS không bắt được. Sửa (`features/trips/map/thumbs.ts`): ghi cờ file trước mỗi lần chụp ảnh bản đồ, xoá sau; lần mở sau
   còn cờ = đã sập giữa chừng → tắt ảnh bản đồ thu nhỏ vĩnh viễn trên máy đó (hàng giữ biểu tượng tròn). Còn lại: sập **1 lần** trước khi
-  tự tắt (giới hạn đã biết). ⏳ phiên B: mở Miles 2 lần trên máy swiftshader; kiểm thêm màn chi tiết chuyến (bản đồ MapView) trên máy đó.
+  tự tắt — **Phương chốt 2026-11-18: chấp nhận, giới hạn đã biết**. ⏳ phiên B: mở Miles 2 lần trên máy swiftshader; kiểm thêm màn chi tiết chuyến (bản đồ MapView) trên máy đó.
 - [ ] **B-70** 🟠 (QA MOD-7, phiên F) Chạm đúp "Save" ở Ghi nhanh (2 chạm cách ~0,2 s, Fold P056) → lưu 2 khoản trùng (to-sort 27→29, Out +2×$5.55).
   Gốc: `capture.tsx` mở chốt `savingRef` trước `close()` — không có ảnh thì lưu xong ngay, chạm 2 thấy chốt mở và số tiền cũ. Sửa: nhánh đóng màn
   giữ chốt; "Keep adding" mở chốt sau 300 ms (khi số đã xoá); lỗi giữa chừng thì mở lại. Cùng mẫu đã sửa luôn: thêm chuyến tay (`trip/new.tsx`),
@@ -331,3 +331,12 @@
 - [ ] **B-82** 🟡 (QA MOD-6 + MOD-5, phiên F) Chi tiết khoản ở chữ 1.3–2.0: nhãn "Category" gãy giữa từ (cột nhãn cố định 96dp), "Add photo" tràn khung
   72×72. Hộp "Discard this entry?" không nhắc ảnh đã chụp sẽ mất. Sửa: nhãn `minWidth 96` + không co (tối đa ×1.6); ô Add photo `minWidth/minHeight`
   + chữ tối đa ×1.3, 2 dòng; hộp Discard thêm "The photo(s) will be deleted too." khi có ảnh.
+- [x] **B-83** 🟡 (QA SPE-7/SPE-8, phiên D) Đổi cỡ chữ / cỡ hiển thị trong Cài đặt Android khi app đang mở → Activity dựng lại, về Home, mất khoản
+  đang nhập dở; deep link tới đúng lúc dựng lại có thể làm sập. **Phương chốt 2026-11-18: giới hạn đã biết cho 1.0** (không đổi `configChanges`
+  trước khi lên store).
+- [ ] **B-84** 🟡 (QA MOD-3, phiên F) Máy ít RAM: Android giết app khi đang ở bộ chọn file/camera → quay lại về Home, mất khoản đang nhập. Phương chọn
+  **sửa** (2026-11-18).
+- [ ] **B-85** 🟡 (QA MOD-4, phiên F) Tablet / máy gập mở: bố cục điện thoại kéo giãn hết bề ngang. Phương chọn **sửa** (2026-11-18).
+- [ ] **B-86** 🟡 (QA MOD-5, phiên F) Thư viện ảnh chỉ mở được bằng giữ lâu nút Photo (khó phát hiện). Phương chọn **sửa** (2026-11-18).
+- [ ] **B-87** 🟡 (QA SPE-5 phần còn lại, phiên D) Khôi phục bản sao lưu thật có rất nhiều ảnh nạp cả file + mọi ảnh vào RAM. Phương chọn **sửa**
+  (2026-11-18).
