@@ -233,6 +233,10 @@ bộ đọc ra nhưng dưới ngưỡng (@ độ tin cậy). Ở hai cột sửa
 - **r28 ngày:** OCR đọc ô Date thành `05/09/2028` → 2028 @0.2, không điền. Các dòng `due 05/09/26` có năm đúng.
 - **r11:** 69.83 do OCR đọc nhầm số (đã biết). Dòng ngày OCR ra rác `1e/11/282s 8s: 18 AH`.
 
+**Chốt (điều phối, 16:00):** B-102 dừng ở 29/32 · 29/32 · 30/32; không chạy lại bản cuối. Ghi là giới hạn đã biết:
+- r11 do OCR đọc nhầm;
+- nơi bán @0.62 ở r22 / r23 / r28: nâng ngưỡng sẽ làm mất các tên đúng có cùng độ tin cậy.
+
 **Ghi chú cho `parseReceipt.ts` (từ dòng thô, bản 322acd6):**
 - **Ngày đọc đúng nhưng chỉ @0.3** (r01, r03, r07, r13–r18) → không bao giờ điền. Dòng dạng `06/06/2017 8:46 …`, `03/15/2024 21162400`.
 - **r12 `DATE 3/10/26 17:24`** trên hoá đơn `$` bị đọc theo kiểu UK thành 3 Oct (@ ≥ 0.6, **đổi ngày sai** trên màn ghi). r09
