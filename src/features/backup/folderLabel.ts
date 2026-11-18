@@ -12,6 +12,8 @@ export function folderLabel(uri: string, name: string | null): string {
     n = name ?? '';
   }
   if (opaqueName(n)) n = '';
+  // OLD-11: the storage root itself comes back as "primary:" (Android 7) — that is just "This phone".
+  n = n.replace(/^primary:/, '');
   let where = '';
   if (uri.includes('com.google.android.apps.docs')) where = 'Google Drive';
   else if (uri.includes('com.android.externalstorage')) where = 'This phone';

@@ -2,7 +2,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { backupPlan, createBackupFile, inspectBackupFile, restoreFromBackupFile } from '@/features/backup/backupFile';
@@ -398,6 +398,12 @@ export default function BackupScreen() {
               {t('backupAuto.heroBody')}
             </Txt>
             <Button label={t('backupAuto.chooseFolder')} icon={Folder} full onPress={chooseFolder} style={{ marginTop: 6 }} />
+            {/* QA-100 OLD-11: Android 7's folder picker hides the phone's storage until "Show internal storage" is on. */}
+            {Platform.OS === 'android' && Number(Platform.Version) < 26 ? (
+              <Txt v="small" c="textSecondary" style={{ textAlign: 'center' }}>
+                {t('backupAuto.oldPickerHint')}
+              </Txt>
+            ) : null}
           </Card>
         ) : (
           <Group>
