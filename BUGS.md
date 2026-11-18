@@ -351,3 +351,7 @@
   thay thư mục ảnh (`restoreFromBackupFile`, `inspectBackupFile`). Test `streamRestore.test.ts`. ⏳ phiên D/B: khôi phục P096 + file độc trên máy.
   Sửa B-85: gốc điều hướng (`app/_layout.tsx`) là cột tối đa 640dp căn giữa trên màn rộng (tablet, Fold mở, xoay ngang); sheet/hộp thoại vẫn
   toàn màn. ⏳ phiên F: Fold mở + xoay ngang, chia đôi màn hình.
+- [ ] **B-88** 🟠 (QA A13-2, phiên E — chạy xe thật tối 17/11) Bản 538ede9, Automatic trips bật, đủ quyền, pin Unrestricted: cả ca **không sinh chuyến
+  tự động nào** (Phương: "chạy chậm, dừng nhiều"). Sao lưu thật sau ca 18/11 08:30: chuyến mới nhất 16/11. Không còn lịch sử tín hiệu để soi (vòng
+  `EventLog` 200 dòng native nhiều khả năng bị mẫu 'sample' đè). Nghi: `features/trips/auto/engine.ts` chỉ mở chuyến khi Activity Recognition báo
+  'driving' (IN_VEHICLE, mẫu ≥ 75%) — không có dự phòng; xe máy / đi chậm thường bị báo ON_BICYCLE / ON_FOOT. ⏳ chờ Phương: xe máy hay ô tô.
