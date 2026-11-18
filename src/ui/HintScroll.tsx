@@ -1,5 +1,5 @@
 import { useRef, useState, type ComponentProps, type ComponentRef } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 import { t } from '@/i18n';
 import { fonts, useTheme } from '@/theme';
@@ -57,12 +57,12 @@ export function HintScroll(props: ComponentProps<typeof ScrollView>) {
         }}
       />
       {more ? (
-        <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: 8, alignItems: 'center' }}>
-          <Pressable
-            accessibilityRole="button"
+        // B-100 v2 (phiên B): a swipe starting on a tappable pill didn't scroll the page and it covered "United States" —
+        // now a plain label in the corner that touches pass through.
+        <View pointerEvents="none" style={{ position: 'absolute', right: 12, bottom: 8 }}>
+          <View
+            accessible
             accessibilityLabel={t('common.moreBelow')}
-            onPress={() => ref.current?.scrollTo({ y: y.current + viewH.current * 0.8, animated: true })}
-            hitSlop={8}
             style={{
               flexDirection: 'row',
               alignItems: 'center',
@@ -78,7 +78,7 @@ export function HintScroll(props: ComponentProps<typeof ScrollView>) {
               {t('common.moreBelow')}
             </Txt>
             <ChevronDown size={16} color={colors.text} />
-          </Pressable>
+          </View>
         </View>
       ) : null}
     </View>

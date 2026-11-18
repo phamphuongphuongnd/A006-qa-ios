@@ -102,6 +102,9 @@ export function SortEntryCard({
         <ScrollView
           ref={scrollRef}
           style={{ flex: 1 }}
+          // B-114 v2: inside the Sort screen's own scroll (large text) Android only scrolls an inner list with this —
+          // without it the split form's "Split & sort" could never be reached.
+          nestedScrollEnabled
           contentContainerStyle={[styles.cardBody, mode === 'view' && { paddingBottom: 8 }]}
           // B-43: when the card scrolls, show it (Android keeps the bar; iOS flashes it once the content is taller).
           persistentScrollbar

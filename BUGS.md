@@ -430,7 +430,8 @@
 - [ ] **B-100** 🟡 (QA iOS QI-1, phiên C) iPhone SE + chữ lớn: màn chọn vùng — thẻ United States khuất dưới nút Continue, không có gợi ý cuộn (màn đã cuộn được).
   Sửa: `ui/HintScroll.tsx` — nháy thanh cuộn khi nội dung dài hơn màn (màn chào + màn chọn vùng). (Màn chào cắt chữ = B-66.)
   iOS lượt 4b (phiên C, P091 SE AX-Large): tiêu đề đủ, nhưng thanh cuộn iOS chỉ nháy ~1 s → không thấy gợi ý. Sửa lần 2: thêm viên "More below ⌄" ở
-  đáy, ở lại tới khi cuộn tới cuối, chạm = cuộn xuống ~1 màn (cả iOS + Android). ⏳ phiên C.
+  đáy, ở lại tới khi cuộn tới cuối, chạm = cuộn xuống ~1 màn (cả iOS + Android). Phiên B: vuốt bắt đầu trên viên không cuộn trang + viên che chữ
+  "United States" → lần 3: nhãn không bấm (chạm xuyên qua) ở góc phải dưới. ⏳ phiên C / B.
 - [ ] **B-101** 🟡 (QA iOS QI-3, phiên C) Ô Note ở Ghi nhanh đảo ký tự khi gõ nhanh (P052: "QA-P052 Shell M62" → "QA-052 Shell M62P"; 1/14). Sửa: ô không còn
   điều khiển `value` (dựng lại khi app tự điền: chip, đọc hoá đơn); nháp ghi file trễ 400 ms thay vì mỗi phím.
 - [x] **B-102** 🟠 (QA A13-4, phiên E — hoá đơn Tesco thật chụp bằng A13) 2/3 hoá đơn không ra số tiền (#2 giấy cong; #3 in phẳng "TOTAL: £33.50" có
@@ -503,7 +504,10 @@
 - [ ] **B-114** 🟠 (QA OLD-13, phiên B — 3f26b33, API 26, 360×640dp, chữ 2.0) Tab Sort: thẻ bị ép còn ~2px (header "Sort your wee/k" bẻ giữa chữ cạnh
   List view + chip tuần + thanh tiến độ chiếm hết chiều cao) → không thấy / không dùng được thẻ; List view vẫn sort được. Chữ 1.3–1.7 ổn. Gốc: chế độ
   cuộn (MOD-11) chỉ bật khi cửa sổ < 520dp, không tính cỡ chữ. Sửa: tính theo dp ÷ cỡ chữ, thẻ cao 360 × cỡ chữ (≤ 1.6), List view xuống dòng dưới
-  tiêu đề, đệm dưới giữ chỗ FAB khi FAB còn hiện. ⏳ phiên B.
+  tiêu đề, đệm dưới giữ chỗ FAB khi FAB còn hiện. Phiên B (04fa4f9): một phần — Edit/Split/Merge/Skip tới được, nhưng form Split bị cắt, không tới
+  được "Split & sort" (ScrollView của thẻ lồng trong ScrollView màn → Android cần `nestedScrollEnabled`); tiêu đề vẫn chiếm nửa màn, List view cạnh
+  tiêu đề, FAB che Skip. Sửa lần 2: `nestedScrollEnabled` ở thẻ khoản + thẻ chuyến; màn cuộn → tiêu đề cuộn cùng thẻ; chữ ≥ 1.5 → List view dòng riêng;
+  ẩn FAB ở Sort khi màn cuộn. ⏳ phiên B.
 - [ ] **B-115** 🔴 (QA OLD-14, phiên B — 3f26b33, API 26) Android 7/8/9 (API 24–28): Ghi nhanh → Photo → "Take photo" **không bao giờ mở camera** (cấp quyền
   CAMERA rồi vẫn không); "Choose from library" vẫn được. Gốc: trên SDK < Q expo-image-picker đòi cả WRITE_EXTERNAL_STORAGE lẫn CAMERA
   (`ensureCameraPermissionsAreGranted`), mà `plugins/withReleasePermissions.js` xoá WRITE_EXTERNAL_STORAGE khỏi manifest release (B-19) → không xin
@@ -511,4 +515,12 @@
 - [ ] **B-116** 🟡 (QA OLD-15, phiên B — 360dp chữ 1.0) Chip ngày có năm "Tue 18 Nov 2025, 03:33" xuống 2 dòng, đẩy chữ "Expense" tràn khỏi nút. Sửa: khác
   năm thì bỏ thứ ("18 Nov 2025, 03:33"). Kèm OLD-14 phụ: camera không mở báo nhầm "Couldn't save the photo. Your entry was saved without it." → câu
   riêng "Couldn't open the camera. Try again, or hold Photo to choose from your library." ⏳ phiên B.
+- [ ] **B-117** 🔴 (QA iOS — phiên H thử Appetize, iPhone 14 Pro iOS 17.2, bản 55db0eb; 3/3 lần) End trip → màn chỉ còn "0.0", EndTripSheet không hiện,
+  nút thu nhỏ không bấm được → phải tắt app. Log: "Attempt to present RCTFabricModalHostViewController … while a presentation is in progress". Gốc:
+  `trip/active.tsx` — gpsDialog / shortDialog / endSheet ở vị trí con khác nhau trong 2 nhánh (còn chuyến / hết chuyến) → đổi nhánh thì React gỡ rồi
+  dựng lại Sheet (RN Modal) đang mở, iOS từ chối mở Modal khi cái cũ đang đóng. Android không bị. Sửa: key cố định cho 3 lớp phủ (giữ nguyên khi đổi
+  nhánh); "Keep" của B-107 mở Sheet sau khi Dialog đóng (iOS trễ 400 ms). ⏳ iOS (phiên C / Appetize).
+- [ ] **B-118** 🟠 (QA iOS — phiên H) Câu xin quyền vị trí iOS (app.json) hứa "only while a trip you started is running" / "Recording stops when you end the
+  trip" — sai từ khi có chuyến tự động (theo dõi rời chỗ đỗ / vùng 150 m ở nền) → Apple 5.1.1. Sửa: câu mới nói rõ chuyến tự động; câu trong app
+  (`trip.permBody`) cũng sửa. Cần build iOS mới mới có hiệu lực. ⏳ Phương xem chữ trước khi nộp.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.

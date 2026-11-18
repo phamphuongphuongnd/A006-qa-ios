@@ -45,9 +45,11 @@ export default function SortScreen() {
   // "Undo" on the sort that triggered the offer puts the entry back in the queue: the offer goes away with it.
   const offer = pendingOffer && !s.queue.some((i) => i.key === pendingOffer.entryId) ? pendingOffer : null;
 
+  // B-114 v2: at 1.5× text and up List view gets its own row — beside the title it broke "Sort your wee/k".
+  const bigText = fontScale >= 1.5;
   const header = (
-    <View style={[styles.top, { paddingTop: insets.top + 14, paddingHorizontal: GUTTER }]}>
-      <Txt v="h1" accessibilityRole="header" style={{ flexGrow: 1, flexShrink: 1, flexBasis: 180 }}>
+    <View style={[styles.top, bigText && { flexDirection: 'column', alignItems: 'flex-start' }, { paddingTop: insets.top + 14, paddingHorizontal: GUTTER }]}>
+      <Txt v="h1" accessibilityRole="header" style={bigText ? undefined : { flexGrow: 1, flexShrink: 1, flexBasis: 180 }}>
         {t('sort.title')}
       </Txt>
       {top ? (
@@ -162,12 +164,14 @@ export default function SortScreen() {
   return (
     // Typing in Edit / Split on the card: the screen shrinks above the keyboard and the FAB hides (B-38).
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, backgroundColor: colors.background }}>
-      {header}
+      {/* B-114 v2: when the screen scrolls (short window / large text) the header scrolls away with the card. */}
+      {short ? null : header}
       {/* Bottom padding keeps the card clear of the FAB. QA-100 MOD-11: in a short window (split screen) the FAB is
           gone and the card got squeezed to its button row — give it a real height and let the screen scroll. */}
       <Body
         short={short}
         style={{ flexGrow: 1, paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: keyboardUp || windowHeight < 520 ? 12 : 96, gap: 12 }}>
+        {short ? <View style={{ marginHorizontal: -GUTTER, marginTop: -6 }}>{header}</View> : null}
         <WeekProgress week={week} done={s.done} total={s.total} onPick={() => setWeekSheet(true)} />
         {autoLine}
         <View style={short ? { height: cardHeight, marginTop: 6 } : { flex: 1, marginTop: 6 }}>
@@ -202,7 +206,8 @@ export default function SortScreen() {
           )}
         </View>
       </Body>
-      {keyboardUp ? null : <CaptureFab />}
+      {/* B-114 v2: in the scrolling layout the floating + sat on the card's Skip button. */}
+      {keyboardUp || short ? null : <CaptureFab />}
       <WeekPickerSheet
         visible={weekSheet}
         onClose={() => setWeekSheet(false)}

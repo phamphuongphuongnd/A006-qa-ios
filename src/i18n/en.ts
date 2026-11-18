@@ -274,7 +274,7 @@ export const en = {
     empty: 'No trips yet',
     emptySub: 'Start a GPS trip or add miles from your odometer.',
     permTitle: 'Track business miles with GPS',
-    permBody: 'Sunday Sort records your route only while a trip is running. You start and stop every trip — nothing runs in the background otherwise.',
+    permBody: 'Sunday Sort records your route while a trip is running. Unless you turn on Automatic trips, you start and stop every trip — nothing records in the background otherwise.',
     permStays: 'Your route is never sent to us.',
     permAllow: 'Allow location',
     permAlways: "To keep recording with the screen off, choose 'Allow all the time'.",
