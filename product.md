@@ -242,8 +242,9 @@ Mở từ: 2 nút lớn Home, FAB "+", widget, phím tắt icon app (long-press:
 - **Máy tính trong ô số tiền** **[Mới]** (Q20): bàn phím có thêm hàng "+ − × ÷"; gõ "12.50+4.20" hiện biểu thức nhỏ phía trên
   và số lớn "= £16.70"; Save lưu kết quả. Biểu thức lỗi → số lớn mờ + chữ "Check the sum".
 - Hàng 3 nút tròn 56dp:
-  - "Photo" → camera ngay. **Nhiều ảnh** **[Mới]** (Q21): chụp xong quay lại sheet, hiện ảnh nhỏ 56dp có ✕; nút "Photo"
-    thành "+ Photo" cho tới **3 ảnh**/lần ghi. Giữ lâu → chọn từ thư viện (chọn được nhiều).
+  - "Photo" → bảng "Add a receipt photo": "Take photo" / "Choose from library" (B-86, Phương 2026-11-18). **Nhiều ảnh** **[Mới]** (Q21): chụp xong quay lại sheet, hiện ảnh nhỏ 56dp có ✕; nút "Photo"
+    thành "+ Photo" cho tới **3 ảnh**/lần ghi. Giữ lâu → vào thẳng thư viện (chọn được nhiều).
+  - Đang nhập mà app bị Android tắt (camera / bộ chọn, máy ít RAM) → lần mở sau mở lại Ghi nhanh với số, ghi chú, ảnh đang có (B-84).
   - "Work" / "Personal" (chip bật tắt, mặc định theo Settings).
   - "Note" → ô 1 dòng "Add a note (e.g. Shell, M62)", ≤ 120 ký tự.
 - Chip ghi chú hay dùng cuộn ngang (5 cái).
