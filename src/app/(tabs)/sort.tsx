@@ -1,7 +1,7 @@
 import { router } from '@/services/router';
 import { List , Zap } from '@/ui/icons';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { db } from '@/db/client';
@@ -28,6 +28,7 @@ import { Button, Card, Txt, useKeyboardUp, useSnackbar } from '@/ui';
  */
 export default function SortScreen() {
   const { colors } = useTheme();
+  const { height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { settings } = useSettings();
   const [chosen, setChosen] = useState<number | null>(null);
@@ -151,17 +152,21 @@ export default function SortScreen() {
     if (isLast) finish();
   };
 
+  const short = windowHeight < 520;
   const mergeEntry = mergeFor ? s.entries.find((e) => e.id === mergeFor) ?? null : null;
 
   return (
     // Typing in Edit / Split on the card: the screen shrinks above the keyboard and the FAB hides (B-38).
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, backgroundColor: colors.background }}>
       {header}
-      {/* Bottom padding keeps the card clear of the FAB. */}
-      <View style={{ flex: 1, paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: keyboardUp ? 12 : 96, gap: 12 }}>
+      {/* Bottom padding keeps the card clear of the FAB. QA-100 MOD-11: in a short window (split screen) the FAB is
+          gone and the card got squeezed to its button row — give it a real height and let the screen scroll. */}
+      <Body
+        short={short}
+        style={{ flexGrow: 1, paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: keyboardUp || short ? 12 : 96, gap: 12 }}>
         <WeekProgress week={week} done={s.done} total={s.total} onPick={() => setWeekSheet(true)} />
         {autoLine}
-        <View style={{ flex: 1, marginTop: 6 }}>
+        <View style={short ? { height: 360, marginTop: 6 } : { flex: 1, marginTop: 6 }}>
           {s.queue.length > 2 ? <Card style={[styles.ghost, { left: 24, right: 24, top: 0, opacity: 0.5 }]}>{null}</Card> : null}
           {s.queue.length > 1 ? <Card style={[styles.ghost, { left: 12, right: 12, top: 8, opacity: 0.8 }]}>{null}</Card> : null}
           {top.kind === 'entry' ? (
@@ -192,7 +197,7 @@ export default function SortScreen() {
             />
           )}
         </View>
-      </View>
+      </Body>
       {keyboardUp ? null : <CaptureFab />}
       <WeekPickerSheet
         visible={weekSheet}
@@ -223,3 +228,15 @@ const styles = StyleSheet.create({
   ghost: { position: 'absolute', height: 60 },
   autoLine: { minHeight: 36, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
 });
+
+/** Plain column, or a scroll view in a short window (MOD-11). */
+function Body({ short, style, children }: { short: boolean; style: object; children: React.ReactNode }) {
+  if (short) {
+    return (
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={style} keyboardShouldPersistTaps="handled">
+        {children}
+      </ScrollView>
+    );
+  }
+  return <View style={[{ flex: 1 }, style]}>{children}</View>;
+}
