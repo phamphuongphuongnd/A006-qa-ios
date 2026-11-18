@@ -344,19 +344,16 @@ class Run:
                     time.sleep(2)
             if title != 'Download':
                 # grid: Alarms | Android / DCIM | Download …
-                if not self.focus_keys((20, 22, 20), 'Download'):
-                    raise RuntimeError(f'keyboard focus did not reach Download (focused: {self.focused_text()!r})')
-                d.key(66)
+                # keys + ENTER in one go: a uiautomator dump in between moves the focus back to the first item
+                d.shell('input keyevent 20; sleep 0.3; input keyevent 22; sleep 0.3; input keyevent 20; sleep 0.3; input keyevent 66')
                 time.sleep(2.5)
+                if not self.has(fname):
+                    raise RuntimeError('keyboard navigation did not open Download/')
             if self.has(fname):
-                if not self.focus_keys((20,), fname):
-                    raise RuntimeError(f'keyboard focus did not reach {fname} (focused: {self.focused_text()!r})')
-                d.key(66)
+                d.shell('input keyevent 20; sleep 0.3; input keyevent 66')
                 time.sleep(2.5)
         if self.api < 26 and self.has(fname) and not self.has('Replace this phone'):
-            if not self.focus_keys((20,), fname):
-                raise RuntimeError(f'keyboard focus did not reach {fname} (focused: {self.focused_text()!r})')
-            d.key(66)
+            d.shell('input keyevent 20; sleep 0.3; input keyevent 66')
             time.sleep(2.5)
         if not self.has('Replace this phone'):
             self.tap_vis(fname, exact=True, timeout=15)

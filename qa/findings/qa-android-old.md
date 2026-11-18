@@ -107,6 +107,22 @@ B-70 ✅ (P056, P057) · B-61 ✅ · B-60 ✅ (`P003/10_tab_Reports.png`: nút x
 | B-69 Miles trên swiftshader | ✅ | API 30 swiftshader, P023 12 chuyến: mở Miles + màn chi tiết chuyến (MapView) 3 lần, **0** Fatal signal (`b69_*`). Lỗi gốc không tái hiện nên nhánh "sập tối đa 1 lần" chưa được thử tới |
 | B-59 migration trước tác vụ nền | ✅ | 40/40 logcat lượt 538ede9 có lần mở đầu, **0** dòng "no such table" |
 
+### Kiểm lại B-93 / OLD-10 trên APK 97ceb60 (gồm bcc8c7a B-93), 2026-11-18 · `qa-runs/android-old/verify-97ceb60/`
+| Kiểm | API 26 360dp chữ 0.85 | API 26 chữ 1.3 | Android 7 (chữ 0.85 / 1.3) |
+|---|---|---|---|
+| Hàng + − × ÷ thấy đủ 4 ký hiệu (B-93) | ✅ ngay dưới số tiền, ký hiệu y=361–380 (`b93_f085_1250.png`) | ✅ (`b93_f13_1250.png`) | ✅ cả hai (`api24/android7_sum_compare.png`) |
+| Gõ 1250 → + → 420 = **£16.70** | ✅ "12.50+4.20 = £16.70", Save → "Saved · £16.70 expense" | ✅ | ✅ cả hai; ✓ rồi Save → "Saved · £16.70 expense" |
+| Bộ nhớ đầy → Save báo lỗi trên màn (OLD-10) | ✅ bàn phím tự ẩn, snack "Couldn't save. Free up some storage…" hiện ~1,5–2 s, số tiền giữ nguyên (`old10b_strip.png`) | — | ✅ (`api24/android7_save_strip.png`) |
+| Nút **Save** khi bàn phím mở | ⚠️ chỉ lộ 65/112 px (đỉnh y=709, bàn phím y=774) — chữ "Save" bị cắt, bấm phần lộ vẫn lưu | ❌ chỉ lộ 43 px, không thấy chữ "Save" | ❌ bị che hoàn toàn (bàn phím Android 7 cao hơn, có dải gợi ý; mép trên y=657) |
+Ghi chú: ở 16 MB trống lưu vẫn được (lần đầu "Saved · £9.99"); phải chừa ~2 MB mới vào nhánh lỗi.
+
+### OLD-12 🟡 Android < 11: nút Save ở Ghi nhanh nằm (một phần / hoàn toàn) sau bàn phím khi đang gõ
+- **Máy/APK:** API 26 360dp và Android 7, APK 97ceb60. Bảng trên. Nút ✓ của bàn phím chỉ ẩn bàn phím (không lưu); sau đó Save hiện đủ.
+- **Nguyên nhân gốc nghi ngờ:** vẫn lệch đúng ~24dp: Save đỉnh y=709 + cao 112 px = 821 so với bàn phím y=774 → 47 px = 23,5dp ≈ chiều cao thanh
+  trạng thái — cùng gốc B-58 (bố cục tính theo cửa sổ dài hơn vùng thật một thanh trạng thái). Với bàn phím cao hơn (Gboard có dải gợi ý) phần
+  bị che lớn hơn. Gợi ý: trừ đúng `insets.top`/dùng chiều cao vùng còn lại thật (ví dụ `useWindowDimensions().height - keyboardHeight - statusBar`)
+  cho API < 30, hoặc cho phím ✓/Enter của bàn phím gọi Save khi số tiền > 0.
+
 ### Android 7.0 x86 32-bit (minSdk 24) — APK 5ce0626, 2026-11-18 · `qa-runs/android-old/api24/` (`summary.md`)
 AVD `qa_min_api24_x86` (google_apis x86 r27, **32-bit**, RAM 1536 MB, 720×1280 @320 = 360dp, cổng 5568, `-gpu host`). APK cài bằng
 `adb push` + `pm install` (`adb install` kiểu streamed treo trên API 24); `primaryCpuAbi=x86`.
