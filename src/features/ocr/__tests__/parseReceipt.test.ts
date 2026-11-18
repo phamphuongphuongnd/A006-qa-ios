@@ -271,3 +271,23 @@ describe('parseReceipt — QA-100 B-102 layouts from the receipt set Phương co
     expect(r.amountMinor === 8000 && r.confidence.amount >= OCR_FILL_CONFIDENCE).toBe(false);
   });
 });
+
+describe('parseReceipt — real A13 camera reads (QA-100 B-102)', () => {
+  // ML Kit lines exactly as the phone returned them (322acd6 diagnostics), photo a few degrees off.
+  const reads = require('./fixtures/a13-receipts.json') as { name: string; expectMinor: number; lines: RawLine[] }[];
+  it.each(reads.map((r) => [r.name, r] as const))('%s: fills the total', (_n, r) => {
+    const out = parseReceipt({ text: '', lines: r.lines }, 'UK', NOW);
+    expect(out.amountMinor).toBe(r.expectMinor);
+    expect(out.confidence.amount).toBeGreaterThanOrEqual(OCR_FILL_CONFIDENCE);
+  });
+
+  it('keeps a bare figure on the total row unless subtotal + tax or the card line prove it', () => {
+    const at = (text: string, y: number, x: number, w = 0.1): RawLine => ({ text, box: { x, y, w, h: 0.016 } });
+    const raw = (tax: string): RawOcr => ({
+      text: '',
+      lines: [at('MILK', 0.3, 0.2), at('$1.18', 0.3, 0.6), at('Subtotal', 0.44, 0.35), at('$20.32', 0.44, 0.56), at('Tax', 0.465, 0.35), at(tax, 0.465, 0.57), at('Total', 0.51, 0.35), at('2174', 0.505, 0.51)],
+    });
+    expect(parseReceipt(raw('$1.42'), 'US', NOW).amountMinor).toBe(2174);
+    expect(parseReceipt(raw('$1.40'), 'US', NOW).confidence.amount).toBeLessThan(OCR_FILL_CONFIDENCE);
+  });
+});

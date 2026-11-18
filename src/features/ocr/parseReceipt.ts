@@ -103,29 +103,68 @@ const NOT_TOTAL = /\b(SUB\s*-?\s*TOTAL|CHANGE|CASH\s*BACK|CASHBACK|TENDER(ED)?|S
 const TAX = /\b(VAT|TAX|GST)\b/;
 const INCL = /\b(INC|INCL|INCLUDING|INC\.)\b/;
 
+const centre = (l: Line) => l.box!.y + l.box!.h / 2;
+/** Letters left once currency marks are gone ("E33.50" — £ read as E — still counts as a bare figure). */
+const wordsIn = (l: Line) => l.up.replace(/GBP|USD|EUR|[£$€]/g, '').replace(/[^A-Z]/g, '');
+const isFigure = (l: Line) => wordsIn(l).length <= 1 && moneyIn(l.text).length > 0;
+const isLabel = (l: Line) => /[A-Z]{2}/.test(l.up) && !moneyIn(l.text).length;
+
+/**
+ * QA-100 B-102 (real A13 reads of two Tesco receipts): on a photo taken a few degrees off, the whole right-hand figure
+ * column sits ~0.6 of a line below its labels, so "TOTAL: £33.50"'s figure ended up nearer the "Cash" label under it
+ * and was thrown away. Estimate that column shift once from all label/figure pairs (the shift that lines up the most
+ * figures with a label; the smallest one on a tie), then compare rows after taking it off.
+ */
+function columnShift(lines: Line[]): number {
+  const boxed = lines.filter((l) => l.box);
+  const figs = boxed.filter(isFigure);
+  const labels = boxed.filter(isLabel);
+  if (figs.length < 2 || !labels.length) return 0;
+  const hs = boxed.map((l) => l.box!.h).sort((a, b) => a - b);
+  const h = hs[Math.floor(hs.length / 2)];
+  const shifts = figs.map((f) => labels.filter((l) => l.box!.x < f.box!.x).map((l) => centre(f) - centre(l)));
+  const cands = [0, ...shifts.flat().filter((d) => Math.abs(d) <= 1.5 * h)];
+  let best = 0;
+  let bestScore = -1;
+  for (const s of cands) {
+    const score = shifts.filter((ds) => ds.some((d) => Math.abs(d - s) < 0.3 * h)).length;
+    if (score > bestScore || (score === bestScore && Math.abs(s) < Math.abs(best))) {
+      best = s;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
 /** Amounts printed on the same row as `line` (a label on the left, the figure in another OCR block on the right). */
-function rowAmounts(line: Line, lines: Line[]): Money[] {
+function rowAmounts(line: Line, lines: Line[], shift: number): Money[] {
   const own = moneyIn(line.text);
   if (own.length) return own;
   if (!line.box) {
     const next = lines[line.i + 1];
     return next && !/[A-Z]{3}/.test(next.up.replace(/GBP|USD|EUR/g, '')) ? moneyIn(next.text) : [];
   }
-  // A hand-held photo is a few degrees off: the figure's row may sit up to about a line height away. Take the figure
-  // whose centre is nearest this label's row, never one nearer to another row's label.
-  const cy = line.box.y + line.box.h / 2;
-  const tol = Math.max(line.box.h, 0.01);
-  const right = line.box.x + line.box.w * 0.5;
-  const dy = (o: Line) => Math.abs(o.box!.y + o.box!.h / 2 - cy);
-  const near = lines
-    .filter((o) => o !== line && o.box && dy(o) <= tol && o.box.x >= right && moneyIn(o.text).length > 0)
-    .sort((a, b) => dy(a) - dy(b))[0];
-  if (!near) return figureBelow(line, lines);
-  const nearCy = near.box!.y + near.box!.h / 2;
+  const near = rowFigure(line, lines, shift, (o) => moneyIn(o.text).length > 0);
+  return near ? moneyIn(near.text) : figureBelow(line, lines);
+}
+
+/**
+ * The figure block on `line`'s row once the column shift is taken off: nearest centre within about a line, never one
+ * that another label's row claims more closely.
+ */
+function rowFigure(line: Line, lines: Line[], shift: number, ok: (o: Line) => boolean): Line | null {
+  const b = line.box!;
+  const cy = centre(line) + shift;
+  const tol = Math.max(b.h, 0.01);
+  const right = b.x + b.w * 0.5;
+  const dy = (o: Line) => Math.abs(centre(o) - cy);
+  const near = lines.filter((o) => o !== line && o.box && dy(o) <= tol && o.box.x >= right && ok(o)).sort((p, q) => dy(p) - dy(q))[0];
+  if (!near) return null;
+  const nearCy = centre(near);
   const closerLabel = lines.some(
-    (o) => o !== line && o.box && o.box.x < right && !moneyIn(o.text).length && Math.abs(o.box.y + o.box.h / 2 - nearCy) < dy(near) * 0.6,
+    (o) => o !== line && o.box && o.box.x < right && !moneyIn(o.text).length && Math.abs(centre(o) + shift - nearCy) < dy(near) * 0.6,
   );
-  return closerLabel ? [] : moneyIn(near.text);
+  return closerLabel ? null : near;
 }
 
 /**
@@ -142,30 +181,70 @@ function figureBelow(line: Line, lines: Line[]): Money[] {
       const gap = o.box.y - bottom;
       if (gap < -b.h * 0.3 || gap > b.h * 2) return false;
       if (o.box.x + o.box.w < b.x) return false;
-      const words = o.up.replace(/GBP|USD|EUR|[£$€]/g, '').replace(/[^A-Z]/g, '');
-      if (words.length > 1 || !moneyIn(o.text).length) return false;
+      if (!isFigure(o)) return false;
       // The figure of the next row ("CASH  £80.00" under a tilted "TOTAL") has its own label beside it: not ours.
       const ob = o.box;
       const cy = ob.y + ob.h / 2;
-      return !lines.some((l) => l !== line && l.box && /[A-Z]{2}/.test(l.up) && !moneyIn(l.text).length && Math.abs(l.box.y + l.box.h / 2 - cy) < ob.h * 0.6);
+      return !lines.some((l) => l !== line && l.box && isLabel(l) && Math.abs(centre(l) - cy) < ob.h * 0.6);
     })
     .sort((p, q) => p.box!.y - q.box!.y);
   return below.length ? moneyIn(below[0].text) : [];
 }
 
 const rightmost = (ms: Money[]) => ms.reduce((a, b) => (b.at > a.at ? b : a));
+/** OCR splits words ("Subtota l", "TOTA L"): labels are also checked with the spaces taken out. */
+const squash = (s: string) => s.replace(/\s+/g, '');
+const isSubtotal = (l: Line) => /SUB-?TOTAL/.test(squash(l.up));
+
+/**
+ * QA-100 B-102 (FreshHarvest on the A13): a big-font total lost its point ("2174" next to "Total"). Read a bare
+ * 3–6 digit figure on the total row as pence/cents only when the receipt proves it: subtotal + tax, or a paid-by line.
+ */
+function lostPointTotal(
+  line: Line,
+  lines: Line[],
+  shift: number,
+  sum: { sub: number | null; tax: number | null },
+  paid: number[],
+): number | null {
+  if (!line.box) return null;
+  const fig = rowFigure(line, lines, shift, (o) => /^[£$€E]?\s?\d{3,6}$/.test(o.text.trim()));
+  if (!fig) return null;
+  const minor = Number(fig.text.replace(/\D/g, ''));
+  if (sum.sub !== null && sum.tax !== null && sum.sub + sum.tax === minor) return minor;
+  return paid.includes(minor) ? minor : null;
+}
 
 function readAmount(lines: Line[]): { minor: number | null; confidence: number } {
+  const shift = columnShift(lines);
   type Cand = { minor: number; score: number; kind: 'strong' | 'total' | 'paid' };
   const cands: Cand[] = [];
+  const totalRows: Line[] = [];
   for (const l of lines) {
-    if (NOT_TOTAL.test(l.up)) continue;
+    if (NOT_TOTAL.test(l.up) || isSubtotal(l)) continue;
     if (TAX.test(l.up) && !INCL.test(l.up)) continue;
-    const kind = TOTAL_STRONG.test(l.up) ? 'strong' : TOTAL.test(l.up) ? 'total' : PAID_BY.test(l.up) ? 'paid' : null;
+    const kind = TOTAL_STRONG.test(l.up) ? 'strong' : TOTAL.test(l.up) || /TOTAL/.test(squash(l.up)) ? 'total' : PAID_BY.test(l.up) ? 'paid' : null;
     if (!kind) continue;
-    const ms = rowAmounts(l, lines);
-    if (!ms.length) continue;
+    const ms = rowAmounts(l, lines, shift);
+    if (!ms.length) {
+      if (kind !== 'paid') totalRows.push(l);
+      continue;
+    }
     cands.push({ minor: rightmost(ms).minor, score: kind === 'strong' ? 0.95 : kind === 'total' ? 0.9 : 0.75, kind });
+  }
+
+  if (!cands.some((c) => c.kind !== 'paid') && totalRows.length) {
+    const first = (pick: (l: Line) => boolean) => {
+      const l = lines.find(pick);
+      const ms = l ? rowAmounts(l, lines, shift) : [];
+      return ms.length ? rightmost(ms).minor : null;
+    };
+    const sum = { sub: first(isSubtotal), tax: first((l) => TAX.test(l.up) && !INCL.test(l.up)) };
+    const paid = cands.map((c) => c.minor);
+    for (const l of totalRows) {
+      const minor = lostPointTotal(l, lines, shift, sum, paid);
+      if (minor !== null) cands.push({ minor, score: 0.85, kind: 'total' });
+    }
   }
 
   if (cands.length) {
@@ -181,7 +260,7 @@ function readAmount(lines: Line[]): { minor: number | null; confidence: number }
   }
 
   // No label at all (parking ticket, till slip): a single figure is probably it; several → not sure.
-  const all = lines.filter((l) => !NOT_TOTAL.test(l.up) && !TAX.test(l.up)).flatMap((l) => moneyIn(l.text));
+  const all = lines.filter((l) => !NOT_TOTAL.test(l.up) && !isSubtotal(l) && !TAX.test(l.up)).flatMap((l) => moneyIn(l.text));
   if (!all.length) return { minor: null, confidence: 0 };
   const distinct = new Set(all.map((m) => m.minor));
   const max = Math.max(...distinct);

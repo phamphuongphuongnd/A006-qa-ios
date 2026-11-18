@@ -32,11 +32,19 @@ export const ocrAvailable = () => !!ReceiptOcr && ReceiptOcr.isAvailable();
  * go into "Share trip diagnostics" — which the driver sends only if they choose to.
  */
 const lastFile = () => new File(Paths.cache, 'ocr-last-readings.json');
-function rememberLastReading(raw: RawOcr, reading: ParsedReceipt, at: number) {
+
+/** QA-100 A13-5: how long each step took for a photo (picker back → shrink → OCR), kept with its reading. */
+const timings = new Map<string, Record<string, unknown>>();
+export function notePhotoTiming(uri: string, t: Record<string, unknown>) {
+  timings.set(uri, { ...timings.get(uri), ...t });
+  if (timings.size > 10) timings.delete(timings.keys().next().value as string);
+}
+
+function rememberLastReading(raw: RawOcr, reading: ParsedReceipt, at: number, timing: Record<string, unknown>) {
   try {
     const f = lastFile();
     const prev: unknown[] = f.exists ? (JSON.parse(f.textSync()) as unknown[]) : [];
-    const next = [{ at: new Date(at).toISOString(), lines: raw.lines, parsed: reading }, ...prev].slice(0, 3);
+    const next = [{ at: new Date(at).toISOString(), timing, lines: raw.lines, parsed: reading }, ...prev].slice(0, 3);
     f.create({ overwrite: true });
     f.write(JSON.stringify(next));
   } catch {
@@ -59,6 +67,7 @@ export function lastReceiptReadings(): unknown[] {
  */
 export async function readReceipt(uri: string, region: Region, now = Date.now()): Promise<OcrResult | null> {
   if (!ReceiptOcr) return null;
+  const started = Date.now();
   try {
     const raw = await Promise.race([
       ReceiptOcr.recognize(uri),
@@ -66,7 +75,7 @@ export async function readReceipt(uri: string, region: Region, now = Date.now())
     ]);
     if (!raw) return null;
     const reading = parseReceipt(raw, region, now);
-    rememberLastReading(raw, reading, now);
+    rememberLastReading(raw, reading, now, { ...timings.get(uri), ocrStartedAt: new Date(started).toISOString(), ocrMs: Date.now() - started, size: [raw.width, raw.height] });
     return { reading, text: raw.text ?? '' };
   } catch (e) {
     if (__DEV__) console.log('[ocr] recognize failed', String(e));

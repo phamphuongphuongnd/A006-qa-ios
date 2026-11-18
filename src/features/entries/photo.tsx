@@ -1,11 +1,34 @@
 import * as ImagePicker from 'expo-image-picker';
-import { Linking } from 'react-native';
+import { Linking, Platform } from 'react-native';
 
+import { ReceiptOcr } from '../../../modules/receipt-ocr';
+
+import { notePhotoTiming } from '@/features/ocr/reader';
 import { withLockSuspended } from '@/features/settings/lockState';
 import { t } from '@/i18n';
 import { Dialog } from '@/ui';
 
 export type PhotoResult = { ok: true; uri: string } | { ok: false; reason: 'cancelled' | 'denied' | 'failed' };
+
+/**
+ * QA-100 A13-5: on Android the picker copies the photo untouched (quality 1 = no re-encode of a 50 MP JPEG, which took
+ * 15–18 s on a Galaxy A13) and receipt-ocr makes one small upright copy that is both read and kept. iOS is unchanged.
+ */
+const SHRINK = Platform.OS === 'android' && typeof ReceiptOcr?.shrink === 'function';
+const QUALITY = SHRINK ? 1 : 0.6;
+const MAX_SIDE = 2400;
+
+async function prepared(uri: string, pickedAt: number): Promise<string> {
+  if (!SHRINK) return uri;
+  const t0 = Date.now();
+  try {
+    const out = await ReceiptOcr!.shrink!(uri, MAX_SIDE, 85);
+    notePhotoTiming(out, { pickedAt: new Date(pickedAt).toISOString(), shrinkMs: Date.now() - t0 });
+    return out;
+  } catch {
+    return uri;
+  }
+}
 
 /**
  * Camera (default) or library pick. Asks for permission first; 'denied' means the user has to go to
@@ -18,14 +41,14 @@ export async function takePhoto(source: 'camera' | 'library'): Promise<PhotoResu
       if (!perm.granted) return { ok: false, reason: 'denied' };
       // QA-100 A13-3: time in the camera / photo picker isn't "leaving the app" — App lock must not lock behind them
       // (the receipt photo and the typed entry were lost after unlocking), same as the share sheet and file pickers.
-      const res = await withLockSuspended(() => ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.6 }));
+      const res = await withLockSuspended(() => ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: QUALITY }));
       if (res.canceled || !res.assets[0]) return { ok: false, reason: 'cancelled' };
-      return { ok: true, uri: res.assets[0].uri };
+      return { ok: true, uri: await prepared(res.assets[0].uri, Date.now()) };
     }
     // The system photo picker needs no permission on Android 13+ / iOS 14+.
-    const res = await withLockSuspended(() => ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.6 }));
+    const res = await withLockSuspended(() => ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: QUALITY }));
     if (res.canceled || !res.assets[0]) return { ok: false, reason: 'cancelled' };
-    return { ok: true, uri: res.assets[0].uri };
+    return { ok: true, uri: await prepared(res.assets[0].uri, Date.now()) };
   } catch {
     return { ok: false, reason: 'failed' };
   }
@@ -47,14 +70,15 @@ export async function takePhotos(source: 'camera' | 'library', max: number): Pro
     const res = await withLockSuspended(() =>
       ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
-        quality: 0.6,
+        quality: QUALITY,
         allowsMultipleSelection: true,
         selectionLimit: max,
         orderedSelection: true,
       }),
     );
     if (res.canceled || !res.assets.length) return { ok: false, reason: 'cancelled' };
-    return { ok: true, uris: res.assets.slice(0, max).map((a) => a.uri) };
+    const at = Date.now();
+    return { ok: true, uris: await Promise.all(res.assets.slice(0, max).map((a) => prepared(a.uri, at))) };
   } catch {
     return { ok: false, reason: 'failed' };
   }
