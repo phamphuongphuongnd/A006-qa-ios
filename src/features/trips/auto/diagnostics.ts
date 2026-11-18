@@ -14,7 +14,7 @@ import { getSettings } from '@/db/settingsRepo';
 import { listTrips } from '@/db/tripsRepo';
 
 import { getAutoFlags } from './runner';
-import { hasActivityPermission, nativeHealth, readSignals } from './native';
+import { hasActivityPermission, nativeHealth, readRawSignals, readSignals } from './native';
 import { getKV } from './repo';
 
 const DAYS = 7;
@@ -58,7 +58,14 @@ export async function buildTripDiagnostics(now = Date.now()) {
     health: nativeHealth(),
     engine: getKV<unknown>(db, 'engine', null),
     flags: getAutoFlags(),
-    signals: readSignals(now - DAYS * 86_400_000).map((x) => ({ ...x, time: new Date(x.at).toISOString() })),
+    signals: readRawSignals(now - DAYS * 86_400_000).map((x) => ({ ...x, time: new Date(x.at).toISOString() })),
+    // iOS logs CoreMotion snapshots: also show the transitions the engine read from them (B-95).
+    transitions:
+      Platform.OS === 'ios'
+        ? readSignals(now - DAYS * 86_400_000)
+            .filter((x) => x.kind === 'activity')
+            .map((x) => ({ ...x, time: new Date('eventAt' in x ? x.eventAt : x.at).toISOString() }))
+        : undefined,
     trips,
   };
 }

@@ -5,7 +5,7 @@ import { and, asc, desc, eq, gt, gte, lt, sql } from 'drizzle-orm';
 import { entries, settings, tripPoints, trips, tripSegments, tripStops } from '@/db/schema';
 import type { TripPointRow, TripRow, TripSegmentRow, TripStopRow } from '@/db/schema';
 import { newId, type AppDb } from '@/db/types';
-import { milesToMeters, trackDistance } from '@/domain/mileage';
+import { MAX_ACCURACY_M, milesToMeters, trackDistance } from '@/domain/mileage';
 import type { Scope, TripClassifiedBy, TripScope } from '@/domain/types';
 
 import { recordRoute } from './routes';
@@ -263,3 +263,39 @@ export const lastAutoTrip = (db: AppDb): TripRow | undefined =>
 /** Unsorted automatic trips (count for Miles / Sort). */
 export const unsortedTripCount = (db: AppDb): number =>
   Number(db.select({ n: sql<number>`COUNT(*)` }).from(trips).where(eq(trips.scope, 'unsorted')).get()?.n ?? 0);
+
+// ---------------- iOS departure (B-95) ----------------
+
+/** Where the last GPS trip ended (its last usable fix): the parking spot iOS watches for a departure. */
+export function lastParkedPoint(db: AppDb): { tripId: string; endedAt: number; lat: number; lng: number } | null {
+  const trip = db
+    .select()
+    .from(trips)
+    .where(and(eq(trips.status, 'done'), eq(trips.source, 'gps')))
+    .orderBy(desc(trips.endedAt))
+    .get();
+  if (!trip || trip.endedAt == null) return null;
+  const p = db
+    .select()
+    .from(tripPoints)
+    .where(and(eq(tripPoints.tripId, trip.id), sql`${tripPoints.accuracy} <= ${MAX_ACCURACY_M}`))
+    .orderBy(desc(tripPoints.ts))
+    .get();
+  return p ? { tripId: trip.id, endedAt: trip.endedAt, lat: p.lat, lng: p.lng } : null;
+}
+
+/**
+ * First point of an automatic trip at the parking spot it left, timed at the trip start: iOS notices a drive a few
+ * hundred metres in, and without this point the stretch before GPS started would not count. `lastPointAt` stays as it
+ * is (it means "last time the vehicle moved").
+ */
+export function seedStartPoint(db: AppDb, tripId: string, p: { lat: number; lng: number }): boolean {
+  const trip = db.select().from(trips).where(eq(trips.id, tripId)).get();
+  if (!trip || trip.status !== 'running') return false;
+  db.transaction((tx) => {
+    tx.insert(tripPoints).values({ tripId, ts: trip.startedAt, lat: p.lat, lng: p.lng, accuracy: 10, segmentStart: false }).run();
+    const all = tx.select().from(tripPoints).where(eq(tripPoints.tripId, tripId)).orderBy(asc(tripPoints.ts)).all();
+    tx.update(trips).set({ distanceM: trackDistance(all) }).where(eq(trips.id, tripId)).run();
+  });
+  return true;
+}

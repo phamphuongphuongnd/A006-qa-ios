@@ -13,7 +13,12 @@ export const NOTIF_SILENT = 'trip-silent';
 export const NOTIF_AUTO_OFF = 'trip-auto-off';
 export const NOTIF_AUTO_START_FAILED = 'trip-auto-start-failed';
 
-async function post(identifier: string, title: string, body: string, opts: { channel?: string; url?: string; category?: string; data?: object } = {}) {
+async function post(
+  identifier: string,
+  title: string,
+  body: string,
+  opts: { channel?: string; url?: string; category?: string; data?: object; at?: number } = {},
+) {
   try {
     await setupTripNotifications();
     await Notifications.scheduleNotificationAsync({
@@ -25,7 +30,12 @@ async function post(identifier: string, title: string, body: string, opts: { cha
         categoryIdentifier: opts.category,
         data: { kind: 'trip', url: opts.url ?? '/miles', ...opts.data },
       },
-      trigger: Platform.OS === 'android' ? { channelId: opts.channel ?? CHANNEL_TRIP_REMINDER } : null,
+      trigger:
+        opts.at !== undefined
+          ? { type: Notifications.SchedulableTriggerInputTypes.DATE, date: opts.at, channelId: opts.channel ?? CHANNEL_TRIP_REMINDER }
+          : Platform.OS === 'android'
+            ? { channelId: opts.channel ?? CHANNEL_TRIP_REMINDER }
+            : null,
     });
   } catch {
     // Notifications are best effort.
@@ -45,10 +55,33 @@ export const notifyStill = () =>
 
 export const notifySilent = () => post(NOTIF_SILENT, t('autoTrip.notif.silentTitle'), t('autoTrip.notif.silentBody'), { url: '/trip/active' });
 
+/**
+ * iOS backstop (B-96): the same two notifications booked ahead with the same identifiers, so iOS shows them even if
+ * the app has stopped running; re-booked as fixes arrive, cancelled when the trip ends (features/trips/auto/backstop.ts).
+ */
+export const scheduleStill = (at: number) =>
+  post(NOTIF_STILL, t('autoTrip.notif.stillTitle'), t('autoTrip.notif.stillBody'), { category: CATEGORY_LONG, url: '/trip/active', at });
+
+export const scheduleSilent = (at: number) =>
+  post(NOTIF_SILENT, t('autoTrip.notif.silentTitle'), t('autoTrip.notif.silentBody'), { url: '/trip/active', at });
+
+export const cancelScheduled = (identifier: string) => Notifications.cancelScheduledNotificationAsync(identifier).catch(() => {});
+
+/** Already on screen (a booked backstop fired): don't post it again. */
+export async function isPresented(identifier: string): Promise<boolean> {
+  try {
+    return (await Notifications.getPresentedNotificationsAsync()).some((n) => n.request.identifier === identifier);
+  } catch {
+    return false;
+  }
+}
+
 export const notifyAutoPaused = (samsung: boolean) =>
-  post(NOTIF_AUTO_OFF, t('homeV2.alert.autoPausedTitle'), samsung ? t('homeV2.alert.autoPausedBodySamsung') : t('homeV2.alert.autoPausedBody'), {
-    url: '/trip/battery',
-  });
+  Platform.OS === 'ios'
+    ? post(NOTIF_AUTO_OFF, t('homeV2.alert.autoPausedTitle'), t('homeV2.alert.autoPausedBodyIos'), { url: '/trip/setup' })
+    : post(NOTIF_AUTO_OFF, t('homeV2.alert.autoPausedTitle'), samsung ? t('homeV2.alert.autoPausedBodySamsung') : t('homeV2.alert.autoPausedBody'), {
+        url: '/trip/battery',
+      });
 
 export const notifyProEnded = () => post(NOTIF_AUTO_OFF, t('autoTrip.notif.proEndedTitle'), t('autoTrip.notif.proEndedBody'), { url: '/trip/auto' });
 

@@ -1,6 +1,6 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { PermissionsAndroid, Platform, Pressable, ScrollView, View } from 'react-native';
+import { Linking, PermissionsAndroid, Platform, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { AppSettings, MergeStopMinutes } from '@/db/settingsRepo';
@@ -42,6 +42,15 @@ export function autoStatus(on: boolean, h: TripDetectHealth | null, lastRunAt: n
   };
 }
 
+const needsSetup = (h: TripDetectHealth | null) => !!h && (!h.activityPermission || !h.backgroundLocation);
+
+/** What the orange card says. iOS has no battery-saving pause, only permissions and Background App Refresh (B-95). */
+function fixText(h: TripDetectHealth | null, samsung: boolean) {
+  if (Platform.OS === 'ios') return needsSetup(h) ? t('autoTrip.iosPermNote') : t('autoTrip.iosRefreshNote');
+  if (h?.batteryOptimized && !autoPausedBy(h)) return t('autoTrip.stMayMiss');
+  return samsung ? t('autoTrip.samsungMayPause') : t('autoTrip.phoneMayPause');
+}
+
 /** S-07d Automatic trips [Pro]. */
 export default function AutoTripsScreen() {
   const { settings, update } = useSettings();
@@ -58,7 +67,8 @@ export default function AutoTripsScreen() {
   useFocusEffect(refresh);
 
   const supported = autoTripsSupported();
-  const on = settings.autoTrips && pro;
+  // A phone that can't tell driving (iPhone without motion chip, simulator) never shows "Working".
+  const on = settings.autoTrips && pro && supported;
   const now = useNow(60_000);
   const st = autoStatus(on, health, flags.lastRunAt, now);
   const android = Platform.OS === 'android';
@@ -121,16 +131,17 @@ export default function AutoTripsScreen() {
         {pro && on && st.fix ? (
           <Card variant="warn" style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <Txt v="body" style={{ flex: 1 }}>
-              {health?.batteryOptimized && !autoPausedBy(health)
-                ? t('autoTrip.stMayMiss')
-                : samsung
-                  ? t('autoTrip.samsungMayPause')
-                  : t('autoTrip.phoneMayPause')}
+              {fixText(health, samsung)}
             </Txt>
             <Button
-              label={health && (!health.activityPermission || !health.backgroundLocation) ? t('autoTrip.finishSetup') : t('autoTrip.fix')}
+              label={needsSetup(health) ? t('autoTrip.finishSetup') : android ? t('autoTrip.fix') : t('autoTrip.openIosSettings')}
               size="sm"
-              onPress={() => router.push(health && (!health.activityPermission || !health.backgroundLocation) ? '/trip/setup' : '/trip/battery')}
+              onPress={() => {
+                if (needsSetup(health)) router.push('/trip/setup');
+                else if (android) router.push('/trip/battery');
+                // iOS: Background App Refresh lives in the app's Settings page.
+                else Linking.openSettings().catch(() => {});
+              }}
             />
           </Card>
         ) : null}

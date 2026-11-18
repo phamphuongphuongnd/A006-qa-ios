@@ -38,7 +38,12 @@ export const autoTrip = {
   vanBt: 'Van Bluetooth',
   vanBtNone: 'Not set',
   startCharging: 'Start when charging',
-  iosNote: 'iPhone starts trips from motion. Add an NFC tag for instant start.',
+  // B-95: iOS wakes the app on leaving the last parking spot (geofence) or a significant location change (~500 m+).
+  iosNote:
+    'iPhone notices a drive when you leave where your last trip ended, or after about half a mile, and starts the trip from when you set off. For an instant start, add an NFC tag.',
+  iosPermNote: 'Automatic trips need Motion & Fitness on and Location set to "Always".',
+  iosRefreshNote: 'Background App Refresh is off or Low Power Mode is on, so iPhone may not wake Sunday Sort for a drive.',
+  openIosSettings: 'Open Settings',
   mergeTitle: 'Merge stops shorter than',
   mergeHint: 'Deliveries and red lights stay in one trip.',
   min: '{n} min',
