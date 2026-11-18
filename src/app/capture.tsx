@@ -209,9 +209,10 @@ export default function CaptureScreen() {
   const keyboardTop = useRef<number | null>(null);
   const keyboardHeight = useRef(0);
   const [calcLift, setCalcLift] = useState(0);
-  // QA-100 B-98: on Android < 11 the Save row stayed partly under the keyboard whatever offset KeyboardAvoidingView got —
-  // measure it and lift it by what is still covered.
-  const [saveLift, setSaveLift] = useState(0);
+  // QA-100 B-98 v4: on Android < 11 (360×640dp) there is simply no room: header + amount take 216dp, the keyboard leaves
+  // 89–147dp, the bottom block needs 157–211dp (measured on API 24/26). Padding only made the block taller. When the
+  // measured block still runs under the keyboard, keep only what is being typed in + Save until the keyboard goes down.
+  const [cramped, setCramped] = useState(false);
   const bottomRef = useRef<ComponentRef<typeof View>>(null);
   const calcRef = useRef<ComponentRef<typeof View>>(null);
   const [middleHeight, setMiddleHeight] = useState(0);
@@ -226,7 +227,7 @@ export default function CaptureScreen() {
       setKeyboardUp(false);
       setSqueezed(false);
       setCalcLift(0);
-      setSaveLift(0);
+      setCramped(false);
     });
     return () => {
       show.remove();
@@ -510,12 +511,12 @@ export default function CaptureScreen() {
               if (top === null) return;
               const covered = Math.round(y + h - top);
               // Numbers only (no user data): lets QA read the real geometry from logcat on a release build.
-              console.log(`[B98v3] screenY=${keyboardTop.current} kb=${keyboardHeight.current} top=${top} y=${y} h=${h} covered=${covered} insetsBottom=${insets.bottom}`);
-              if (covered > 1) setSaveLift((l) => Math.min(l + covered, 200));
+              console.log(`[B98v4] top=${top} y=${y} h=${h} covered=${covered} cramped=${cramped}`);
+              if (covered > 1) setCramped(true);
             });
           }}
-          style={{ paddingHorizontal: GUTTER, paddingBottom: keyboardUp ? 10 + saveLift : 12 + insets.bottom, gap: tight ? 8 : 12 }}>
-          {chipMinor !== null ? (
+          style={{ paddingHorizontal: GUTTER, paddingBottom: keyboardUp ? 10 : 12 + insets.bottom, gap: tight ? 8 : 12 }}>
+          {chipMinor !== null && !cramped ? (
             <ReceiptSaysChip
               minor={chipMinor}
               currency={currency}
@@ -527,7 +528,7 @@ export default function CaptureScreen() {
             />
           ) : null}
 
-          {hasPhotos || photos.reading ? (
+          {(hasPhotos || photos.reading) && !cramped ? (
             <View style={styles.thumbs}>
               <PendingThumbs uris={photos.uris} onRemove={photos.remove} />
               {photos.reading ? (
@@ -567,6 +568,7 @@ export default function CaptureScreen() {
           ) : null}
 
           {/* Photo · Work/Personal · Note */}
+          {cramped ? null : (
           <View style={styles.row3}>
             <PhotoButton
               count={photos.photos.length}
@@ -600,8 +602,9 @@ export default function CaptureScreen() {
               onPress={() => (noteOpen ? focusAmount() : setNoteOpen(true))}
             />
           </View>
+          )}
 
-          {notes.length > 0 ? (
+          {notes.length > 0 && !cramped ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="always" contentContainerStyle={{ gap: 8 }}>
               {notes.map((n) => (
                 <Chip
@@ -618,10 +621,10 @@ export default function CaptureScreen() {
             </ScrollView>
           ) : null}
 
-          {slots.left !== null && !tight ? <PhotosLeft left={slots.left} low={slots.low} /> : null}
+          {slots.left !== null && !tight && !cramped ? <PhotosLeft left={slots.left} low={slots.low} /> : null}
 
           <Button label={t('common.save')} variant={type} full disabled={amount.minor <= 0} onPress={save} />
-          {tight ? null : (
+          {tight || cramped ? null : (
             <Txt v="caption" c="textTertiary" center style={{ marginTop: -4, fontFamily: fonts.regular }}>
               {t('capture.noCategory')}
             </Txt>

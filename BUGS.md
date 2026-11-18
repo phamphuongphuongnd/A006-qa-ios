@@ -428,7 +428,14 @@
 - [ ] **B-101** 🟡 (QA iOS QI-3, phiên C) Ô Note ở Ghi nhanh đảo ký tự khi gõ nhanh (P052: "QA-P052 Shell M62" → "QA-052 Shell M62P"; 1/14). Sửa: ô không còn
   điều khiển `value` (dựng lại khi app tự điền: chip, đọc hoá đơn); nháp ghi file trễ 400 ms thay vì mỗi phím.
 - [ ] **B-102** 🟠 (QA A13-4, phiên E — hoá đơn Tesco thật chụp bằng A13) 2/3 hoá đơn không ra số tiền (#2 giấy cong; #3 in phẳng "TOTAL: £33.50" có
-  Subtotal/Savings phía trên và Cash/Change phía dưới) dù nơi bán + ngày đúng. Chưa rõ nguyên nhân (nghi `parseReceipt.ts` `rowAmounts`: "TOTAL:" và số là 2
-  khối lệch dòng do ảnh nghiêng). Bước 1: 3 lần đọc gần nhất (dòng OCR thô + kết quả) lưu trong cache và có trong "Share trip diagnostics" (`receipts`). ⏳ phiên
-  E lấy file → sửa parser + test bằng dòng thật.
+  Subtotal/Savings phía trên và Cash/Change phía dưới) dù nơi bán + ngày đúng. **Gốc (dòng OCR thật, chẩn đoán 322acd6):** ảnh nghiêng vài độ → cả cột số
+  lệch xuống ~0,6 dòng (TOTAL: cy 0,664, số 0,676, nhãn Cash 0,682) → luật "nhãn khác gần hơn" trong `rowAmounts` bỏ số → fallback 0,4 → trống; Tesco
+  2022 y hệt; FreshHarvest: chữ to đọc "2174" mất dấu chấm. **Sửa (2 đợt):** đo độ lệch cột nhãn↔số từ mọi cặp rồi bù (`columnShift`); số dưới nhãn
+  ("FUEL TOTAL" / "$ 20.00"); số nguyên sau ký hiệu tiền ("$5400"); "1.575,01"; nhãn tách chữ ("Subtota l"); tổng mất dấu chấm chỉ nhận khi = subtotal +
+  tax hoặc = dòng thẻ. 3 lần đọc thật của A13 thành fixture Jest — cả 3 điền đúng. ⏳ chạy lại trên A13 + 32 ảnh Phương gom (`qa/receipts-expected.json`).
+- [ ] **B-103** 🟠 (QA A13-5, phiên E — Phương: "chụp hoá đơn rất đơ, nhận diện cũng đơ") Từ lúc bấm OK ở camera tới lúc bắt đầu đọc 14,9–17,8 s trên A13
+  (camera 50 MP). Gốc: `photo.tsx` gọi picker với `quality: 0.6` → expo-image-picker giải nén + nén lại cả ảnh 50 MP (`CompressionImageExporter`); ML Kit
+  lại giải nén ảnh gốc lần nữa. Sửa: Android dùng `quality: 1` (picker chỉ chép file) + `ReceiptOcr.shrink` native (giải nén lấy mẫu, xoay theo EXIF,
+  cạnh dài ≤ 2400 px, JPEG 85) → đọc và lưu bản nhỏ, xoá bản to trong cache. iOS không đổi. Chẩn đoán ghi thời gian từng bước (`timing`: pickedAt,
+  shrinkMs, ocrStartedAt, ocrMs). ⏳ phiên E đo lại trên A13.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
