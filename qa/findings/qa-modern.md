@@ -29,6 +29,31 @@ Cài đặt gốc từng máy: `qa-runs/modern/_baseline/`.
 - Lưu ý vận hành: máy chủ Windows chạm trần commit (7 máy ảo) nên phải tạm tắt XL để chạy máy 16 KB; lần đầu `adb install` (stream) làm
   máy 16 KB rơi offline — cài bằng `adb push` + `pm install` thì ổn.
 
+## 2d. Chạy lại trên APK `sundaysort-qa-bcc8c7a-all.apk` (dev bcc8c7a, "B-89 v2") — 2026-11-18 09:57–10:07
+
+Bằng chứng: `qa-runs/modern/regress-bcc8c7a/`. Kịch bản B-89 (script `b89.py` trong scratchpad): Ghi nhanh → Take photo → camera mở →
+mở Settings (app *cached*) → `am kill` (pid mất) → Recents về camera → chụp + Done (hoặc Back = huỷ) → ảnh chụp sau 6 s và 12 s.
+
+| Lỗi | Kiểm | Kết quả |
+|---|---|---|
+| B-89 v2 | XL, $3.21 **có sẵn 1 ảnh** → chụp ảnh 2 lúc app đã chết | ✅ tiến trình mới mở lại Ghi nhanh: **"2 of 3"**, không nhân đôi sau 12 s; Save → "Saved · $3.21 expense" (`withphoto-*.png`) |
+| | XL, $6.54 **chưa có ảnh** | ✅ mở lại có $6.54 + "1 of 3" (`nophoto-*.png`); Discard → "The photo will be deleted too.", bộ đếm ảnh miễn phí trả lại (17 → 18/20) |
+| | XL, khoản trống → camera → **Back (huỷ)** | ✅ tiến trình mới về Ghi nhanh trống $0.00 (đúng chỗ đang đứng); `force-stop` + mở lại → **Home**, không tự vào Ghi nhanh (nháp đã xoá) (`cancel-*.png`) |
+| Nút "+" < 520dp | Fold chia đôi ngang 852×436dp: Home / Entries / Sort / Miles / Reports | ✅ không còn nút "+" ở tab nào; Entries hiện đủ số tiền các dòng. Toàn màn 883dp: "+" hiện lại (`fold-436-montage.png`) |
+
+Ghi chú: nháp $3.21 có 1 ảnh để lại từ lượt 8cb9c8f, sau khi cài đè bcc8c7a mở lại **không còn ảnh** (chỉ còn số tiền). Hiếm (chỉ khi cập
+nhật app đúng lúc có nháp) — để ý nếu ảnh nháp nằm trong `cache/` có thể bị dọn.
+
+### MOD-11 🟠 Cửa sổ thấp (chia đôi ngang 436dp): thẻ Sort bẹp còn mỗi hàng Edit / Split / Merge / Skip — không phân loại được
+- **Máy:** Fold mở, chia đôi ngang (`am start --windowingMode 6` + `am task resize … 0 1090 2076 2152` → `w852dp h436dp`), APK bcc8c7a.
+- **Thực tế:** phần thân thẻ (số tiền, tên, các nút nhóm chi, Work/Personal) cao ~0, chỉ còn thanh cuộn nhỏ; dưới thẻ trống ~100dp
+  (`regress-bcc8c7a/fold-436-Sort.png`). Người dùng không thấy khoản cũng không bấm được nhóm chi → luồng chính Sort không dùng được
+  ở chế độ chia đôi trên máy gập / tablet.
+- **Nguyên nhân gốc nghi ngờ:** `src/app/(tabs)/sort.tsx:161` luôn đệm `paddingBottom: 96` (chừa chỗ nút "+") — nay nút "+" đã ẩn ở cửa
+  sổ < 520dp nên phần đệm này thừa; thẻ (`SortEntryCard.tsx:104/467` `flex: 1`) không có `minHeight`, phần thân là ScrollView `flex: 1`
+  nên bị ép về 0 khi chiều cao còn lại < hàng nút. Gợi ý: đệm đáy theo đúng điều kiện hiện "+" (12 khi ẩn); `minHeight` ~260dp cho thẻ
+  và cho cả màn cuộn được khi cửa sổ thấp hơn mức đó.
+
 ## 2c. Chạy lại trên APK `sundaysort-qa-8cb9c8f-all.apk` (dev 8cb9c8f, gồm B-89 50974d7) — 2026-11-18 09:39–09:46
 
 Bằng chứng: `qa-runs/modern/regress-8cb9c8f/`.
