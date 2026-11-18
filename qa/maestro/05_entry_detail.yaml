@@ -5,7 +5,7 @@ name: 05_entry_detail
 - tapOn: "Entries.*"
 - waitForAnimationToEnd:
     timeout: 3000
-- tapOn: "QA-${PID}.*"
+- tapOn: ".*QA-${PID}.*"
 - extendedWaitUntil:
     visible: "Save changes"
     timeout: 10000

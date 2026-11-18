@@ -50,3 +50,13 @@ name: 09_export_csv
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: ${PID}_09d_after_share
+# B-62 (dev 7fd7305): the app asks whether the files were really sent. We closed the sheet → "Not sent".
+- runFlow:
+    when:
+      visible: 'Did you send or save the files\?'
+    commands:
+      - takeScreenshot: ${PID}_09e_sent_ask
+      - tapOn: "Not sent"
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - takeScreenshot: ${PID}_09f_after_not_sent

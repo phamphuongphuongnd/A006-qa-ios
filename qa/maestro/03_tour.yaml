@@ -27,7 +27,7 @@ name: 03_tour
 - runFlow: common/home.yaml
 - tapOn: "Settings"
 - extendedWaitUntil:
-    visible: "Region"
+    visible: "Region.*"
     timeout: 15000
 - takeScreenshot: ${PID}_03h_settings
 - scroll

@@ -13,4 +13,4 @@ name: 04_quick_add
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: ${PID}_04c_in_entries
-- assertVisible: "QA-${PID}.*"
+- assertVisible: ".*QA-${PID}.*"

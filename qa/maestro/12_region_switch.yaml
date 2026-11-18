@@ -8,13 +8,13 @@ name: 12_region_switch
       - runFlow: common/home.yaml
       - tapOn: "Settings"
       - extendedWaitUntil:
-          visible: "Region"
+          visible: "Region.*"
           timeout: 15000
-      - tapOn: "Region"
+      - tapOn: "Region.*(Kingdom|States).*"
       - waitForAnimationToEnd:
           timeout: 3000
       - takeScreenshot: ${PID}_12a_region_sheet
-      - tapOn: ${OTHER_REGION_LABEL}
+      - tapOn: "${OTHER_REGION_LABEL}.*"
       - extendedWaitUntil:
           visible: 'Change region\?'
           timeout: 10000

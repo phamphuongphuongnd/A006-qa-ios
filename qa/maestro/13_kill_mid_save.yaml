@@ -20,5 +20,5 @@ name: 13_kill_mid_save
           timeout: 3000
       - takeScreenshot: ${PID}_13b_entries
       - assertNotVisible:
-          text: "KILL-${PID}"
+          text: ".*KILL-${PID}.*"
           index: 1

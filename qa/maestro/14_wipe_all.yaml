@@ -9,9 +9,9 @@ name: 14_wipe_all
       - tapOn: "Settings"
       - scrollUntilVisible:
           element:
-            text: "Delete all data"
+            text: "Delete all data.*"
           timeout: 20000
-      - tapOn: "Delete all data"
+      - tapOn: "Delete all data.*"
       - extendedWaitUntil:
           visible: 'Delete all data\?'
           timeout: 10000

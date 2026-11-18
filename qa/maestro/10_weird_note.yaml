@@ -16,4 +16,4 @@ name: 10_weird_note
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: ${PID}_10b_weird_in_list
-- assertVisible: "QW-${PID}.*"
+- assertVisible: ".*QW-${PID}.*"

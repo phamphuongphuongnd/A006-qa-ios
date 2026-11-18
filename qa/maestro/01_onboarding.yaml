@@ -11,7 +11,7 @@ name: 01_onboarding
 - extendedWaitUntil:
     visible: 'Where do you file your taxes\?'
     timeout: 15000
-- tapOn: ${REGION_LABEL}
+- tapOn: "${REGION_LABEL}.*"
 - takeScreenshot: ${PID}_01b_region
 - scrollUntilVisible:
     element:

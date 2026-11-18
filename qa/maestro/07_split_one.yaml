@@ -6,7 +6,7 @@ name: 07_split_one
 - tapOn: "Entries.*"
 - waitForAnimationToEnd:
     timeout: 3000
-- tapOn: "QA-${PID}.*"
+- tapOn: ".*QA-${PID}.*"
 - extendedWaitUntil:
     visible: "Save changes"
     timeout: 10000

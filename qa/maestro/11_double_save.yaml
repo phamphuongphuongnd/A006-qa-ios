@@ -19,7 +19,7 @@ name: 11_double_save
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: ${PID}_11b_entries
-- assertVisible: "DBL-${PID}"
+- assertVisible: ".*DBL-${PID}.*"
 - assertNotVisible:
-    text: "DBL-${PID}"
+    text: ".*DBL-${PID}.*"
     index: 1

@@ -62,6 +62,9 @@ for PIDX in ${PERSONAS//,/ }; do
     fi
     export FIXTURE FIXTURE_PLACED FIXTURE_NOTE
 
+    # The XCTest driver is installed by the first persona of the lane; later ones reuse it.
+    REINSTALL=""
+    if [ -f "$OUT_ROOT/.driver-$LANE" ]; then REINSTALL="--no-reinstall-driver"; fi
     MARKER="$OUT/raw/.marker"
     touch "$MARKER"
     LOG_START=$(date '+%Y-%m-%d %H:%M:%S')
@@ -69,13 +72,14 @@ for PIDX in ${PERSONAS//,/ }; do
     (
       cd "$OUT/raw" || exit 99
       perl -e 'alarm shift; exec @ARGV' "$PER_PERSONA_TIMEOUT" \
-        maestro --device "$UDID" test "$SUITE" \
-        --format junit --output "$OUT/junit.xml" --debug-output "$OUT/debug" \
+        maestro --device "$UDID" test "$SUITE" $REINSTALL \
+        --format junit --output "$OUT/junit.xml" --debug-output "$OUT/debug" --test-output-dir "$OUT/maestro-out" \
         -e "PID=$PID" -e "REGION=$REGION" -e "REGION_LABEL=$REGION_LABEL" -e "OTHER_REGION_LABEL=$OTHER_REGION_LABEL" \
         -e "AMOUNT=$AMOUNT" -e "NOTE=$NOTE" -e "FIXTURE=$FIXTURE" -e "DO_REGION_SWITCH=$DO_REGION_SWITCH" \
         -e "DO_KILL=$DO_KILL" -e "DO_WIPE=$DO_WIPE"
     ) > "$OUT/maestro.txt" 2>&1
     CODE=$?
+    touch "$OUT_ROOT/.driver-$LANE"
     DUR=$(( $(date +%s) - T0 ))
     log "$PIDX maestro exit $CODE in ${DUR}s"
 

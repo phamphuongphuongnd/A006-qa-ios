@@ -11,9 +11,9 @@ name: 02_restore
       - tapOn: "Settings"
       - scrollUntilVisible:
           element:
-            text: "Backup & restore"
+            text: "Backup & restore.*"
           timeout: 20000
-      - tapOn: "Backup & restore"
+      - tapOn: "Backup & restore.*"
       - extendedWaitUntil:
           visible: "Restore from backup"
           timeout: 15000
@@ -24,7 +24,7 @@ name: 02_restore
       - takeScreenshot: ${PID}_02b_picker
       - runFlow:
           when:
-            notVisible: "${FIXTURE}.*"
+            notVisible: ".*${FIXTURE}.*"
           commands:
             - tapOn:
                 text: "Browse"
@@ -37,7 +37,7 @@ name: 02_restore
             - waitForAnimationToEnd:
                 timeout: 3000
       - takeScreenshot: ${PID}_02c_picker_files
-      - tapOn: "${FIXTURE}.*"
+      - tapOn: ".*${FIXTURE}.*"
       - extendedWaitUntil:
           visible: "Replace this phone's data"
           timeout: 120000

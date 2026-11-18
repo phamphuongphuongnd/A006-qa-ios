@@ -4,13 +4,15 @@ appId: com.phiotron.sundaysort
 - runFlow: home.yaml
 - tapOn: "Settings"
 - extendedWaitUntil:
-    visible: "Region"
+    visible: "Region.*"
     timeout: 15000
 - scrollUntilVisible:
     element:
-      text: ${ITEM}
+      text: "${ITEM}.*"
     timeout: 20000
-- tapOn: ${ITEM}
+- tapOn:
+    text: "${ITEM}.*"
+    index: 0
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: ${PID}_${SHOT}
