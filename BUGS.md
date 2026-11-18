@@ -384,7 +384,7 @@
   nào) — phép đo B-72 trộn toạ độ cửa sổ (`measureInWindow`) với toạ độ màn hình (`screenY`), lệch đúng thanh trạng thái. Sửa: Android < 11 đặt hàng
   phép tính ngay dưới vùng số tiền (không thể nằm dưới bàn phím); Android 11+ giữ như cũ. Kèm OLD-10 🟡: báo "Couldn't save…" nằm sau bàn phím
   trên Android cũ → ẩn bàn phím trước khi báo. ⏳ phiên B API 26 + Android 7.
-- [ ] **B-94** 🟠 (QA MOD-11, phiên F) Cửa sổ thấp 436dp (chia đôi màn): thẻ Sort bẹp còn hàng Edit/Split/Merge/Skip (thân thẻ ~0), dưới trống ~100dp
+- [x] **B-94** 🟠 (QA MOD-11, phiên F) Cửa sổ thấp 436dp (chia đôi màn): thẻ Sort bẹp còn hàng Edit/Split/Merge/Skip (thân thẻ ~0), dưới trống ~100dp
   → không phân loại được. Gốc: luôn đệm đáy 96dp cho nút "+" (đã ẩn < 520dp) + thẻ `flex: 1` không chiều cao tối thiểu. Sửa (`sort.tsx`): cửa sổ < 520dp
   → bỏ đệm, thẻ cao 360dp, cả màn cuộn được. (B-89 v2 ✅ phiên F trên bcc8c7a: ảnh chụp lúc app chết được lấy lại, không trùng; huỷ camera trên khoản
   trống không tự mở Ghi nhanh.) Ghi nhận: nháp có ảnh để lại đúng lúc cài bản cập nhật thì mất ảnh (hiếm).
