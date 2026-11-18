@@ -19,7 +19,8 @@
 
 | 4c | 44241312809 (repo công khai `A006-qa-ios`) | e25dc9a (dev 322acd6 + QA) | 17/29 có chạy, **0 bước ✅ ngoài onboarding** | 0 (repo công khai, miễn phí; job 136 phút) | ❌ **hạ tầng**: runner chậm gấp 3–4 lần (build 18 phút thay vì 7, khởi động simulator 14 phút). 9 persona `IOSDriverTimeoutException` (XCTest driver không sẵn sàng sau 240 s); P001/P076 `DeviceUnreachableException`; 5 persona qua onboarding (2–6 phút/persona) rồi hết hạn 600 s. 10 persona + 2 iPad ⏭ hết ngân sách. 0 crash. → tăng driver 480 s, 25 phút/persona |
 | 4d | 44258898134 (công khai) | 94de76a (dev 322acd6) | 4/4 (P016 7 bước ✅, P041 6 bước ✅ trước khi hết 25 phút, P031 ❌ do hộp hệ thống còn treo, P052 ⏭ DeviceUnreachable) | 0 | Tuần tự. **0 crash.** Thấy **QI-4 🟠**. Bước 15: hộp "Open in “Sunday Sort”?" hiện chậm, app ở Home → B-95 ⏭; hộp đó treo sang P031 → sửa kịch bản (febb184) |
-| 4e | 44264516648 (công khai) | 67fd42b (dev f424978) | đang chạy | 0 | P091, P016, P052 (SE) ‖ P041 (Pro Max): viên "More below" (B-100 lần 2), B-101, B-90 |
+| 4e | 44264516648 (công khai) | 67fd42b (dev f424978) | 1/4 (P052: 11/16 bước ✅) | 0 | P091, P016, P041 ⏭ `IOSDriverTimeoutException` (driver XCTest không lên sau 480 s). P052: **B-101 ✅**, **B-100 v2 ✅** (viên "More below ⌄" thấy rõ). ❌ 02 (khôi phục), 06 (chạm tab Sort vẫn ở Home), 08/09 (kịch bản cũ, đã sửa ở 730b76a), 15 (kịch bản cũ). 0 crash |
+| 4g | 44274943533 (công khai) | e5f0714 (dev 4e4b030: B-117, B-118, B-114 v2, B-100 v3) | đang chạy | 0 | P052, P016, P091 (SE) ‖ P041 (Pro Max); thêm bước 16 Start trip → End trip → Save (B-117) |
 | 4f | 44274384593 (công khai) | febb184 | 0 | 0 | ❌ GitHub không khởi chạy job (lỗi thanh toán tài khoản) — cả repo công khai |
 
 Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ lượt 4c chạy trên repo công khai `phamphuongphuongnd/A006-qa-ios` (Phương chọn; không tính phút) — **xoá repo này sau QA-100 khi Phương đồng ý**.
@@ -72,6 +73,10 @@ Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ 
 - Kỳ vọng: ghi chú "QA-P052 Shell M62". Thực tế: ô hiện và lưu "QA-052 Shell M62P" — ký tự "P" thứ 4 bị dời xuống cuối.
 - Ảnh: `qa-runs/ios/44221266865/personas/P052/shots/P052_04a_capture_filled.jpg` (ô Note), `P052_04c_in_entries.jpg` (danh sách "QA-052 Sh…").
 - Nguyên nhân nghi ngờ: ô Note là TextInput có kiểm soát (`value={note}` + `onChangeText` gọi `setNote` và `setFromReceipt`) ở `src/app/capture.tsx` (khối `noteOpen`, ~dòng 365-380) — trên iOS, khi JS bận (vừa mở ô, cỡ chữ lớn) giá trị cũ ghi đè lên chữ vừa gõ → ký tự bị đảo/mất. Có thể chỉ xảy ra ở tốc độ gõ máy; cần thử tay trên iPhone thật. Hướng sửa thường dùng: bỏ `setFromReceipt` khi không cần, hoặc dùng `defaultValue` + ref.
+
+### Kiểm bản sửa (lượt 4e, dev f424978)
+- **B-101 ✅** P052 (SE, `extra-extra-extra-large`): ô Note hiện đúng "QA-P052 Shell M62" (`qa-runs/ios/44264516648/personas/P052/shots/P052_04a_capture_filled.jpg`), bước 04 assert "QA-P052" trong danh sách ✅ — lượt 3 cùng persona ra "QA-052 Shell M62P".
+- **B-100 v2 ✅** P052: màn chọn vùng có viên "More below ⌄" ở đáy (`…/P052_01b_region.jpg`); 🟡 viên đè lên dòng mô tả thẻ United States ("$ · Calendar year · S…") — v3 (dev 1565783) đã dời sang góc phải, chờ 4g. Màn chào cùng cỡ chữ hiện đủ, không cần viên.
 
 ### QI-4 🟠 Thẻ ở màn Sort bị cắt mất phần chọn danh mục khi chữ cỡ trợ năng
 - Persona/thiết bị: P041 (iPhone 16 Pro Max, `accessibility-large`, tối, UK), P016 (iPhone SE 3rd gen, `accessibility-large`, sáng, US). Lượt 4d.
