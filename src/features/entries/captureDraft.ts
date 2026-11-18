@@ -1,4 +1,4 @@
-import { File, Paths } from 'expo-file-system';
+import { Directory, File, Paths } from 'expo-file-system';
 import { useEffect } from 'react';
 
 import type { EntryType, Scope } from '@/domain/types';
@@ -16,6 +16,8 @@ export interface CaptureDraft {
   scope: Scope;
   at: number | null;
   photoUris: string[];
+  /** Set just before the camera opens (B-89): a photo taken while the app was dead is found by its time. */
+  cameraStartedAt?: number | null;
   savedAt: number;
 }
 
@@ -51,6 +53,27 @@ export function readDraft(now = Date.now()): CaptureDraft | null {
     return { ...d, photoUris: (d.photoUris ?? []).filter((u) => new File(u).exists) };
   } catch {
     return null;
+  }
+}
+
+/**
+ * QA-100 B-89: when Android recreates the app while the camera is open, React Native drops the camera result
+ * ("Tried to access onActivityResult while context is not ready"), so expo-image-picker never hands it back. The
+ * camera still wrote the photo into cache/ImagePicker/ — pick up non-empty files written after the camera opened.
+ */
+export function cameraPhotosSince(since: number, known: string[]): string[] {
+  try {
+    const dir = new Directory(Paths.cache, 'ImagePicker');
+    if (!dir.exists) return [];
+    const seen = new Set(known);
+    return dir
+      .list()
+      .filter((f): f is File => f instanceof File)
+      .filter((f) => (f.size ?? 0) > 0 && (f.modificationTime ?? 0) >= since - 2000 && !seen.has(f.uri))
+      .sort((a, b) => (a.modificationTime ?? 0) - (b.modificationTime ?? 0))
+      .map((f) => f.uri);
+  } catch {
+    return [];
   }
 }
 

@@ -42,7 +42,7 @@ import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, useTheme } from '@/theme';
 import { Button, Chip, Dialog, IconButton, RoundButton, Segmented, Txt, useSnackbar } from '@/ui';
 import { refocus } from '@/features/ocr/refocus';
-import { clearDraft, readDraft, saveDraft } from '@/features/entries/captureDraft';
+import { cameraPhotosSince, clearDraft, readDraft, saveDraft } from '@/features/entries/captureDraft';
 
 /** Home's fixed Expense/Income bar (72 + 2×12 padding): the Saved snackbar sits above it. */
 const HOME_BAR = 96;
@@ -121,13 +121,16 @@ export default function CaptureScreen() {
   useEffect(() => {
     if (restored.current) return;
     restored.current = true;
+    const taken = new Set<string>();
     if (draft) {
-      if (draft.photoUris.length) photos.add(draft.photoUris);
+      const fromCamera = draft.cameraStartedAt ? cameraPhotosSince(draft.cameraStartedAt, draft.photoUris).slice(0, MAX_PHOTOS_PER_ENTRY) : [];
+      const uris = [...draft.photoUris, ...fromCamera].slice(0, MAX_PHOTOS_PER_ENTRY);
+      if (uris.length) photos.add(uris);
+      fromCamera.forEach((u) => taken.add(u));
       snack({ message: t('capture.draftRestored'), above: 'none' });
     }
     // QA-100 MOD-10: the camera result reaches the recreated Activity a moment after this screen opens — ask again
     // shortly after and whenever the app comes back to the front, and take each photo once.
-    const taken = new Set<string>();
     const fetchPending = () =>
       ImagePicker.getPendingResultAsync()
         .then((r) => {
@@ -245,7 +248,10 @@ export default function CaptureScreen() {
       return;
     }
     if (slots.canAdd <= 0) return;
+    // B-89: if Android kills the app while the camera is open, the next start finds this draft and the photo by time.
+    if (source === 'camera') saveDraft({ type, expr: amount.expr, note, scope, at, photoUris: photos.uris, cameraStartedAt: Date.now() });
     const res = await takePhotos(source, slots.canAdd);
+    if (!res.ok && !dirty) clearDraft(); // cancelled on an empty entry: nothing to bring back
     if (res.ok) photos.add(res.uris);
     else if (res.reason === 'denied') setCameraDenied(true);
     else if (res.reason === 'failed') snack({ message: t('capture.photoFailed'), above: 'none' });

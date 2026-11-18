@@ -362,6 +362,10 @@
 - [ ] **B-89** 🟡 (QA MOD-10, phiên F — hồi quy một phần B-84) Nháp được mở lại nhưng **ảnh chụp trong lúc app đã bị giết** vẫn mất: `getPendingResultAsync`
   gọi 1 lần lúc màn mở, trước khi kết quả camera tới Activity mới. Sửa (`capture.tsx`): gọi lại sau 1 s, 3 s và mỗi khi app trở lại active, bỏ ảnh trùng.
   Kèm: cửa sổ thấp < 520dp (chia đôi màn 436dp) → ẩn nút nổi "+" (`ui/Layout.tsx`) vì nó đè "Sort now" ở Reports.
+  **Lần 1 không đạt** (phiên F, 8cb9c8f): nguyên nhân gốc thật — Activity dựng lại trước khi React sẵn sàng, RN **bỏ** `onActivityResult`
+  ("Tried to access onActivityResult while context is not ready") nên `getPendingResultAsync` luôn rỗng. Sửa lần 2: trước khi mở camera ghi
+  `cameraStartedAt` vào nháp; mở lại nháp → lấy ảnh không rỗng mới hơn mốc đó trong `cache/ImagePicker/` (`cameraPhotosSince`); huỷ camera trên khoản
+  trống thì xoá nháp. Nút "+" ẩn ở cửa sổ thấp cho mọi tab (`CaptureFab`).
 - [ ] **B-90** 🟠 (QA A37-7, phiên A) Chế độ tối: mọi nút `variant="sun"` chữ vàng trên nền vàng (chỉ thấy viên thuốc trống) — "Sort first" (Export có khoản
   chưa sort), "End trip" (Home khi đang có chuyến), "Back up now"/"Choose again", "Subscribe now"/"Try free", "See Pro", Save chi tiết chuyến, "Always"…
   Gốc: `ui/Button.tsx` `sun: { fg: 'primary' }`, mà ở theme tối `primary` = `sun` = #F5B841. Sửa: chữ dùng token `onSun` có sẵn (sáng #18202F, tối
