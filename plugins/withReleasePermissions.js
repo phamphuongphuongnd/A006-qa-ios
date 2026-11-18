@@ -21,7 +21,7 @@ const REMOVE = [
   // JobScheduler throws SecurityException for a network constraint without it (Android 9+) → nightly backup (S4).
   'android.permission.SYSTEM_ALERT_WINDOW',
   'android.permission.READ_EXTERNAL_STORAGE',
-  'android.permission.WRITE_EXTERNAL_STORAGE',
+  // WRITE_EXTERNAL_STORAGE is NOT removed — see KEEP_OLD below (QA-100 B-115).
   'com.google.android.c2dm.permission.RECEIVE',
   'com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE',
   // Launcher badge permissions (ShortcutBadger, pulled in by expo-notifications). The app sets no icon badge.
@@ -48,6 +48,9 @@ const manifest = () =>
     '<manifest xmlns:android="http://schemas.android.com/apk/res/android"',
     '    xmlns:tools="http://schemas.android.com/tools">',
     ...REMOVE.map((p) => `    <uses-permission android:name="${p}" tools:node="remove"/>`),
+    // QA-100 B-115 (OLD-14, API 26): on Android 9 and older expo-image-picker's camera needs WRITE_EXTERNAL_STORAGE as well
+    // as CAMERA; removing it meant "Take photo" never opened the camera on Android 7–9. Kept for those versions only.
+    '    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" tools:replace="android:maxSdkVersion"/>',
     // S3 OCR: ask Play services to download the ML Kit text model at install time, not on the first scan.
     // Release only: in debug, expo-dev-launcher declares the same key ("barcode_ui") and the merge would clash.
     '    <application>',
