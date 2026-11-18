@@ -22,7 +22,7 @@ async function prepared(uri: string, pickedAt: number): Promise<string> {
   if (!SHRINK) return uri;
   const t0 = Date.now();
   try {
-    const out = await ReceiptOcr!.shrink!(uri, MAX_SIDE, 85);
+    const out = await ReceiptOcr!.shrink!(uri, MAX_SIDE, 92);
     notePhotoTiming(out, { pickedAt: new Date(pickedAt).toISOString(), shrinkMs: Date.now() - t0 });
     return out;
   } catch {

@@ -39,16 +39,20 @@ class ReceiptOcrModule : Module() {
       resolver.openInputStream(src).use { BitmapFactory.decodeStream(it, null, bounds) }
       val longSide = maxOf(bounds.outWidth, bounds.outHeight)
       if (longSide <= 0) throw IllegalArgumentException("not an image")
-      var sample = 1
-      while (longSide / (sample * 2) >= maxSide) sample *= 2
-      val decoded = resolver.openInputStream(src).use {
-        BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample })
-      } ?: throw IllegalArgumentException("not an image")
       val orientation = try {
         resolver.openInputStream(src).use { ExifInterface(it!!).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL) }
       } catch (e: Exception) {
         ExifInterface.ORIENTATION_NORMAL
       }
+      // QA-100 B-102: re-encoding an already small picture (a screenshot, a saved image) only adds JPEG noise — ML Kit
+      // then lost a "TOTAL" line and read "Supernarket". Small and upright → keep the file as it is.
+      val upright = orientation == ExifInterface.ORIENTATION_NORMAL || orientation == ExifInterface.ORIENTATION_UNDEFINED
+      if (longSide <= maxSide && upright) return@AsyncFunction uri
+      var sample = 1
+      while (longSide / (sample * 2) >= maxSide) sample *= 2
+      val decoded = resolver.openInputStream(src).use {
+        BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample })
+      } ?: throw IllegalArgumentException("not an image")
       val m = Matrix()
       when (orientation) {
         ExifInterface.ORIENTATION_ROTATE_90 -> m.postRotate(90f)

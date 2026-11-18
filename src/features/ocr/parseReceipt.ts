@@ -36,12 +36,14 @@ interface Line {
   text: string;
   up: string;
   box: RawLine['box'];
+  /** ML Kit / Vision line confidence (0..1; 0 or missing = not given). */
+  conf: number;
 }
 
 /** Lines in reading order (top to bottom, then left to right) when boxes are known. */
 function prepare(raw: RawOcr): Line[] {
   const lines = raw.lines
-    .map((l, i) => ({ i, text: l.text.replace(/\s+/g, ' ').trim(), up: '', box: l.box }))
+    .map((l, i) => ({ i, text: l.text.replace(/\s+/g, ' ').trim(), up: '', box: l.box, conf: l.confidence ?? 0 }))
     .filter((l) => l.text !== '');
   const boxed = lines.every((l) => l.box);
   if (boxed) lines.sort((a, b) => a.box!.y + a.box!.h / 2 - (b.box!.y + b.box!.h / 2) || a.box!.x - b.box!.x);
@@ -58,6 +60,8 @@ interface Money {
   minor: number;
   /** Position in the line (rightmost wins when a line has several). */
   at: number;
+  /** OCR confidence of the line the figure was read from (set where rows are paired). */
+  conf?: number;
 }
 
 // Whole part: "1,250" (comma thousands), "1.575" before ",01" (dot thousands, comma decimal — QA-100 B-102 r22), or plain.
@@ -139,13 +143,13 @@ function columnShift(lines: Line[]): number {
 /** Amounts printed on the same row as `line` (a label on the left, the figure in another OCR block on the right). */
 function rowAmounts(line: Line, lines: Line[], shift: number): Money[] {
   const own = moneyIn(line.text);
-  if (own.length) return own;
+  if (own.length) return own.map((m) => ({ ...m, conf: line.conf }));
   if (!line.box) {
     const next = lines[line.i + 1];
     return next && !/[A-Z]{3}/.test(next.up.replace(/GBP|USD|EUR/g, '')) ? moneyIn(next.text) : [];
   }
   const near = rowFigure(line, lines, shift, (o) => moneyIn(o.text).length > 0);
-  return near ? moneyIn(near.text) : figureBelow(line, lines);
+  return near ? moneyIn(near.text).map((m) => ({ ...m, conf: near.conf })) : figureBelow(line, lines);
 }
 
 /**
@@ -188,7 +192,7 @@ function figureBelow(line: Line, lines: Line[]): Money[] {
       return !lines.some((l) => l !== line && l.box && isLabel(l) && Math.abs(centre(l) - cy) < ob.h * 0.6);
     })
     .sort((p, q) => p.box!.y - q.box!.y);
-  return below.length ? moneyIn(below[0].text) : [];
+  return below.length ? moneyIn(below[0].text).map((m) => ({ ...m, conf: below[0].conf })) : [];
 }
 
 const rightmost = (ms: Money[]) => ms.reduce((a, b) => (b.at > a.at ? b : a));
@@ -217,9 +221,12 @@ function lostPointTotal(
 
 function readAmount(lines: Line[]): { minor: number | null; confidence: number } {
   const shift = columnShift(lines);
-  type Cand = { minor: number; score: number; kind: 'strong' | 'total' | 'paid' };
+  type Cand = { minor: number; score: number; kind: 'strong' | 'total' | 'paid'; conf?: number };
   const cands: Cand[] = [];
   const totalRows: Line[] = [];
+  // QA-100 B-102 r01: below "CHANGE DUE" the till prints a VAT/GST summary whose own "Total" (net + tax columns) is not
+  // what was paid — it only counts when nothing above the change line does.
+  const changeAt = lines.findIndex((l) => /\bCHANGE\b/.test(l.up));
   for (const l of lines) {
     if (NOT_TOTAL.test(l.up) || isSubtotal(l)) continue;
     if (TAX.test(l.up) && !INCL.test(l.up)) continue;
@@ -230,7 +237,8 @@ function readAmount(lines: Line[]): { minor: number | null; confidence: number }
       if (kind !== 'paid') totalRows.push(l);
       continue;
     }
-    cands.push({ minor: rightmost(ms).minor, score: kind === 'strong' ? 0.95 : kind === 'total' ? 0.9 : 0.75, kind });
+    const base = kind === 'strong' ? 0.95 : kind === 'total' ? 0.9 : 0.75;
+    cands.push({ minor: rightmost(ms).minor, conf: rightmost(ms).conf, score: changeAt >= 0 && l.i > changeAt && kind !== 'paid' ? 0.7 : base, kind });
   }
 
   if (!cands.some((c) => c.kind !== 'paid') && totalRows.length) {
@@ -342,7 +350,15 @@ const BRANDS: [RegExp, string][] = [
 
 const NOT_NAME =
   /(\bVAT\b|\bREG\b|\bTEL\b|\bPHONE\b|\bWWW\.|\.CO\b|\.COM\b|@|\bRECEIPT\b|\bINVOICE\b|\bWELCOME\b|\bCOPY\b|\bCUSTOMER\b|\bMERCHANT\b|\bTERMINAL\b|\bTILL\b|\bCASHIER\b|\bSTORE\s*(NO|#)|\bTRANS|\bAUTH|\bROAD\b|\bRD\b|\bSTREET\b|\bST\b\.?$|\bLANE\b|\bAVE(NUE)?\b|\bWAY\b|\bUNIT\b|\bPARK\b|\bESTATE\b|\bBLVD\b|\bSUITE\b|\bHIGHWAY\b|\bHWY\b|\bDRIVE\b|\bTHANK)/;
-const POSTCODE = /\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b|\b\d{5}(-\d{4})?\b/;
+/** Template / sample text that is never a shop ("Shop Name", "Lorem Ipsum" on receipt mock-ups). */
+const PLACEHOLDER = /\b(LOREM|IPSUM|SHOP\s*NAME|COMPANY\s*NAME|STORE\s*NAME|BUSINESS\s*NAME|YOUR\s*(SHOP|STORE|COMPANY)|MM\/DD|DD\/MM|YYYY)\b/;
+/** Upper case without accents ("IESÇO" → "IESCO"). */
+const plain = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+const LOGO_SLIPS: [RegExp, string][] = [
+  [/(^|\s)[TI1]ESC[O0Q](\s|$)/, 'Tesco'],
+  [/(^|\s)SHE[L1I]\s?[L1I](\s|$)/, 'Shell'],
+];
+const POSTCODE =/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b|\b\d{5}(-\d{4})?\b/;
 
 /** "TESCO EXPRESS" → "Tesco Express"; mixed case is kept as printed. */
 function tidyName(s: string): string {
@@ -359,16 +375,28 @@ function readMerchant(lines: Line[]): { name: string | null; confidence: number 
     const hit = lines.find((l) => re.test(l.up));
     if (hit) return { name, confidence: hit.i < topCut ? 0.92 : 0.8 };
   }
+  // QA-100 B-102: logos read with a slip ("Iesço" for TESCO, "ShelI" for Shell) — only for these two, near the top.
+  for (const [re, name] of LOGO_SLIPS) {
+    const hit = lines.slice(0, topCut).find((l) => re.test(plain(l.up)));
+    if (hit) return { name, confidence: 0.8 };
+  }
   // No known chain: the first plausible name in the top lines (biggest text = shop name on most till rolls).
   const top = lines.slice(0, Math.min(n, Math.max(4, Math.ceil(n * 0.2))));
   const named = top.filter((l) => {
-    const letters = (l.text.match(/[A-Za-z]/g) ?? []).length;
-    const digits = (l.text.match(/\d/g) ?? []).length;
-    return letters >= 3 && digits <= letters * 0.3 && l.text.length <= 40 && !NOT_NAME.test(l.up) && !POSTCODE.test(l.up) && !moneyIn(l.text).length && !findDate(l.text, 'UK');
+    // "UNITED PACIFIC 5651" (first line): a trailing store number doesn't make the name a reference line. Item lines
+    // further down ("MILK GALLON 895426") keep their code and stay out.
+    const t = l.i <= 1 ? l.text.replace(/\s*#?\d{1,6}$/, '') : l.text;
+    // "250 TIBURON BLVD": a line starting with a house number is the address.
+    if (/^\d{1,5}\s+[A-Za-z]/.test(l.text)) return false;
+    // "Date:" / "Tel:" — a field label, not a name.
+    if (/:\s*$/.test(l.text)) return false;
+    const letters = (t.match(/[A-Za-z]/g) ?? []).length;
+    const digits = (t.match(/\d/g) ?? []).length;
+    return letters >= 3 && digits <= letters * 0.3 && l.text.length <= 40 && !NOT_NAME.test(l.up) && !PLACEHOLDER.test(l.up) && !POSTCODE.test(l.up) && !moneyIn(l.text).length && !findDate(l.text, 'UK');
   });
   if (!named.length) return { name: null, confidence: 0 };
-  const tallest = named.every((l) => l.box) ? named.reduce((a, b) => (b.box!.h > a.box!.h * 1.15 ? b : a)) : named[0];
-  return { name: tidyName(tallest.text) || null, confidence: tallest === named[0] || tallest.i <= 1 ? 0.62 : 0.6 };
+  const tallest = named.every((l) => l.box) ? named.reduce((a, b) => (b.box!.h > a.box!.h * 1.35 ? b : a)) : named[0];
+  return { name: tidyName(tallest.text.replace(/\s*#?\d{1,6}$/, '')) || null, confidence: tallest === named[0] || tallest.i <= 1 ? 0.62 : 0.6 };
 }
 
 // ---------------------------------------------------------------- date
@@ -383,16 +411,23 @@ interface FoundDate {
   confidence: number;
 }
 
-const year4 = (y: string) => (y.length === 2 ? 2000 + Number(y) : Number(y));
+/** Two-digit years: "26" → 2026, but "94" → 1994 (never a year further ahead than next year). */
+const year4 = (y: string) => {
+  if (y.length !== 2) return Number(y);
+  const n = 2000 + Number(y);
+  return n > new Date().getFullYear() + 1 ? n - 100 : n;
+};
 const validDay = (y: number, m: number, d: number) => m >= 1 && m <= 12 && d >= 1 && d <= new Date(y, m, 0).getDate();
 
 /** First date in a line. UK reads 03/04/26 as 3 Apr, US as Mar 4; an impossible order is swapped either way. */
 function findDate(text: string, region: Region): FoundDate | null {
-  const up = text.toUpperCase();
+  // OCR reads the O of OCT / NOV as a zero ("06 0CT 2026", QA-100 B-102 r06).
+  const up = text.toUpperCase().replace(/(^|[\s\d-])0CT\b/g, '$1OCT').replace(/\bN0V\b/g, 'NOV');
   let m = up.match(/\b(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})\b/);
   if (m) return { y: Number(m[1]), m: Number(m[2]), d: Number(m[3]), confidence: 0.92 };
 
-  m = up.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4}|\d{2})(?![\d.])/);
+  // "DATE06/21/06": a label glued to the date (no word break before the digits).
+  m = up.match(/(?<!\d)(\d{1,2})[-/.](\d{1,2})[-/.](\d{4}|\d{2})(?![\d.])/);
   if (m) {
     const a = Number(m[1]);
     const b = Number(m[2]);
@@ -425,10 +460,17 @@ function findTime(text: string): number | null {
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function readDate(lines: Line[], region: Region, now: number): { date: number | null; minutes: number | null; confidence: number } {
-  for (const l of lines) {
-    // Card expiry lines ("EXP 12/27") never hold the receipt date.
-    if (/\bEXP|\bEXPIRY|\bVALID\b/.test(l.up)) continue;
-    const f = findDate(l.text, region);
+  // QA-100 B-102 r12: "DATE 3/10/26" on a dollar receipt is March 10th even when the app is set to the UK — the receipt's
+  // own currency says which way round its dates are. Only a clear sign switches (dollars and no pounds, or the reverse).
+  const all = lines.map((l) => l.text).join(' ');
+  const dollars = /\$\s?\d/.test(all);
+  const pounds = /£\s?\d/.test(all);
+  const order: Region = dollars && !pounds ? 'US' : pounds && !dollars ? 'UK' : region;
+  // A date printed with its time is the transaction; "TOTAL UP TO 22/04/12" (points statement) and expiry lines are not.
+  const usable = lines.filter((l) => !/\bEXP|\bEXPIRY|\bEXPIRES|\bVALID\b|\bUP\s*TO\b|\bPOINTS\b|\bDUE\b/.test(l.up) && findDate(l.text, order));
+  const withTime = usable.find((l) => findTime(l.text.replace(/(?<!\d)\d{1,4}[-/.]\d{1,2}[-/.]\d{2,4}(?!\d)/, ' ')) !== null);
+  for (const l of withTime ? [withTime, ...usable.filter((x) => x !== withTime)] : usable) {
+    const f = findDate(l.text, order);
     if (!f) continue;
     const today = new Date(now);
     let y = f.y ?? today.getFullYear();
