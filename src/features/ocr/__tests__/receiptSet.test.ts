@@ -52,7 +52,7 @@ describe('receipt set (32 collected, 20 read on the emulator × 2 builds)', () =
         `${g.id} ${g.build}  amount ${g.amount.padEnd(5)} merchant ${g.merchant.padEnd(5)} date ${g.date.padEnd(5)}${g.expectOld ? '(old)' : '     '}  → ${g.got.amountMinor} "${g.got.merchant}" ${g.got.date ? ymd(g.got.date) : '-'} [${g.got.confidence.amount}/${g.got.confidence.merchant}/${g.got.confidence.date}]`,
     );
     console.log(rows.join('\n'));
-    expect(graded.length).toBe(60);
+    expect(graded.length).toBe(72);
   });
 
   // Known OCR limit, not the parser: r11 is a 255 px wide, watermarked image; ML Kit reads its "$69.03" as "$69.83"

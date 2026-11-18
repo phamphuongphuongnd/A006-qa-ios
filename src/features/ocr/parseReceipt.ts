@@ -356,14 +356,20 @@ const BRANDS: [RegExp, string][] = [
 const NOT_NAME =
   /(\bVAT\b|\bREG\b|\bTEL\b|\bPHONE\b|\bWWW\.|\.CO\b|\.COM\b|@|\bRECEIPT\b|\bINVOICE\b|\bWELCOME\b|\bCOPY\b|\bCUSTOMER\b|\bMERCHANT\b|\bTERMINAL\b|\bTILL\b|\bCASHIER\b|\bSTORE\s*(NO|#)|\bTRANS|\bAUTH|\bROAD\b|\bRD\b|\bSTREET\b|\bST\b\.?$|\bLANE\b|\bAVE(NUE)?\b|\bWAY\b|\bUNIT\b|\bPARK\b|\bESTATE\b|\bBLVD\b|\bSUITE\b|\bHIGHWAY\b|\bHWY\b|\bDRIVE\b|\bTHANK)/;
 /** Template / sample text that is never a shop ("Shop Name", "Lorem Ipsum" on receipt mock-ups). */
-const PLACEHOLDER = /\b(LOREM|IPSUM|SHOP\s*NAME|COMPANY\s*NAME|STORE\s*NAME|BUSINESS\s*NAME|YOUR\s*(SHOP|STORE|COMPANY)|MM\/DD|DD\/MM|YYYY)\b/;
+const PLACEHOLDER =
+  /\b(LOREM|IPSUM|SAMPLE|NAME|ADDRESS|LOCATION\s*HERE|YOUR\s*(SHOP|STORE|COMPANY)|MM\/DD|DD\/MM|YYYY)\b|^\W*COMPANY\W*$/;
+/** Ticket titles and slip lines that sit where a shop name would (QA-100 B-102 r25/r26/r31). */
+const NOT_SHOP = /\b(TICKET|CHECK\s*FOR|PIN\s*(USED|VERIFIED)|NUMBER\s*OF)\b/;
 /** Upper case without accents ("IESÇO" → "IESCO"). */
 const plain = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
 const LOGO_SLIPS: [RegExp, string][] = [
   [/(^|\s)[TI1]ESC[O0Q](\s|$)/, 'Tesco'],
   [/(^|\s)SHE[L1I]\s?[L1I](\s|$)/, 'Shell'],
 ];
-const POSTCODE =/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b|\b\d{5}(-\d{4})?\b/;
+const US_STATE_ZIP =
+  /\b(A[KLRZ]|C[AOT]|D[CE]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[ADEINOST]|N[CDEHJMVY]|O[HKR]|PA|RI|S[CD]|T[NX]|UT|V[AT]|W[AIVY])\s+\d{5}(-\d{4})?\b/;
+const UK_POSTCODE = /\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/;
+const POSTCODE = /\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b|\b\d{5}(-\d{4})?\b/;
 
 /** "TESCO EXPRESS" → "Tesco Express"; mixed case is kept as printed. */
 function tidyName(s: string): string {
@@ -397,7 +403,7 @@ function readMerchant(lines: Line[]): { name: string | null; confidence: number 
     if (/:\s*$/.test(l.text)) return false;
     const letters = (t.match(/[A-Za-z]/g) ?? []).length;
     const digits = (t.match(/\d/g) ?? []).length;
-    return letters >= 3 && digits <= letters * 0.3 && l.text.length <= 40 && !NOT_NAME.test(l.up) && !PLACEHOLDER.test(l.up) && !POSTCODE.test(l.up) && !moneyIn(l.text).length && !findDate(l.text, 'UK');
+    return letters >= 3 && digits <= letters * 0.3 && l.text.length <= 40 && !NOT_NAME.test(l.up) && !PLACEHOLDER.test(l.up) && !NOT_SHOP.test(l.up) && !POSTCODE.test(l.up) && !moneyIn(l.text).length && !findDate(l.text, 'UK');
   });
   if (!named.length) return { name: null, confidence: 0 };
   const tallest = named.every((l) => l.box) ? named.reduce((a, b) => (b.box!.h > a.box!.h * 1.35 ? b : a)) : named[0];
@@ -420,7 +426,8 @@ interface FoundDate {
 const year4 = (y: string) => {
   if (y.length !== 2) return Number(y);
   const n = 2000 + Number(y);
-  return n > new Date().getFullYear() + 1 ? n - 100 : n;
+  // "94" → 1994 (a real old receipt); "28" stays 2028 — a future year that is never filled (OCR noise read "1928").
+  return n > new Date().getFullYear() + 1 && Number(y) >= 50 ? n - 100 : n;
 };
 const validDay = (y: number, m: number, d: number) => m >= 1 && m <= 12 && d >= 1 && d <= new Date(y, m, 0).getDate();
 
@@ -468,13 +475,18 @@ function readDate(lines: Line[], region: Region, now: number): { date: number | 
   // QA-100 B-102 r12: "DATE 3/10/26" on a dollar receipt is March 10th even when the app is set to the UK — the receipt's
   // own currency says which way round its dates are. Only a clear sign switches (dollars and no pounds, or the reverse).
   const all = lines.map((l) => l.text).join(' ');
-  const dollars = /\$\s?\d/.test(all);
-  const pounds = /£\s?\d/.test(all);
-  const order: Region = dollars && !pounds ? 'US' : pounds && !dollars ? 'UK' : region;
+  const up = all.toUpperCase();
+  // r32 (Speedway, Bakersfield): no "$" printed at all — a state + ZIP or a 1-800 number says American just as well.
+  const us = [/\$\s?\d/, US_STATE_ZIP, /\b1-8\d\d-\d{3}-\d{4}\b/].filter((re) => re.test(up)).length;
+  const uk = [/£\s?\d/, UK_POSTCODE, /\bVAT\b/].filter((re) => re.test(up)).length;
+  const order: Region = us > uk ? 'US' : uk > us ? 'UK' : region;
   // A date printed with its time is the transaction; "TOTAL UP TO 22/04/12" (points statement) and expiry lines are not.
   const usable = lines.filter((l) => !/\bEXP|\bEXPIRY|\bEXPIRES|\bVALID\b|\bUP\s*TO\b|\bPOINTS\b|\bDUE\b/.test(l.up) && findDate(l.text, order));
   const withTime = usable.find((l) => findTime(l.text.replace(/(?<!\d)\d{1,4}[-/.]\d{1,2}[-/.]\d{2,4}(?!\d)/, ' ')) !== null);
-  for (const l of withTime ? [withTime, ...usable.filter((x) => x !== withTime)] : usable) {
+  // r27 (car park): "Entry Time 03/18" then "Exit Time 03/20" — the stay is paid on the way out.
+  const entry = (l: Line) => /\b(ENTRY|ENTERED|ARRIV\w*|TIME\s*IN)\b/.test(l.up);
+  const ordered = withTime ? [withTime, ...usable.filter((x) => x !== withTime)] : usable;
+  for (const l of [...ordered.filter((x) => !entry(x)), ...ordered.filter(entry)]) {
     const f = findDate(l.text, order);
     if (!f) continue;
     const today = new Date(now);
