@@ -225,7 +225,9 @@ export default function CaptureScreen() {
   const tight = keyboardUp && (squeezed || windowHeight / Math.max(1, fontScale) < 720);
   // QA-100 OLD-2: before Android 11 the keyboard height RN reports leaves out the nav bar the app draws behind
   // (edge-to-edge), so the calculator row ended up half under the keyboard.
-  const keyboardOffset = Platform.OS === 'android' && Number(Platform.Version) < 30 ? insets.bottom : 0;
+  // QA-100 OLD-12: the shortfall measured on Android 8/7 is exactly the status bar (24dp) — the keyboard height RN reports
+  // there is short by the bars the app draws behind. Add both bars (too much only leaves a gap; too little hid Save).
+  const keyboardOffset = Platform.OS === 'android' && Number(Platform.Version) < 30 ? insets.top + insets.bottom : 0;
   // QA-100 B-58/B-72: before Android 11 the window doesn't shrink for the keyboard the way RN measures, and the row
   // at the bottom stayed half under it (19dp ≈ the status bar). There the calculator row sits right under the amount.
   const calcUnderAmount = Platform.OS === 'android' && Number(Platform.Version) < 30;
@@ -444,6 +446,12 @@ export default function CaptureScreen() {
             selection={amount.selection}
             onChangeText={onAmountText}
             keyboardType="number-pad"
+            // OLD-12: the pad's ✓ key saves (it only closed the keyboard before).
+            returnKeyType="done"
+            onSubmitEditing={() => {
+              if (amount.minor > 0) save();
+            }}
+            submitBehavior="submit"
             autoFocus
             caretHidden
             contextMenuHidden

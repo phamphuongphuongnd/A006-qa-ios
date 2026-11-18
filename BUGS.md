@@ -231,12 +231,12 @@
   Sort servers: we never see your data", permStays "Your route is never sent to us", 4 câu "lives only on this phone" → "kept on this
   phone", `docs/privacy.html` thêm mục "Outside services" + System backup + nightly folder; product.md §F-01/S-07a/§11.
   ⏳ Đăng bản privacy mới lên trang công khai + Data safety: phần store, chờ Phương.
-- [ ] **B-57** 🟠 (QA OLD-1, phiên B) Màn nhập khoản trên màn thấp 360×640dp (API 26, và API 30 đặt 720×1280@320): khi bàn phím số mở,
+- [x] **B-57** 🟠 (QA OLD-1, phiên B) Màn nhập khoản trên màn thấp 360×640dp (API 26, và API 30 đặt 720×1280@320): khi bàn phím số mở,
   số tiền đang gõ co còn ~4px / biến mất — `middle` `flex: 1` không có `minHeight`, hàng Photo/Work/Note + gợi ý + "20 of 20 free photos"
   + Save + chú thích + CalcBar chiếm hết ~390dp. Bằng chứng `qa-runs/android-old/_smoke26/17_expense_typed.png`. Sửa (`capture.tsx`):
   màn cao < 720dp khi bàn phím mở → ẩn "Tap for Personal", "N of 20 free photos", "No category needed…", gap 8; `middle` `minHeight: 88`;
   số tiền `minimumFontScale 0.5`. ⏳ chờ phiên B thử lại bằng APK mới.
-- [ ] **B-58** 🟡 (QA OLD-2) Android 8: hàng phép tính (CalcBar) bị bàn phím che nửa dưới (API 30 cùng cỡ màn không bị). Nghi: RN báo chiều
+- [x] **B-58** 🟡 (QA OLD-2) Android 8: hàng phép tính (CalcBar) bị bàn phím che nửa dưới (API 30 cùng cỡ màn không bị). Nghi: RN báo chiều
   cao bàn phím không gồm thanh điều hướng app vẽ phía sau (edge-to-edge) trước Android 11 → `KeyboardAvoidingView` bù thiếu. Sửa thử:
   `keyboardVerticalOffset = insets.bottom` khi Android < 11 (`capture.tsx`). ⏳ chờ phiên B kiểm trên API 26 (giả thuyết, chưa xác nhận).
 - [x] **B-59** 🟠 (QA OLD-4, mở rộng) Migration DB chỉ chạy trong `app/_layout.tsx` (`useMigrations`), trong khi Android chạy JS **không cần
@@ -298,14 +298,14 @@
   lần mở sheet). Luật (`rules.tsx`) đã có kiểm trùng trong DB. ⏳ phiên F thử lại P056 + thử chạm đúp 3 màn kia.
 - [ ] **B-71** 🟡 (QA A13-1, phiên E) Đổi vùng US → UK có quy đổi: ô tỷ giá gợi ý "e.g. 0.79" nhưng nhập sai thì báo "Enter a rate like 1.27"
   (chuỗi lỗi cố định). Sửa: `settings.tsx` dùng chung ví dụ theo vùng cho gợi ý và lỗi (`rateError` có `{example}`). ⏳ A13.
-- [ ] **B-72** 🟠 (QA OLD-9, hồi quy B-57/B-58 trên 538ede9, phiên B) Android 8 360dp: chế độ gọn đã chạy nhưng số tiền vẫn ~4px và hàng
+- [x] **B-72** 🟠 (QA OLD-9, hồi quy B-57/B-58 trên 538ede9, phiên B) Android 8 360dp: chế độ gọn đã chạy nhưng số tiền vẫn ~4px và hàng
   + − × ÷ vẫn bị bàn phím che nửa. Gốc: `adjustsFontSizeToFit` của Android tính cỡ chữ 1 lần lúc vùng số còn ~0 (bàn phím đang mở) và không
   phóng lại; bù `insets.bottom` (B-58) là đoán sai. Sửa (`capture.tsx`): cỡ chữ số tiền tính từ chiều cao đo được của vùng số + độ dài chuỗi
   (24–64), bỏ `adjustsFontSizeToFit`; hàng phép tính **đo vị trí thật** (`measureInWindow`) so với mép trên bàn phím (`keyboardDidShow`
   `screenY`) rồi nâng lên đúng phần bị che (tối đa 160dp). ⏳ phiên B (API 26 360dp) + F (XL @2.0, Fold ngang) + A13.
 - [x] **B-73** 🟠 (QA MOD-9, phiên F) Back ẩn bàn phím rồi chạm số tiền → bàn phím không hiện lại (ô ẩn vẫn đang focus, `focus()` không mở IME
   trên Android) — kẹt, phải đóng màn. Sửa: `features/ocr/refocus.ts` (blur rồi focus khung sau) cho Ghi nhanh, Sửa khoản, Parking & tolls.
-- [ ] **B-74** 🟡 (QA OLD-8, phiên B) Bộ nhớ máy đầy: Save ở Ghi nhanh không lưu, không báo gì (SQLITE_FULL bị nuốt). Sửa: báo "Couldn't save.
+- [x] **B-74** 🟡 (QA OLD-8, phiên B) Bộ nhớ máy đầy: Save ở Ghi nhanh không lưu, không báo gì (SQLITE_FULL bị nuốt). Sửa: báo "Couldn't save.
   Free up some storage on your phone and try again.", giữ số trên màn.
 - [x] **B-75** 🟠 (QA OLD-7, phiên B) Bộ nhớ máy đầy → mở app là "Sunday Sort has stopped" (lặp lại tới khi xoá bớt): WorkManager (kéo vào bởi
   expo-background-task + widget) khởi tạo lúc mở app, ghi DB riêng gặp SQLITE_FULL → `IllegalStateException`. Sửa: plugin
@@ -380,7 +380,7 @@
   bản 2 máy không ghi máy nào; 2 máy cùng phút → trùng tên ghi đè. Sửa: tên file đêm có mã máy 6 ký tự (`SundaySort-backup-…-HHMM-<tag>`,
   `features/backup/deviceTag.ts`, lưu file riêng — không theo bản sao lưu sang máy khác); mỗi máy chỉ tỉa file của mình (+ file không mã cũ); danh sách
   Khôi phục ghi "· another phone". Test `nightly.test.ts` "SPE-9". ⏳ phiên D mô phỏng lại.
-- [ ] **B-93** 🟠 (QA phiên B, kiểm lại B-58/B-72 trên 5ce0626) Android 8 360dp: hàng + − × ÷ vẫn bị bàn phím che ~19dp (chữ 1.3: không thấy ký hiệu
+- [x] **B-93** 🟠 (QA phiên B, kiểm lại B-58/B-72 trên 5ce0626) Android 8 360dp: hàng + − × ÷ vẫn bị bàn phím che ~19dp (chữ 1.3: không thấy ký hiệu
   nào) — phép đo B-72 trộn toạ độ cửa sổ (`measureInWindow`) với toạ độ màn hình (`screenY`), lệch đúng thanh trạng thái. Sửa: Android < 11 đặt hàng
   phép tính ngay dưới vùng số tiền (không thể nằm dưới bàn phím); Android 11+ giữ như cũ. Kèm OLD-10 🟡: báo "Couldn't save…" nằm sau bàn phím
   trên Android cũ → ẩn bàn phím trước khi báo. ⏳ phiên B API 26 + Android 7.
@@ -403,3 +403,8 @@
   storage; nhãn thư mục gốc hiện "This phone / primary:". Bộ chọn của expo-file-system không truyền được `SHOW_ADVANCED`. Sửa: Android < 8 hiện dòng hướng
   dẫn "If the list is empty, tap ⋮ → Show internal storage." dưới nút; nhãn bỏ "primary:" → "This phone".
 > Phiên B (18/11): 40 persona Android 8/11 có kết quả thật (39 PASS, P074 = B-74); Android 7.0 x86 32-bit 8/8 PASS (mở nguội 1,24 s, PSS 84 MB, 0 crash/ANR).
+> Phiên B (18/11, 97ceb60): **B-93 ✅** (API 26 chữ 0.85/1.3 + Android 7: đủ 4 ký hiệu, 12.50+4.20 = £16.70 lưu được); **B-74/OLD-10 ✅** (bộ nhớ đầy: bàn
+> phím ẩn, "Couldn't save…" thấy rõ, số giữ nguyên) → tick B-57/B-58/B-72 (thay bằng B-93 + B-72 phần số tiền ✅).
+- [ ] **B-98** 🟡 (QA OLD-12, phiên B) Android 8/7: nút **Save** ở Ghi nhanh vẫn nằm sau bàn phím khi đang gõ (API 26 chữ 0.85 lộ 65/112px; chữ 1.3 lộ 43px;
+  Android 7 che hết) — thiếu đúng ~24dp = thanh trạng thái (cùng gốc B-58). Sửa: bù `insets.top + insets.bottom` cho Android < 11 (`capture.tsx`); phím ✓ của
+  bàn phím số giờ lưu khi số tiền > 0. ⏳ phiên B.
