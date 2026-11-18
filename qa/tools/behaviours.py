@@ -103,6 +103,12 @@ def capture(r, digits, note=None, income=False, double=False, kill_after_ms=None
         sv = find_save_band(r)
         nb = find_note_button(r, r._save_top - 8) if sv else None
         if not nb:
+            # 4f297e1 (B-98 v4): on a small screen the Photo/Work/Note row is hidden while the keyboard is up
+            r.d.key(4)
+            time.sleep(1.0)
+            sv = find_save_band(r)
+            nb = find_note_button(r, r._save_top - 8) if sv else None
+        if not nb:
             raise RuntimeError('Note button not found in screenshot')
         r.d.tap_xy(*nb)
         time.sleep(1.2)

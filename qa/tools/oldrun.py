@@ -233,7 +233,12 @@ class Run:
         d = self.d
         self.tap_vis('Get started')
         d.wait('Where do you file')
-        self.tap_vis('United Kingdom. ' if self.p['region'] == 'UK' else 'United States. ')
+        # 322acd6 (B-100): at big font sizes the region list scrolls — the second card can sit below the fold
+        lab = 'United Kingdom. ' if self.p['region'] == 'UK' else 'United States. '
+        n = self.scroll_vis(lab, tries=6)
+        x1, y1, x2, y2 = n['b']
+        time.sleep(0.3)
+        d.tap_xy((x1 + x2) // 2, (y1 + y2) // 2)
         time.sleep(0.6)
         self.tap_vis('Continue', exact=True)
         d.wait('How do you claim')

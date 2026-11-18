@@ -183,6 +183,39 @@ Log `[B98v4]`: API 26 `top=363 y=216 h=200.5 covered=54 cramped=false` → `y=32
 Android 7 `top=305 … covered=68` → `y=263 h=66 cramped=true`. (`covered=24` còn lại ở trạng thái gọn là phần đệm dưới của khối; ảnh cho thấy Save
 nằm trọn trên bàn phím, cách mép 27 px.) Ảnh: `api26/v4_strip.png`, `api24/v4_strip.png`.
 
+### Hồi quy APK 3f26b33 (bản ứng viên cuối), 2026-11-18 15:06–15:45 · `qa-runs/android-old/verify-3f26b33/`
+| Kiểm | API 26 (360×640dp) | Android 7 |
+|---|---|---|
+| B-98 (`oldb98v4.py`, chữ 0.85 + 1.3) | ✅ Save 651–744 / bàn phím 771; Note + Save thấy; hàng hiện lại; ✓ "Saved · $12.50" | ✅ 535–628 / 655, đủ 4 ý |
+| Ảnh: Choose from library (JPEG 4000×3000 EXIF orientation 6) | ✅ lưu 1800×2400, đứng đúng (dải đỏ trên, xanh dưới), bản tạm ImagePicker đã xoá, khoản lưu có ảnh (`files/receipts`) | ✅ y hệt (DocumentsUI Recent, chọn bằng phím) |
+| Ảnh: Take photo | 🔴 **OLD-14** — không mở camera | 🔴 OLD-14 y hệt |
+| B-112 chip ngày khác năm | ✅ Ghi nhanh "Tue 18 Nov 2025, 03:33"; dòng Date & time ở Sửa khoản giống thế; tiêu đề nhóm "TUE 18 NOV 2025" (chip 2 dòng → OLD-15) | — (không kịp) |
+| B-109 Save → Entries về đầu | 🟠 **chưa sửa được** — 3 đường đều giữ vị trí cũ (FAB ở Entries + ✓; FAB + nút Save; Home → Expense → ✓ → tab Entries) | — |
+| Persona | P003 ✅ 12/0/0 · P041 ✅ (⏭ Try Pro) · P016 (US, chữ 2.0) ❌ chỉ bước Split = **OLD-13** | P003: runner khôi phục hỏng (hạn chế đã biết của DocumentsUI) |
+Runner sửa cho bản này: đến màn chọn vùng thì tự cuộn (B-100 làm danh sách vùng cuộn được ở chữ 2.0); Ghi nhanh đóng bàn phím rồi mới tìm nút Note
+(B-98 v4 ẩn hàng Photo/Work/Note khi bàn phím mở). Lần chạy đầu P003/P016 hỏng vì 2 chỗ này: `run1_P003/`, `run1_P016/`.
+
+### OLD-14 🔴 Android 7–9 (API 24–28): "Take photo" không bao giờ mở camera
+- **Máy/APK:** API 26 và Android 7, APK 3f26b33. Ghi nhanh → Photo → Take photo → hộp xin quyền Camera → ALLOW → quay lại Ghi nhanh, không có ảnh.
+  Bấm lần 2 (CAMERA granted=true) vẫn vậy. Logcat có 2 lần `REQUEST_PERMISSIONS`, lần thứ hai trả về sau ~80 ms, không hiện hộp thoại, và không có
+  intent camera nào được mở. Android 7 hiện snack "Couldn't save the photo. Your entry was saved without it." — câu sai (khoản chưa lưu) và che
+  nút Save (`a7_04_after_allow_t1.png`).
+- **Gốc (đọc code):** trên SDK < Q, `ensureCameraPermissionsAreGranted()` của expo-image-picker (ImagePickerModule.kt:275–301) đòi **cả**
+  WRITE_EXTERNAL_STORAGE và CAMERA. `plugins/withReleasePermissions.js` gỡ WRITE_EXTERNAL_STORAGE (và READ) khỏi manifest release → `dumpsys package`
+  không có quyền này → không xin được → UserRejectedPermissionsException → `takePhoto()` trả 'failed'. Android 10+ (A13) chỉ cần CAMERA nên không bị.
+- **Gợi ý:** bỏ WRITE_EXTERNAL_STORAGE khỏi REMOVE, khai lại trong manifest release với `android:maxSdkVersion="28"`
+  (`tools:replace="android:maxSdkVersion"`); Android ≤ 9 sẽ hỏi thêm quyền "ảnh, nội dung, tệp".
+
+### OLD-13 🟠 Chữ 2.0 trên máy cao 640dp: thẻ ở tab Sort bị ép còn ~2px, không phân loại được
+- **Máy/APK:** API 26 720×1280 @320dpi, font_scale 2.0, APK 3f26b33 (persona P016). Tiêu đề "Sort your wee / k" bị bẻ giữa từ vì nút List view
+  nằm cạnh, cộng chip tuần + thanh tiến độ, chiếm hết chiều cao. Thẻ ở [32,828]–[688,844]: Edit/Split/Merge/Skip có bounds cao 2px. Vuốt không
+  cuộn được. Chữ 1.3 / 1.5 / 1.7 bình thường (Split y≈740–848). Vẫn dùng được List view ("Choose"). A13 (800dp) không bị.
+- **Gợi ý:** thẻ có chiều cao tối thiểu (~260dp); không đủ chỗ thì cả màn cuộn chứ không ép thẻ; hoặc tiêu đề 1 dòng / đưa List view xuống dưới
+  tiêu đề. Ảnh: `sort_font2*.png`, `P016/12_split_panel.png`.
+
+### OLD-15 🟡 Chip ngày có năm ("Tue 18 Nov 2025, 03:33") xuống 2 dòng, ép nút Expense|Income
+- API 26, chữ 1.0, 360dp, APK 3f26b33: chữ "Expense" tràn ra ngoài viên đỏ (`d_04_chip.png`). Gợi ý: chip 1 dòng + co chữ, hoặc bỏ thứ khi có năm.
+
 ### OLD-12 🟡 Android < 11: nút Save ở Ghi nhanh nằm (một phần / hoàn toàn) sau bàn phím khi đang gõ
 - **Máy/APK:** API 26 360dp và Android 7, APK 97ceb60. Bảng trên. Nút ✓ của bàn phím chỉ ẩn bàn phím (không lưu); sau đó Save hiện đủ.
 - **Nguyên nhân gốc nghi ngờ:** vẫn lệch đúng ~24dp: Save đỉnh y=709 + cao 112 px = 821 so với bàn phím y=774 → 47 px = 23,5dp ≈ chiều cao thanh
