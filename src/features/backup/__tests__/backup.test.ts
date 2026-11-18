@@ -315,3 +315,44 @@ describe('QA-100 SPE-2: Pro state from a hand-edited backup', () => {
     expect(db.select().from(proState).get()!.trialStartedAt).toBe(1);
   });
 });
+
+describe('QA-100 SPE-4/SPE-5: odd backup contents', () => {
+  it('wrong-typed settings fall back to defaults instead of crashing screens', () => {
+    const db = makeTestDb();
+    const t = snapshotTables(makeTestDb());
+    t.settings = [
+      { key: 'region', value: '"ZZ"' },
+      { key: 'mileageRates', value: '"x"' },
+      { key: 'notify', value: 'null' },
+      { key: 'lockAfterMs', value: '"soon"' },
+      { key: 'reminder', value: '{"on":"yes","weekday":3}' },
+      { key: 'exportLog', value: '{"2026-27":123}' },
+    ];
+    replaceAllData(db, t, Date.now());
+    const s = getSettings(db);
+    expect(s.region).toBeNull();
+    expect(s.mileageRates.UK.length).toBeGreaterThan(0);
+    expect(s.notify.tripAuto).toBe(true);
+    expect(s.lockAfterMs).toBe(60_000);
+    expect(s.reminder).toEqual({ on: false, weekday: 3, hour: 18, minute: 0 });
+    expect(s.exportLog['2026-27']).toBe(123);
+  });
+
+  it('refuses a file whose photo inflates far beyond a receipt (zip bomb)', () => {
+    const t = snapshotTables(makeTestDb());
+    const manifest = { format: BACKUP_FORMAT, version: BACKUP_VERSION, createdAt: 1, appVersion: 'qa', counts: { entries: 0, trips: 0, photos: 1, categories: t.categories.length }, tables: t };
+    const bytes = zipSync({ [MANIFEST_NAME]: strToU8(JSON.stringify(manifest)), 'receipts/big.jpg': new Uint8Array(30 * 1024 * 1024) }, { level: 9 });
+    expect(bytes.length).toBeLessThan(1024 * 1024);
+    expect(unpackBackup(bytes)).toEqual({ ok: false, error: 'damaged' });
+  });
+
+  it('refuses amounts the app could never have made', () => {
+    const src = makeTestDb();
+    seedCategories(src, 'UK');
+    createEntry(src, { type: 'expense', amountMinor: 100, currency: 'GBP' });
+    const t = snapshotTables(src);
+    t.entries[0] = { ...t.entries[0], amountMinor: 1e15 };
+    const manifest = { format: BACKUP_FORMAT, version: BACKUP_VERSION, createdAt: 1, appVersion: 'qa', counts: { entries: 1, trips: 0, photos: 0, categories: t.categories.length }, tables: t };
+    expect(unpackBackup(zipSync({ [MANIFEST_NAME]: strToU8(JSON.stringify(manifest)) }))).toEqual({ ok: false, error: 'damaged' });
+  });
+});

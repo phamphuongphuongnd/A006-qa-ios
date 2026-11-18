@@ -18,6 +18,7 @@ import type {
   TripSegmentRow,
   TripStopRow,
 } from '@/db/schema';
+import { MAX_MINOR } from '@/domain/money';
 
 /**
  * Backup file = a ZIP with the extension `.sundaysort`:
@@ -179,6 +180,9 @@ function countsOf(t: BackupTables, photos: number): BackupCounts {
   return { entries: t.entries.length, trips: t.trips.length, photos, categories: t.categories.length };
 }
 
+const MAX_MANIFEST_BYTES = 64 * 1024 * 1024;
+const MAX_PHOTO_BYTES = 25 * 1024 * 1024;
+
 const isZip = (b: Uint8Array) => b.length >= 4 && b[0] === 0x50 && b[1] === 0x4b;
 
 export type InspectResult = { ok: true; manifest: BackupManifest } | { ok: false; error: BackupError };
@@ -200,7 +204,17 @@ function readZip(bytes: Uint8Array, withPhotos: boolean): UnpackResult {
   if (!isZip(bytes)) return { ok: false, error: 'not_backup' };
   let files: Record<string, Uint8Array>;
   try {
-    files = unzipSync(bytes, { filter: (f) => f.name === MANIFEST_NAME || (withPhotos && f.name.startsWith(PHOTO_DIR)) });
+    // QA-100 SPE-5: a 200 KB file that inflates to 200 MB pushed the app past 1 GB of RAM. Our manifest for 20,000
+    // entries is ~10 MB and receipt photos are a few MB — anything far larger is not a backup we made.
+    let tooBig = false;
+    files = unzipSync(bytes, {
+      filter: (f) => {
+        const wanted = f.name === MANIFEST_NAME || (withPhotos && f.name.startsWith(PHOTO_DIR));
+        if (wanted && f.originalSize > (f.name === MANIFEST_NAME ? MAX_MANIFEST_BYTES : MAX_PHOTO_BYTES)) tooBig = true;
+        return wanted && !tooBig;
+      },
+    });
+    if (tooBig) return { ok: false, error: 'damaged' };
   } catch {
     return { ok: false, error: 'damaged' };
   }
@@ -240,6 +254,8 @@ const ROW_CHECKS: Record<keyof BackupTables, (r: Record<string, unknown>) => boo
     (r.type === 'income' || r.type === 'expense') &&
     isInt(r.amountMinor) &&
     (r.amountMinor as number) > 0 &&
+    // SPE-4: the app never makes more than 999,999.99; bigger sums lose precision past 2^53.
+    (r.amountMinor as number) <= MAX_MINOR &&
     isInt(r.occurredAt) &&
     (r.scope === 'work' || r.scope === 'personal') &&
     (r.categoryId === null || isStr(r.categoryId)),
