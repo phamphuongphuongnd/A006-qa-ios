@@ -5,8 +5,17 @@ name: 15_auto_trips
 ---
 - runFlow: common/home.yaml
 - openLink: sundaysort://trip/auto
+# iOS asks "Open in “Sunday Sort”?" — on a slow runner it shows several seconds later, so wait for it before tapping.
+- extendedWaitUntil:
+    visible: "Open"
+    timeout: 20000
+    optional: true
 - tapOn:
     text: "Open"
+    optional: true
+- extendedWaitUntil:
+    visible: "Automatic trips.*|.*recognise driving.*"
+    timeout: 20000
     optional: true
 - waitForAnimationToEnd:
     timeout: 4000

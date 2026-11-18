@@ -3,6 +3,10 @@ name: 01_onboarding
 ---
 - launchApp:
     clearState: true
+# A late iOS "Open in “Sunday Sort”?" alert from the previous persona's deep link can still be on screen (run 44258898134).
+- tapOn:
+    text: "Cancel"
+    optional: true
 - extendedWaitUntil:
     visible: "Get started"
     timeout: 90000
