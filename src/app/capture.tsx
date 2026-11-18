@@ -4,7 +4,7 @@ import { useLocalSearchParams, useNavigation, usePreventRemove } from 'expo-rout
 import { router } from '@/services/router';
 import { Briefcase, FileText, User, X } from '@/ui/icons';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { AppState, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { db } from '@/db/client';
@@ -42,7 +42,7 @@ import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, useTheme } from '@/theme';
 import { Button, Chip, Dialog, IconButton, RoundButton, Segmented, Txt, useSnackbar } from '@/ui';
 import { refocus } from '@/features/ocr/refocus';
-import { clearDraft, readDraft, saveDraft } from '@/features/entries/captureDraft';
+import { cameraPhotosSince, clearDraft, readDraft, saveDraft } from '@/features/entries/captureDraft';
 
 /** Home's fixed Expense/Income bar (72 + 2×12 padding): the Saved snackbar sits above it. */
 const HOME_BAR = 96;
@@ -121,15 +121,34 @@ export default function CaptureScreen() {
   useEffect(() => {
     if (restored.current) return;
     restored.current = true;
+    const taken = new Set<string>();
     if (draft) {
-      if (draft.photoUris.length) photos.add(draft.photoUris);
+      const fromCamera = draft.cameraStartedAt ? cameraPhotosSince(draft.cameraStartedAt, draft.photoUris).slice(0, MAX_PHOTOS_PER_ENTRY) : [];
+      const uris = [...draft.photoUris, ...fromCamera].slice(0, MAX_PHOTOS_PER_ENTRY);
+      if (uris.length) photos.add(uris);
+      fromCamera.forEach((u) => taken.add(u));
       snack({ message: t('capture.draftRestored'), above: 'none' });
     }
-    ImagePicker.getPendingResultAsync()
-      .then((r) => {
-        if (r && 'assets' in r && !r.canceled && r.assets?.length) photos.add(r.assets.map((a) => a.uri));
-      })
-      .catch(() => {});
+    // QA-100 MOD-10: the camera result reaches the recreated Activity a moment after this screen opens — ask again
+    // shortly after and whenever the app comes back to the front, and take each photo once.
+    const fetchPending = () =>
+      ImagePicker.getPendingResultAsync()
+        .then((r) => {
+          if (!r || !('assets' in r) || r.canceled || !r.assets?.length) return;
+          const uris = r.assets.map((x) => x.uri).filter((u) => !taken.has(u));
+          uris.forEach((u) => taken.add(u));
+          if (uris.length) photos.add(uris);
+        })
+        .catch(() => {});
+    fetchPending();
+    const timers = [setTimeout(fetchPending, 1000), setTimeout(fetchPending, 3000)];
+    const sub = AppState.addEventListener('change', (st) => {
+      if (st === 'active') fetchPending();
+    });
+    return () => {
+      timers.forEach(clearTimeout);
+      sub.remove();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on open
   }, []);
 
@@ -206,7 +225,12 @@ export default function CaptureScreen() {
   const tight = keyboardUp && (squeezed || windowHeight / Math.max(1, fontScale) < 720);
   // QA-100 OLD-2: before Android 11 the keyboard height RN reports leaves out the nav bar the app draws behind
   // (edge-to-edge), so the calculator row ended up half under the keyboard.
-  const keyboardOffset = Platform.OS === 'android' && Number(Platform.Version) < 30 ? insets.bottom : 0;
+  // QA-100 OLD-12: the shortfall measured on Android 8/7 is exactly the status bar (24dp) — the keyboard height RN reports
+  // there is short by the bars the app draws behind. Add both bars (too much only leaves a gap; too little hid Save).
+  const keyboardOffset = Platform.OS === 'android' && Number(Platform.Version) < 30 ? insets.top + insets.bottom : 0;
+  // QA-100 B-58/B-72: before Android 11 the window doesn't shrink for the keyboard the way RN measures, and the row
+  // at the bottom stayed half under it (19dp ≈ the status bar). There the calculator row sits right under the amount.
+  const calcUnderAmount = Platform.OS === 'android' && Number(Platform.Version) < 30;
 
   // QA-100 OLD-9: Android's adjustsFontSizeToFit sized the amount once, while its area was still ~0 under the opening
   // keyboard, and never grew it back (4px on Android 8). Size it from the measured height and the text's length instead.
@@ -229,7 +253,10 @@ export default function CaptureScreen() {
       return;
     }
     if (slots.canAdd <= 0) return;
+    // B-89: if Android kills the app while the camera is open, the next start finds this draft and the photo by time.
+    if (source === 'camera') saveDraft({ type, expr: amount.expr, note, scope, at, photoUris: photos.uris, cameraStartedAt: Date.now() });
     const res = await takePhotos(source, slots.canAdd);
+    if (!res.ok && !dirty) clearDraft(); // cancelled on an empty entry: nothing to bring back
     if (res.ok) photos.add(res.uris);
     else if (res.reason === 'denied') setCameraDenied(true);
     else if (res.reason === 'failed') snack({ message: t('capture.photoFailed'), above: 'none' });
@@ -256,6 +283,8 @@ export default function CaptureScreen() {
     } catch {
       // QA-100 OLD-8: a full phone (SQLITE_FULL) failed silently — the driver thought it was saved. Keep the amount.
       savingRef.current = false;
+      // OLD-10: on old Android the snackbar sat behind the keyboard — put the keyboard away first.
+      Keyboard.dismiss();
       snack({ message: t('capture.saveFailed'), tone: 'error', above: 'none' });
     }
   };
@@ -417,6 +446,12 @@ export default function CaptureScreen() {
             selection={amount.selection}
             onChangeText={onAmountText}
             keyboardType="number-pad"
+            // OLD-12: the pad's ✓ key saves (it only closed the keyboard before).
+            returnKeyType="done"
+            onSubmitEditing={() => {
+              if (amount.minor > 0) save();
+            }}
+            submitBehavior="submit"
             autoFocus
             caretHidden
             contextMenuHidden
@@ -424,6 +459,11 @@ export default function CaptureScreen() {
             style={styles.hiddenInput}
           />
         </Pressable>
+        {calcUnderAmount && keyboardUp && !noteOpen ? (
+          <View style={{ paddingHorizontal: GUTTER, paddingBottom: 4 }}>
+            <CalcBar onOp={amount.op} />
+          </View>
+        ) : null}
 
         <View style={{ paddingHorizontal: GUTTER, paddingBottom: keyboardUp ? 10 : 12 + insets.bottom, gap: tight ? 8 : 12 }}>
           {chipMinor !== null ? (
@@ -536,7 +576,7 @@ export default function CaptureScreen() {
             </Txt>
           )}
         </View>
-        {keyboardUp && !noteOpen ? (
+        {!calcUnderAmount && keyboardUp && !noteOpen ? (
           <View
             ref={calcRef}
             style={{ marginBottom: calcLift }}

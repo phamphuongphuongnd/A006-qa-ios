@@ -13,7 +13,7 @@ export MSYS_NO_PATHCONV=1 PYTHONIOENCODING=utf-8 QA_APK=$apk
 wait_up() {
   for i in $(seq 1 36); do
     if [ "$(timeout 10 $ADB -s $serial shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; then return 0; fi
-    $ADB reconnect offline >/dev/null 2>&1; sleep 5
+    $ADB -s $serial reconnect >/dev/null 2>&1; sleep 5  # only this emulator: never touch the adb server or other devices (A13)
   done
   return 1
 }

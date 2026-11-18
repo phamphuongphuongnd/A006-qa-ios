@@ -3,6 +3,7 @@
 export const backupAuto = {
   nightly: 'Back up every night',
   chooseFolder: 'Choose backup folder',
+  oldPickerHint: 'If the list is empty, tap ⋮ → Show internal storage.',
   chooseAgain: 'Choose folder again',
   keeps7: 'Keeps your last 7 backups',
   tryingTonight: 'Trying again tonight',

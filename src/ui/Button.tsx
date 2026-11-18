@@ -14,7 +14,7 @@ const SKIN: Record<ButtonVariant, { bg: ColorName | null; fg: ColorName; border?
   dangerOutline: { bg: null, fg: 'expenseText', border: 'expenseText', borderW: 2 },
   income: { bg: 'incomeButton', fg: 'onIncomeButton' },
   expense: { bg: 'expenseButton', fg: 'onExpenseButton' },
-  sun: { bg: 'sun', fg: 'primary' },
+  sun: { bg: 'sun', fg: 'onSun' },
 };
 
 /** `.btn` from sunday.css. `big` = the 72dp Expense / Income capture buttons. */

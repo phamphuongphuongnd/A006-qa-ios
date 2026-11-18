@@ -2,7 +2,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { backupPlan, createBackupFile, inspectBackupFile, restoreFromBackupFile } from '@/features/backup/backupFile';
@@ -22,6 +22,7 @@ import { useSettings } from '@/state/settings';
 import { fonts, GUTTER, useTheme } from '@/theme';
 import { Button, Card, Dialog, Group, Progress, SettingRow, StatusDot, Toggle, Txt, useSnackbar } from '@/ui';
 import { Bell, ChevronRight, Cloud, FileText, Folder, RotateCcw, Upload } from '@/ui/icons';
+import { deviceTag } from '@/features/backup/deviceTag';
 
 const ERRORS: Record<BackupError, () => string> = {
   not_backup: () => t('backup.notBackup'),
@@ -297,7 +298,7 @@ export default function BackupScreen() {
                     <Pressable
                       key={i.name}
                       accessibilityRole="button"
-                      accessibilityLabel={`${listDate(i.createdAt)}, ${itemSub(i)}`}
+                      accessibilityLabel={`${listDate(i.createdAt)}, ${itemSub(i, deviceTag())}`}
                       disabled={restoring}
                       onPress={() => setConfirm({ uri: i.uri, name: i.name, createdAt: i.createdAt, counts: i.counts })}
                       style={({ pressed }) => [
@@ -310,7 +311,7 @@ export default function BackupScreen() {
                       <View style={{ flex: 1, minWidth: 0 }}>
                         <Txt style={{ fontFamily: fonts.bold }}>{listDate(i.createdAt)}</Txt>
                         <Txt v="small" c="textSecondary">
-                          {itemSub(i)}
+                          {itemSub(i, deviceTag())}
                         </Txt>
                       </View>
                       <ChevronRight size={18} color={colors.textTertiary} />
@@ -397,6 +398,12 @@ export default function BackupScreen() {
               {t('backupAuto.heroBody')}
             </Txt>
             <Button label={t('backupAuto.chooseFolder')} icon={Folder} full onPress={chooseFolder} style={{ marginTop: 6 }} />
+            {/* QA-100 OLD-11: Android 7's folder picker hides the phone's storage until "Show internal storage" is on. */}
+            {Platform.OS === 'android' && Number(Platform.Version) < 26 ? (
+              <Txt v="small" c="textSecondary" style={{ textAlign: 'center' }}>
+                {t('backupAuto.oldPickerHint')}
+              </Txt>
+            ) : null}
           </Card>
         ) : (
           <Group>

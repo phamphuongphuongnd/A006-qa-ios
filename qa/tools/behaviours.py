@@ -447,6 +447,9 @@ def manual_trip(r, miles='12.5', odometer=False):
         r.d.tap_xy((start['b'][0] + start['b'][2]) // 2, (start['b'][1] + start['b'][3]) // 2)
         r.d.text('45210')
         time.sleep(0.5)
+        r.d.key(4)  # hide the keyboard, then find the End field again (the keyboard moves the form)
+        time.sleep(0.8)
+        end = next((n for n in r.visible() if (n['text'] or n['desc']).startswith('e.g.') and n['b'][0] > 300), end)
         r.d.tap_xy((end['b'][0] + end['b'][2]) // 2, (end['b'][1] + end['b'][3]) // 2)
         r.d.text('45248')
         time.sleep(0.8)
@@ -674,6 +677,7 @@ def backup_restore_other_phone(r):
     r.step('Back up now → share sheet', backup_now, r)
     other = 'P040' if r.p['id'] != 'P040' else 'P036'
     src = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'fixtures', f'{other}.sundaysort')
+    r.d.shell('rm -f /sdcard/Download/*.sundaysort')  # one backup file in Download (the Android 7 picker is walked by keyboard)
     r.d.sh('push', src, f'/sdcard/Download/{other}.sundaysort')
     r.d.shell(f'am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/Download/{other}.sundaysort')
     r.back_home()
@@ -848,18 +852,7 @@ def kill_mid_save(r):
         r.scroll_vis('Restore from backup')
         r.tap_vis('Restore from backup')
         time.sleep(2.5)
-        fname = f'{r.p["id"]}.sundaysort'
-        if not r.has(fname):
-            try:
-                r.tap_vis('Show roots', timeout=4); time.sleep(1.2); r.tap_vis('Downloads', exact=True, timeout=4); time.sleep(1.5)
-            except TimeoutError:
-                pass
-        r.tap_vis(fname, exact=True)
-        time.sleep(4)
-        if not r.has('Replace this phone'):
-            for kk in [61] * 6 + [21, 66]:
-                r.d.key(kk); time.sleep(0.25)
-        r.d.wait('Replace this phone', timeout=20)
+        r.pick_file(f'{r.p["id"]}.sundaysort')
         r.confirm_replace()
         time.sleep(0.3)
         r.d.shell(f'am force-stop {PKG}')

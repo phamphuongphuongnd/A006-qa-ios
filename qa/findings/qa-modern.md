@@ -29,6 +29,103 @@ Cài đặt gốc từng máy: `qa-runs/modern/_baseline/`.
 - Lưu ý vận hành: máy chủ Windows chạm trần commit (7 máy ảo) nên phải tạm tắt XL để chạy máy 16 KB; lần đầu `adb install` (stream) làm
   máy 16 KB rơi offline — cài bằng `adb push` + `pm install` thì ổn.
 
+## 2e. Chạy lại trên APK `sundaysort-qa-97ceb60-all.apk` (dev 97ceb60, B-56…B-94) — 2026-11-18 10:12–10:18
+
+Bằng chứng: `qa-runs/modern/regress-97ceb60/`. Fold mở, chia đôi ngang 852×436dp (`--windowingMode 6` + `am task resize`).
+
+| Lỗi | Kiểm | Kết quả |
+|---|---|---|
+| B-94 (MOD-11) | Sort ở cửa sổ 436dp | ✅ thẻ hiện đủ thân (Expense, $119.99, Phone bill, ngày); cả màn cuộn được tới MOST USED / Work-Personal / Edit-Split-Merge-Skip (`s436-0.png`, `s436-1-scrolled.png`) |
+| | Edit | ✅ bảng sửa mở ngay trong thẻ (Amount, Note, Done), cuộn được (`s436-2-edit.png`) |
+| | Split | ✅ "Split into parts" 60.00 / 59.99, chọn nhóm + W/P (`s436-3-split.png`) |
+| | Phân loại: chạm "Phone & data" | ✅ "Sorted as Phone & data", 2 → 3 of 6, sang thẻ kế (Evri $242.38) (`s436-4-sorted.png`) |
+| | Về toàn màn 852×883dp | ✅ thẻ Sort như cũ, nút "+" hiện lại, đếm giữ 3 of 6 (`full-sort.png`) |
+
+Ghi chú: đang mở bảng Edit trong thẻ mà bấm Back → về tab Home; quay lại Sort thì bảng Edit vẫn mở (giữ trạng thái) — chấp nhận được.
+
+## 2d. Chạy lại trên APK `sundaysort-qa-bcc8c7a-all.apk` (dev bcc8c7a, "B-89 v2") — 2026-11-18 09:57–10:07
+
+Bằng chứng: `qa-runs/modern/regress-bcc8c7a/`. Kịch bản B-89 (script `b89.py` trong scratchpad): Ghi nhanh → Take photo → camera mở →
+mở Settings (app *cached*) → `am kill` (pid mất) → Recents về camera → chụp + Done (hoặc Back = huỷ) → ảnh chụp sau 6 s và 12 s.
+
+| Lỗi | Kiểm | Kết quả |
+|---|---|---|
+| B-89 v2 | XL, $3.21 **có sẵn 1 ảnh** → chụp ảnh 2 lúc app đã chết | ✅ tiến trình mới mở lại Ghi nhanh: **"2 of 3"**, không nhân đôi sau 12 s; Save → "Saved · $3.21 expense" (`withphoto-*.png`) |
+| | XL, $6.54 **chưa có ảnh** | ✅ mở lại có $6.54 + "1 of 3" (`nophoto-*.png`); Discard → "The photo will be deleted too.", bộ đếm ảnh miễn phí trả lại (17 → 18/20) |
+| | XL, khoản trống → camera → **Back (huỷ)** | ✅ tiến trình mới về Ghi nhanh trống $0.00 (đúng chỗ đang đứng); `force-stop` + mở lại → **Home**, không tự vào Ghi nhanh (nháp đã xoá) (`cancel-*.png`) |
+| Nút "+" < 520dp | Fold chia đôi ngang 852×436dp: Home / Entries / Sort / Miles / Reports | ✅ không còn nút "+" ở tab nào; Entries hiện đủ số tiền các dòng. Toàn màn 883dp: "+" hiện lại (`fold-436-montage.png`) |
+
+Ghi chú: nháp $3.21 có 1 ảnh để lại từ lượt 8cb9c8f, sau khi cài đè bcc8c7a mở lại **không còn ảnh** (chỉ còn số tiền). Hiếm (chỉ khi cập
+nhật app đúng lúc có nháp) — để ý nếu ảnh nháp nằm trong `cache/` có thể bị dọn.
+
+### MOD-11 🟠 Cửa sổ thấp (chia đôi ngang 436dp): thẻ Sort bẹp còn mỗi hàng Edit / Split / Merge / Skip — không phân loại được
+- **Máy:** Fold mở, chia đôi ngang (`am start --windowingMode 6` + `am task resize … 0 1090 2076 2152` → `w852dp h436dp`), APK bcc8c7a.
+- **Thực tế:** phần thân thẻ (số tiền, tên, các nút nhóm chi, Work/Personal) cao ~0, chỉ còn thanh cuộn nhỏ; dưới thẻ trống ~100dp
+  (`regress-bcc8c7a/fold-436-Sort.png`). Người dùng không thấy khoản cũng không bấm được nhóm chi → luồng chính Sort không dùng được
+  ở chế độ chia đôi trên máy gập / tablet.
+- **Nguyên nhân gốc nghi ngờ:** `src/app/(tabs)/sort.tsx:161` luôn đệm `paddingBottom: 96` (chừa chỗ nút "+") — nay nút "+" đã ẩn ở cửa
+  sổ < 520dp nên phần đệm này thừa; thẻ (`SortEntryCard.tsx:104/467` `flex: 1`) không có `minHeight`, phần thân là ScrollView `flex: 1`
+  nên bị ép về 0 khi chiều cao còn lại < hàng nút. Gợi ý: đệm đáy theo đúng điều kiện hiện "+" (12 khi ẩn); `minHeight` ~260dp cho thẻ
+  và cho cả màn cuộn được khi cửa sổ thấp hơn mức đó.
+
+## 2c. Chạy lại trên APK `sundaysort-qa-8cb9c8f-all.apk` (dev 8cb9c8f, gồm B-89 50974d7) — 2026-11-18 09:39–09:46
+
+Bằng chứng: `qa-runs/modern/regress-8cb9c8f/`.
+
+| Lỗi | Kiểm | Kết quả |
+|---|---|---|
+| B-89 (MOD-10) | XL: Ghi nhanh $3.21 + 1 ảnh chụp thường → Take photo → mở Settings (app *cached*) → `am kill` (pid mất) → Recents về camera → chụp → Done → chờ 6 s và 12 s | ❌ **vẫn "1 of 3"**, ảnh thứ 2 mất (`r1-2-after6s.png`, `r1-3-after12s.png`). Nháp số tiền + ảnh cũ vẫn được mở lại ✅ |
+| B-89 (nút +) | Fold chia đôi ngang 852×436dp | ✅ Reports: nút "+" ẩn, "Sort now" không bị đè. 🟡 Entries/Sort/Home cùng cửa sổ 436dp vẫn hiện "+" — ở Entries đè số tiền dòng thứ 2 (cuộn được) (`fold-mw-b89-montage.png`) |
+| | Fold chia dọc 423dp, toàn màn | ✅ "+" hiện bình thường |
+
+### MOD-10 — nguyên nhân gốc thật (gọi lại `getPendingResultAsync` từ JS không đủ)
+- Logcat tiến trình mới (`regress-8cb9c8f/logcat-b89-pid4175.txt`):
+  `09:41:22.573 W BridgelessReact: ReactHost{0}.raiseSoftException(onActivityResult(… requestCode = "1415501858", resultCode = "-1" …))`
+  → `ReactNoCrashSoftException … Tried to access onActivityResult while context is not ready`; mãi tới `09:41:23.675 ReactNativeJS:
+  Running "main"` React mới sẵn sàng.
+- Đường đi: `MainActivity` → `expo.modules.ReactActivityDelegateWrapper.onActivityResult` (node_modules/expo …/ReactActivityDelegateWrapper.kt:244-261)
+  chỉ chờ `loadAppReady` (hoàn tất ở dòng 147 ngay sau `awaitDelayLoadAppWhenReady`, **trước** khi ReactHost có context) rồi chuyển cho
+  `ReactHostImpl.onActivityResult` (react-native 0.88.1, ReactHostImpl.kt:654-668) → `currentReactContext == null` → bỏ kết quả. Do đó
+  `AppContext.onActivityResult` → `ActivityResultsManager.dispatchResult` không bao giờ chạy, `ImagePickerModule.pendingMediaPickingResult`
+  luôn `null`; JS gọi `getPendingResultAsync` bao nhiêu lần cũng ra `null`. (Bản sửa đường cũ của Expo viết cho kiến trúc bridge,
+  không còn đúng với bridgeless.)
+- Gợi ý sửa (chọn 1):
+  1. **Native, trong app:** `MainActivity.onActivityResult` — nếu `reactHost.currentReactContext == null` thì giữ (requestCode, resultCode, data)
+     và phát lại khi context sẵn sàng (`reactHost.addReactInstanceEventListener { onReactContextInitialized → super.onActivityResult(...) }`),
+     qua config plugin để prebuild không mất.
+  2. **JS, không đụng native:** trước `launchCameraAsync` ghi `cameraStartedAt` vào nháp; khi mở lại nháp mà có `cameraStartedAt` thì liệt kê
+     thư mục ảnh của expo-image-picker trong cache (`FileSystem.cacheDirectory + 'ImagePicker/'`) lấy file mới hơn `cameraStartedAt`, kích
+     thước > 0 → gắn vào. Camera vẫn ghi file (logcat: tiến trình được dựng lại vì `ImagePickerFileProvider`).
+- Chưa chạy lượt 2 (không ảnh sẵn) trên 8cb9c8f vì nguyên nhân gốc giống hệt; sẽ chạy cả 2 lượt khi có bản sửa mới.
+
+## 2b. Chạy lại trên APK `sundaysort-qa-5ce0626-all.apk` (dev 5ce0626, B-56…B-87) — 2026-11-18 08:55–09:12
+
+Bằng chứng: `qa-runs/modern/regress-5ce0626/`. XL (`-gpu host`) rồi Fold (`-gpu swiftshader_indirect`), từng máy một, 3072 MB, khởi động lại giữa 2 lô.
+
+| Lỗi | Kiểm | Kết quả |
+|---|---|---|
+| B-79 (MOD-8) | XL, P098 5.006 khoản | ✅ "2,037 entries to sort" |
+| B-64/B-72 (MOD-2) | XL chữ 2.0 tối: gõ 1234 | ✅ "$12.34" to rõ; bàn phím số (`xl-f2-typed.png`) |
+| | Fold mở xoay ngang, chữ 1.0 và 2.0: gõ 750 | ✅ "$7.50" rõ ở cả hai (`fold-land-montage.png`) |
+| B-73 (MOD-9) | XL: Back ẩn bàn phím → chạm số tiền (2 lần liên tiếp); Fold ngang: như trên | ✅ bàn phím hiện lại (`mInputShown=true`), gõ tiếp nối vào số ($12.34 → $123.45) |
+| B-86 (MOD-5) | Chạm Photo ở Ghi nhanh và "Add photo" ở Sửa khoản | ✅ bảng "Add a receipt photo": Take photo / Choose from library |
+| B-82 (MOD-6 + Discard) | Sửa khoản chữ 2.0 và 1.3 | ✅ "Category" nguyên chữ, "Add photo" nằm trong khung (`xl-b82-detail-*.png`) |
+| | Discard khi có ảnh | ✅ "$123.45 expense won't be saved. The photo will be deleted too." |
+| B-84 (MOD-3) | Ghi nhanh gõ số (+1 ảnh) → Take photo → camera mở → mở Settings (app thành *cached*) → `am kill` (pid mất) → Recents về camera → chụp → Done | ✅ tiến trình mới mở lại Ghi nhanh với **số cũ + ảnh đã gắn trước đó**. ❌ **ảnh vừa chụp lúc app đã chết bị mất** — lặp 2 lần: lần 1 có sẵn 1 ảnh → vẫn "1 of 3"; lần 2 không có ảnh → mở lại không có ảnh (`xl-b84-after.png`, `xl-b84-run2.png`). Xem MOD-10 |
+| B-85 (MOD-4) | Fold mở 5 tab; xoay ngang; chia đôi 423dp dọc / 436dp ngang | ✅ cột ~640dp giữa màn khi rộng; nửa dọc dùng hết bề ngang (`fold-open-montage.png`, `fold-mw-montage.png`). 🟡 cửa sổ thấp 436dp: nút "+" đè lên nút "Sort now" của dải "99+ entries … aren't sorted" ở Reports (`fold-mw-bottom-reports.png`) |
+
+Ghi chú: `am kill` không giết được app khi app vừa rời sang camera (trạng thái *previous*, oom adj 700) — phải đưa app về *cached* (mở app
+khác) mới giống máy thật bị thu hồi bộ nhớ.
+
+### MOD-10 🟡 (phần còn lại của B-84) Ảnh chụp trong lúc app bị Android giết không được gắn lại vào Ghi nhanh
+- **Máy:** XL API 37, APK 5ce0626, P098. Bước như hàng B-84 ở trên. Logcat: `Start proc …sundaysort for content provider
+  {…expo.modules.imagepicker.fileprovider.ImagePickerFileProvider}` — tức camera vẫn ghi file vào app, nhưng màn Ghi nhanh mở lại
+  không nhận ảnh.
+- **Nguyên nhân nghi ngờ:** `src/app/capture.tsx:128-132` gọi `ImagePicker.getPendingResultAsync()` một lần khi màn mở; lúc đó kết quả
+  camera có thể chưa được giao cho Activity mới (Home đẩy sang Ghi nhanh trước khi `onActivityResult` tới), hoặc module chỉ giữ kết quả chờ
+  khi chính Activity (không phải tiến trình) bị dựng lại. Gợi ý: gọi lại `getPendingResultAsync` khi `AppState` → `active` lần đầu / sau
+  ~1 s; hoặc tự lưu đường dẫn file đích trước khi mở camera (`launchCameraAsync` với `uri` biết trước) để nháp tự nhặt file nếu có.
+
 ## 2a. Chạy lại trên APK `sundaysort-qa-538ede9-all.apk` (dev 538ede9, B-56…B-70) — 2026-11-17 15:30–15:55
 
 Bằng chứng: `qa-runs/modern/regress-538ede9/`. Máy: XL (`-gpu host`) rồi Fold (`-gpu swiftshader_indirect`), mỗi lúc 1 máy, 3072 MB.

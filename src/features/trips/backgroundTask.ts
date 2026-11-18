@@ -5,7 +5,7 @@
 import type { LocationObject } from 'expo-location';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
-import { AppRegistry, AppState } from 'react-native';
+import { AppRegistry, AppState, Platform } from 'react-native';
 
 import { db } from '@/db/client';
 import { ensureMigrated } from '@/db/migrate';
@@ -13,7 +13,8 @@ import { getSettings } from '@/db/settingsRepo';
 import { appendPoints, getActiveTrip, getTrip } from '@/db/tripsRepo';
 import { refreshWidgets } from '@/features/widgets/refresh';
 
-import { TRIP_DETECT_TASK } from '../../../modules/trip-detect';
+import { addSignalListener, TRIP_DETECT_TASK } from '../../../modules/trip-detect';
+import { syncIosBackstops } from './auto/backstop';
 import { processAutoSignals, syncAutoDetection } from './auto/runner';
 import { TRIP_TASK } from './constants';
 import { formatDistance } from './format';
@@ -37,6 +38,15 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
     return;
   }
   if (active.status !== 'running') return;
+  if (Platform.OS === 'ios' && active.startedBy === 'auto') {
+    // B-95 backstop: the end-of-trip wake timer should have ended an automatic trip that stood still this long. If it
+    // didn't fire (phone asleep), let the engine end it now — before fixes of the next drive join it.
+    const mergeMs = getSettings(db).mergeStopMinutes * 60_000;
+    if (Date.now() - Math.max(active.lastPointAt ?? 0, active.startedAt) >= mergeMs) {
+      await processAutoSignals();
+      if (getActiveTrip(db)?.id !== active.id) return;
+    }
+  }
   // The first batch can carry the OS's cached fix from before this trip started (seen on A13: a trip started 18:06
   // showed "stopped recording at 17:57"); drop anything older than the trip.
   const locations = (data?.locations ?? []).filter((l) => l.timestamp >= active.startedAt);
@@ -52,6 +62,8 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
       speed: l.coords.speed,
     })),
   );
+  // iOS (B-96): move the booked "Still on a trip?" / "Trip isn't recording" past this fix.
+  if (Platform.OS === 'ios') await syncIosBackstops();
   const trip = getTrip(db, active.id);
   if (!trip) return;
   const unit = getSettings(db).distanceUnit;
@@ -81,6 +93,20 @@ const onActive = () => {
     .catch(() => {});
 };
 if (AppState.currentState === 'active') setTimeout(onActive, 2_000);
+else if (Platform.OS === 'ios') {
+  // B-95: iOS has no headless task. A significant location change relaunches the whole app in the background
+  // (JS bundle included) with ~10–30 s to run: process what TripWatcher logged straight away. Android starts JS
+  // headless through SundayTripDetect above instead.
+  onActive();
+}
+if (Platform.OS === 'ios') {
+  // Each wake-up (location change, wake timer, live CoreMotion update) logs signals and then sends onSignal.
+  addSignalListener(() => {
+    ensureMigrated()
+      .then(() => processAutoSignals())
+      .catch(() => {});
+  });
+}
 AppState.addEventListener('change', (s) => {
   if (s === 'active') onActive();
 });

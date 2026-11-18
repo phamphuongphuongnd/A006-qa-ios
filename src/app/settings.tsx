@@ -4,7 +4,7 @@ import { router } from '@/services/router';
 import * as WebBrowser from 'expo-web-browser';
 import { CloudUpload, Download, Lock, RotateCcw, Tag as TagIcon, Trash2 } from '@/ui/icons';
 import { useEffect, useState } from 'react';
-import { Linking, Platform, ScrollView, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { count } from 'drizzle-orm';
@@ -36,6 +36,8 @@ import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, useTheme } from '@/theme';
 import { Badge, Dialog, Field, Group, Segmented, Sheet, Toggle, Txt } from '@/ui';
+import { withLockSuspended } from '@/features/settings/lockState';
+import { shareTripDiagnostics } from '@/features/trips/auto/diagnostics';
 
 type Picker = 'region' | 'scope' | 'unit' | 'lockAfter' | 'vehicle' | 'odometer' | null;
 
@@ -286,9 +288,15 @@ export default function SettingsScreen() {
             ABOUT_LINKS.contactEmail ? (
               <NavRow key="contact" title={t('settings.contact')} onPress={() => Linking.openURL(`mailto:${ABOUT_LINKS.contactEmail}`)} />
             ) : null,
-            <View key="version" style={{ minHeight: 56, justifyContent: 'center', paddingHorizontal: 16 }}>
+            // B-88: long-press shares the automatic-trip diagnostics (support only; not advertised).
+            <Pressable
+              key="version"
+              accessibilityRole="text"
+              delayLongPress={1200}
+              onLongPress={() => withLockSuspended(() => shareTripDiagnostics()).catch(() => {})}
+              style={{ minHeight: 56, justifyContent: 'center', paddingHorizontal: 16 }}>
               <Txt c="textSecondary">{t('settings.version', { version })}</Txt>
-            </View>,
+            </Pressable>,
           ]}
         </Group>
       </ScrollView>

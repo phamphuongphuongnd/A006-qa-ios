@@ -22,6 +22,7 @@ export type StreamResult = { ok: true; manifest: BackupManifest; photos: number 
 
 export const STREAM_MAX_MANIFEST_BYTES = 64 * 1024 * 1024;
 export const STREAM_MAX_PHOTO_BYTES = 25 * 1024 * 1024;
+const FEED = 64 * 1024;
 
 /** Reads a backup ZIP. With `sink` null only the manifest is read (restore preview); photos are skipped. */
 export async function readBackupStream(src: ChunkSource, sink: PhotoSink | null): Promise<StreamResult> {
@@ -36,12 +37,19 @@ export async function readBackupStream(src: ChunkSource, sink: PhotoSink | null)
 
   const unzip = new Unzip((f) => {
     if (failed) return;
+    // QA-100 REG-1: a size declared in the ZIP header that is already too big is refused before inflating anything.
+    const limit = f.name === MANIFEST_NAME ? STREAM_MAX_MANIFEST_BYTES : STREAM_MAX_PHOTO_BYTES;
+    if (f.originalSize !== undefined && f.originalSize > limit) return fail('damaged');
     if (f.name === MANIFEST_NAME) {
       sawManifest = true;
       f.ondata = (err, data) => {
+        if (failed) return;
         if (err) return fail('damaged');
         manifestBytes += data.length;
-        if (manifestBytes > STREAM_MAX_MANIFEST_BYTES) return fail('damaged');
+        if (manifestBytes > STREAM_MAX_MANIFEST_BYTES) {
+          f.terminate();
+          return fail('damaged');
+        }
         manifestParts.push(data);
       };
       f.start();
@@ -61,12 +69,14 @@ export async function readBackupStream(src: ChunkSource, sink: PhotoSink | null)
       }
     };
     f.ondata = (err, data, final) => {
+      if (failed) return close();
       if (err) {
         close();
         return fail('damaged');
       }
       size += data.length;
       if (size > STREAM_MAX_PHOTO_BYTES) {
+        f.terminate();
         close();
         return fail('damaged');
       }
@@ -87,7 +97,8 @@ export async function readBackupStream(src: ChunkSource, sink: PhotoSink | null)
         first = false;
         if (chunk.length < 2 || chunk[0] !== 0x50 || chunk[1] !== 0x4b) return { ok: false, error: 'not_backup' };
       }
-      unzip.push(chunk, false);
+      // Fed in 64 KB slices: deflate expands at most ~1000×, so one slice can't balloon past the limits before we stop.
+      for (let i = 0; i < chunk.length && !failed; i += FEED) unzip.push(chunk.subarray(i, i + FEED), false);
       if (failed) break;
     }
     if (first) return { ok: false, error: 'not_backup' };

@@ -94,6 +94,93 @@ B-70 ✅ (P056, P057) · B-61 ✅ · B-60 ✅ (`P003/10_tab_Reports.png`: nút x
   che phần chữ "Actual co|sts" (367–656, 762–858). Cuộn được nên vẫn bấm được nút khi cuộn, nhưng ở vị trí mặc định thì bấm vào giữa-phải nút sẽ mở
   màn nhập khoản thay vì chọn "Actual costs".
 
+### Kiểm lại trên APK 5ce0626 (2026-11-18, API 26 360dp `-gpu host -memory 1536`; B-69 trên API 30 swiftshader) — `qa-runs/android-old/verify-5ce0626/`
+| Lỗi | KQ | Bằng chứng + số đo |
+|---|---|---|
+| B-72 (OLD-9) số tiền | ✅ | `b72_typed_1234.png`: "$12.34" cao 58 px = **29 dp** (chữ 0.85); `b72_font13_draft_restored.png` chữ 1.3: **34 dp** |
+| B-72 (OLD-9) hàng + − × ÷ trên bàn phím | ❌ | bàn phím bắt đầu y=774 px; phím CalcBar bắt đầu y≈726 → chỉ lộ ~47/85 px, ký hiệu bị cắt (~19 dp bị che). Chữ 1.3: dải CalcBar y=735→774, **chỉ lộ 39 px**, không thấy ký hiệu nào |
+| B-73 Back ẩn bàn phím → chạm số tiền → bàn phím lại | ✅ | `b73_compare.png`: ẩn bàn phím thì "Tap for Personal", "20 of 20 free photos", "No category needed" hiện lại; chạm số tiền → bàn phím + màn gọn |
+| B-74 (OLD-8) bộ nhớ đầy → Save báo lỗi | ⚠️ (OLD-10) | snack "Couldn't save. Free up some storage on your phone and try again." **có**, nhưng nằm sau bàn phím: 10 ảnh/3 s sau Save không thấy (`b74_strip3.png`); ẩn bàn phím mới lộ (`b74_strip4.png`) |
+| B-75 (OLD-7) bộ nhớ đầy → mở app 3 lần | ✅ | `b75_open_0..2.png`, `b75_logcat.txt`: 3/3 mở được, WorkManager vẫn log SQLiteFull (D) nhưng không "bad state"/crash dialog của app (các hộp "has stopped" là Google Play Music/Gmail) |
+| B-84 bị giết khi đang chọn ảnh → mở lại | ✅ | gõ 43.21 → Photo → Choose from library → `kill -9` (như lowmemorykiller; `am kill` không giết được vì app còn "perceptible") → Back → Ghi nhanh mở lại "$43.21" (`b84_c3_after_return.png`, `capture-draft.json` còn) |
+| B-65 Recents khi App lock bật | ✅ | API 26: Settings và khi đang mở sheet → ảnh Recents 1 màu (trống); tắt App lock → Recents 64 màu, chụp màn được lại (`b65_*`). API 30 (538ede9) cũng ✅ (`_dbg/b65/`) |
+| B-69 Miles trên swiftshader | ✅ | API 30 swiftshader, P023 12 chuyến: mở Miles + màn chi tiết chuyến (MapView) 3 lần, **0** Fatal signal (`b69_*`). Lỗi gốc không tái hiện nên nhánh "sập tối đa 1 lần" chưa được thử tới |
+| B-59 migration trước tác vụ nền | ✅ | 40/40 logcat lượt 538ede9 có lần mở đầu, **0** dòng "no such table" |
+
+### Kiểm lại B-93 / OLD-10 trên APK 97ceb60 (gồm bcc8c7a B-93), 2026-11-18 · `qa-runs/android-old/verify-97ceb60/`
+| Kiểm | API 26 360dp chữ 0.85 | API 26 chữ 1.3 | Android 7 (chữ 0.85 / 1.3) |
+|---|---|---|---|
+| Hàng + − × ÷ thấy đủ 4 ký hiệu (B-93) | ✅ ngay dưới số tiền, ký hiệu y=361–380 (`b93_f085_1250.png`) | ✅ (`b93_f13_1250.png`) | ✅ cả hai (`api24/android7_sum_compare.png`) |
+| Gõ 1250 → + → 420 = **£16.70** | ✅ "12.50+4.20 = £16.70", Save → "Saved · £16.70 expense" | ✅ | ✅ cả hai; ✓ rồi Save → "Saved · £16.70 expense" |
+| Bộ nhớ đầy → Save báo lỗi trên màn (OLD-10) | ✅ bàn phím tự ẩn, snack "Couldn't save. Free up some storage…" hiện ~1,5–2 s, số tiền giữ nguyên (`old10b_strip.png`) | — | ✅ (`api24/android7_save_strip.png`) |
+| Nút **Save** khi bàn phím mở | ⚠️ chỉ lộ 65/112 px (đỉnh y=709, bàn phím y=774) — chữ "Save" bị cắt, bấm phần lộ vẫn lưu | ❌ chỉ lộ 43 px, không thấy chữ "Save" | ❌ bị che hoàn toàn (bàn phím Android 7 cao hơn, có dải gợi ý; mép trên y=657) |
+Ghi chú: ở 16 MB trống lưu vẫn được (lần đầu "Saved · £9.99"); phải chừa ~2 MB mới vào nhánh lỗi.
+
+### Kiểm lại B-97 (OLD-11) trên APK c5e0d3e, Android 7, 2026-11-18 · `qa-runs/android-old/verify-c5e0d3e/`
+- DocumentsUI đặt về mặc định (`pm clear com.android.documentsui`, "Show internal storage" tắt — như máy mới). Màn Backup & restore có dòng
+  **"If the list is empty, tap ⋮ → Show internal storage."** dưới nút Choose backup folder ✅ (`b97_backup_screen.png`).
+- Làm theo hướng dẫn: bộ chọn mở "Recent · No items" → ⋮ → Show internal storage → bộ nhớ máy → SELECT → app hiện **"Backup folder · This phone"**,
+  "Nightly backup on · … · This phone" (không còn "primary:") ✅ (`b97_3_after_select.png`); file `SundaySort-backup-2026-11-18-0406-ecbcz7.sundaysort`
+  được ghi ngay.
+- B-93 kiểm nhanh lại trên bản này (Android 7): "12.50+4.20 = £16.70", đủ 4 ký hiệu, ✓ → Save → "Saved · £16.70 expense" ✅ (`b93_android7_sum.png`).
+  Từ 97ceb60 → c5e0d3e chỉ đổi màn sao lưu (`git diff --stat`), nên kết quả B-93/OLD-10 trên API 26 ở 97ceb60 vẫn áp dụng. OLD-12 vẫn còn (Save sau bàn phím).
+
+### Kiểm lại B-98 (OLD-12) trên APK 1dd73db, 2026-11-18 · `qa-runs/android-old/verify-1dd73db/` (`qa/tools/oldb98.py`)
+| | Save lộ trên bàn phím (px, nút cao ~112) | Phím ✓ của bàn phím số |
+|---|---|---|
+| API 26 360dp, P003 (có hàng gợi ý), chữ 0.85 | ❌ 64 px (đỉnh y=710, bàn phím y=774) — **không đổi** so với 97ceb60 (709) | ✅ "Saved · £12.50 expense" |
+| API 26, chữ 1.3 | ❌ 42 px, không thấy chữ "Save" | ✅ "Saved · £12.50 expense" |
+| Android 7, dữ liệu mới (không hàng gợi ý — trường hợp dễ nhất), chữ 0.85 | ❌ 36 px (đỉnh y=622, bàn phím y=658) | ✅ |
+| Android 7, chữ 1.3 | ❌ 14 px | ✅ |
+- **Phím ✓ lưu** ✅ ở mọi máy/cỡ chữ → giờ người dùng có đường lưu ngay cả khi Save bị che.
+- **Save vẫn bị che** ❌: đổi `keyboardVerticalOffset` từ `insets.bottom` sang `insets.top + insets.bottom` (`capture.tsx:230`, dùng ở `:368`
+  `KeyboardAvoidingView behavior='height'`) không dịch nút đi pixel nào trên API 26 → giá trị offset không phải thứ quyết định ở đây (có thể KAV
+  không tính lại theo offset trên Android < 11, hoặc `insets.top` = 0 khi không edge-to-edge). Gợi ý: thêm khoảng đệm cứng dưới khối nút khi
+  `keyboardUp && API < 30` (vd `paddingBottom: StatusBar.currentHeight`) rồi đo lại; hoặc tính chiều cao vùng thật bằng
+  `Dimensions.get('screen').height - keyboard.endCoordinates.screenY`.
+- Ghi chú: lần này khôi phục P003 trên Android 7 lỗi do runner (DocumentsUI vừa bị đặt lại khi kiểm B-97) nên Android 7 chạy với dữ liệu mới.
+
+### OLD-12 🟡 Android < 11: nút Save ở Ghi nhanh nằm (một phần / hoàn toàn) sau bàn phím khi đang gõ
+- **Máy/APK:** API 26 360dp và Android 7, APK 97ceb60. Bảng trên. Nút ✓ của bàn phím chỉ ẩn bàn phím (không lưu); sau đó Save hiện đủ.
+- **Nguyên nhân gốc nghi ngờ:** vẫn lệch đúng ~24dp: Save đỉnh y=709 + cao 112 px = 821 so với bàn phím y=774 → 47 px = 23,5dp ≈ chiều cao thanh
+  trạng thái — cùng gốc B-58 (bố cục tính theo cửa sổ dài hơn vùng thật một thanh trạng thái). Với bàn phím cao hơn (Gboard có dải gợi ý) phần
+  bị che lớn hơn. Gợi ý: trừ đúng `insets.top`/dùng chiều cao vùng còn lại thật (ví dụ `useWindowDimensions().height - keyboardHeight - statusBar`)
+  cho API < 30, hoặc cho phím ✓/Enter của bàn phím gọi Save khi số tiền > 0.
+
+### Android 7.0 x86 32-bit (minSdk 24) — APK 5ce0626, 2026-11-18 · `qa-runs/android-old/api24/` (`summary.md`)
+AVD `qa_min_api24_x86` (google_apis x86 r27, **32-bit**, RAM 1536 MB, 720×1280 @320 = 360dp, cổng 5568, `-gpu host`). APK cài bằng
+`adb push` + `pm install` (`adb install` kiểu streamed treo trên API 24); `primaryCpuAbi=x86`.
+
+**8/8 persona ✅** (chạy trên API 24, chọn từ nhóm api26_small): P003 P020 P024 P028 P032 P036 P061 P082 — mở nguội lần đầu trung vị **1 239 ms**
+(tối đa 1 340), sau hành trình 1 473 ms; PSS trung vị 84 MB; khôi phục 2 000 khoản ≤ 3,9 s; 0 FATAL/ANR/crash native/kill.
+(GPU host nhanh hơn swiftshader của lượt API 26 nên số mở nguội không so trực tiếp được.) P020/P032 là persona "tối" nhưng Android 7 không có
+chế độ tối hệ thống → chạy nền sáng (ghi trong bước device profile). ⏭ PDF (Pro).
+
+Kiểm riêng Android 7:
+- **Khôi phục qua SAF** ✅ — DocumentsUI 7: mục "Downloads" chỉ liệt kê file của DownloadManager và **bỏ qua `input tap`** trên lưới → runner
+  bật "Show internal storage" rồi đi bằng phím (DPAD/ENTER; mỗi lần `uiautomator dump` xen giữa làm mất tiêu điểm phím). Giới hạn công cụ, không phải app.
+- **Chọn thư mục sao lưu (OPEN_DOCUMENT_TREE)** ✅ có điều kiện (OLD-11): chọn bộ nhớ máy → "Nightly backup on · This phone / primary:", app ghi ngay
+  `SundaySort-backup-2026-11-18-0337.sundaysort` + `SundaySort-backups.json` vào thư mục đó (`checks/saf_after_select.png`).
+- **JobScheduler/sao lưu đêm** ✅ đăng ký: `dumpsys jobscheduler` có job WorkManager `SystemJobService` của app (latency ~2h55m). ⏭ ép chạy job:
+  Android 7 từ chối `cmd jobscheduler run -f` (kể cả root).
+- **Foreground service + thông báo chuyến** ✅ (P024: "RECORDING · GPS good · 1.6 mi", có thông báo, sau Save không còn service).
+- **Widget** ✅ "Week & trip" trên Launcher3: hiện "£180.66 · 25 to sort", bấm "Start trip" → màn xin quyền vị trí (`checks/widget_*.png`).
+- **Phông / RTL** ✅ Inter + "مرحبا بالعالم" hiển thị đúng (`P082/14_entries_weird.png`).
+- WebView in PDF: ⏭ (PDF là tính năng Pro).
+
+### OLD-11 🟡 Android 7: "Choose backup folder" mở bộ chọn chỉ có "Recent · No items"
+- **Máy:** API 24, 5ce0626. **Bước:** Settings → Backup & restore → Choose backup folder.
+- **Thực tế:** ngăn "Open from" chỉ có "Recent", màn chính "No items" — không có chỗ nào để chọn. Phải biết mở ⋮ → "Show internal storage" mới thấy
+  bộ nhớ máy (`checks/saf_tree_picker.png`, `saf_tree_root.png`). Sau khi chọn gốc bộ nhớ, nhãn hiện "This phone / **primary:**" (lộ id tài liệu).
+- **Gợi ý:** thêm extra `android.content.extra.SHOW_ADVANCED = true` vào intent OPEN_DOCUMENT_TREE (và OPEN_DOCUMENT khi khôi phục) để bộ nhớ máy hiện
+  sẵn trên Android 7–9; với gốc bộ nhớ, đặt nhãn "This phone" thay vì "primary:".
+
+### OLD-10 🟡 (từ B-74) Android 8: snackbar lỗi/“Saved” ở màn Ghi nhanh nằm sau bàn phím
+- **Máy:** API 26 360dp, APK 5ce0626. **Bước:** bộ nhớ đầy → Expense → gõ 888 → Save (bàn phím đang mở như bình thường).
+- **Thực tế:** 3 s không thấy gì; nhấn Back ẩn bàn phím thì snack đỏ "Couldn't save…" hiện ở đáy (đè lên nút Save). Người dùng nghĩ Save không ăn.
+- **Nguyên nhân gốc nghi ngờ:** cùng gốc B-58: trên API < 30 vùng cửa sổ không co lại theo bàn phím, nên mọi thứ ở đáy (CalcBar, snack `above: 'none'`)
+  nằm sau bàn phím. Gợi ý: ở màn Ghi nhanh đặt snack phía trên (`above: 'keyboard'`/top) hoặc ẩn bàn phím khi báo lỗi.
+
 ### OLD-7 🟠 Bộ nhớ máy đầy → app sập ngay khi mở ("Sunday Sort has stopped") vì WorkManager
 - **Máy:** API 26 (emulator-5558), APK `538ede9-all`, dữ liệu P074. `/data` còn 16 MB (`dd` lấp đầy, như máy 16 GB rẻ tiền đầy ảnh).
 - **Bước:** đầy bộ nhớ → force-stop → mở app (`am start`). Lần 1 mở được; lần 2 (và lần mở trong lúc chạy runner) → hộp **"Sunday Sort has stopped"**,

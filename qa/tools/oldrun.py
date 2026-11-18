@@ -18,7 +18,7 @@ from adbui import Dev, PKG, ADB  # noqa: E402
 APP = os.path.abspath(os.path.join(HERE, '..', '..'))
 PERSONAS = {p['id']: p for p in json.load(open(os.path.join(APP, 'qa', 'personas.json'), encoding='utf-8'))}
 FIX = os.path.join(APP, 'qa', 'fixtures')
-RUNS = os.path.join(APP, 'qa-runs', 'android-old')
+RUNS = os.path.join(APP, 'qa-runs', 'android-old', os.environ.get('QA_RUNS_SUB', ''))
 
 NET = {  # emulator console profiles
     'online': ('full', 'none'),
@@ -188,8 +188,12 @@ class Run:
         self.airplane(False)
         notes.append(f'net={sp}/{dl}')
         notes.append(f'font={d.shell("settings get system font_scale").strip()}')
-        d.shell(f'cmd uimode night {"yes" if p["dark"] else "no"}')
-        notes.append('night=' + d.shell('cmd uimode night').strip().replace('Night mode: ', ''))
+        if self.api >= 26:
+            d.shell(f'cmd uimode night {"yes" if p["dark"] else "no"}')
+            notes.append('night=' + d.shell('cmd uimode night').strip().replace('Night mode: ', ''))
+        else:
+            # Android 7 has no system dark mode (`cmd uimode` missing): the app follows a light system theme
+            notes.append('night=n/a (Android 7: no system dark mode)' if p['dark'] else 'night=no')
         return 'pass', ' '.join(notes)
 
     def airplane(self, on):
@@ -264,6 +268,25 @@ class Run:
         self.tap_vis(row)
         time.sleep(1.2)
 
+    def focused_text(self):
+        self.d.shell('uiautomator dump /sdcard/qa-ui.xml')
+        xml = self.d.sh('exec-out', 'cat', '/sdcard/qa-ui.xml')
+        m = re.search(r'focused="true"[^>]*bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', xml)
+        if not m:
+            return None
+        fx1, fy1, fx2, fy2 = map(int, m.groups())
+        for t, x1, y1, x2, y2 in re.findall(r' text="([^"]+)"[^>]*bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', xml):
+            x1, y1, x2, y2 = map(int, (x1, y1, x2, y2))
+            if fx1 <= x1 and fy1 <= y1 and x2 <= fx2 and y2 <= fy2:
+                return t
+        return None
+
+    def focus_keys(self, keys, label):
+        """Send DPAD keys in one go (a uiautomator dump between keys resets keyboard focus), then check the focus once."""
+        self.d.shell('; '.join(f'input keyevent {k}; sleep 0.3' for k in keys))
+        time.sleep(0.5)
+        return self.focused_text() == label
+
     def confirm_replace(self):
         self.tap_vis("Replace this phone")
         self.d.wait('Replace everything', timeout=15)
@@ -272,13 +295,9 @@ class Run:
         b = btns[-1]['b']
         self.d.tap_xy((b[0] + b[2]) // 2, (b[1] + b[3]) // 2)
 
-    def restore(self, fname=None):
+    def pick_file(self, fname):
+        """In the system file picker (DocumentsUI) opened by the app: pick Download/<fname> and wait for the Restore screen."""
         d = self.d
-        fname = fname or f'{self.p["id"]}.sundaysort'
-        self.open_settings_row('Backup & restore')
-        self.scroll_vis('Restore from backup')
-        self.tap_vis('Restore from backup')
-        time.sleep(2.5)
         # system file picker (DocumentsUI)
         for _ in range(3):
             if self.has(fname):
@@ -295,13 +314,55 @@ class Run:
                 except TimeoutError:
                     pass
                 time.sleep(2)
-        self.tap_vis(fname, exact=True, timeout=15)
+        if self.api < 26 and not self.has(fname):
+            # Android 7 DocumentsUI: "Downloads" lists DownloadManager items only, and taps on grid items are ignored
+            # (verified 2026-11-17) → show internal storage, then walk to Download/<file> with the keyboard.
+            w, h = d.size()
+            title = next((n['text'] for n in self.visible() if n['b'][1] < 140 and n['b'][0] > 120 and n['text']), '')
+            if title != 'Download':  # always re-enter the root from the drawer: afterwards DPAD focus works in the grid
+                if not self.has('Open from'):
+                    d.tap_xy(56, 104)  # Show roots
+                    time.sleep(1.5)
+                if not self.has('Android SDK built for'):
+                    d.key(4)
+                    time.sleep(0.8)
+                    d.tap_xy(w - 40, 104)  # More options
+                    time.sleep(1.2)
+                    if self.has('Show internal storage'):
+                        self.tap_vis('Show internal storage')
+                        time.sleep(1.2)
+                    d.tap_xy(56, 104)
+                    time.sleep(1.5)
+                root = next((n for n in self.visible() if (n['text'] or '').startswith('Android SDK built for') and n['b'][1] > 160), None)
+                if root:  # the drawer entry, not the toolbar title
+                    d.tap_xy((root['b'][0] + root['b'][2]) // 2, (root['b'][1] + root['b'][3]) // 2)
+                    time.sleep(2)
+            if self.has('Open from'):  # drawer still open over the grid: choosing the root closes it
+                root = next((n for n in self.visible() if (n['text'] or '').startswith('Android SDK built for') and n['b'][1] > 160), None)
+                if root:
+                    d.tap_xy((root['b'][0] + root['b'][2]) // 2, (root['b'][1] + root['b'][3]) // 2)
+                    time.sleep(2)
+            if title != 'Download':
+                # grid: Alarms | Android / DCIM | Download …
+                # keys + ENTER in one go: a uiautomator dump in between moves the focus back to the first item
+                d.shell('input keyevent 20; sleep 0.3; input keyevent 22; sleep 0.3; input keyevent 20; sleep 0.3; input keyevent 66')
+                time.sleep(2.5)
+                if not self.has(fname):
+                    raise RuntimeError('keyboard navigation did not open Download/')
+            if self.has(fname):
+                d.shell('input keyevent 20; sleep 0.3; input keyevent 66')
+                time.sleep(2.5)
+        if self.api < 26 and self.has(fname) and not self.has('Replace this phone'):
+            d.shell('input keyevent 20; sleep 0.3; input keyevent 66')
+            time.sleep(2.5)
+        if not self.has('Replace this phone'):
+            self.tap_vis(fname, exact=True, timeout=15)
         picked = False
         end = time.time() + 5
         while time.time() < end and not picked:
             picked = self.has('Replace this phone')
             time.sleep(0.5)
-        if not picked:
+        if not picked and self.api >= 26:
             # DocumentsUI on API 30 ignores `input tap` on list rows (verified 2026-11-17); pick with keyboard instead
             # (TAB → focus, LEFT → row, ENTER). This is a test-driver workaround, not an app behaviour.
             self.metrics['picker_keyboard'] = True
@@ -309,6 +370,15 @@ class Run:
                 d.key(k)
                 time.sleep(0.25)
         d.wait("Replace this phone", timeout=30)
+
+    def restore(self, fname=None):
+        d = self.d
+        fname = fname or f'{self.p["id"]}.sundaysort'
+        self.open_settings_row('Backup & restore')
+        self.scroll_vis('Restore from backup')
+        self.tap_vis('Restore from backup')
+        time.sleep(2.5)
+        self.pick_file(fname)
         nodes = d.nodes()
         texts = [n['text'] for n in self.visible(nodes)]
         counts = ' '.join(texts)
@@ -330,10 +400,16 @@ class Run:
             if not nodes:
                 empty += 1
                 if empty >= 2:
-                    # undumpable screen (capture: blinking caret) → restart the app; an unsaved entry is discarded
-                    self.d.shell(f'am force-stop {PKG}')
-                    self.d.shell(f'am start -n {PKG}/.MainActivity')
-                    time.sleep(3)
+                    # undumpable screen (capture: blinking caret). The app keeps a capture draft across restarts (B-84),
+                    # so close it like a user: Back (keyboard) → X → "Discard".
+                    w, h = self.d.size()
+                    self.d.key(4)
+                    time.sleep(0.8)
+                    self.d.tap_xy(int(w * 0.1), int(h * 0.094))
+                    time.sleep(1.2)
+                    if self.has('Discard'):
+                        self.tap_vis('Discard', exact=True)
+                        time.sleep(1)
                     empty = 0
                 continue
             if self.has('New expense', nodes) and self.has('Reports', nodes):

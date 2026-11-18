@@ -1,7 +1,7 @@
 import type { LucideIcon } from '@/ui/icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef, type ComponentRef, type ReactNode, type Ref } from 'react';
-import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GUTTER, radius, touch, useTheme } from '@/theme';
@@ -53,8 +53,12 @@ export function Screen({
 }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  // QA-100 (B-85 follow-up): in a short window (split screen, ~436dp) the floating "+" sat on the content's own
+  // buttons ("Sort now") — leave it out there; Home's buttons and the widget still add entries.
+  const { height } = useWindowDimensions();
+  const showFab = !!fab && height >= 520;
   // With a FAB the last rows scroll clear of it (64dp button + 16dp margin + gap).
-  const body = [{ paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: fab ? 100 : 20, gap: 14 }, contentStyle];
+  const body = [{ paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: showFab ? 100 : 20, gap: 14 }, contentStyle];
   return (
     <KeyboardAvoidingView
       enabled={avoidKeyboard}
@@ -100,7 +104,7 @@ export function Screen({
         ) : (
           <View style={[{ flex: 1 }, body]}>{children}</View>
         )}
-        {fab}
+        {showFab ? fab : null}
       </View>
       {bottom ? (
         <View

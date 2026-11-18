@@ -10,8 +10,17 @@ export type TripSignal =
       at: number;
       eventAt: number;
     }
+  | {
+      /** iOS: a raw CoreMotion snapshot (activity + confidence 0–2 from `eventAt` on); JS turns these into transitions. */
+      kind: 'motion';
+      activity: 'driving' | 'walking' | 'cycling' | 'running' | 'still';
+      confidence: number;
+      at: number;
+      eventAt: number;
+    }
   | { kind: 'bt_connected' | 'bt_disconnected'; address: string | null; name: string | null; at: number }
-  | { kind: 'power_connected' | 'power_disconnected' | 'wake' | 'boot'; at: number };
+  /** iOS wake: `reason` 'location' (significant change) / 'departure' / 'timer' (scheduleWake) / 'motion_error'. */
+  | { kind: 'power_connected' | 'power_disconnected' | 'wake' | 'boot'; at: number; reason?: string };
 
 export interface BondedDevice {
   address: string;
@@ -26,7 +35,7 @@ export interface TripDetectHealth {
   /** Background use restricted by the user / system (Samsung sleeping apps): automatic trips paused. */
   backgroundRestricted: boolean;
   restrictedBucket: boolean;
-  /** Activity transitions registered with Play services. */
+  /** Android: activity transitions registered with Play services. iOS: significant-change wake-ups on. */
   registered: boolean;
   manufacturer: string;
 }
@@ -35,6 +44,8 @@ export interface TripDetectHealth {
 export const TRIP_DETECT_TASK = 'SundayTripDetect';
 
 interface TripDetectNative {
+  /** iOS: the phone has a motion coprocessor (false on the simulator). */
+  isActivityAvailable?(): boolean;
   hasActivityPermission(): boolean;
   startTransitions(): Promise<void>;
   stopTransitions(): Promise<void>;
@@ -45,11 +56,13 @@ interface TripDetectNative {
   isCharging(): boolean;
   watchPower(on: boolean): void;
   getBondedDevices(): BondedDevice[];
-  /** S1: state the receivers read while JS is dead (Android). */
+  /** S1: state the receivers read while JS is dead (Android; a no-op on iOS). */
   configure?(cfg: { enabled?: boolean; tripActive?: boolean; startOnCharge?: boolean; vanAddress?: string | null }): void;
-  /** S1: one pending wake-up (end-of-trip check) that runs the JS task (Android). */
+  /** S1: one pending wake-up (end-of-trip check) that runs the JS task (Android alarm; iOS timer while the app runs). */
   scheduleWake?(atMs: number): void;
   cancelWake?(): void;
+  /** iOS only: one-shot wake-up ('wake', reason 'departure') when the phone leaves 150 m around this point. */
+  watchDeparture?(lat: number, lng: number): void;
   health?(): TripDetectHealth;
   /** Dev: log a fake signal and run the JS task as a real one would. */
   simulate?(kind: string, activity: string | null, transition: string | null, address: string | null): void;

@@ -19,27 +19,34 @@ export const INDEX_NAME = 'SundaySort-backups.json';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
-/** `SundaySort-backup-2026-11-13-0210.sundaysort` (local time). The manual share-sheet file has no time part. */
-export function nightlyFileName(at: number): string {
+/**
+ * `SundaySort-backup-2026-11-13-0210-k3x9qa.sundaysort` (local time + this phone's tag). The manual share-sheet file has
+ * no time part. QA-100 SPE-9: two phones backing up into one folder deleted each other's files (the newest 7 counted
+ * across both) and could overwrite each other in the same minute — the tag keeps them apart.
+ */
+export function nightlyFileName(at: number, tag?: string): string {
   const d = new Date(at);
-  return `SundaySort-backup-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.${BACKUP_EXT}`;
+  return `SundaySort-backup-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${tag ? `-${tag}` : ''}.${BACKUP_EXT}`;
 }
 
-const NAME_RE = new RegExp(`^SundaySort-backup-(\\d{4})-(\\d{2})-(\\d{2})(?:-(\\d{2})(\\d{2}))?\\.${BACKUP_EXT}$`);
+const NAME_RE = new RegExp(`^SundaySort-backup-(\\d{4})-(\\d{2})-(\\d{2})(?:-(\\d{2})(\\d{2})(?:-([a-z0-9]{4,8}))?)?\\.${BACKUP_EXT}$`);
 
-/** Time encoded in a backup file name (manual files: local midnight), or null for other files. */
-export function parseBackupName(name: string): { at: number; nightly: boolean } | null {
+/** Time encoded in a backup file name (manual files: local midnight), or null for other files. `tag`: which phone. */
+export function parseBackupName(name: string): { at: number; nightly: boolean; tag?: string } | null {
   const m = NAME_RE.exec(name);
   if (!m) return null;
-  const [, y, mo, d, h, mi] = m;
-  return { at: new Date(+y, +mo - 1, +d, h ? +h : 0, mi ? +mi : 0).getTime(), nightly: h !== undefined };
+  const [, y, mo, d, h, mi, tag] = m;
+  return { at: new Date(+y, +mo - 1, +d, h ? +h : 0, mi ? +mi : 0).getTime(), nightly: h !== undefined, tag: tag ?? undefined };
 }
 
-/** Nightly files beyond the newest `keep` (files the driver saved there by hand are never deleted). */
-export function filesToPrune(names: string[], keep = NIGHTLY_KEEP): string[] {
+/** This phone's nightly files: its own tag, or untagged ones from before tags existed. */
+const ownNightly = (p: ReturnType<typeof parseBackupName>, tag?: string) => !!p?.nightly && (!tag || !p.tag || p.tag === tag);
+
+/** This phone's nightly files beyond the newest `keep` (other phones' files and hand-saved ones are never deleted). */
+export function filesToPrune(names: string[], keep = NIGHTLY_KEEP, tag?: string): string[] {
   const nightly = names
     .map((name) => ({ name, p: parseBackupName(name) }))
-    .filter((x) => x.p?.nightly)
+    .filter((x) => ownNightly(x.p, tag))
     .sort((a, b) => b.p!.at - a.p!.at || (a.name < b.name ? 1 : -1));
   return nightly.slice(keep).map((x) => x.name);
 }
@@ -165,6 +172,8 @@ export interface BackupListItem {
   counts: Pick<BackupCounts, 'entries' | 'photos' | 'trips'> | null;
   size: number;
   uri: string | null;
+  /** Phone tag from the file name (SPE-9), when it has one. */
+  tag?: string;
 }
 
 /** "Restore from backup" list: every backup file in the folder, newest first, with counts from the index. */
@@ -184,6 +193,7 @@ export async function listFolderBackups(port: BackupFolderPort): Promise<BackupL
       counts: i ? { entries: i.entries, trips: i.trips, photos: i.photos } : null,
       size: f.size,
       uri: f.uri,
+      tag: p.tag,
     });
   }
   return out.sort((a, b) => b.createdAt - a.createdAt);
@@ -208,6 +218,8 @@ export interface RunDeps {
   makeFile: (tables: BackupTables, photoNames: string[], name: string) => Promise<MadeFile>;
   /** Write even when nothing changed ("Tap to finish", first run, the driver asked). */
   force?: boolean;
+  /** This phone's tag in nightly file names (SPE-9). */
+  tag?: string;
 }
 
 export type RunResult =
@@ -245,13 +257,13 @@ export async function runNightlyBackup(d: RunDeps): Promise<RunResult> {
     return fail('folder');
   }
   const names = files.map((f) => f.name);
-  const hasNightly = names.some((n) => parseBackupName(n)?.nightly);
+  const hasNightly = names.some((n) => ownNightly(parseBackupName(n), d.tag));
   if (!d.force && hasNightly && before.backupRun?.fingerprint === fingerprint) {
     ok(false);
     return { status: 'unchanged' };
   }
 
-  const name = nightlyFileName(now);
+  const name = nightlyFileName(now, d.tag);
   let made: MadeFile;
   try {
     made = await d.makeFile(tables, referencedPhotos(tables), name);
@@ -266,7 +278,7 @@ export async function runNightlyBackup(d: RunDeps): Promise<RunResult> {
   }
   made.discard();
 
-  const pruned = filesToPrune([...names.filter((n) => n !== name), name]);
+  const pruned = filesToPrune([...names.filter((n) => n !== name), name], NIGHTLY_KEEP, d.tag);
   for (const p of pruned) await port.remove(p).catch(() => {});
 
   // Index: best effort (the list still works without counts).

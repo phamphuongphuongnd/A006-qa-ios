@@ -4,6 +4,8 @@ export const homeV2 = {
     autoPausedTitle: 'Automatic trips were paused by your phone',
     autoPausedBody: 'Battery saving stopped Sunday Sort. Fix it in 1 minute.',
     autoPausedBodySamsung: 'Samsung battery saving stopped Sunday Sort. Fix it in 1 minute.',
+    // B-95: iPhone only pauses automatic trips when a permission is taken back.
+    autoPausedBodyIos: 'Motion & Fitness or "Always" location was turned off. Turn it back on in 1 minute.',
     fixNow: 'Fix now',
     later: 'Later',
     noTripsTitle: 'No trips on {days}',

@@ -1,9 +1,19 @@
 {
-  "platforms": ["android", "apple"],
+  "platforms": [
+    "android",
+    "apple"
+  ],
   "android": {
-    "modules": ["com.phiotron.sundaysort.tripdetect.TripDetectModule"]
+    "modules": [
+      "com.phiotron.sundaysort.tripdetect.TripDetectModule"
+    ]
   },
   "apple": {
-    "modules": ["TripDetectModule"]
+    "modules": [
+      "TripDetectModule"
+    ],
+    "appDelegateSubscribers": [
+      "TripDetectAppDelegate"
+    ]
   }
 }

@@ -231,15 +231,15 @@
   Sort servers: we never see your data", permStays "Your route is never sent to us", 4 câu "lives only on this phone" → "kept on this
   phone", `docs/privacy.html` thêm mục "Outside services" + System backup + nightly folder; product.md §F-01/S-07a/§11.
   ⏳ Đăng bản privacy mới lên trang công khai + Data safety: phần store, chờ Phương.
-- [ ] **B-57** 🟠 (QA OLD-1, phiên B) Màn nhập khoản trên màn thấp 360×640dp (API 26, và API 30 đặt 720×1280@320): khi bàn phím số mở,
+- [x] **B-57** 🟠 (QA OLD-1, phiên B) Màn nhập khoản trên màn thấp 360×640dp (API 26, và API 30 đặt 720×1280@320): khi bàn phím số mở,
   số tiền đang gõ co còn ~4px / biến mất — `middle` `flex: 1` không có `minHeight`, hàng Photo/Work/Note + gợi ý + "20 of 20 free photos"
   + Save + chú thích + CalcBar chiếm hết ~390dp. Bằng chứng `qa-runs/android-old/_smoke26/17_expense_typed.png`. Sửa (`capture.tsx`):
   màn cao < 720dp khi bàn phím mở → ẩn "Tap for Personal", "N of 20 free photos", "No category needed…", gap 8; `middle` `minHeight: 88`;
   số tiền `minimumFontScale 0.5`. ⏳ chờ phiên B thử lại bằng APK mới.
-- [ ] **B-58** 🟡 (QA OLD-2) Android 8: hàng phép tính (CalcBar) bị bàn phím che nửa dưới (API 30 cùng cỡ màn không bị). Nghi: RN báo chiều
+- [x] **B-58** 🟡 (QA OLD-2) Android 8: hàng phép tính (CalcBar) bị bàn phím che nửa dưới (API 30 cùng cỡ màn không bị). Nghi: RN báo chiều
   cao bàn phím không gồm thanh điều hướng app vẽ phía sau (edge-to-edge) trước Android 11 → `KeyboardAvoidingView` bù thiếu. Sửa thử:
   `keyboardVerticalOffset = insets.bottom` khi Android < 11 (`capture.tsx`). ⏳ chờ phiên B kiểm trên API 26 (giả thuyết, chưa xác nhận).
-- [ ] **B-59** 🟠 (QA OLD-4, mở rộng) Migration DB chỉ chạy trong `app/_layout.tsx` (`useMigrations`), trong khi Android chạy JS **không cần
+- [x] **B-59** 🟠 (QA OLD-4, mở rộng) Migration DB chỉ chạy trong `app/_layout.tsx` (`useMigrations`), trong khi Android chạy JS **không cần
   màn** cho GPS chuyến (`TRIP_TASK`), tín hiệu chuyến tự động (headless `TRIP_DETECT_TASK`), sao lưu đêm, widget, và `onActive` 2 s sau khi mở.
   Lần mở đầu: log `[auto-trip] sync failed: no such table: settings` (API 26/30). Nặng hơn: **sau mỗi bản cập nhật có migration mới**, trước
   khi tài xế mở app, các tác vụ nền chạy trên schema cũ → điểm GPS / chuyến tự động / sao lưu đêm / widget lỗi âm thầm. Sửa: `src/db/migrate.ts`
@@ -247,23 +247,23 @@
   (`backgroundTask.ts` ×3, `nightlyTask.ts`, `widgets/register.ts`). ⏳ thử: cài mới (logcat không còn "no such table") + cập nhật đè.
 - [ ] **B-60** 🟡 (QA OLD-3) 360dp: nút nổi "+" che nửa phải nút "Actual costs" trong thẻ "Choose how you claim your vehicle" (Reports) ở vị trí
   mặc định; cuộn lên thì bấm được (đệm 100dp). Phương chọn **xếp dọc**: màn < 420dp → 2 nút thành 2 hàng, chừa lề phải 56dp cho nút + (`reports.tsx`). ⏳ thử 360dp.
-- [ ] **B-61** 🟡 (QA phiên A) Ô số tiền: bàn phím số Android có phím "." nhưng app bỏ dấu chấm (kiểu máy tính tiền) → gõ "7.5" ra £0.75,
+- [x] **B-61** 🟡 (QA phiên A) Ô số tiền: bàn phím số Android có phím "." nhưng app bỏ dấu chấm (kiểu máy tính tiền) → gõ "7.5" ra £0.75,
   "120" ra £1.20. Phương chốt **nhận dấu chấm**: `features/ocr/calc.ts` — toán hạng tiền có dấu chấm = số thập phân (≤ 2 số sau dấu, "," = "."),
   không dấu vẫn kiểu máy tính tiền; toán hạng × ÷ bỏ dấu; test `calc.test.ts` "decimal point". Áp cho Ghi nhanh, Sửa khoản, Parking & tolls. ⏳ thử máy.
-- [ ] **B-62** 🟡 (QA phiên A) Xuất file rồi huỷ bảng chia sẻ (Back) → khoản vẫn "Exported on …" (đánh dấu khi tạo file, trước khi chia sẻ).
+- [x] **B-62** 🟡 (QA phiên A) Xuất file rồi huỷ bảng chia sẻ (Back) → khoản vẫn "Exported on …" (đánh dấu khi tạo file, trước khi chia sẻ).
   Phương chốt **hỏi lại như sao lưu**: `ExportPanel.tsx` sau bảng chia sẻ hiện "Did you send or save the files?" → chỉ "Yes, sent" mới
   `markExported`; product.md Q29 sửa theo. ⏳ thử máy (cả Export từ tab Reports lẫn S-10).
-- [ ] **B-63** 🟠 (QA MOD-1, phiên F) Người dùng chọn vị trí **"Approximate"** (Android 12+, kể cả "Only this time") / tắt "Precise" (iOS) →
+- [x] **B-63** 🟠 (QA MOD-1, phiên F) Người dùng chọn vị trí **"Approximate"** (Android 12+, kể cả "Only this time") / tắt "Precise" (iOS) →
   chuyến GPS kẹt "Finding GPS…", lưu 0.0 mi, không báo gì (Fold API 37, P039; đối chứng Precise cùng tuyến = 1.9 mi). Gốc: chỉ xem
   `fg.granted`, điểm sai số km bị lọc ở `MAX_ACCURACY_M`. Sửa: `isApproximate()` (`features/trips/controller.ts`) → `startBlocker`
   trả `needs_precise` → màn quyền bước "Turn on precise location" (Android hỏi nâng lên Precise, không được thì mở Cài đặt; iOS mở Cài
   đặt); chuyến tự động (`setup.tsx`) cũng đòi Precise; đang chạy chuyến mà hạ xuống Approximate → chuyến bị ngắt có thông báo (không ghi
   0 mi âm thầm). ⏳ phiên F thử lại.
-- [ ] **B-64** 🟠 (QA MOD-2, mở rộng B-57) Máy cao (Pixel 9 Pro XL 997dp) + chữ 200% → số tiền đang gõ co ~6px vì điều kiện B-57 chỉ xét
+- [x] **B-64** 🟠 (QA MOD-2, mở rộng B-57) Máy cao (Pixel 9 Pro XL 997dp) + chữ 200% → số tiền đang gõ co ~6px vì điều kiện B-57 chỉ xét
   chiều cao < 720dp. Ca thứ 3: Fold mở xoay ngang (Android 16 bỏ qua `screenOrientation=portrait` trên màn ≥ 600dp) → số tiền ~5px.
   Sửa: so theo chiều cao chia `fontScale`, **và đo thật** — bàn phím mở mà vùng số tiền < 80dp thì rút gọn tới khi bàn phím đóng
   (`onLayout`, không bật/tắt qua lại); `minHeight` 64. ⏳ phiên F thử lại (XL @2.0, Fold ngang).
-- [ ] **B-65** 🟠 (QA OLD-5, phiên B; nghi từ đầu QA) Bật App lock (Lock after = Immediately) → Home → Recents: ảnh thu nhỏ hiện nguyên
+- [x] **B-65** 🟠 (QA OLD-5, phiên B; nghi từ đầu QA) Bật App lock (Lock after = Immediately) → Home → Recents: ảnh thu nhỏ hiện nguyên
   màn có số tiền (API 26, `qa-runs/android-old/_dbg/al_recents.png`). Khoá vẫn đúng khi mở lại / deep link. Gốc: không có gì ẩn nội dung
   khi app vào nền. Sửa: `modules/system-bars` thêm `setHideInRecents` — Android 13+ `setRecentsScreenshotEnabled(false)` (vẫn chụp màn hình
   được), Android < 13 `FLAG_SECURE` cho cửa sổ app + cửa sổ Modal (chặn cả chụp màn hình khi App lock bật — giới hạn của Android cũ);
@@ -273,78 +273,78 @@
   thấp hoặc chữ lớn (chiều cao / fontScale < 700) → hình còn 55%, đệm 16; tiêu đề `maxFontSizeMultiplier 1.6`. ⏳ iOS lượt 2.
   Ghi nhận (không sửa): log iOS "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện đọc đăng ký
   push từ keychain, app chỉ dùng thông báo local; theo dõi ở lượt 2 xem thông báo nhắc có hiện không.
-- [ ] **B-67** 🟠 (QA SPE-1, phiên D) Deep link `sundaysort://reports?from=-99999999999999999&to=0` treo app vĩnh viễn (luồng JS 100%, RAM tới OOM,
+- [x] **B-67** 🟠 (QA SPE-1, phiên D) Deep link `sundaysort://reports?from=-99999999999999999&to=0` treo app vĩnh viễn (luồng JS 100%, RAM tới OOM,
   phải buộc dừng) — link BROWSABLE nên trang web/thẻ NFC bất kỳ mở được; `from=0&to=99999999999999999` treo ~190 s; Custom 1970→2026 với
   20.000 khoản treo ~95 s. Gốc: `monthlySeries` `for(;;)` gặp ngày ngoài phạm vi Date → NaN → không dừng; `linkedPeriod` không chặn biên;
   tìm tháng bằng `find` tuyến tính. Sửa: `saneReportRange` (từ 1/1/2000, ≤ 10 năm, ≤ hôm nay + 1 năm) cho deep link + ô Custom (lỗi "Choose up
   to 10 years, from 2000 onwards.", From có minimumDate); `monthlySeries` dừng khi ngày không hợp lệ, tối đa 121 tháng, tìm nhị phân; test
   `reports.test.ts` "SPE-1". ⏳ phiên D thử lại deep link.
-- [ ] **B-68** 🟠 (QA SPE-2, phiên D) File `.sundaysort` sửa tay mở khoá Pro vĩnh viễn: máy chưa có `pro_state` (cài mới / cài lại) → Restore file có
+- [x] **B-68** 🟠 (QA SPE-2, phiên D) File `.sundaysort` sửa tay mở khoá Pro vĩnh viễn: máy chưa có `pro_state` (cài mới / cài lại) → Restore file có
   `proState.trialEndsAt` năm 2100 → "Trial · 26708 days left", PDF/MTD/xlsx/FreeAgent mở (đã xuất thật). Chỉ cần sửa 1 dòng JSON → chia sẻ được
   "file Pro free". Gốc: `replaceAllData` chép nguyên `proState` của file; `validateManifest` chỉ kiểm `id`. Sửa: `sanitizeRestoredPro`
   (`domain/pro.ts`) — dùng thử tối đa 7 ngày từ ngày bắt đầu (bắt đầu ở tương lai → hôm nay); `entitlement` 'active' từ file → 'expired',
   `autoRenewing` false, `lastVerifiedAt` null → lần mở app sau kiểm lại với cửa hàng (người mua thật được Pro lại / "Restore purchase");
   máy đã có `pro_state` giữ nguyên như cũ. Test `backup.test.ts` "SPE-2". ⏳ phiên D thử lại file độc.
   (SPE-3 Recents = B-65.)
-- [ ] **B-69** 🟠 (QA OLD-6, phiên B) Mở tab Miles có chuyến → app sập native (SIGABRT, "Failed to choose ARGB config", `libmaplibre.so`, luồng
+- [x] **B-69** 🟠 (QA OLD-6, phiên B) Mở tab Miles có chuyến → app sập native (SIGABRT, "Failed to choose ARGB config", `libmaplibre.so`, luồng
   Snapshotter) — API 30 GPU phần mềm, P023; mỗi lần mở Miles đều sập lại. Cùng máy GPU host thì bình thường → phụ thuộc EGL của máy (máy thật
   GPU lạ có thể gặp). JS không bắt được. Sửa (`features/trips/map/thumbs.ts`): ghi cờ file trước mỗi lần chụp ảnh bản đồ, xoá sau; lần mở sau
   còn cờ = đã sập giữa chừng → tắt ảnh bản đồ thu nhỏ vĩnh viễn trên máy đó (hàng giữ biểu tượng tròn). Còn lại: sập **1 lần** trước khi
   tự tắt — **Phương chốt 2026-11-18: chấp nhận, giới hạn đã biết**. ⏳ phiên B: mở Miles 2 lần trên máy swiftshader; kiểm thêm màn chi tiết chuyến (bản đồ MapView) trên máy đó.
-- [ ] **B-70** 🟠 (QA MOD-7, phiên F) Chạm đúp "Save" ở Ghi nhanh (2 chạm cách ~0,2 s, Fold P056) → lưu 2 khoản trùng (to-sort 27→29, Out +2×$5.55).
+- [x] **B-70** 🟠 (QA MOD-7, phiên F) Chạm đúp "Save" ở Ghi nhanh (2 chạm cách ~0,2 s, Fold P056) → lưu 2 khoản trùng (to-sort 27→29, Out +2×$5.55).
   Gốc: `capture.tsx` mở chốt `savingRef` trước `close()` — không có ảnh thì lưu xong ngay, chạm 2 thấy chốt mở và số tiền cũ. Sửa: nhánh đóng màn
   giữ chốt; "Keep adding" mở chốt sau 300 ms (khi số đã xoá); lỗi giữa chừng thì mở lại. Cùng mẫu đã sửa luôn: thêm chuyến tay (`trip/new.tsx`),
   số đồng hồ (`trip/odometer.tsx` — chốt bằng state không chặn 2 chạm cùng khung hình → thêm ref), khoản lặp lại (`recurring.tsx`, 1 lần lưu mỗi
   lần mở sheet). Luật (`rules.tsx`) đã có kiểm trùng trong DB. ⏳ phiên F thử lại P056 + thử chạm đúp 3 màn kia.
 - [ ] **B-71** 🟡 (QA A13-1, phiên E) Đổi vùng US → UK có quy đổi: ô tỷ giá gợi ý "e.g. 0.79" nhưng nhập sai thì báo "Enter a rate like 1.27"
   (chuỗi lỗi cố định). Sửa: `settings.tsx` dùng chung ví dụ theo vùng cho gợi ý và lỗi (`rateError` có `{example}`). ⏳ A13.
-- [ ] **B-72** 🟠 (QA OLD-9, hồi quy B-57/B-58 trên 538ede9, phiên B) Android 8 360dp: chế độ gọn đã chạy nhưng số tiền vẫn ~4px và hàng
+- [x] **B-72** 🟠 (QA OLD-9, hồi quy B-57/B-58 trên 538ede9, phiên B) Android 8 360dp: chế độ gọn đã chạy nhưng số tiền vẫn ~4px và hàng
   + − × ÷ vẫn bị bàn phím che nửa. Gốc: `adjustsFontSizeToFit` của Android tính cỡ chữ 1 lần lúc vùng số còn ~0 (bàn phím đang mở) và không
   phóng lại; bù `insets.bottom` (B-58) là đoán sai. Sửa (`capture.tsx`): cỡ chữ số tiền tính từ chiều cao đo được của vùng số + độ dài chuỗi
   (24–64), bỏ `adjustsFontSizeToFit`; hàng phép tính **đo vị trí thật** (`measureInWindow`) so với mép trên bàn phím (`keyboardDidShow`
   `screenY`) rồi nâng lên đúng phần bị che (tối đa 160dp). ⏳ phiên B (API 26 360dp) + F (XL @2.0, Fold ngang) + A13.
-- [ ] **B-73** 🟠 (QA MOD-9, phiên F) Back ẩn bàn phím rồi chạm số tiền → bàn phím không hiện lại (ô ẩn vẫn đang focus, `focus()` không mở IME
+- [x] **B-73** 🟠 (QA MOD-9, phiên F) Back ẩn bàn phím rồi chạm số tiền → bàn phím không hiện lại (ô ẩn vẫn đang focus, `focus()` không mở IME
   trên Android) — kẹt, phải đóng màn. Sửa: `features/ocr/refocus.ts` (blur rồi focus khung sau) cho Ghi nhanh, Sửa khoản, Parking & tolls.
-- [ ] **B-74** 🟡 (QA OLD-8, phiên B) Bộ nhớ máy đầy: Save ở Ghi nhanh không lưu, không báo gì (SQLITE_FULL bị nuốt). Sửa: báo "Couldn't save.
+- [x] **B-74** 🟡 (QA OLD-8, phiên B) Bộ nhớ máy đầy: Save ở Ghi nhanh không lưu, không báo gì (SQLITE_FULL bị nuốt). Sửa: báo "Couldn't save.
   Free up some storage on your phone and try again.", giữ số trên màn.
-- [ ] **B-75** 🟠 (QA OLD-7, phiên B) Bộ nhớ máy đầy → mở app là "Sunday Sort has stopped" (lặp lại tới khi xoá bớt): WorkManager (kéo vào bởi
+- [x] **B-75** 🟠 (QA OLD-7, phiên B) Bộ nhớ máy đầy → mở app là "Sunday Sort has stopped" (lặp lại tới khi xoá bớt): WorkManager (kéo vào bởi
   expo-background-task + widget) khởi tạo lúc mở app, ghi DB riêng gặp SQLITE_FULL → `IllegalStateException`. Sửa: plugin
   `plugins/withWorkManagerSafeInit.js` — `MainApplication` là `Configuration.Provider` với `setInitializationExceptionHandler` (ghi log, việc nền
   bỏ qua, app vẫn mở), gỡ `WorkManagerInitializer` mặc định (manifest `tools:node="remove"`), thêm `androidx.work:work-runtime:2.10.5`;
   `expo prebuild --clean` lại. ⏳ phiên B: đầy bộ nhớ → mở app 3 lần; còn chỗ → sao lưu đêm/widget vẫn chạy.
-- [ ] **B-76** 🟠 (QA SPE-6, phiên D) Xuất PDF kỳ dài (~8.000 khoản trở lên) treo mãi ở "Preparing your files…", WebView ~2,9 GB RAM, cả máy ì.
+- [x] **B-76** 🟠 (QA SPE-6, phiên D) Xuất PDF kỳ dài (~8.000 khoản trở lên) treo mãi ở "Preparing your files…", WebView ~2,9 GB RAM, cả máy ì.
   Gốc: mọi khoản in vào 1 trang HTML, `printToFileAsync` không giới hạn thời gian. Sửa: bảng Entries / Mileage log trong PDF tối đa 2.000 dòng +
   dòng "Showing the first 2,000 of N entries. The full list is in the CSV export." (tổng vẫn tính đủ); in quá 120 s → báo "The PDF is taking too
   long for this period. Pick a shorter period, or use the CSV." Test `reports.test.ts` "SPE-6". ⏳ phiên D thử lại 2 năm + 20k.
-- [ ] **B-77** 🟡 (QA A37-3, phiên A) Home "Recent" ghi "Sun 10:23" cho khoản từ nhiều tuần trước. Sửa: `entryWhen` (`features/entries/format.ts`) —
+- [x] **B-77** 🟡 (QA A37-3, phiên A) Home "Recent" ghi "Sun 10:23" cho khoản từ nhiều tuần trước. Sửa: `entryWhen` (`features/entries/format.ts`) —
   trong 6 ngày ghi thứ + giờ, cũ hơn ghi "25 Oct 10:23" (khác năm thêm năm); `EntryRow`. (+ MOD-5: tiêu đề ngày Entries thêm năm khi khác năm nay.)
 - [ ] **B-78** 🟡 (QA A37-4/A37-5, phiên A) Chữ 200% + 320dp ở Reports: thẻ "N entries … aren't sorted yet" bẻ chữ 1 từ/dòng, huy hiệu cắt "99+";
   Income/Expenses/Profit bị cắt bên phải. Sửa (`reports.tsx`): thẻ `flexWrap` (nút "Sort now" xuống dòng, chữ `minWidth 150`, huy hiệu co theo
   chữ); hàng tổng `flexWrap` (số xuống dưới nhãn khi không vừa).
-- [ ] **B-79** 🟡 (QA MOD-8, phiên F) Home "2037 entries to sort" thiếu dấu phẩy nghìn. Sửa: `formatCount`.
-- [ ] **B-80** 🟡 (QA SPE-4, phiên D) Khôi phục file có cài đặt sai kiểu (`region: "ZZ"`, `mileageRates: "x"`, `notify: null`…) → Miles / Reports /
+- [x] **B-79** 🟡 (QA MOD-8, phiên F) Home "2037 entries to sort" thiếu dấu phẩy nghìn. Sửa: `formatCount`.
+- [x] **B-80** 🟡 (QA SPE-4, phiên D) Khôi phục file có cài đặt sai kiểu (`region: "ZZ"`, `mileageRates: "x"`, `notify: null`…) → Miles / Reports /
   Notifications / có lúc Settings sập mỗi lần mở (không vào được Backup để sửa). Sửa: `saneSetting` (`db/settingsRepo.ts`) — mỗi khoá kiểm
   kiểu / danh sách giá trị khi đọc, sai thì dùng mặc định, object thiếu/sai trường thì lấy trường mặc định; khôi phục: `amountMinor ≤ 10¹²`
   (ban đầu đặt ≤ 99,999,999 — bộ 100 persona P054 bắt được: đổi vùng quy đổi £999,999.99 ×1.27 vượt trần → sao lưu thật không khôi phục được; đã nới).
-- [ ] **B-81** 🟡 (QA SPE-5, phiên D) "Zip bomb" (file 207 KB giải nén 200 MB) → RAM > 1 GB khi khôi phục (không mất dữ liệu nhưng máy RAM thấp có
+- [x] **B-81** 🟡 (QA SPE-5, phiên D) "Zip bomb" (file 207 KB giải nén 200 MB) → RAM > 1 GB khi khôi phục (không mất dữ liệu nhưng máy RAM thấp có
   thể tắt app). Sửa (`pack.ts`): bỏ qua/báo "damaged" nếu `backup.json` > 64 MB hoặc 1 ảnh > 25 MB trước khi giải nén. Còn lại (giới hạn đã biết):
   bản sao lưu thật rất nhiều ảnh vẫn nạp cả vào RAM khi khôi phục — chưa dựng được file thật cỡ đó để đo.
-- [ ] **B-82** 🟡 (QA MOD-6 + MOD-5, phiên F) Chi tiết khoản ở chữ 1.3–2.0: nhãn "Category" gãy giữa từ (cột nhãn cố định 96dp), "Add photo" tràn khung
+- [x] **B-82** 🟡 (QA MOD-6 + MOD-5, phiên F) Chi tiết khoản ở chữ 1.3–2.0: nhãn "Category" gãy giữa từ (cột nhãn cố định 96dp), "Add photo" tràn khung
   72×72. Hộp "Discard this entry?" không nhắc ảnh đã chụp sẽ mất. Sửa: nhãn `minWidth 96` + không co (tối đa ×1.6); ô Add photo `minWidth/minHeight`
   + chữ tối đa ×1.3, 2 dòng; hộp Discard thêm "The photo(s) will be deleted too." khi có ảnh.
 - [x] **B-83** 🟡 (QA SPE-7/SPE-8, phiên D) Đổi cỡ chữ / cỡ hiển thị trong Cài đặt Android khi app đang mở → Activity dựng lại, về Home, mất khoản
   đang nhập dở; deep link tới đúng lúc dựng lại có thể làm sập. **Phương chốt 2026-11-18: giới hạn đã biết cho 1.0** (không đổi `configChanges`
   trước khi lên store).
-- [ ] **B-84** 🟡 (QA MOD-3, phiên F) Máy ít RAM: Android giết app khi đang ở bộ chọn file/camera → quay lại về Home, mất khoản đang nhập. Phương chọn
+- [x] **B-84** 🟡 (QA MOD-3, phiên F) Máy ít RAM: Android giết app khi đang ở bộ chọn file/camera → quay lại về Home, mất khoản đang nhập. Phương chọn
   **sửa** (2026-11-18).
   Sửa: Ghi nhanh lưu nháp (loại, biểu thức số tiền, ghi chú, Work/Personal, ngày, ảnh) vào `capture-draft.json` khi đang gõ, xoá khi Save/Discard
   (`features/entries/captureDraft.ts`); lần mở sau Home tự mở lại Ghi nhanh với nháp (≤ 24 h) + ảnh camera Android giữ hộ
   (`ImagePicker.getPendingResultAsync`), snack "Your unsaved entry is back." Còn lại: luồng Khôi phục sao lưu bị giết giữa bộ chọn file thì phải
   chọn file lại (bộ chọn file không trả kết quả cho tiến trình mới). ⏳ phiên F/B: `am kill` khi đang ở camera / bộ chọn ảnh.
-- [ ] **B-85** 🟡 (QA MOD-4, phiên F) Tablet / máy gập mở: bố cục điện thoại kéo giãn hết bề ngang. Phương chọn **sửa** (2026-11-18).
-- [ ] **B-86** 🟡 (QA MOD-5, phiên F) Thư viện ảnh chỉ mở được bằng giữ lâu nút Photo (khó phát hiện). Phương chọn **sửa** (2026-11-18).
+- [x] **B-85** 🟡 (QA MOD-4, phiên F) Tablet / máy gập mở: bố cục điện thoại kéo giãn hết bề ngang. Phương chọn **sửa** (2026-11-18).
+- [x] **B-86** 🟡 (QA MOD-5, phiên F) Thư viện ảnh chỉ mở được bằng giữ lâu nút Photo (khó phát hiện). Phương chọn **sửa** (2026-11-18).
   Sửa: chạm Photo (Ghi nhanh + Sửa khoản) mở bảng "Add a receipt photo": Take photo / Choose from library (`PhotoSourceSheet`); giữ lâu vẫn vào thư viện.
-- [ ] **B-87** 🟡 (QA SPE-5 phần còn lại, phiên D) Khôi phục bản sao lưu thật có rất nhiều ảnh nạp cả file + mọi ảnh vào RAM. Phương chọn **sửa**
+- [x] **B-87** 🟡 (QA SPE-5 phần còn lại, phiên D) Khôi phục bản sao lưu thật có rất nhiều ảnh nạp cả file + mọi ảnh vào RAM. Phương chọn **sửa**
   (2026-11-18).
   Sửa: `features/backup/streamRestore.ts` — đọc file 1 MB/lần (`FileHandle`), giải nén luồng (`fflate.Unzip`), ảnh ghi thẳng vào thư mục tạm,
   chỉ `backup.json` nằm trong RAM; xem trước (preview) bỏ qua ảnh; giữ giới hạn 64 MB / 25 MB, zip-slip, đếm ảnh; DB đổi trong 1 transaction rồi mới
@@ -354,4 +354,63 @@
 - [ ] **B-88** 🟠 (QA A13-2, phiên E — chạy xe thật tối 17/11) Bản 538ede9, Automatic trips bật, đủ quyền, pin Unrestricted: cả ca **không sinh chuyến
   tự động nào** (Phương: "chạy chậm, dừng nhiều"). Sao lưu thật sau ca 18/11 08:30: chuyến mới nhất 16/11. Không còn lịch sử tín hiệu để soi (vòng
   `EventLog` 200 dòng native nhiều khả năng bị mẫu 'sample' đè). Nghi: `features/trips/auto/engine.ts` chỉ mở chuyến khi Activity Recognition báo
-  'driving' (IN_VEHICLE, mẫu ≥ 75%) — không có dự phòng; xe máy / đi chậm thường bị báo ON_BICYCLE / ON_FOOT. ⏳ chờ Phương: xe máy hay ô tô.
+  'driving' (IN_VEHICLE, mẫu ≥ 75%) — không có dự phòng. Phương: **ô tô**. Phương chọn **nhật ký trước, sửa sau** (2026-11-18): Settings → giữ lâu dòng
+  Version → "Share trip diagnostics" (JSON: tín hiệu native 7 ngày, trạng thái engine, quyền, Pro, cài đặt, 30 chuyến gần nhất —
+  `features/trips/auto/diagnostics.ts`); vòng nhật ký native 200 → 1.000 dòng. Bản release không ghi mẫu dày nên tín hiệu tối 17/11 có thể còn.
+  Tín hiệu tối 17/11 **đã mất** (lượt persona sáng 18/11 `pm clear` trước khi có nút chẩn đoán). A13 đã về dữ liệu thật + bản 8cb9c8f, Automatic
+  trips "Working". ⏳ lần chạy xe tới (ô tô) → giữ lâu Version → gửi file chẩn đoán → phân tích → sửa engine.
+  18/11 (8cb9c8f, A13): nút chẩn đoán chạy đúng (`qa-runs/a13/diagnostics/…02-44.json`: registered, đủ quyền, không tối ưu pin); **mở chuyến bằng
+  Bluetooth ✅** (nối thiết bị đã chọn → chuyến Auto đúng giây đó). Chưa có dữ liệu Activity Recognition khi lái.
+- [x] **B-89** 🟡 (QA MOD-10, phiên F — hồi quy một phần B-84) Nháp được mở lại nhưng **ảnh chụp trong lúc app đã bị giết** vẫn mất: `getPendingResultAsync`
+  gọi 1 lần lúc màn mở, trước khi kết quả camera tới Activity mới. Sửa (`capture.tsx`): gọi lại sau 1 s, 3 s và mỗi khi app trở lại active, bỏ ảnh trùng.
+  Kèm: cửa sổ thấp < 520dp (chia đôi màn 436dp) → ẩn nút nổi "+" (`ui/Layout.tsx`) vì nó đè "Sort now" ở Reports.
+  **Lần 1 không đạt** (phiên F, 8cb9c8f): nguyên nhân gốc thật — Activity dựng lại trước khi React sẵn sàng, RN **bỏ** `onActivityResult`
+  ("Tried to access onActivityResult while context is not ready") nên `getPendingResultAsync` luôn rỗng. Sửa lần 2: trước khi mở camera ghi
+  `cameraStartedAt` vào nháp; mở lại nháp → lấy ảnh không rỗng mới hơn mốc đó trong `cache/ImagePicker/` (`cameraPhotosSince`); huỷ camera trên khoản
+  trống thì xoá nháp. Nút "+" ẩn ở cửa sổ thấp cho mọi tab (`CaptureFab`).
+- [ ] **B-90** 🟠 (QA A37-7, phiên A) Chế độ tối: mọi nút `variant="sun"` chữ vàng trên nền vàng (chỉ thấy viên thuốc trống) — "Sort first" (Export có khoản
+  chưa sort), "End trip" (Home khi đang có chuyến), "Back up now"/"Choose again", "Subscribe now"/"Try free", "See Pro", Save chi tiết chuyến, "Always"…
+  Gốc: `ui/Button.tsx` `sun: { fg: 'primary' }`, mà ở theme tối `primary` = `sun` = #F5B841. Sửa: chữ dùng token `onSun` có sẵn (sáng #18202F, tối
+  #12161C). ⏳ phiên A: chụp lại 2 màn trên ở chế độ tối.
+- [x] **B-91** 🟡 (QA REG-1, phiên D — B-81/B-87 chưa trọn) Chọn file "bom" có `backup.json` 200 MB: không báo gì, RAM giữ ~515 MB 2 phút; bom ảnh báo
+  "damaged" đúng nhưng RAM vẫn lên ~520 MB. Gốc: `fail()` chỉ ghi lỗi, mục đang giải nén không dừng, mỗi lần nạp 1 MB nén có thể nở hàng trăm MB.
+  Sửa (`streamRestore.ts`): kích thước khai báo trong header vượt giới hạn → từ chối trước khi giải nén; nạp 64 KB/lần; vượt → `terminate()`.
+  Test "REG-1". ⏳ phiên D đo lại PSS.
+- [x] **B-92** 🟡 (QA SPE-9, phiên D) 2 máy cùng sao lưu đêm vào 1 thư mục: máy A xoá bản cũ nhất của máy B (giữ 7 bản tính chung), danh sách Khôi phục trộn
+  bản 2 máy không ghi máy nào; 2 máy cùng phút → trùng tên ghi đè. Sửa: tên file đêm có mã máy 6 ký tự (`SundaySort-backup-…-HHMM-<tag>`,
+  `features/backup/deviceTag.ts`, lưu file riêng — không theo bản sao lưu sang máy khác); mỗi máy chỉ tỉa file của mình (+ file không mã cũ); danh sách
+  Khôi phục ghi "· another phone". Test `nightly.test.ts` "SPE-9". ⏳ phiên D mô phỏng lại.
+- [x] **B-93** 🟠 (QA phiên B, kiểm lại B-58/B-72 trên 5ce0626) Android 8 360dp: hàng + − × ÷ vẫn bị bàn phím che ~19dp (chữ 1.3: không thấy ký hiệu
+  nào) — phép đo B-72 trộn toạ độ cửa sổ (`measureInWindow`) với toạ độ màn hình (`screenY`), lệch đúng thanh trạng thái. Sửa: Android < 11 đặt hàng
+  phép tính ngay dưới vùng số tiền (không thể nằm dưới bàn phím); Android 11+ giữ như cũ. Kèm OLD-10 🟡: báo "Couldn't save…" nằm sau bàn phím
+  trên Android cũ → ẩn bàn phím trước khi báo. ⏳ phiên B API 26 + Android 7.
+- [x] **B-94** 🟠 (QA MOD-11, phiên F) Cửa sổ thấp 436dp (chia đôi màn): thẻ Sort bẹp còn hàng Edit/Split/Merge/Skip (thân thẻ ~0), dưới trống ~100dp
+  → không phân loại được. Gốc: luôn đệm đáy 96dp cho nút "+" (đã ẩn < 520dp) + thẻ `flex: 1` không chiều cao tối thiểu. Sửa (`sort.tsx`): cửa sổ < 520dp
+  → bỏ đệm, thẻ cao 360dp, cả màn cuộn được. (B-89 v2 ✅ phiên F trên bcc8c7a: ảnh chụp lúc app chết được lấy lại, không trùng; huỷ camera trên khoản
+  trống không tự mở Ghi nhanh.) Ghi nhận: nháp có ảnh để lại đúng lúc cài bản cập nhật thì mất ảnh (hiếm).
+
+> **QA-100 kiểm lại trên máy (18/11):** đã tick các mục phiên con xác nhận đạt — B-59 (B), B-61 (E), B-63/64/70/73/79/82/84/85/86/89 (F), B-65/75 (B),
+> B-67/68/76/80/87/91/92 (D), B-77 (A); B-69 (B: 0 sập trên máy lỗi EGL, nhánh "sập 1 lần" là giới hạn Phương đã chấp nhận); B-81 (thay bằng B-91 ✅). Còn mở: chờ kiểm lại hoặc chờ dữ liệu (B-88).
+- [ ] **B-95** 🔴 (đọc code, phiên hỏi đáp của Phương 18/11) **Chuyến tự động trên iOS chưa chạy**: `modules/trip-detect/ios/TripDetectModule.swift`
+  chỉ là khung — `getRecentEvents` trả `[]`, `startTransitions` chỉ phát `onSignal` khi app đang mở, và JS không nghe `onSignal` → `readSignals` luôn rỗng →
+  engine không bao giờ thấy 'driving'. Chưa có "significant location change" để đánh thức app nền (PLAN-v2 §Rủi ro). Màn Automatic trips trên iOS vẫn bật
+  được ("iPhone starts trips from motion") → người dùng tưởng đang chạy. Chưa thử được trên iPhone thật (không có Apple Developer + iPhone, TC-340).
+- [ ] **B-96** 🟠 (đọc code, phiên hỏi đáp của Phương 18/11) iPhone thiếu báo nghi sót của chuyến **tay** (miễn phí, F-12/Q2): "Still on a trip?" (đứng yên
+  ≥ 45 phút) và "Trip isn't recording" (mất vị trí ≥ 10 phút khi đang lái) chạy nhờ báo thức đánh thức (`sync.ts` `scheduleWake`, `native.ts`
+  `configureNative`/`cancelWake`/`health`) — module iOS không có các hàm này (`native.ts` nuốt lỗi) → trên iPhone chỉ hiện khi mở app. Nhắc 12 giờ vẫn chạy.
+  Phương duyệt làm chung phiên B-95.
+- [x] **B-97** 🟡 (QA OLD-11, phiên B — Android 7.0) "Choose backup folder": bộ chọn thư mục Android 7 chỉ hiện "Recent · No items" tới khi bật ⋮ → Show internal
+  storage; nhãn thư mục gốc hiện "This phone / primary:". Bộ chọn của expo-file-system không truyền được `SHOW_ADVANCED`. Sửa: Android < 8 hiện dòng hướng
+  dẫn "If the list is empty, tap ⋮ → Show internal storage." dưới nút; nhãn bỏ "primary:" → "This phone".
+> Phiên B (18/11): 40 persona Android 8/11 có kết quả thật (39 PASS, P074 = B-74); Android 7.0 x86 32-bit 8/8 PASS (mở nguội 1,24 s, PSS 84 MB, 0 crash/ANR).
+> Phiên B (18/11, 97ceb60): **B-93 ✅** (API 26 chữ 0.85/1.3 + Android 7: đủ 4 ký hiệu, 12.50+4.20 = £16.70 lưu được); **B-74/OLD-10 ✅** (bộ nhớ đầy: bàn
+> phím ẩn, "Couldn't save…" thấy rõ, số giữ nguyên) → tick B-57/B-58/B-72 (thay bằng B-93 + B-72 phần số tiền ✅).
+- [ ] **B-98** 🟡 (QA OLD-12, phiên B) Android 8/7: nút **Save** ở Ghi nhanh vẫn nằm sau bàn phím khi đang gõ (API 26 chữ 0.85 lộ 65/112px; chữ 1.3 lộ 43px;
+  Android 7 che hết) — thiếu đúng ~24dp = thanh trạng thái (cùng gốc B-58). Sửa: bù `insets.top + insets.bottom` cho Android < 11 (`capture.tsx`); phím ✓ của
+  bàn phím số giờ lưu khi số tiền > 0. ⏳ phiên B.
+> Phiên E (A13 thật, 8cb9c8f, dữ liệu thật + vân tay thật, 18/11): **B-62 ✅**, B-63 ✅, B-65 ✅ (Recents trắng; deep link khi khoá chỉ hiện Unlock), B-73 ✅,
+> B-84 ✅, widget cập nhật ✅, CPU nền 10 phút 0,01% (B-51 không tái hiện), 20.000 khoản: cuộn giật 12%.
+- [ ] **B-99** 🟠 (QA A13-3, phiên E — A13 thật, vân tay thật) App lock (Lock after 1 minute) → Ghi nhanh → Take photo → chụp hoá đơn > 1 phút → quay lại app
+  đòi mở khoá → vân tay OK → về **Home, mất ảnh hoá đơn + khoản đang nhập**. Gốc: `features/entries/photo.tsx` gọi camera / thư viện ảnh KHÔNG bọc
+  `withLockSuspended` (share sheet, bộ chọn file, bộ chọn thư mục đều có). Sửa: bọc cả 3 lời gọi ImagePicker. (B-84/B-89 v2 cũng giữ lại nháp + ảnh nếu
+  app bị tắt.) ⏳ phiên E thử lại với vân tay thật.
