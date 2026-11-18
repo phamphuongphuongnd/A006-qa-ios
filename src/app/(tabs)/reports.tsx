@@ -275,13 +275,15 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
   return (
     <>
       {toSort > 0 ? (
-        <Card variant="sun" style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.sun, alignItems: 'center', justifyContent: 'center' }}>
-            <Txt v="h3" style={{ color: '#1F2A44' }}>
+        // QA-100 A37-4: at 200% text on a narrow phone the sentence was squeezed to one word per line — wrap the button
+        // under the text instead (the badge grows with the text).
+        <Card variant="sun" style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
+          <View style={{ minWidth: 40, minHeight: 40, paddingHorizontal: 6, borderRadius: 20, backgroundColor: colors.sun, alignItems: 'center', justifyContent: 'center' }}>
+            <Txt v="h3" maxFontSizeMultiplier={1.4} style={{ color: '#1F2A44' }}>
               {toSort > 99 ? '99+' : toSort}
             </Txt>
           </View>
-          <Txt v="small" style={{ flex: 1, fontFamily: fonts.bold }}>
+          <Txt v="small" style={{ flex: 1, minWidth: 150, fontFamily: fonts.bold }}>
             {unsortedText}
           </Txt>
           <Button label={t('reports.sortNow')} size="sm" onPress={() => router.push('/sort')} style={{ paddingHorizontal: 14 }} />
@@ -514,11 +516,12 @@ function LineRow({ label, value, income, first }: { label: string; value: string
 
 function Row({ label, value, color }: { label: string; value: string; color: 'incomeText' | 'expenseText' }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+    // QA-100 A37-5: "$2,053,740.86" at 200% ran off the card — the amount drops under its label when it doesn't fit.
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: 8 }}>
       <Txt c="textSecondary" style={{ fontFamily: fonts.bold }}>
         {label}
       </Txt>
-      <Txt v="amount" c={color} size={20}>
+      <Txt v="amount" c={color} size={20} style={{ flexShrink: 1, marginLeft: 'auto' }}>
         {value}
       </Txt>
     </View>

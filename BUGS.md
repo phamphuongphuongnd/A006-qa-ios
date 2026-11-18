@@ -316,3 +316,9 @@
   Gốc: mọi khoản in vào 1 trang HTML, `printToFileAsync` không giới hạn thời gian. Sửa: bảng Entries / Mileage log trong PDF tối đa 2.000 dòng +
   dòng "Showing the first 2,000 of N entries. The full list is in the CSV export." (tổng vẫn tính đủ); in quá 120 s → báo "The PDF is taking too
   long for this period. Pick a shorter period, or use the CSV." Test `reports.test.ts` "SPE-6". ⏳ phiên D thử lại 2 năm + 20k.
+- [ ] **B-77** 🟡 (QA A37-3, phiên A) Home "Recent" ghi "Sun 10:23" cho khoản từ nhiều tuần trước. Sửa: `entryWhen` (`features/entries/format.ts`) —
+  trong 6 ngày ghi thứ + giờ, cũ hơn ghi "25 Oct 10:23" (khác năm thêm năm); `EntryRow`. (+ MOD-5: tiêu đề ngày Entries thêm năm khi khác năm nay.)
+- [ ] **B-78** 🟡 (QA A37-4/A37-5, phiên A) Chữ 200% + 320dp ở Reports: thẻ "N entries … aren't sorted yet" bẻ chữ 1 từ/dòng, huy hiệu cắt "99+";
+  Income/Expenses/Profit bị cắt bên phải. Sửa (`reports.tsx`): thẻ `flexWrap` (nút "Sort now" xuống dòng, chữ `minWidth 150`, huy hiệu co theo
+  chữ); hàng tổng `flexWrap` (số xuống dưới nhãn khi không vừa).
+- [ ] **B-79** 🟡 (QA MOD-8, phiên F) Home "2037 entries to sort" thiếu dấu phẩy nghìn. Sửa: `formatCount`.
