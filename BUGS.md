@@ -341,3 +341,5 @@
   Sửa: chạm Photo (Ghi nhanh + Sửa khoản) mở bảng "Add a receipt photo": Take photo / Choose from library (`PhotoSourceSheet`); giữ lâu vẫn vào thư viện.
 - [ ] **B-87** 🟡 (QA SPE-5 phần còn lại, phiên D) Khôi phục bản sao lưu thật có rất nhiều ảnh nạp cả file + mọi ảnh vào RAM. Phương chọn **sửa**
   (2026-11-18).
+  Sửa B-85: gốc điều hướng (`app/_layout.tsx`) là cột tối đa 640dp căn giữa trên màn rộng (tablet, Fold mở, xoay ngang); sheet/hộp thoại vẫn
+  toàn màn. ⏳ phiên F: Fold mở + xoay ngang, chia đôi màn hình.
