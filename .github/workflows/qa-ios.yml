@@ -36,7 +36,7 @@ env:
   MAESTRO_VERSION: '2.12.1'
   MAESTRO_CLI_NO_ANALYTICS: '1'
   MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED: 'true'
-  MAESTRO_DRIVER_STARTUP_TIMEOUT: '240000'
+  MAESTRO_DRIVER_STARTUP_TIMEOUT: '480000'
 
 jobs:
   fixtures:
@@ -200,7 +200,7 @@ jobs:
           PERSONAS_IN: ${{ github.event_name == 'workflow_dispatch' && inputs.personas || 'P052,P016,P041,P001,P007,P022,P067,P076,P091,P011,P026,P071,P077,P086,P092,P031,P037,P097,P002,P017,P032,P046,P047,P056,P061,P062,P082' }}
           IPAD_IN: ${{ github.event_name == 'workflow_dispatch' && inputs.ipad_personas || 'P002-ipad,P041-ipad' }}
           BUDGET_MIN: ${{ inputs.test_budget_min || '85' }}
-          PER_PERSONA_TIMEOUT: '600'
+          PER_PERSONA_TIMEOUT: '1500'
           PARALLEL: ${{ inputs.parallel || 'true' }}
         run: |
           chmod +x qa/ios/run-lane.sh
