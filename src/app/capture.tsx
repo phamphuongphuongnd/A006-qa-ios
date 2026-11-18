@@ -1,4 +1,5 @@
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useNavigation, usePreventRemove } from 'expo-router';
 import { router } from '@/services/router';
 import { Briefcase, FileText, User, X } from '@/ui/icons';
@@ -41,6 +42,7 @@ import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, useTheme } from '@/theme';
 import { Button, Chip, Dialog, IconButton, RoundButton, Segmented, Txt, useSnackbar } from '@/ui';
 import { refocus } from '@/features/ocr/refocus';
+import { clearDraft, readDraft, saveDraft } from '@/features/entries/captureDraft';
 
 /** Home's fixed Expense/Income bar (72 + 2×12 padding): the Saved snackbar sits above it. */
 const HOME_BAR = 96;
@@ -51,7 +53,7 @@ const HOME_BAR = 96;
  * (Q20). Up to 3 photos (Q21); with Pro each is read on the device and fills empty fields (P1-12). No category field.
  */
 export default function CaptureScreen() {
-  const params = useLocalSearchParams<{ type?: string; from?: string }>();
+  const params = useLocalSearchParams<{ type?: string; from?: string; restore?: string }>();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { settings } = useSettings();
@@ -63,12 +65,15 @@ export default function CaptureScreen() {
   const { status, pro } = usePro();
   const allowance = usePhotoAllowance();
 
-  const [type, setType] = useState<EntryType>(params.type === 'income' ? 'income' : 'expense');
-  const amount = useAmountExpr(0);
-  const [at, setAt] = useState<number | null>(null);
-  const [note, setNote] = useState('');
+  // B-84: an entry typed before Android killed the app comes back as the starting values.
+  // A draft only exists when the last Quick capture was cut off — whatever opened this one (Home, widget, shortcut).
+  const [draft] = useState(() => readDraft());
+  const [type, setType] = useState<EntryType>(draft?.type ?? (params.type === 'income' ? 'income' : 'expense'));
+  const amount = useAmountExpr(0, draft?.expr);
+  const [at, setAt] = useState<number | null>(draft?.at ?? null);
+  const [note, setNote] = useState(draft?.note ?? '');
   const [noteOpen, setNoteOpen] = useState(false);
-  const [scope, setScope] = useState<Scope>(settings.defaultScope);
+  const [scope, setScope] = useState<Scope>(draft?.scope ?? settings.defaultScope);
   const [cameraDenied, setCameraDenied] = useState(false);
   const [usedUp, setUsedUp] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
@@ -110,6 +115,31 @@ export default function CaptureScreen() {
 
   const notes = useLive(() => topNotes(db, type), [type], ['entries']);
   const dirty = amount.expr !== '' || note.trim() !== '' || photos.photos.length > 0;
+
+  // B-84: put back an entry typed before Android killed the app, plus a camera photo it kept for us.
+  const restored = useRef(false);
+  useEffect(() => {
+    if (restored.current) return;
+    restored.current = true;
+    if (draft) {
+      if (draft.photoUris.length) photos.add(draft.photoUris);
+      snack({ message: t('capture.draftRestored'), above: 'none' });
+    }
+    ImagePicker.getPendingResultAsync()
+      .then((r) => {
+        if (r && 'assets' in r && !r.canceled && r.assets?.length) photos.add(r.assets.map((a) => a.uri));
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on open
+  }, []);
+
+  // Keep what is typed until Save / Discard (B-84).
+  const photoKey = photos.uris.join('|');
+  useEffect(() => {
+    if (leaving) return;
+    if (dirty) saveDraft({ type, expr: amount.expr, note, scope, at, photoUris: photoKey ? photoKey.split('|') : [] });
+    else clearDraft();
+  }, [dirty, type, amount.expr, note, scope, at, photoKey, leaving]);
   const chipMinor = receiptMinor !== null && receiptMinor !== amount.minor ? receiptMinor : null;
 
   const focusAmount = () => {
@@ -276,6 +306,7 @@ export default function CaptureScreen() {
       above: keep ? 'none' : 'tabs',
       bottomOffset: !keep && params.from === 'home' ? HOME_BAR : 0,
     });
+    clearDraft();
     if (keep) {
       reset();
       // Open the latch once the cleared amount has rendered (a second tap in the same frame still saw the old one).
@@ -564,6 +595,7 @@ export default function CaptureScreen() {
             variant: 'danger',
             onPress: () => {
               setConfirmDiscard(false);
+              clearDraft();
               close();
             },
           },

@@ -336,6 +336,10 @@
   trước khi lên store).
 - [ ] **B-84** 🟡 (QA MOD-3, phiên F) Máy ít RAM: Android giết app khi đang ở bộ chọn file/camera → quay lại về Home, mất khoản đang nhập. Phương chọn
   **sửa** (2026-11-18).
+  Sửa: Ghi nhanh lưu nháp (loại, biểu thức số tiền, ghi chú, Work/Personal, ngày, ảnh) vào `capture-draft.json` khi đang gõ, xoá khi Save/Discard
+  (`features/entries/captureDraft.ts`); lần mở sau Home tự mở lại Ghi nhanh với nháp (≤ 24 h) + ảnh camera Android giữ hộ
+  (`ImagePicker.getPendingResultAsync`), snack "Your unsaved entry is back." Còn lại: luồng Khôi phục sao lưu bị giết giữa bộ chọn file thì phải
+  chọn file lại (bộ chọn file không trả kết quả cho tiến trình mới). ⏳ phiên F/B: `am kill` khi đang ở camera / bộ chọn ảnh.
 - [ ] **B-85** 🟡 (QA MOD-4, phiên F) Tablet / máy gập mở: bố cục điện thoại kéo giãn hết bề ngang. Phương chọn **sửa** (2026-11-18).
 - [ ] **B-86** 🟡 (QA MOD-5, phiên F) Thư viện ảnh chỉ mở được bằng giữ lâu nút Photo (khó phát hiện). Phương chọn **sửa** (2026-11-18).
   Sửa: chạm Photo (Ghi nhanh + Sửa khoản) mở bảng "Add a receipt photo": Take photo / Choose from library (`PhotoSourceSheet`); giữ lâu vẫn vào thư viện.

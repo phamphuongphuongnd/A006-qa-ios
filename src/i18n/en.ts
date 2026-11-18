@@ -94,6 +94,7 @@ export const en = {
     discardBody: "{amount} {type}{note} won't be saved.",
     discardPhotos: 'The {count} photos will be deleted too.',
     discardPhotosOne: 'The photo will be deleted too.',
+    draftRestored: 'Your unsaved entry is back.',
     photoHint: 'Hold for library',
     photoSourceTitle: 'Add a receipt photo',
     takePhoto: 'Take photo',
