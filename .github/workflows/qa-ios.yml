@@ -62,7 +62,7 @@ jobs:
     name: iOS Simulator personas
     needs: fixtures
     runs-on: ${{ inputs.runner || 'macos-26' }}
-    timeout-minutes: 115
+    timeout-minutes: 140
     steps:
       - uses: actions/checkout@v4
 
@@ -197,9 +197,9 @@ jobs:
       - name: Run personas
         env:
           # Push runs: personas not covered yet (round 4 = the 13 left after run 44221266865).
-          PERSONAS_IN: ${{ github.event_name == 'workflow_dispatch' && inputs.personas || 'P052,P016,P001,P007,P022,P067,P076,P091,P041,P011,P026,P071,P077,P086,P092' }}
-          IPAD_IN: ${{ github.event_name == 'workflow_dispatch' && inputs.ipad_personas || 'P041-ipad' }}
-          BUDGET_MIN: ${{ inputs.test_budget_min || '33' }}
+          PERSONAS_IN: ${{ github.event_name == 'workflow_dispatch' && inputs.personas || 'P052,P016,P041,P001,P007,P022,P067,P076,P091,P011,P026,P071,P077,P086,P092,P031,P037,P097,P002,P017,P032,P046,P047,P056,P061,P062,P082' }}
+          IPAD_IN: ${{ github.event_name == 'workflow_dispatch' && inputs.ipad_personas || 'P002-ipad,P041-ipad' }}
+          BUDGET_MIN: ${{ inputs.test_budget_min || '85' }}
           PER_PERSONA_TIMEOUT: '600'
           PARALLEL: ${{ inputs.parallel || 'true' }}
         run: |
