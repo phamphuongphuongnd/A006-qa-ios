@@ -1,7 +1,7 @@
 import { Briefcase, CheckCircle2, ChevronDown, Combine, Pencil, Plus, SkipForward, Split, User, X, type LucideIcon } from '@/ui/icons';
 import { Zap } from '@/ui/icons';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Animated, Image, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Animated, Image, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 
 import { listCategories } from '@/db/categoriesRepo';
 import { db } from '@/db/client';
@@ -426,15 +426,18 @@ function SplitPanel({
 /** Small text action under the card ("Edit · Split · Merge · Skip"): four fit on a 360dp phone. */
 function CardAction({ label, icon: Icon, onPress }: { label: string; icon: LucideIcon; onPress: () => void }) {
   const { colors } = useTheme();
+  // QA-100 (phiên B, 360dp + text 2.0): side by side the labels were cut to "E… Sp.. Mer… Sk.." — at large text the
+  // icon goes above a smaller label so all four fit.
+  const stack = useWindowDimensions().fontScale >= 1.3;
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
       hitSlop={4}
-      style={({ pressed }) => [styles.action, { opacity: pressed ? 0.6 : 1 }]}>
+      style={({ pressed }) => [styles.action, stack && { flexDirection: 'column', gap: 2, flexGrow: 1 }, { opacity: pressed ? 0.6 : 1 }]}>
       <Icon size={18} color={colors.text} />
-      <Txt numberOfLines={1} maxFontSizeMultiplier={1.3} style={{ fontSize: 15, fontFamily: fonts.semibold, flexShrink: 1 }}>
+      <Txt numberOfLines={1} maxFontSizeMultiplier={1.3} style={{ fontSize: stack ? 13 : 15, fontFamily: fonts.semibold, flexShrink: 1 }}>
         {label}
       </Txt>
     </Pressable>
