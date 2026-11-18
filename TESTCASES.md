@@ -394,3 +394,36 @@
 | TC-363 | Q29 | Xuất CSV quý | Khoản + chuyến trong kỳ có nhãn "Exported"; ngoài kỳ thì không | T + M | ✅ T; E: xuất CSV năm → 2 chuyến "Exported" |
 | TC-364 | Q29 | Sửa khoản đã xuất | Dòng "Already in your export of …"; S-10 "1 change since your last export" | T + M | ✅ T; E: sửa 24.8 → 25 → mất nhãn, S-10 "1 change since your last export on Mon 16 Nov" |
 | TC-365 | Dữ liệu | Migration 0004 trên DB đang dùng + khôi phục sao lưu cũ | Chạy không mất dữ liệu | T + M | ✅ T (sao lưu cũ khôi phục được); E: cài mới chạy 0004. A13 (dữ liệu thật) chưa — Phương chọn thử giả lập |
+
+## QA-100 — 100 người dùng mô phỏng, Android + iOS (2026-11-17/18, bản cuối `b843037`)
+> Báo cáo: `qa/QA-100-REPORT.md` · lỗi B-56…B-121 trong `BUGS.md` · bằng chứng `qa-runs/` · phiên: A (API 37) · B (API 26/30 + Android 7) ·
+> C (iOS GitHub Actions) · D (bảo mật/hiệu năng) · E (A13 dữ liệu thật) · F (máy đời mới + OCR) · G (Firebase máy thật) · H (iOS Appetize).
+
+| Mã | Tính năng | Trường hợp | Kết quả mong đợi | Cách | Kết quả |
+|---|---|---|---|---|---|
+| TC-366 | Toàn app | 100 persona (UK/US × 20 hành vi) chạy hành trình logic trên SQLite thật | Bất biến tiền, năm thuế, sao lưu↔khôi phục, CSV injection giữ đúng | T `personas100` | ✅ 100/100 |
+| TC-367 | Toàn app | 40 persona trên giả lập Android 8 (360×640) + 11 | Đi hết bước, không FATAL / lỗi JS | M (B) | ✅ 39/40; P074 ❌ = B-74 → sửa ✅ |
+| TC-368 | Toàn app | 60 persona trên API 37 phone / 320dp / tablet | Như TC-367 | M (A) | ⏳ 50/60 có kết quả trên 5ce0626 (43 không bước ❌); 5 còn lại + kiểm lại trên bản cuối |
+| TC-369 | Toàn app | Máy thật Firebase: Galaxy S26, Pixel 11, Galaxy S9, OPPO A38, Xiaomi 14 | Onboarding → 5 tab → ghi khoản, Robo không crash | M (G) | ✅ 4 máy 0 crash/ANR; Xiaomi ⏭ (HyperOS chặn bơm sự kiện) |
+| TC-370 | Toàn app | iOS simulator SE / Pro Max / iPad, nhiều persona | Không crash; bố cục chữ lớn | M (C) | ✅ 0 crash; QI-1/3/4 → B-100/B-101/B-114; lượt 4g bản cuối ⏳ |
+| TC-371 | Bảo mật | Monkey 10.000 sự kiện trên dữ liệu 20k | 0 crash, 0 ANR, dữ liệu không hỏng | M (D) | ✅ |
+| TC-372 | Bảo mật | 34 deep link lạ + link không tồn tại | Không crash, không lộ dữ liệu khi khoá; link lạ về Home | M (D) | ✅; `dev/gallery` (B-119) + "Unmatched Route" → sửa, ⏳ kiểm |
+| TC-373 | Bảo mật | 49 file sao lưu độc (zip slip, bom zip, JSON hỏng, version lạ…) | Từ chối đúng câu, dữ liệu không đổi | M (D) | ✅ |
+| TC-374 | Hiệu năng | Mở nguội với 20.000 khoản | < 2 s | M (D) | ✅ trung vị 1,04 s |
+| TC-375 | Riêng tư | File chẩn đoán (giữ lâu Version) | Không URI thư mục, không tên file, Bluetooth chỉ "van"/"other device" | M (D) + đọc code | ✅ URI/tên file; Bluetooth = B-121 sửa ⏳ |
+| TC-376 | F-02 | Android 7/8/9: Take photo | Hỏi quyền → camera mở → ảnh vào khoản, đúng chiều | M (B) | ❌ B-115 → sửa ✅ API 26 + Android 7 |
+| TC-377 | F-02 | Chụp hoá đơn 50 MP trên A13: từ OK tới số tiền | Nhanh (< 6 s) | M (E) | ❌ 15–18 s B-103 → sửa ✅ ~4,3 s |
+| TC-378 | OCR | 32 hoá đơn thật (Tesco, Shell, đổ xăng Mỹ, gửi xe, hoá đơn mẫu) | Số tiền / nơi bán / ngày đúng hoặc để trống, không điền sai | M (F) + T `receiptSet` | ✅ 29 / 29 / 30 trên 32; giới hạn: r11 OCR đọc nhầm, nơi bán 3 hoá đơn mẫu |
+| TC-379 | OCR | Ảnh nghiêng / thẳng chụp trên A13 (Tesco Cradley, Shrewsbury, FreshHarvest) | Tổng đúng; thấy TOTAL mà không đọc được số → để trống | M (E) + T | ✅ sau B-102, B-105 |
+| TC-380 | OCR | Hoá đơn cũ (2017, 2019, 2025) | Điền đúng ngày kèm năm, chip có năm | M (E, F) | ✅ B-108, B-112, B-116 |
+| TC-381 | OCR | Nhiều ảnh trong 1 khoản (ảnh không tổng + ảnh có tổng) | Nơi bán / ngày lấy từ ảnh có tổng | T + M (E) | ✅ |
+| TC-382 | F-04 | Entries đã cuộn sâu → ghi khoản (FAB ✓, Save, từ Home) | Khoản mới hiện ở đầu Entries | M (B, E) | ❌ B-109 → lần 3 ✅ cả 3 đường |
+| TC-383 | F-06 | Sort ở 360×640, chữ 1.0 / 1.3 / 2.0: Split → "Split & sort" | Tới được, không bị cắt, + không che Skip | M (B, E) | ❌ B-114 → lần 3 ✅; lần 4 (inset, nút xếp dọc) ⏳ |
+| TC-384 | F-02 | Android 8/7: nút Save khi bàn phím mở (chữ 0.85 / 1.3) | Save thấy trọn | M (B) | ❌ B-98 → lần 4 ✅ |
+| TC-385 | F-12 | iOS: Start trip → End trip | Sheet lưu chuyến hiện, không treo | M (H Appetize, C) | ❌ B-117 → sửa ⏳ iOS |
+| TC-386 | F-12 | Chuyến tự động < 500 m kết thúc bằng tay | Hỏi Discard / Keep (Phương chốt) | M (E) | ⏭ không có chuyến tự động ngắn thật |
+| TC-387 | F-16 | Thư mục sao lưu Drive không mở được | Báo rõ + chạm để chọn lại; sao lưu đêm chạy lại | M (E, Phương duyệt) | ✅ B-111 (thư mục A006, sao lưu 15:34) |
+| TC-388 | F-18 | Bấm Try Pro 7 ngày | "Trial · 7 days left", thanh tiến độ ≥ 0 | T + M (G) | ❌ B-104 "8 days" → sửa ✅ T; máy thật ⏳ (Firebase ngày mai) |
+| TC-389 | Dữ liệu | Cài đè từng bản QA lên A13 dữ liệu thật | 233 khoản / 266 chuyến / 8 ảnh / 12 danh mục, id không đổi | M (E) | ✅ mọi lần (sao lưu kiểm 08:30, 14:28, 15:56, 16:24, 16:49) |
+| TC-390 | F-12 | Chuyến tự động Android khi lái xe thật | Có chuyến tự động | M (Phương lái) | ❌ B-88 — cần thêm 1 chuyến xe + chẩn đoán |
+| TC-391 | F-12 | Chuyến tự động iOS (CoreMotion + SLC) | Có chuyến tự động | iPhone thật | ⏭ không có iPhone thật (B-95/B-96) |
