@@ -82,7 +82,7 @@ def main():
         'settings': {
             'region': e.get('REGION'), 'appearance': e.get('APPEARANCE'), 'content_size': e.get('CONTENT_SIZE'),
             'font_scale': e.get('P_FONT_SCALE'), 'time_zone': e.get('P_TZ'), 'tz_applied': e.get('TZ_APPLIED'),
-            'behaviour': e.get('P_BEHAVIOUR'), 'entries': e.get('P_ENTRIES'), 'fixture': e.get('FIXTURE'),
+            'locale': e.get('DEVICE_LOCALE'), 'behaviour': e.get('P_BEHAVIOUR'), 'entries': e.get('P_ENTRIES'), 'fixture': e.get('FIXTURE'),
         },
         'maestro_exit': code,
         'duration_s': dur,

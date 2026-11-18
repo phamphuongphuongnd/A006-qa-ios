@@ -20,7 +20,7 @@ on:
         default: 'P002-ipad,P041-ipad'
       test_budget_min:
         description: 'Stop starting new personas after this many minutes of testing'
-        default: '55'
+        default: '50'
       runner:
         description: 'macOS runner label'
         default: 'macos-26'
@@ -191,15 +191,22 @@ jobs:
         env:
           PERSONAS_IN: ${{ inputs.personas }}
           IPAD_IN: ${{ github.event_name == 'workflow_dispatch' && inputs.ipad_personas || 'P002-ipad,P041-ipad' }}
-          BUDGET_MIN: ${{ inputs.test_budget_min || '55' }}
+          BUDGET_MIN: ${{ inputs.test_budget_min || '50' }}
           PARALLEL: ${{ inputs.parallel || 'true' }}
         run: |
           chmod +x qa/ios/run-lane.sh
           OUT="$PWD/out"
           mkdir -p "$OUT"
           APP=$(ls -d "$PWD"/build/app/*.app | head -1)
-          SE_LIST=$(python3 -c "import json,os; w=[x.strip() for x in os.environ['PERSONAS_IN'].split(',') if x.strip()]; print(','.join(p['id'] for p in json.load(open('qa/personas.json')) if p['ios']=='iphone_se' and (not w or p['id'] in w)))")
-          PM_LIST=$(python3 -c "import json,os; w=[x.strip() for x in os.environ['PERSONAS_IN'].split(',') if x.strip()]; print(','.join(p['id'] for p in json.load(open('qa/personas.json')) if p['ios']=='iphone_pro_max' and (not w or p['id'] in w)))")
+          # Personas with special behaviour first, so a time-budget cut drops the plain ones.
+          PICK='import json,os,sys
+          w=[x.strip() for x in os.environ["PERSONAS_IN"].split(",") if x.strip()]
+          pri=["backup_restore_other_phone","large_history","region_switch","kill_mid_save","wipe_all","weird_text","double_tap_save","year_end_export","split_merge_heavy","weekly_sorter"]
+          ps=[p for p in json.load(open("qa/personas.json")) if p["ios"]==sys.argv[1] and (not w or p["id"] in w)]
+          ps.sort(key=lambda p:(pri.index(p["behaviour"]) if p["behaviour"] in pri else 99, p["id"]))
+          print(",".join(p["id"] for p in ps))'
+          SE_LIST=$(python3 -c "$PICK" iphone_se)
+          PM_LIST=$(python3 -c "$PICK" iphone_pro_max)
           echo "$SE_LIST,$PM_LIST,$IPAD_IN" | tr ',' '\n' | sed '/^$/d;/^none$/d' > "$OUT/planned.txt"
           echo "small: $SE_LIST"; echo "max: $PM_LIST"; echo "ipad: $IPAD_IN"
           DEADLINE=$(( $(date +%s) + BUDGET_MIN * 60 ))

@@ -42,6 +42,11 @@ for PIDX in ${PERSONAS//,/ }; do
     xcrun simctl terminate "$UDID" "$BUNDLE" >/dev/null 2>&1
     xcrun simctl uninstall "$UDID" "$BUNDLE" >/dev/null 2>&1
     xcrun simctl install "$UDID" "$APP" || { log "install failed"; }
+    # Device locale follows the persona's region (expo-localization picks the default region from it).
+    if [ "$REGION" = UK ]; then LOC=en_GB; LANGS='("en-GB")'; else LOC=en_US; LANGS='("en-US")'; fi
+    xcrun simctl spawn "$UDID" defaults write -g AppleLocale "$LOC"
+    xcrun simctl spawn "$UDID" defaults write -g AppleLanguages "$LANGS"
+    export DEVICE_LOCALE=$LOC
     xcrun simctl ui "$UDID" appearance "$APPEARANCE"
     xcrun simctl ui "$UDID" content_size "$CONTENT_SIZE"
     TZ_APPLIED=no
@@ -84,7 +89,7 @@ for PIDX in ${PERSONAS//,/ }; do
     log "$PIDX maestro exit $CODE in ${DUR}s"
 
     xcrun simctl spawn "$UDID" log show --start "$LOG_START" --style compact \
-      --predicate 'process == "SundaySort" OR (subsystem == "com.facebook.react.log")' 2>/dev/null | tail -n 20000 > "$OUT/app.log"
+      --predicate 'process == "SundaySort" AND subsystem != "com.apple.dt.xctest"' 2>"$OUT/log-show.err" | tail -n 20000 > "$OUT/app.log"
     find "$HOME/Library/Logs/DiagnosticReports" -newer "$MARKER" -type f 2>/dev/null | while read -r c; do
       if grep -q "SundaySort\|$BUNDLE" "$c" 2>/dev/null; then cp "$c" "$OUT/crash/"; fi
     done
