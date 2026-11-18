@@ -432,9 +432,10 @@
   iOS lượt 4b (phiên C, P091 SE AX-Large): tiêu đề đủ, nhưng thanh cuộn iOS chỉ nháy ~1 s → không thấy gợi ý. Sửa lần 2: thêm viên "More below ⌄" ở
   đáy, ở lại tới khi cuộn tới cuối, chạm = cuộn xuống ~1 màn (cả iOS + Android). Phiên B: vuốt bắt đầu trên viên không cuộn trang + viên che chữ
   "United States" → lần 3: nhãn không bấm (chạm xuyên qua) ở góc phải dưới. ✅ Android — phiên B (ef470b7): vuốt bắt đầu trên nhãn cuộn được trang.
-  ⏳ iOS (lượt 4g, phiên C).
-- [ ] **B-101** 🟡 (QA iOS QI-3, phiên C) Ô Note ở Ghi nhanh đảo ký tự khi gõ nhanh (P052: "QA-P052 Shell M62" → "QA-052 Shell M62P"; 1/14). Sửa: ô không còn
+  iOS lượt 4e (lần 2): viên hiện rõ ✅ nhưng đè dòng thẻ US → lần 3 ở góc ⏳ lượt 4g.
+- [x] **B-101** 🟡 (QA iOS QI-3, phiên C) Ô Note ở Ghi nhanh đảo ký tự khi gõ nhanh (P052: "QA-P052 Shell M62" → "QA-052 Shell M62P"; 1/14). Sửa: ô không còn
   điều khiển `value` (dựng lại khi app tự điền: chip, đọc hoá đơn); nháp ghi file trễ 400 ms thay vì mỗi phím.
+  ✅ iOS lượt 4e (phiên C, dev f424978, P052 SE chữ XXXL): ô Note + danh sách đúng "QA-P052 Shell M62".
 - [x] **B-102** 🟠 (QA A13-4, phiên E — hoá đơn Tesco thật chụp bằng A13) 2/3 hoá đơn không ra số tiền (#2 giấy cong; #3 in phẳng "TOTAL: £33.50" có
   Subtotal/Savings phía trên và Cash/Change phía dưới) dù nơi bán + ngày đúng. **Gốc (dòng OCR thật, chẩn đoán 322acd6):** ảnh nghiêng vài độ → cả cột số
   lệch xuống ~0,6 dòng (TOTAL: cy 0,664, số 0,676, nhãn Cash 0,682) → luật "nhãn khác gần hơn" trong `rowAmounts` bỏ số → fallback 0,4 → trống; Tesco
