@@ -20,6 +20,9 @@ import type {
 } from '@/db/schema';
 import { MAX_MINOR } from '@/domain/money';
 
+/** 10 billion in pounds/dollars — far above anything real, far below where sums lose precision. */
+const MAX_RESTORED_MINOR = 1_000 * MAX_MINOR * 10;
+
 /**
  * Backup file = a ZIP with the extension `.sundaysort`:
  *   backup.json      — format, version, counts and every table as JSON
@@ -254,8 +257,9 @@ const ROW_CHECKS: Record<keyof BackupTables, (r: Record<string, unknown>) => boo
     (r.type === 'income' || r.type === 'expense') &&
     isInt(r.amountMinor) &&
     (r.amountMinor as number) > 0 &&
-    // SPE-4: the app never makes more than 999,999.99; bigger sums lose precision past 2^53.
-    (r.amountMinor as number) <= MAX_MINOR &&
+    // SPE-4: refuse absurd amounts (1e15, 2^53+2 lose precision in totals). Not MAX_MINOR: a region change converts
+    // 999,999.99 at the exchange rate (QA-100 persona P054 caught that), so real data can be a little above it.
+    (r.amountMinor as number) <= MAX_RESTORED_MINOR &&
     isInt(r.occurredAt) &&
     (r.scope === 'work' || r.scope === 'personal') &&
     (r.categoryId === null || isStr(r.categoryId)),

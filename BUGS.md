@@ -324,7 +324,8 @@
 - [ ] **B-79** 🟡 (QA MOD-8, phiên F) Home "2037 entries to sort" thiếu dấu phẩy nghìn. Sửa: `formatCount`.
 - [ ] **B-80** 🟡 (QA SPE-4, phiên D) Khôi phục file có cài đặt sai kiểu (`region: "ZZ"`, `mileageRates: "x"`, `notify: null`…) → Miles / Reports /
   Notifications / có lúc Settings sập mỗi lần mở (không vào được Backup để sửa). Sửa: `saneSetting` (`db/settingsRepo.ts`) — mỗi khoá kiểm
-  kiểu / danh sách giá trị khi đọc, sai thì dùng mặc định, object thiếu/sai trường thì lấy trường mặc định; khôi phục: `amountMinor ≤ 99,999,999`.
+  kiểu / danh sách giá trị khi đọc, sai thì dùng mặc định, object thiếu/sai trường thì lấy trường mặc định; khôi phục: `amountMinor ≤ 10¹²`
+  (ban đầu đặt ≤ 99,999,999 — bộ 100 persona P054 bắt được: đổi vùng quy đổi £999,999.99 ×1.27 vượt trần → sao lưu thật không khôi phục được; đã nới).
 - [ ] **B-81** 🟡 (QA SPE-5, phiên D) "Zip bomb" (file 207 KB giải nén 200 MB) → RAM > 1 GB khi khôi phục (không mất dữ liệu nhưng máy RAM thấp có
   thể tắt app). Sửa (`pack.ts`): bỏ qua/báo "damaged" nếu `backup.json` > 64 MB hoặc 1 ảnh > 25 MB trước khi giải nén. Còn lại (giới hạn đã biết):
   bản sao lưu thật rất nhiều ảnh vẫn nạp cả vào RAM khi khôi phục — chưa dựng được file thật cỡ đó để đo.
