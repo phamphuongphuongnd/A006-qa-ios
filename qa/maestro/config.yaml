@@ -19,4 +19,5 @@ executionOrder:
     - 12_region_switch
     - 13_kill_mid_save
     - 14_wipe_all
+    - 15_auto_trips
     - 99_final_state

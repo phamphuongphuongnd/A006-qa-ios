@@ -1,0 +1,21 @@
+# B-95: on a phone without motion hardware (iOS Simulator) Automatic trips must say it can't recognise driving,
+# never "Working". Opened by deep link so the Pro lock on the Miles card does not matter.
+appId: com.phiotron.sundaysort
+name: 15_auto_trips
+---
+- runFlow: common/home.yaml
+- openLink: sundaysort://trip/auto
+- tapOn:
+    text: "Open"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: ${PID}_15a_auto_trips
+- scroll
+- takeScreenshot: ${PID}_15b_auto_trips_scrolled
+- assertNotVisible: "Working.*"
+- scrollUntilVisible:
+    element:
+      text: ".*recognise driving.*"
+    direction: UP
+    timeout: 10000

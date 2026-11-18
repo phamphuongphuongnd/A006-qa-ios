@@ -12,7 +12,7 @@ import xml.etree.ElementTree as ET
 
 STEPS = ['01_onboarding', '02_restore', '03_tour', '04_quick_add', '05_entry_detail', '06_sort_one', '07_split_one',
          '08_manual_trip', '09_export_csv', '10_weird_note', '11_double_save', '12_region_switch', '13_kill_mid_save',
-         '14_wipe_all', '99_final_state']
+         '14_wipe_all', '15_auto_trips', '99_final_state']
 
 
 def junit_steps(path):

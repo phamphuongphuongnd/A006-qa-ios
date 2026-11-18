@@ -197,10 +197,10 @@ jobs:
       - name: Run personas
         env:
           # Push runs: personas not covered yet (round 4 = the 13 left after run 44221266865).
-          PERSONAS_IN: ${{ github.event_name == 'workflow_dispatch' && inputs.personas || 'P001,P007,P022,P067,P076,P091,P011,P026,P041,P071,P077,P086,P092' }}
+          PERSONAS_IN: ${{ github.event_name == 'workflow_dispatch' && inputs.personas || 'P052,P016,P001,P007,P022,P067,P076,P091,P041,P011,P026,P071,P077,P086,P092' }}
           IPAD_IN: ${{ github.event_name == 'workflow_dispatch' && inputs.ipad_personas || 'P041-ipad' }}
-          BUDGET_MIN: ${{ inputs.test_budget_min || '48' }}
-          PER_PERSONA_TIMEOUT: '900'
+          BUDGET_MIN: ${{ inputs.test_budget_min || '33' }}
+          PER_PERSONA_TIMEOUT: '600'
           PARALLEL: ${{ inputs.parallel || 'true' }}
         run: |
           chmod +x qa/ios/run-lane.sh
@@ -212,7 +212,7 @@ jobs:
           w=[x.strip() for x in os.environ["PERSONAS_IN"].split(",") if x.strip()]
           pri=["backup_restore_other_phone","large_history","region_switch","kill_mid_save","wipe_all","weird_text","double_tap_save","year_end_export","split_merge_heavy","weekly_sorter"]
           ps=[p for p in json.load(open("qa/personas.json")) if p["ios"]==sys.argv[1] and (not w or p["id"] in w)]
-          ps.sort(key=lambda p:(pri.index(p["behaviour"]) if p["behaviour"] in pri else 99, p["id"]))
+          ps.sort(key=lambda p:(w.index(p["id"]),) if w else (pri.index(p["behaviour"]) if p["behaviour"] in pri else 99, p["id"]))
           print(",".join(p["id"] for p in ps))'
           SE_LIST=$(python3 -c "$PICK" iphone_se)
           PM_LIST=$(python3 -c "$PICK" iphone_pro_max)
