@@ -58,7 +58,10 @@
 ## Bước 6 — Kiểm cuối & lên store
 - [x] Giả lập người dùng thật trên máy, xem giao diện từng màn — cài mới, vai UK + US, tối / 200% / 320dp, vân tay, widget, TalkBack nghe thật (Phương): 10 mục mới B-27…B-36 sửa + thử A13 (`6c87170`, `bd04cfe`, `40493d6`)
 - [ ] **Bản 2 — tự động + Pro: xem `PLAN-v2.md` (P0–P6)** — Phương chốt 2026-11-13: dừng Bước 6 ở đây, lên store sau bản 2
-- [ ] Store listing + privacy + Data safety / App Privacy + ảnh store
+  - [ ] **QA-100 (bản 2, 2026-11-17/18)** — 100 người dùng mô phỏng, Android + iOS + máy thật (`qa/QA-100-REPORT.md`, TC-366…TC-391):
+        bản cuối `b843037`; B-56…B-121: 45 sửa + kiểm trên máy, còn lại chờ kiểm (phiên A Android 17, phiên C iOS 4g, Firebase ngày mai)
+        hoặc cần máy thật / Phương duyệt giới hạn (B-88, B-95/96, B-99, B-107, B-113). Xong khi BUGS tick hết hoặc Phương duyệt lý do.
+- [ ] Store listing + privacy + Data safety / App Privacy + ảnh store — nháp `store/listing.md` (chờ Phương duyệt, Data safety 2 điểm ❓)
 - [ ] Phương tạo khoá ký → tag `v1.0.0` → AAB + iOS
 - [ ] checklists release-android + release-ios
 - [ ] Nộp Google Play (closed test) + App Store (TestFlight)
