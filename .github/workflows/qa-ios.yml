@@ -109,7 +109,14 @@ jobs:
         env:
           RCT_USE_PREBUILT_RNCORE: '1'
           RCT_USE_RN_DEP: '1'
-        run: pod install
+        # Prebuilt Hermes / RN core tarballs come from repo.reactnative.dev, which sometimes resets the connection.
+        run: |
+          for i in 1 2 3; do
+            pod install && exit 0
+            echo "pod install failed (attempt $i), retrying in 20 s"
+            sleep 20
+          done
+          exit 1
 
       - name: xcodebuild Release (simulator, unsigned)
         if: steps.appcache.outputs.cache-hit != 'true'
