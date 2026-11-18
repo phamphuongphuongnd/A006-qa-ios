@@ -436,7 +436,14 @@
   lệch xuống ~0,6 dòng (TOTAL: cy 0,664, số 0,676, nhãn Cash 0,682) → luật "nhãn khác gần hơn" trong `rowAmounts` bỏ số → fallback 0,4 → trống; Tesco
   2022 y hệt; FreshHarvest: chữ to đọc "2174" mất dấu chấm. **Sửa (2 đợt):** đo độ lệch cột nhãn↔số từ mọi cặp rồi bù (`columnShift`); số dưới nhãn
   ("FUEL TOTAL" / "$ 20.00"); số nguyên sau ký hiệu tiền ("$5400"); "1.575,01"; nhãn tách chữ ("Subtota l"); tổng mất dấu chấm chỉ nhận khi = subtotal +
-  tax hoặc = dòng thẻ. 3 lần đọc thật của A13 thành fixture Jest — cả 3 điền đúng. ⏳ chạy lại trên A13 + 32 ảnh Phương gom (`qa/receipts-expected.json`).
+  tax hoặc = dòng thẻ. 3 lần đọc thật của A13 thành fixture Jest — cả 3 điền đúng.
+  **Đợt 2 (phiên F đọc thật 20 ảnh Phương gom trên giả lập API 37, 2 bản 322acd6/4f297e1 = 40 lần đọc → `receiptSet.test.ts`):** trước sửa số tiền 18/20,
+  nơi bán 16, ngày điền sai 1 (r12 "3/10/26" hoá đơn $ đọc kiểu UK). Sửa: dòng "Total" bảng VAT/GST sau CHANGE hạ ưu tiên; logo đọc lệch ("Iesço",
+  "ShelI"); tên có số cửa hàng; bỏ dòng địa chỉ / nhãn "Date:" / chữ mẫu (Lorem Ipsum, Shop Name, MM/DD/YYYY); tiền tệ trên hoá đơn quyết định thứ tự
+  ngày; "DATE06/21/06", "0CT", năm 94 → 1994; ưu tiên dòng ngày có giờ, bỏ "TOTAL UP TO"/"EXPIRES". Bản 4f297e1 thụt lùi 2 ca (r03, r18) do nén lại ảnh
+  vốn đã nhỏ → `shrink` giữ nguyên ảnh nhỏ + đúng chiều, JPEG 92. Sau sửa (dòng ảnh gốc): số tiền 19/20, nơi bán 20/20 (r20 mẫu không tên → để trống),
+  0 ngày sai. Giới hạn OCR: r11 ảnh 255 px có watermark, ML Kit đọc "$69.03" thành "$69.83" (độ tin cậy dòng 0,46 nhưng số đúng chỉ 0,50 → không
+  dùng làm ngưỡng được) → điền sai, ghi nhận. ⏳ chạy lại trên A13 + giả lập với APK mới; 12 ảnh r21–r32 chờ Phương lưu file.
 - [ ] **B-103** 🟠 (QA A13-5, phiên E — Phương: "chụp hoá đơn rất đơ, nhận diện cũng đơ") Từ lúc bấm OK ở camera tới lúc bắt đầu đọc 14,9–17,8 s trên A13
   (camera 50 MP). Gốc: `photo.tsx` gọi picker với `quality: 0.6` → expo-image-picker giải nén + nén lại cả ảnh 50 MP (`CompressionImageExporter`); ML Kit
   lại giải nén ảnh gốc lần nữa. Sửa: Android dùng `quality: 1` (picker chỉ chép file) + `ReceiptOcr.shrink` native (giải nén lấy mẫu, xoay theo EXIF,
