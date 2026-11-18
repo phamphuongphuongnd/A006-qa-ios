@@ -433,7 +433,7 @@
   đáy, ở lại tới khi cuộn tới cuối, chạm = cuộn xuống ~1 màn (cả iOS + Android). ⏳ phiên C.
 - [ ] **B-101** 🟡 (QA iOS QI-3, phiên C) Ô Note ở Ghi nhanh đảo ký tự khi gõ nhanh (P052: "QA-P052 Shell M62" → "QA-052 Shell M62P"; 1/14). Sửa: ô không còn
   điều khiển `value` (dựng lại khi app tự điền: chip, đọc hoá đơn); nháp ghi file trễ 400 ms thay vì mỗi phím.
-- [ ] **B-102** 🟠 (QA A13-4, phiên E — hoá đơn Tesco thật chụp bằng A13) 2/3 hoá đơn không ra số tiền (#2 giấy cong; #3 in phẳng "TOTAL: £33.50" có
+- [x] **B-102** 🟠 (QA A13-4, phiên E — hoá đơn Tesco thật chụp bằng A13) 2/3 hoá đơn không ra số tiền (#2 giấy cong; #3 in phẳng "TOTAL: £33.50" có
   Subtotal/Savings phía trên và Cash/Change phía dưới) dù nơi bán + ngày đúng. **Gốc (dòng OCR thật, chẩn đoán 322acd6):** ảnh nghiêng vài độ → cả cột số
   lệch xuống ~0,6 dòng (TOTAL: cy 0,664, số 0,676, nhãn Cash 0,682) → luật "nhãn khác gần hơn" trong `rowAmounts` bỏ số → fallback 0,4 → trống; Tesco
   2022 y hệt; FreshHarvest: chữ to đọc "2174" mất dấu chấm. **Sửa (2 đợt):** đo độ lệch cột nhãn↔số từ mọi cặp rồi bù (`columnShift`); số dưới nhãn
@@ -445,7 +445,11 @@
   ngày; "DATE06/21/06", "0CT", năm 94 → 1994; ưu tiên dòng ngày có giờ, bỏ "TOTAL UP TO"/"EXPIRES". Bản 4f297e1 thụt lùi 2 ca (r03, r18) do nén lại ảnh
   vốn đã nhỏ → `shrink` giữ nguyên ảnh nhỏ + đúng chiều, JPEG 92. Sau sửa (dòng ảnh gốc): số tiền 19/20, nơi bán 20/20 (r20 mẫu không tên → để trống),
   0 ngày sai. Giới hạn OCR: r11 ảnh 255 px có watermark, ML Kit đọc "$69.03" thành "$69.83" (độ tin cậy dòng 0,46 nhưng số đúng chỉ 0,50 → không
-  dùng làm ngưỡng được) → điền sai, ghi nhận. ⏳ chạy lại trên A13 + giả lập với APK mới; 12 ảnh r21–r32 chờ Phương lưu file.
+  dùng làm ngưỡng được) → điền sai, ghi nhận.
+  **Đợt 3 (phiên F, 32 ảnh trên 3f26b33):** số tiền 29/32, nơi bán 29/32, ngày 30/32 (ngày cũ điền kèm năm); A13: Shrewsbury £55.30, Cradley nghiêng
+  £33.50, FreshHarvest $21.74 + ngày có nhãn. **Giới hạn đã biết:** r11 OCR đọc nhầm số (ảnh 255 px); nơi bán điền sai ở 3 hoá đơn mẫu kiểu công ty /
+  vé phạt (r22 "lexnet" logo cắt, r23 "Jane Smith" tên người trên mẫu, r28 "Ala Moana Center" = nơi gửi xe) ở 0,62 — nâng ngưỡng sẽ mất tên đúng
+  (FreshHarvest, WideMart, Fuelmax…) cùng mức; ô nơi bán sửa được. 104 lần đọc thật là bộ test `receiptSet.test.ts`.
 - [ ] **B-103** 🟠 (QA A13-5, phiên E — Phương: "chụp hoá đơn rất đơ, nhận diện cũng đơ") Từ lúc bấm OK ở camera tới lúc bắt đầu đọc 14,9–17,8 s trên A13
   (camera 50 MP). Gốc: `photo.tsx` gọi picker với `quality: 0.6` → expo-image-picker giải nén + nén lại cả ảnh 50 MP (`CompressionImageExporter`); ML Kit
   lại giải nén ảnh gốc lần nữa. Sửa: Android dùng `quality: 1` (picker chỉ chép file) + `ReceiptOcr.shrink` native (giải nén lấy mẫu, xoay theo EXIF,
