@@ -189,6 +189,7 @@ nằm trọn trên bàn phím, cách mép 27 px.) Ảnh: `api26/v4_strip.png`, `
 | P016 (US, chữ 2.0) | ✅ 10/10: onboarding, khôi phục, 5 tab, **Split "Split into 2 entries"**, Merge, mở lại, log sạch |
 | B-114 v3 chữ 2.0 | ✅ "Sort your / week" không bẻ giữa chữ; List view dòng riêng dưới tiêu đề; tiêu đề cuộn cùng thẻ; FAB ẩn ở Sort; Edit/Split/Merge/Skip tới được; Skip → thẻ kế ($170.16 → $16.72). 🟡 khi đã cuộn, chữ của thẻ chạy dưới thanh trạng thái (không chừa mép trên); nhãn nút vẫn cắt "E… Sp.. Mer… Sk..". |
 | OLD-16 chữ 1.3 | ✅ bố cục thường; Split → "Split & sort" thấy sau 1 lần vuốt trong thẻ |
+| Split chữ 1.0 (16:32, dữ liệu mới + 2 khoản) | ✅ "Split into 2 entries", Merge "Merged 2 entries" |
 | B-109 v3 | ✅ cả 3 đường (Entries cuộn ~4 trang mỗi lần): FAB + ✓ → TODAY + −$3.21 trên cùng; FAB + nút Save → −$4.56; Home → Expense → ✓ → tab Entries → −$6.54 |
 | B-115 | ✅ hỏi "photos, media, files" → CaptureActivity → ✓ → "1 of 3" → Save → `files/receipts` 1080×1080 khớp khung duyệt, không FATAL |
 | B-116 (trên 07f4aac) | ✅ chip 1 dòng "18 Nov 2025, 04:18"; 🟡 nút Expense hơi chật (chữ chạm mép viên) nhưng không cắt |
