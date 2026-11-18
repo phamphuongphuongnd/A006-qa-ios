@@ -504,6 +504,8 @@
   Photo, (540,1990) Take photo) kể cả lúc nháp được khôi phục / bàn phím số mở — chạm có thể rơi vào chip ngày (lịch Samsung → đổi năm) và phím ✓ /
   Save; một khoản Tesco £55.30 lúc 15:08 cũng tự lưu sau chuỗi chạm y hệt. **Kết luận tạm: nghi do script chạm mù, không phải người dùng** — chưa tái
   hiện được bằng thao tác người; để mở theo dõi (gặp lại: chụp màn + chẩn đoán trước khi xoá). Phiên E bỏ chạm theo toạ độ (luật xưởng: chờ chữ rồi bấm).
+  Phương tự bấm (ef470b7, 16:30–16:51): nháp FreshHarvest khôi phục sau khi app bị tắt (£21.74, nơi bán, ảnh, "20 Nov 2019") → X → Discard → không
+  có khoản nào được lưu; FreshHarvest Save thường lưu đúng 2019. **Không tái hiện bằng tay** → đề xuất đóng là do script (chờ Phương duyệt).
 - [x] **B-114** 🟠 (QA OLD-13, phiên B — 3f26b33, API 26, 360×640dp, chữ 2.0) Tab Sort: thẻ bị ép còn ~2px (header "Sort your wee/k" bẻ giữa chữ cạnh
   List view + chip tuần + thanh tiến độ chiếm hết chiều cao) → không thấy / không dùng được thẻ; List view vẫn sort được. Chữ 1.3–1.7 ổn. Gốc: chế độ
   cuộn (MOD-11) chỉ bật khi cửa sổ < 520dp, không tính cỡ chữ. Sửa: tính theo dp ÷ cỡ chữ, thẻ cao 360 × cỡ chữ (≤ 1.6), List view xuống dòng dưới
