@@ -14,8 +14,11 @@
 | 1 | 44017774856 | 4e8a150 (= dev dc6d0a6 + QA) | 10/29 (đều kẹt onboarding) | 78 | Build Release simulator 7 phút OK, app chạy trên iPhone SE (3rd gen) + iPhone 16 Pro Max, 0 crash. **Lỗi kịch bản** (không phải app): tap đúng chữ "United Kingdom" nhưng nhãn trợ năng của thẻ là "United Kingdom. £ · Tax year…" → mọi bước sau ❌; 17 persona + 2 iPad ⏭ hết ngân sách 55 phút. |
 | 2 | 44220110475 | a92c60b (+ merge dev 189106e) | 0 | 5 | ❌ hạ tầng: `pod install` tải Hermes từ repo.reactnative.dev bị "Connection reset by peer" → thêm thử lại 3 lần |
 | 3 | 44221266865 | 9c99362 (dev 189106e + QA) | 14/27 (+0/2 iPad) | 71 | iOS 26.5, iPhone SE (3rd gen) + iPhone 16 Pro Max. **0 crash.** 13 persona + 2 iPad ⏭ hết ngân sách 50 phút. Kết quả theo bước bên dưới. |
+| 4 | 44236852419 | dev 4853823 + QA | 0 | 14 | Huỷ chủ động: dev có thêm B-100/B-101 (322acd6) sau khi merge |
+| 4b | 44238847151 | dev 322acd6 + QA (+ bước 15_auto_trips) | 0 | 0 | ❌ GitHub không khởi chạy job: "recent account payments have failed or your spending limit needs to be increased" (Billing & plans) |
 
-Tổng phút macOS đã dùng: **154** (78 + 5 + 71) — vượt trần 150 khoảng 4 phút (lượt 3 dài hơn ước tính). Lượt sau cần Phương duyệt.
+Tổng phút macOS đã dùng: **168** (78 + 5 + 71 + 14). Lượt 4b chờ Phương xử lý thanh toán / hạn mức GitHub Actions.
+
 
 ### Kết quả lượt 3 theo bước (14 persona)
 | bước | ✅ | ❌ | ghi chú |
