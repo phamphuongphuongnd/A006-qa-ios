@@ -125,6 +125,21 @@ Ghi chú: ở 16 MB trống lưu vẫn được (lần đầu "Saved · £9.99")
 - B-93 kiểm nhanh lại trên bản này (Android 7): "12.50+4.20 = £16.70", đủ 4 ký hiệu, ✓ → Save → "Saved · £16.70 expense" ✅ (`b93_android7_sum.png`).
   Từ 97ceb60 → c5e0d3e chỉ đổi màn sao lưu (`git diff --stat`), nên kết quả B-93/OLD-10 trên API 26 ở 97ceb60 vẫn áp dụng. OLD-12 vẫn còn (Save sau bàn phím).
 
+### Kiểm lại B-98 (OLD-12) trên APK 1dd73db, 2026-11-18 · `qa-runs/android-old/verify-1dd73db/` (`qa/tools/oldb98.py`)
+| | Save lộ trên bàn phím (px, nút cao ~112) | Phím ✓ của bàn phím số |
+|---|---|---|
+| API 26 360dp, P003 (có hàng gợi ý), chữ 0.85 | ❌ 64 px (đỉnh y=710, bàn phím y=774) — **không đổi** so với 97ceb60 (709) | ✅ "Saved · £12.50 expense" |
+| API 26, chữ 1.3 | ❌ 42 px, không thấy chữ "Save" | ✅ "Saved · £12.50 expense" |
+| Android 7, dữ liệu mới (không hàng gợi ý — trường hợp dễ nhất), chữ 0.85 | ❌ 36 px (đỉnh y=622, bàn phím y=658) | ✅ |
+| Android 7, chữ 1.3 | ❌ 14 px | ✅ |
+- **Phím ✓ lưu** ✅ ở mọi máy/cỡ chữ → giờ người dùng có đường lưu ngay cả khi Save bị che.
+- **Save vẫn bị che** ❌: đổi `keyboardVerticalOffset` từ `insets.bottom` sang `insets.top + insets.bottom` (`capture.tsx:230`, dùng ở `:368`
+  `KeyboardAvoidingView behavior='height'`) không dịch nút đi pixel nào trên API 26 → giá trị offset không phải thứ quyết định ở đây (có thể KAV
+  không tính lại theo offset trên Android < 11, hoặc `insets.top` = 0 khi không edge-to-edge). Gợi ý: thêm khoảng đệm cứng dưới khối nút khi
+  `keyboardUp && API < 30` (vd `paddingBottom: StatusBar.currentHeight`) rồi đo lại; hoặc tính chiều cao vùng thật bằng
+  `Dimensions.get('screen').height - keyboard.endCoordinates.screenY`.
+- Ghi chú: lần này khôi phục P003 trên Android 7 lỗi do runner (DocumentsUI vừa bị đặt lại khi kiểm B-97) nên Android 7 chạy với dữ liệu mới.
+
 ### OLD-12 🟡 Android < 11: nút Save ở Ghi nhanh nằm (một phần / hoàn toàn) sau bàn phím khi đang gõ
 - **Máy/APK:** API 26 360dp và Android 7, APK 97ceb60. Bảng trên. Nút ✓ của bàn phím chỉ ẩn bàn phím (không lưu); sau đó Save hiện đủ.
 - **Nguyên nhân gốc nghi ngờ:** vẫn lệch đúng ~24dp: Save đỉnh y=709 + cao 112 px = 821 so với bàn phím y=774 → 47 px = 23,5dp ≈ chiều cao thanh
