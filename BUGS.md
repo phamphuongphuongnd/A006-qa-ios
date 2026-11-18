@@ -540,7 +540,8 @@
   trip" — sai từ khi có chuyến tự động (theo dõi rời chỗ đỗ / vùng 150 m ở nền) → Apple 5.1.1. Sửa: câu mới nói rõ chuyến tự động; câu trong app
   (`trip.permBody`) cũng sửa. Cần build iOS mới mới có hiệu lực. ⏳ Phương xem chữ trước khi nộp.
 - [ ] **B-119** 🟡 (QA SPE-11, phiên D) `sundaysort://dev/gallery` mở được trong bản release (gallery.tsx thiếu chặn `__DEV__`). Sửa: chuyển về Home như dev/ocr,
-  dev/probe. Link lạ khác ra màn "Unmatched Route" + nút Sitemap → thêm `src/app/+not-found.tsx` chuyển về Home. ⏳ phiên D.
+  dev/probe. Link lạ khác ra màn "Unmatched Route" + nút Sitemap → thêm `src/app/+not-found.tsx` chuyển về Home. ✅ A13 (b843037):
+  `sundaysort://abc`, `sundaysort://abc/xyz?q=1` → Home, logcat sạch (app đang chạy). ⏳ `dev/gallery` trên máy.
 - [ ] **B-120** 🟡 (QA SPE-12, phiên D) `export?mode=custom&end=1e17` hiện "NaN undefined NaN", tên file "…NaN-NaN-NaN.zip". Sửa: khoảng ngày qua `saneReportRange`
   như Reports (B-67); sai thì về năm thuế. ⏳ phiên D.
 - [x] **B-121** 🟡 (QA SPE-10, phiên D — đọc code) File chẩn đoán ghi MAC + tên mọi thiết bị Bluetooth đã nối trong 7 ngày, không chỉ xe (BluetoothReceiver.kt:30).
