@@ -298,3 +298,16 @@ describe('parseReceipt — real A13 camera reads (QA-100 B-102)', () => {
     expect(parseReceipt(raw('$1.40'), 'US', NOW).confidence.amount).toBeLessThan(OCR_FILL_CONFIDENCE);
   });
 });
+
+describe('parseReceipt — labelled date wins (QA-100 A13, FreshHarvest on 3f26b33)', () => {
+  it('"Date/time 11/20/2019 11:09 AM" beats a footer print stamp, wherever the stamp sits', () => {
+    const at = (text: string, y: number, x: number): RawLine => ({ text, box: { x, y, w: 0.3, h: 0.016 } });
+    const raw: RawOcr = {
+      text: '',
+      lines: [at('5/25/2025, 12:53:23 PM', 0.1, 0.3), at('Total', 0.5, 0.35), at('$21.74', 0.5, 0.6), at('Date/time', 0.6, 0.21), at('11/20/2019 11:09 AM', 0.6, 0.43)],
+    };
+    const r = parseReceipt(raw, 'US', NOW);
+    expect(r.date).toBe(new Date(2019, 10, 20).getTime());
+    expect(r.minutes).toBe(11 * 60 + 9);
+  });
+});
