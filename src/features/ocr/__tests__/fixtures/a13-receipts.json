@@ -1359,5 +1359,926 @@
 "confidence": 0.76
 }
 ]
+},
+{
+"name": "tesco-shrewsbury-straight-08cdb7b",
+"expectMinor": null,
+"source": "Galaxy A13 camera (photo of a screen), app 08cdb7b, 2026-11-18",
+"lines": [
+{
+"text": "TAPE NEASURE",
+"box": {
+"x": 0.1478,
+"y": 0.1767,
+"w": 0.1722,
+"h": 0.0246
+},
+"confidence": 0.61
+},
+{
+"text": "PROTEIN DOOKTE",
+"box": {
+"x": 0.1528,
+"y": 0.2033,
+"w": 0.2006,
+"h": 0.0229
+},
+"confidence": 0.49
+},
+{
+"text": "PAUTETN DOORT",
+"box": {
+"x": 0.1522,
+"y": 0.23,
+"w": 0.1906,
+"h": 0.02
+},
+"confidence": 0.29
+},
+{
+"text": "DONDONS",
+"box": {
+"x": 0.1483,
+"y": 0.2542,
+"w": 0.0983,
+"h": 0.0196
+},
+"confidence": 0.52
+},
+{
+"text": "PROCECC0",
+"box": {
+"x": 0.1489,
+"y": 0.3246,
+"w": 0.1189,
+"h": 0.0217
+},
+"confidence": 0.7
+},
+{
+"text": "SHREVSBURY CATTLE MARKET",
+"box": {
+"x": 0.2622,
+"y": 0.0725,
+"w": 0.3633,
+"h": 0.0338
+},
+"confidence": 0.7
+},
+{
+"text": "TESCO",
+"box": {
+"x": 0.305,
+"y": 0.0171,
+"w": 0.2833,
+"h": 0.0462
+},
+"confidence": 0.66
+},
+{
+"text": "SAUWIGNON BLNC",
+"box": {
+"x": 0.1611,
+"y": 0.345,
+"w": 0.1944,
+"h": 0.0296
+},
+"confidence": 0.64
+},
+{
+"text": "SAUNIGNON BLNC",
+"box": {
+"x": 0.1533,
+"y": 0.3692,
+"w": 0.2028,
+"h": 0.0246
+},
+"confidence": 0.68
+},
+{
+"text": "KRNENBOL",
+"box": {
+"x": 0.1544,
+"y": 0.3954,
+"w": 0.1578,
+"h": 0.0204
+},
+"confidence": 0.27
+},
+{
+"text": "CONDONS",
+"box": {
+"x": 0.1583,
+"y": 0.4808,
+"w": 0.1078,
+"h": 0.0213
+},
+"confidence": 0.62
+},
+{
+"text": "TOTAL",
+"box": {
+"x": 0.1722,
+"y": 0.5854,
+"w": 0.0656,
+"h": 0.0171
+},
+"confidence": 0.66
+},
+{
+"text": "SAUTIENN EN",
+"box": {
+"x": 0.1744,
+"y": 0.5042,
+"w": 0.1728,
+"h": 0.0192
+},
+"confidence": 0.34
+},
+{
+"text": "SAVIENIN DIN",
+"box": {
+"x": 0.1656,
+"y": 0.5233,
+"w": 0.1967,
+"h": 0.0229
+},
+"confidence": 0.4
+},
+{
+"text": "KRONENBOLRG",
+"box": {
+"x": 0.1678,
+"y": 0.5442,
+"w": 0.1539,
+"h": 0.0208
+},
+"confidence": 0.62
+},
+{
+"text": "CASH",
+"box": {
+"x": 0.1739,
+"y": 0.6042,
+"w": 0.0556,
+"h": 0.0183
+},
+"confidence": 0.86
+},
+{
+"text": "CHANGE DUE",
+"box": {
+"x": 0.1811,
+"y": 0.6238,
+"w": 0.1278,
+"h": 0.0175
+},
+"confidence": 0.68
+},
+{
+"text": "JoinCubcard",
+"box": {
+"x": 0.1933,
+"y": 0.6608,
+"w": 0.3361,
+"h": 0.0242
+},
+"confidence": 0.7
+},
+{
+"text": "E7 00",
+"box": {
+"x": 0.5983,
+"y": 0.3125,
+"w": 0.0783,
+"h": 0.0204
+},
+"confidence": 0.37
+},
+{
+"text": "E7.00",
+"box": {
+"x": 0.61,
+"y": 0.3346,
+"w": 0.0639,
+"h": 0.0254
+},
+"confidence": 0.57
+},
+{
+"text": "E7.00",
+"box": {
+"x": 0.6144,
+"y": 0.3571,
+"w": 0.0594,
+"h": 0.0233
+},
+"confidence": 0.53
+},
+{
+"text": "E4",
+"box": {
+"x": 0.6039,
+"y": 0.4062,
+"w": 0.0278,
+"h": 0.0183
+},
+"confidence": 0.43
+},
+{
+"text": "60",
+"box": {
+"x": 0.6206,
+"y": 0.4062,
+"w": 0.0472,
+"h": 0.0183
+},
+"confidence": 0.34
+},
+{
+"text": "2 10",
+"box": {
+"x": 0.6172,
+"y": 0.4296,
+"w": 0.0483,
+"h": 0.0204
+},
+"confidence": 0.7
+},
+{
+"text": "This visit Ou COuld have col",
+"box": {
+"x": 0.2172,
+"y": 0.6817,
+"w": 0.3617,
+"h": 0.0221
+},
+"confidence": 0.61
+},
+{
+"text": "15 Clubcard points",
+"box": {
+"x": 0.3172,
+"y": 0.6996,
+"w": 0.2222,
+"h": 0.0204
+},
+"confidence": 0.67
+},
+{
+"text": "Doilaad the Tesco GroceryClubcnd",
+"box": {
+"x": 0.1972,
+"y": 0.7158,
+"w": 0.4678,
+"h": 0.0254
+},
+"confidence": 0.58
+},
+{
+"text": "pp or visit Tesco.coVClLbcad",
+"box": {
+"x": 0.2383,
+"y": 0.7358,
+"w": 0.3872,
+"h": 0.02
+},
+"confidence": 0.56
+},
+{
+"text": "S740 104s 1710 2112 2509 3617 168 28",
+"box": {
+"x": 0.2367,
+"y": 0.8725,
+"w": 0.39,
+"h": 0.025
+},
+"confidence": 0.44
+},
+{
+"text": "A chance to win a E1000 Tesco gift card",
+"box": {
+"x": 0.21,
+"y": 0.9296,
+"w": 0.4394,
+"h": 0.0304
+},
+"confidence": 0.75
+},
+{
+"text": "and collect",
+"box": {
+"x": 0.2656,
+"y": 0.9537,
+"w": 0.1178,
+"h": 0.0179
+},
+"confidence": 0.54
+},
+{
+"text": "Visitwew.tescoNtew Clbcrd acply",
+"box": {
+"x": 0.2244,
+"y": 0.9521,
+"w": 0.4317,
+"h": 0.0425
+},
+"confidence": 0.44
+}
+]
+},
+{
+"name": "tesco-cradley-tilted-08cdb7b",
+"expectMinor": 3350,
+"source": "Galaxy A13 camera (photo of a screen), app 08cdb7b, 2026-11-18",
+"lines": [
+{
+"text": "Cradley Heath Extra",
+"box": {
+"x": 0.2428,
+"y": 0.2875,
+"w": 0.3144,
+"h": 0.0238
+},
+"confidence": 0.86
+},
+{
+"text": "Any questions please visit",
+"box": {
+"x": 0.1978,
+"y": 0.3154,
+"w": 0.4222,
+"h": 0.0233
+},
+"confidence": 0.85
+},
+{
+"text": "Www.tesco.com/store-locator",
+"box": {
+"x": 0.1806,
+"y": 0.3412,
+"w": 0.4383,
+"h": 0.0196
+},
+"confidence": 0.73
+},
+{
+"text": "VAT Number: GB 220 4302 31",
+"box": {
+"x": 0.2011,
+"y": 0.3667,
+"w": 0.4122,
+"h": 0.0204
+},
+"confidence": 0.82
+},
+{
+"text": "1 F&F Denim Cinched Waist",
+"box": {
+"x": 0.0928,
+"y": 0.4158,
+"w": 0.3956,
+"h": 0.0254
+},
+"confidence": 0.81
+},
+{
+"text": "Cropped Top In Navy",
+"box": {
+"x": 0.1406,
+"y": 0.4437,
+"w": 0.2889,
+"h": 0.0213
+},
+"confidence": 0.83
+},
+{
+"text": "1 F&F Knitted Fluffy V Neck",
+"box": {
+"x": 0.0944,
+"y": 0.4654,
+"w": 0.4239,
+"h": 0.0225
+},
+"confidence": 0.82
+},
+{
+"text": "Cardigan In Burgundy",
+"box": {
+"x": 0.1439,
+"y": 0.4904,
+"w": 0.3011,
+"h": 0.0238
+},
+"confidence": 0.83
+},
+{
+"text": "Reduced To Clear",
+"box": {
+"x": 0.145,
+"y": 0.5125,
+"w": 0.2556,
+"h": 0.0213
+},
+"confidence": 0.77
+},
+{
+"text": "Sub total :",
+"box": {
+"x": 0.095,
+"y": 0.5637,
+"w": 0.1406,
+"h": 0.0179
+},
+"confidence": 0.57
+},
+{
+"text": "Sav tngs:",
+"box": {
+"x": 0.1017,
+"y": 0.5842,
+"w": 0.1172,
+"h": 0.0192
+},
+"confidence": 0.54
+},
+{
+"text": "TESCO",
+"box": {
+"x": 0.2417,
+"y": 0.1992,
+"w": 0.3178,
+"h": 0.0604
+},
+"confidence": 0.73
+},
+{
+"text": "Pomo tions:",
+"box": {
+"x": 0.1461,
+"y": 0.6092,
+"w": 0.165,
+"h": 0.0163
+},
+"confidence": 0.63
+},
+{
+"text": "TOTAL:",
+"box": {
+"x": 0.1117,
+"y": 0.6512,
+"w": 0.0822,
+"h": 0.02
+},
+"confidence": 0.76
+},
+{
+"text": "Cash",
+"box": {
+"x": 0.1156,
+"y": 0.675,
+"w": 0.0567,
+"h": 0.0175
+},
+"confidence": 0.79
+},
+{
+"text": "CHANGE DUE:",
+"box": {
+"x": 0.1283,
+"y": 0.6942,
+"w": 0.1422,
+"h": 0.0171
+},
+"confidence": 0.75
+},
+{
+"text": "Clubcard points earned:",
+"box": {
+"x": 0.1233,
+"y": 0.7362,
+"w": 0.3239,
+"h": 0.0167
+},
+"confidence": 0.75
+},
+{
+"text": "Clubcard points balance:",
+"box": {
+"x": 0.1244,
+"y": 0.7567,
+"w": 0.3356,
+"h": 0.0175
+},
+"confidence": 0.84
+},
+{
+"text": "5898-1E50-UO53-W6DH",
+"box": {
+"x": 0.3156,
+"y": 0.865,
+"w": 0.2561,
+"h": 0.0175
+},
+"confidence": 0.73
+},
+{
+"text": "£19.50",
+"box": {
+"x": 0.6611,
+"y": 0.4163,
+"w": 0.0933,
+"h": 0.0217
+},
+"confidence": 0.82
+},
+{
+"text": "£22.50",
+"box": {
+"x": 0.6594,
+"y": 0.4667,
+"w": 0.0922,
+"h": 0.0192
+},
+"confidence": 0.78
+},
+{
+"text": "-C8.50",
+"box": {
+"x": 0.6567,
+"y": 0.5133,
+"w": 0.0939,
+"h": 0.0183
+},
+"confidence": 0.67
+},
+{
+"text": "£42.00",
+"box": {
+"x": 0.6567,
+"y": 0.56,
+"w": 0.0906,
+"h": 0.0192
+},
+"confidence": 0.76
+},
+{
+"text": "-£8.50",
+"box": {
+"x": 0.6572,
+"y": 0.5817,
+"w": 0.0894,
+"h": 0.0187
+},
+"confidence": 0.71
+},
+{
+"text": "-£8.50",
+"box": {
+"x": 0.655,
+"y": 0.6029,
+"w": 0.0861,
+"h": 0.0204
+},
+"confidence": 0.67
+},
+{
+"text": "S33.50",
+"box": {
+"x": 0.6478,
+"y": 0.6471,
+"w": 0.0911,
+"h": 0.0175
+},
+"confidence": 0.74
+},
+{
+"text": "£35.00",
+"box": {
+"x": 0.6506,
+"y": 0.67,
+"w": 0.0844,
+"h": 0.0175
+},
+"confidence": 0.8
+},
+{
+"text": "E1.50",
+"box": {
+"x": 0.6656,
+"y": 0.6917,
+"w": 0.0711,
+"h": 0.0158
+},
+"confidence": 0.73
+},
+{
+"text": "33",
+"box": {
+"x": 0.7033,
+"y": 0.7325,
+"w": 0.0283,
+"h": 0.015
+},
+"confidence": 0.94
+},
+{
+"text": "44",
+"box": {
+"x": 0.7017,
+"y": 0.7529,
+"w": 0.0283,
+"h": 0.015
+},
+"confidence": 0.96
+},
+{
+"text": "07/05/2026 15:25 Store: 5362 Checkout: 017",
+"box": {
+"x": 0.1544,
+"y": 0.9,
+"w": 0.5483,
+"h": 0.0221
+},
+"confidence": 0.8
+}
+]
+},
+{
+"name": "tesco-cradley-straight-08cdb7b",
+"expectMinor": null,
+"source": "Galaxy A13 camera (photo of a screen), app 08cdb7b, 2026-11-18",
+"lines": [
+{
+"text": "Cradley Hea th Extra",
+"box": {
+"x": 0.3106,
+"y": 0.3242,
+"w": 0.2894,
+"h": 0.0258
+},
+"confidence": 0.77
+},
+{
+"text": "Any questions please",
+"box": {
+"x": 0.2589,
+"y": 0.3513,
+"w": 0.3094,
+"h": 0.025
+},
+"confidence": 0.65
+},
+{
+"text": "vislt",
+"box": {
+"x": 0.5539,
+"y": 0.3567,
+"w": 0.1078,
+"h": 0.0213
+},
+"confidence": 0.32
+},
+{
+"text": "1 F&F Denim CInched Walst",
+"box": {
+"x": 0.1517,
+"y": 0.4467,
+"w": 0.3911,
+"h": 0.0254
+},
+"confidence": 0.64
+},
+{
+"text": "Croppedopn",
+"box": {
+"x": 0.1989,
+"y": 0.4725,
+"w": 0.2117,
+"h": 0.0262
+},
+"confidence": 0.55
+},
+{
+"text": "1 F&F Knitted Fluffy V Nek",
+"box": {
+"x": 0.1411,
+"y": 0.4921,
+"w": 0.4239,
+"h": 0.0242
+},
+"confidence": 0.77
+},
+{
+"text": "Cardigan In Buguray",
+"box": {
+"x": 0.2017,
+"y": 0.5192,
+"w": 0.2794,
+"h": 0.02
+},
+"confidence": 0.6
+},
+{
+"text": "TESCO",
+"box": {
+"x": 0.2978,
+"y": 0.2362,
+"w": 0.3061,
+"h": 0.0633
+},
+"confidence": 0.73
+},
+{
+"text": "VAT NUmber GB 220 4302 31",
+"box": {
+"x": 0.2672,
+"y": 0.3996,
+"w": 0.3889,
+"h": 0.025
+},
+"confidence": 0.72
+},
+{
+"text": "Reduced To Clea",
+"box": {
+"x": 0.2144,
+"y": 0.5379,
+"w": 0.2189,
+"h": 0.0183
+},
+"confidence": 0.73
+},
+{
+"text": "Subtotal:",
+"box": {
+"x": 0.1656,
+"y": 0.5829,
+"w": 0.1183,
+"h": 0.0183
+},
+"confidence": 0.75
+},
+{
+"text": "Savings:",
+"box": {
+"x": 0.1528,
+"y": 0.6025,
+"w": 0.1144,
+"h": 0.0213
+},
+"confidence": 0.78
+},
+{
+"text": "TOTAL:",
+"box": {
+"x": 0.1611,
+"y": 0.6654,
+"w": 0.0817,
+"h": 0.0171
+},
+"confidence": 0.8
+},
+{
+"text": "Cash",
+"box": {
+"x": 0.1633,
+"y": 0.6863,
+"w": 0.0578,
+"h": 0.0163
+},
+"confidence": 0.81
+},
+{
+"text": "Promotions:",
+"box": {
+"x": 0.1989,
+"y": 0.625,
+"w": 0.1528,
+"h": 0.0187
+},
+"confidence": 0.79
+},
+{
+"text": "CHANGE DUE:",
+"box": {
+"x": 0.1667,
+"y": 0.705,
+"w": 0.1489,
+"h": 0.0154
+},
+"confidence": 0.79
+},
+{
+"text": "Clubcard points earned:",
+"box": {
+"x": 0.1711,
+"y": 0.7421,
+"w": 0.3072,
+"h": 0.0167
+},
+"confidence": 0.78
+},
+{
+"text": "Clubcard points balance:",
+"box": {
+"x": 0.1872,
+"y": 0.7596,
+"w": 0.3044,
+"h": 0.0187
+},
+"confidence": 0.81
+},
+{
+"text": "S898-1E50-UO53-W6DH",
+"box": {
+"x": 0.355,
+"y": 0.8621,
+"w": 0.2406,
+"h": 0.0138
+},
+"confidence": 0.44
+},
+{
+"text": "S19.50",
+"box": {
+"x": 0.6911,
+"y": 0.4479,
+"w": 0.095,
+"h": 0.0242
+},
+"confidence": 0.75
+},
+{
+"text": "E22. 50",
+"box": {
+"x": 0.6978,
+"y": 0.4975,
+"w": 0.08,
+"h": 0.0187
+},
+"confidence": 0.61
+},
+{
+"text": "-D8.50",
+"box": {
+"x": 0.6872,
+"y": 0.54,
+"w": 0.0878,
+"h": 0.0196
+},
+"confidence": 0.62
+},
+{
+"text": "E42.00",
+"box": {
+"x": 0.6867,
+"y": 0.5829,
+"w": 0.0811,
+"h": 0.02
+},
+"confidence": 0.67
+},
+{
+"text": "E50",
+"box": {
+"x": 0.685,
+"y": 0.6062,
+"w": 0.0822,
+"h": 0.0163
+},
+"confidence": 0.41
+},
+{
+"text": "07/05/2026 15:25 Store: 5362 Checkout: 017",
+"box": {
+"x": 0.1939,
+"y": 0.8925,
+"w": 0.5217,
+"h": 0.0179
+},
+"confidence": 0.78
+},
+{
+"text": "33",
+"box": {
+"x": 0.72,
+"y": 0.7425,
+"w": 0.0289,
+"h": 0.0142
+},
+"confidence": 0.63
+},
+{
+"text": "44",
+"box": {
+"x": 0.7194,
+"y": 0.7604,
+"w": 0.0278,
+"h": 0.015
+},
+"confidence": 0.9
+}
+]
 }
 ]

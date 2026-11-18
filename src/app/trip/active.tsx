@@ -22,6 +22,7 @@ import {
 } from '@/features/trips/controller';
 import { distanceValue, formatClock, formatDay, formatDistance, formatDuration } from '@/features/trips/format';
 import { useActiveTrip } from '@/features/trips/hooks';
+import { MIN_AUTO_TRIP_M } from '@/features/trips/auto/engine';
 import { setTripScope } from '@/features/trips/auto/repo';
 import { ModalHeader } from '@/features/trips/ModalHeader';
 import { useAmountExpr } from '@/features/ocr/useAmountExpr';
@@ -97,6 +98,14 @@ export default function ActiveTripScreen() {
         await resumeActiveTrip();
       } else {
         const done = await endActiveTrip();
+        // QA-100 A13: an automatic trip that never went anywhere (phone picked up while charging at a desk) was saved as
+        // "0.0 km" when the driver ended it by hand. Same rule as when the detector ends it: under 500 m it wasn't a drive.
+        if (done && done.startedBy === 'auto' && done.distanceM < MIN_AUTO_TRIP_M) {
+          await discardTrip(done.id);
+          snack({ message: t('trip.discarded') });
+          close();
+          return;
+        }
         if (done) setEndedId(done.id);
       }
     } catch {

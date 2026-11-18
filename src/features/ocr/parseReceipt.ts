@@ -272,6 +272,9 @@ function readAmount(lines: Line[]): { minor: number | null; confidence: number }
   if (!all.length) return { minor: null, confidence: 0 };
   const distinct = new Set(all.map((m) => m.minor));
   const max = Math.max(...distinct);
+  // QA-100 A13-6: the receipt HAS a TOTAL label but its figure wasn't read — then the lone price left ("£7.00" twice on a
+  // £55.30 Tesco receipt) is an item, not the total. Offer it, never fill it.
+  if (totalRows.length) return { minor: max, confidence: 0.4 };
   return { minor: max, confidence: distinct.size === 1 ? 0.65 : 0.4 };
 }
 
