@@ -29,6 +29,150 @@ Cài đặt gốc từng máy: `qa-runs/modern/_baseline/`.
 - Lưu ý vận hành: máy chủ Windows chạm trần commit (7 máy ảo) nên phải tạm tắt XL để chạy máy 16 KB; lần đầu `adb install` (stream) làm
   máy 16 KB rơi offline — cài bằng `adb push` + `pm install` thì ổn.
 
+## B-102 OCR 20 hoá đơn — 2026-11-18 11:45–14:40 (3 bản: 322acd6 → 4f297e1 → 08cdb7b)
+
+**Cách chạy:**
+- **Máy:** XL `qa_pixel9proxl`, API 37 Play Store, Google Play services 26.45, `-gpu swiftshader_indirect` (`-gpu host` treo máy sau
+  lần đọc đầu), chữ 1.0.
+- **Dữ liệu:** vùng **United Kingdom** (P001 + một dòng `proState` trial bắt đầu hôm nay, khôi phục qua Backup → Restore), Pro "Trial · 7
+  days left". Không bấm Subscribe.
+- **Mỗi ảnh:**
+  - đẩy vào `/sdcard/Pictures` (chỉ 1 ảnh mỗi lần) + quét media;
+  - Home → Expense → Photo → Choose from library → chọn → Done;
+  - chờ 16 s, chụp màn hình (`qa-runs/receipts/run*/rNN.png`);
+  - đóng (X) → Discard; không lưu khoản nào.
+- **Lấy dòng thô:** sau mỗi ≤ 3 ảnh: Settings → giữ lâu "Version 1.0.0" → chia sẻ file chẩn đoán.
+  - Ảnh Play Store không `adb root` được, và không có app nào nhận file `.json` (chỉ Drive/Gmail cần tài khoản, Quick Share). Nên tôi
+    dựng tại máy một APK nhận chia sẻ rất nhỏ `qa.rx` (javac + d8 + aapt2 của SDK, ký bằng debug keystore có sẵn). Nó chép file vào
+    `/sdcard/Android/data/qa.rx/files/` để `adb pull`.
+  - File gốc: `qa-runs/receipts/diag*/`.
+- **Thử ảnh API 30 google_apis (root được):** ⏭ không dùng được. Play services 20.18 không tải được module `vision.ocr` ("No acceptable
+  module… remote version is 0", "rate limiting").
+- **Kết quả:**
+  - Dòng thô (text + box) và `parsed` của từng bản: `qa-runs/receipts/ocr-raw.json` (322acd6) và `ocr-raw-4f297e1.json` (4f297e1, có
+    `timing`).
+  - Ảnh r21–r32: chưa có thư mục `qa-runs/receipts/new/` → chưa chạy.
+
+**Cách chấm "app điền":** đúng như `fill.ts` / `receiptSignal.ts`:
+- Trường có độ tin cậy ≥ 0.6 mới được điền.
+- Ngày chỉ đổi trên màn ghi khi hoá đơn trong vòng 400 ngày.
+- Ảnh chụp màn hình khớp 100% với cách tính này: đã đối chiếu r01–r03, r11, r12, r16, r20 bản cũ và r03, r11, r18 bản mới.
+
+Cột ngày chấm theo ngày bộ đọc ra (≥ 0.6) so với đáp án, vì hoá đơn > 400 ngày thì màn ghi giữ "Now" theo thiết kế. Trong ngoặc là giá trị
+bộ đọc ra nhưng dưới ngưỡng (@ độ tin cậy). Ở hai cột sửa, "a+b ms" là `timing.shrinkMs + ocrMs`.
+
+| Ảnh | Đáp án (số tiền / nơi bán / ngày) | Trước sửa 322acd6 | Sửa 1 4f297e1 (· thu nhỏ+OCR) | Sửa 2 08cdb7b (· thu nhỏ+OCR) |
+|---|---|---|---|---|
+| r01 | 154.44 / Tesco / 2017-06-06 | ❌ — (154.44 @0.5) / ✅ / ❌ — (2017-06-06 @0.3) | ❌ — (154.44 @0.5) / ✅ / ❌ — (2017-06-06 @0.3) · 77+1646 ms | ✅ / ✅ / ❌ — (2017-06-06 @0.3) · 82+2019 ms |
+| r02 | 33.50 / Tesco / 2026-05-07 | ✅ / ✅ / ✅ | ✅ / ✅ / ✅ · 269+748 ms | ✅ / ✅ / ✅ · 18+1129 ms |
+| r03 | 5.08 / Tesco / 2012-04-23 | ✅ / ❌ Iesço / ❌ — (2012-04-22 @0.3) | ❌ — (5.08 @0.4) / ❌ merro / ❌ — (2012-04-22 @0.3) · 191+930 ms | ❌ 0.95 / ✅ / ❌ — (2012-04-23 @0.3) · 302+1053 ms |
+| r04 | 23.42 / Tesco / — | ✅ / ✅ / ✅ | ✅ / ✅ / ✅ · 262+837 ms | ✅ / ✅ / ✅ · 12+1062 ms |
+| r05 | 54.73 / Tesco / — | ✅ / ✅ / ✅ | ✅ / ✅ / ✅ · 234+1043 ms | ✅ / ✅ / ✅ · 240+1161 ms |
+| r06 | 21.90 / Tesco / 2026-10-06 | ✅ / ✅ / ❌ — | ✅ / ✅ / ❌ — · 46+903 ms | ✅ / ✅ / ✅ · 79+1153 ms |
+| r07 | 5.67 / Tesco / 1990-12-14 | ✅ / ✅ / ❌ — (1990-12-14 @0.3) | ✅ / ✅ / ❌ — (1990-12-14 @0.3) · 158+1020 ms | ✅ / ✅ / ❌ — (1990-12-14 @0.3) · 17+822 ms |
+| r08 | 6.71 / Tesco / 1994-04-19 | ✅ / ✅ / ❌ — (2094-04-19 @0.2) | ✅ / ✅ / ❌ — (2094-04-19 @0.2) · 352+735 ms | ✅ / ✅ / ❌ — (1994-04-19 @0.3) · 37+1104 ms |
+| r09 | 20.00 / Shell / 2006-06-21 | ✅ / ✅ / ❌ — | ✅ / ✅ / ❌ — · 163+904 ms | ✅ / ✅ / ❌ — (2006-06-21 @0.3) · 7+1007 ms |
+| r10 | 53.69 / Shell / 2025-11-24 | ✅ / ✅ / ✅ | ✅ / ✅ / ✅ · 263+701 ms | ✅ / ✅ / ✅ · 10+812 ms |
+| r11 | 69.03 / Shell / 2025-10-18 | ❌ 69.83 / ❌ MuReceiptME / ❌ — | ❌ 69.83 / ❌ MuReceiptM / ❌ — (2028-11-18 @0.2) · 365+942 ms | ❌ 69.83 / ✅ / ❌ — · 29+989 ms |
+| r12 | 15.04 / Shell / 2026-03-10 | ✅ / ✅ / ❌ 2026-10-03 | ✅ / ✅ / ❌ 2026-10-03 · 157+828 ms | ✅ / ✅ / ✅ · 38+752 ms |
+| r13 | 393.95 / Shell / 2025-06-08 | ✅ / ✅ / ❌ — (2025-06-08 @0.3) | ✅ / ✅ / ❌ — (2025-06-08 @0.3) · 108+844 ms | ✅ / ✅ / ❌ — (2025-06-08 @0.3) · 85+946 ms |
+| r14 | 199.82 / Fuelmax Station / 2024-04-26 | ✅ / ✅ / ❌ — (2024-04-26 @0.3) | ✅ / ✅ / ❌ — (2024-04-26 @0.3) · 261+872 ms | ✅ / ✅ / ❌ — (2024-04-26 @0.3) · 29+1079 ms |
+| r15 | 32.02 / Shell / 2022-04-22 | ✅ / ✅ / ❌ — (2022-04-22 @0.3) | ✅ / ✅ / ❌ — (2022-04-22 @0.3) · 54+782 ms | ✅ / ✅ / ❌ — (2022-04-22 @0.3) · 196+771 ms |
+| r16 | 88.20 / United Pacific / 2024-03-15 | ✅ / ❌ 250 Tiburon Blud / ❌ — (2024-03-15 @0.3) | ✅ / ❌ 250 Tiburon Blud / ❌ — (2024-03-15 @0.3) · 319+675 ms | ✅ / ✅ / ❌ — (2024-03-15 @0.3) · 85+1124 ms |
+| r17 | 21.74 / FreshHarvest Market / 2019-11-20 | ✅ / ✅ / ❌ — (2019-11-20 @0.3) | ✅ / ✅ / ❌ — (2019-11-20 @0.3) · 74+863 ms | ✅ / ✅ / ❌ — (2019-11-20 @0.3) · 105+1012 ms |
+| r18 | 11.51 / WideMart Supermarket / 2025-04-18 | ✅ / ✅ / ❌ — (2025-04-18 @0.3) | ✅ / ❌ WideMart Supernarket / ❌ — (2025-04-18 @0.3) · 284+845 ms | ✅ / ✅ / ❌ — (2025-04-18 @0.3) · 10+1054 ms |
+| r19 | 25.97 / The Shop / — | ✅ / ✅ / ✅ | ✅ / ✅ / ✅ · 50+847 ms | ✅ / ✅ / ✅ · 397+632 ms |
+| r20 | 47.95 / — / — | ✅ / ❌ Shop Name / ✅ | ✅ / ❌ Shop Name / ✅ · 31+1297 ms | ✅ / ✅ / ✅ · 21+843 ms |
+
+**Tổng:**
+
+| | Số tiền | Nơi bán | Ngày |
+|---|---|---|---|
+| **322acd6** | 18/20 | 16/20 | 6/20 |
+| **4f297e1** | 17/20 | 15/20 | 6/20 |
+| **08cdb7b** | 18/20 | 20/20 | 8/20 |
+
+**Sửa 1 (4f297e1):** không ca nào tốt lên. Có **2 ca thụt lùi**, cả hai do ảnh đã thu nhỏ cho OCR ra dòng khác:
+- **r03:** dòng "TOTAL" đứng riêng biến mất → số tiền 5.08 còn @0.4, không điền; nơi bán thành "merro".
+- **r18:** "Supermarket" bị đọc thành "Supernarket".
+
+**Sửa 2 (08cdb7b), chạy 14:00–14:40:** nơi bán 20/20.
+- **Tốt lên:**
+  - r01 số tiền 154.44.
+  - r03, r11, r16, r18, r20 đúng nơi bán.
+  - r06 đọc được ngày "06 0CT 2026".
+  - r12 ra 10 Mar (màn ghi đổi ngày đúng: "Tue 10 Mar, 17:24").
+- **Không có ngày nào bị đổi sai.** r08 / r09 nay ra đúng năm và ngày nhưng @0.3 nên không điền.
+- **🟠 Thụt lùi mới, r03: tự điền SAI số tiền £0.95** (@0.9) thay vì 5.08. Sai còn tệ hơn để trống.
+  - Bản 322acd6 điền đúng 5.08; bản 4f297e1 để trống.
+  - Dòng thô:
+    - `£0.95` (x 0.50, y 0.330) là giá đơn vị của dòng `2@` (y 0.322).
+    - `TOTAL` ở (0.13, 0.367). Số đúng `5.08` ở cột phải (0.75, 0.380 và 0.402).
+  - Nghi parser ưu tiên "số có dấu £" ở gần nhãn TOTAL hơn số cùng hàng ở cột phải.
+  - Ảnh: `qa-runs/receipts/run-08cdb7b/r03.png`.
+- **r11:** vẫn 69.83 (dòng OCR đọc nhầm, như điều phối đã kết luận).
+- **Thời gian:** thu nhỏ 7–397 ms, OCR 632–2019 ms.
+
+### r21–r32 (12 hoá đơn thêm: hoá đơn công ty, gửi xe, đổ xăng) — APK e6bb124, 14:25–14:45
+
+- **Nguồn ảnh:** Phương dán 12 ảnh vào chat phiên điều phối (05:01 UTC). Tôi trích từ lịch sử phiên đó ra
+  `qa-runs/receipts/new/r21…r32.png`; thứ tự đã đối chiếu với `qa/receipts-expected.json`.
+- **APK:** e6bb124 **chưa có 379001d** (sửa r03). `parsed` ở đây là parser 08cdb7b + B-105.
+- **Dòng thô:** `qa-runs/receipts/ocr-raw-e6bb124.json` (có `timing`).
+- **Luật chấm nơi bán:** từ đợt này phải chứa đủ tên đúng (trước đây chấp nhận cả chuỗi con, nên "lexnet" từng bị chấm ✅). Ba bản
+  trên chấm lại vẫn giữ nguyên điểm.
+
+| Ảnh | Số tiền app điền | Đáp án | | Nơi bán app điền | Đáp án | | Ngày bộ đọc ra (≥0.6) · màn ghi | Đáp án | | Dòng OCR |
+|---|---|---|---|---|---|---|---|---|---|---|
+| r21 | 225.00 | 225.00 | ✅ | Acme Inc | Acme Inc. | ✅ | — (đọc 2013-03-08 @0.3) · giữ Now | 2013-03-08 | ❌ | 44 |
+| r22 | 1575.01 | 1575.01 | ✅ | lexnet | Flexnet | ❌ | — (đọc 2016-06-13 @0.3) · giữ Now | 2016-06-13 | ❌ | 35 |
+| r23 | — (đọc 3025.00 @0.4) | 3025.00 | ❌ | Jane Smith | Smith & Co | ❌ | — (đọc 2023-05-10 @0.3) · giữ Now | 2023-05-10 | ❌ | 22 |
+| r24 | 5400.00 | 5400.00 | ✅ | Sample | Stark Industries | ❌ | — (đọc 2023-01-01 @0.3) · giữ Now | 2023-01-01 | ❌ | 59 |
+| r25 | 7.00 | 7.00 | ✅ | Address | — | ❌ | — (đọc 2018-07-28 @0.3) · giữ Now | 2018-07-28 | ❌ | 9 |
+| r26 | 5.00 | 5.00 | ✅ | Pe NAME | — | ❌ | — · giữ Now | — | ✅ | 18 |
+| r27 | 150.00 | 150.00 | ✅ | Parking Garage | Parking Garage | ✅ | — (đọc 2020-03-18 @0.3) · giữ Now | 2020-03-20 | ❌ | 25 |
+| r28 | — (đọc 96.80 @0.4) | 81.80 | ❌ | Ala Moana Center | Glideparcs | ❌ | — (đọc 2028-05-09 @0.2) · giữ Now | 2026-05-09 | ❌ | 40 |
+| r29 | 42.00 | 42.00 | ✅ | Fuelmax Station | Fuelmax Station | ✅ | — (đọc 2025-01-10 @0.3) · giữ Now | 2025-01-10 | ❌ | 32 |
+| r30 | 19.75 | 19.75 | ✅ | H-E-B | H-E-B | ✅ | — · giữ Now | — | ✅ | 18 |
+| r31 | 48.40 | 48.40 | ✅ | Pin Used | — | ❌ | — · giữ Now | — | ✅ | 15 |
+| r32 | 200.00 | 200.00 | ✅ | Speedway | Speedway | ✅ | — (đọc 2020-04-02 @0.3) · giữ Now | 2020-02-04 | ❌ | 21 |
+
+**Đúng:** số tiền 10/12 · nơi bán 5/12 · ngày 3/12. Ảnh màn ghi khớp (r22, r23, r28, r31).
+
+**Số tiền:**
+- **r23:** `$3025.00` cạnh dòng `Total` nhưng chỉ @0.4, nên không điền.
+- **r28 (bảng gửi xe):** bộ đọc chọn `$96.80" due 05/24/26` (@0.4), trong khi `SUBTOTAL` → `$81.80**`.
+
+**Nơi bán:**
+- r22: `lexnet`, trong khi có dòng `Flexnet VS`.
+- r23: `Jane Smith`, trong khi có `Smith & Ge`.
+- r24: `Sample` (chữ mẫu), trong khi có `Stark Industries`.
+- r28: `Ala Moana Center` (địa điểm), đáp án Glideparcs.
+- Lấy chữ mẫu / chữ rác thay vì để trống:
+  - r25 "Address";
+  - r26 "Pe NAME";
+  - r31 "Pin Used".
+
+**Ngày:**
+- **r32 `Date: 02/04/2020`:** hoá đơn `$` nhưng đọc thành 2 Apr (@0.3). Đáp án 4 Feb.
+- **r27:** lấy `Entry Time : 03/18/2020` thay vì `Exit Time: 03/20/2020`.
+- **r28:** năm `26` đọc thành 2028 (@0.2).
+- Các ngày còn lại đọc đúng nhưng @0.3, nên không điền.
+
+**Ghi chú cho `parseReceipt.ts` (từ dòng thô, bản 322acd6):**
+- **Ngày đọc đúng nhưng chỉ @0.3** (r01, r03, r07, r13–r18) → không bao giờ điền. Dòng dạng `06/06/2017 8:46 …`, `03/15/2024 21162400`.
+- **r12 `DATE 3/10/26 17:24`** trên hoá đơn `$` bị đọc theo kiểu UK thành 3 Oct (@ ≥ 0.6, **đổi ngày sai** trên màn ghi). r09
+  `DATE06/21/06` (không có cách) không đọc được. Cả hai là hoá đơn Mỹ, máy để vùng UK.
+- **r06 `TUE 06 0CT 2026`:** OCR đọc chữ O thành số 0, nên không ra ngày.
+- **r08:** năm 2 chữ số `94` → 2094 (@0.2).
+- **r03:** lấy `TOTAL UP TO 22/04/12` (điểm Clubcard) thay vì dòng giờ in `23/04/12 19:51`.
+- **r11:** dòng OCR là `$69.83`, đáp án 69.03 → cần nhìn lại ảnh (OCR đọc nhầm số hay đáp án nhầm). Nơi bán lấy `MuRe…`, trong khi có
+  dòng `She I Riverstde Mart`.
+- **r16:** lấy dòng địa chỉ `250 TIBURON BLUD`, trong khi dòng đầu là `UNITED PACIFIC 5651`.
+- **r20:** chữ mẫu "Shop Name" được điền làm nơi bán (đáp án: không có).
+- **r01:** số tiền đúng nhưng @0.5 (hoá đơn dài, có Cash 160.00 / Change / Rounding).
+- **Thời gian (4f297e1, máy ảo):** thu nhỏ 31–365 ms, OCR 675–1646 ms.
+
 ## 2e. Chạy lại trên APK `sundaysort-qa-97ceb60-all.apk` (dev 97ceb60, B-56…B-94) — 2026-11-18 10:12–10:18
 
 Bằng chứng: `qa-runs/modern/regress-97ceb60/`. Fold mở, chia đôi ngang 852×436dp (`--windowingMode 6` + `am task resize`).

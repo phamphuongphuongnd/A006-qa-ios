@@ -55,15 +55,35 @@ describe('planFill (P1-12)', () => {
   it('older receipt without a time lands at midday; a future date never moves the entry', () => {
     expect(receiptAt(NOV9, null, NOW)).toBe(NOV9 + 12 * 3600_000);
     expect(receiptAt(new Date(2026, 10, 20).getTime(), null, NOW)).toBeNull();
+    // A receipt from the tax year before last (catching up before 31 Jan): keeps its own date, not "Now".
+    const may2025 = new Date(2025, 4, 2).getTime();
+    expect(receiptAt(may2025, 9 * 60, NOW)).toBe(may2025 + 9 * 3600_000);
   });
 });
 
 describe('mergeReadings (several photos)', () => {
-  it('takes each field from the first photo that read it', () => {
+  it('takes each field from the first photo that read it, the photo with the total first', () => {
     const a = reading({ amountMinor: null, confidence: { amount: 0, merchant: 0.92, date: 0.9 } });
     const b = reading({ amountMinor: 1500, merchant: 'Tesco', date: null, confidence: { amount: 0.9, merchant: 0.9, date: 0 } });
-    expect(mergeReadings([null, a, b])).toEqual({ ocrAmountMinor: 1500, ocrMerchant: 'Shell', ocrDate: NOV9 });
+    expect(mergeReadings([null, a, b])).toEqual({ ocrAmountMinor: 1500, ocrMerchant: 'Tesco', ocrDate: NOV9 });
+    expect(mergeReadings([null, a])).toEqual({ ocrAmountMinor: null, ocrMerchant: 'Shell', ocrDate: NOV9 });
     expect(mergeReadings([])).toEqual({ ocrAmountMinor: null, ocrMerchant: null, ocrDate: null });
+  });
+
+  it('shop and date come from the photo that gave the total (A13: Tesco photo without total + FreshHarvest)', () => {
+    const tesco = reading({ amountMinor: null, merchant: 'Tesco', confidence: { amount: 0.4, merchant: 0.92, date: 0.9 } });
+    const fresh = reading({ amountMinor: 2174, merchant: 'FreshHarvest Market', date: null, confidence: { amount: 0.9, merchant: 0.62, date: 0 } });
+    expect(mergeReadings([tesco, fresh])).toEqual({ ocrAmountMinor: 2174, ocrMerchant: 'FreshHarvest Market', ocrDate: NOV9 });
+  });
+});
+
+describe('planFill with a second photo', () => {
+  it('a photo with the total replaces the shop a photo without total put there, unless the driver edited it', () => {
+    const fresh = reading({ amountMinor: 2174, merchant: 'FreshHarvest Market', date: null, confidence: { amount: 0.9, merchant: 0.62, date: 0 } });
+    const form = { amountMinor: 0, note: 'Tesco', at: null };
+    expect(planFill({ ...form, weak: { note: true, at: false } }, fresh, NOW).note).toBe('FreshHarvest Market');
+    expect(planFill({ ...form, weak: { note: false, at: false } }, fresh, NOW).note).toBeUndefined();
+    expect(planFill(form, fresh, NOW).note).toBeUndefined();
   });
 });
 

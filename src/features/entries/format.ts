@@ -38,7 +38,12 @@ export function periodLabel(p: { start: number; end: number }): string {
 }
 
 /** "Tue 10 Nov, 13:05" — the changed-date chip in Quick capture and the Date & time row. */
-export const dateTimeLabel = (at: number) => `${dateLabel(at)}, ${timeLabel(at)}`;
+// QA-100 (A13, B-108): a receipt from 2019 showed "Wed 20 Nov, 11:09" — read as this week while the entry went into the
+// 2019 tax year. Another year is spelled out: "Wed 20 Nov 2019, 11:09".
+export const dateTimeLabel = (at: number, now = Date.now()) => {
+  const y = new Date(at).getFullYear();
+  return `${dateLabel(at)}${y === new Date(now).getFullYear() ? '' : ` ${y}`}, ${timeLabel(at)}`;
+};
 
 /** "Mon 9 Nov · 06:12" — Sort card. */
 export const dateDotTime = (at: number) => `${dateLabel(at)} · ${timeLabel(at)}`;

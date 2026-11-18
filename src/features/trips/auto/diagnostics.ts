@@ -13,6 +13,7 @@ import { getProStatus } from '@/db/proRepo';
 import { getSettings } from '@/db/settingsRepo';
 import { listTrips } from '@/db/tripsRepo';
 
+import { folderProbe } from '@/features/backup/folder';
 import { lastReceiptReadings } from '@/features/ocr/reader';
 
 import { getAutoFlags } from './runner';
@@ -71,6 +72,20 @@ export async function buildTripDiagnostics(now = Date.now()) {
     trips,
     // A13-4: last receipt readings (raw OCR lines + parse) — read on the phone only, shared only with this file.
     receipts: lastReceiptReadings(),
+    // A13: why the backup folder shows "not reachable" (provider + what listing it said), without changing anything.
+    backup: await (async () => {
+      const f = s.backupFolder;
+      const provider = f ? (f.uri.match(/^content:\/\/([^/]+)/)?.[1] ?? f.uri.split(':')[0]) : null;
+      return {
+        folderSet: !!f,
+        provider,
+        nightly: s.backupNightly,
+        failCount: s.backupFailCount,
+        lastError: s.backupRun?.lastError ?? null,
+        lastAutoBackupAt: s.lastAutoBackupAt ? new Date(s.lastAutoBackupAt).toISOString() : null,
+        probe: f ? await folderProbe(f) : null,
+      };
+    })(),
   };
 }
 

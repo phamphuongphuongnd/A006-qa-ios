@@ -16,6 +16,11 @@ export interface CaptureFields {
   note: string;
   /** null = "Now" (the driver has not picked a date). */
   at: number | null;
+  /**
+   * QA-100 (A13, two photos: Tesco + FreshHarvest): note / date that came from a photo whose total couldn't be read and
+   * that the driver hasn't touched. The photo that does give the total replaces them, so all three come from one receipt.
+   */
+  weak?: { note: boolean; at: boolean };
 }
 
 export interface FillPlan {
@@ -26,7 +31,6 @@ export interface FillPlan {
   chipMinor?: Minor;
 }
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 /** No printed time: put an older receipt at midday so it sits in the right day whatever the time zone quirks. */
 const NOON_MIN = 12 * 60;
 
@@ -41,8 +45,8 @@ export function receiptAt(date: number, minutes: number | null, now: number): nu
     return at <= now && now - at > 15 * 60_000 ? at : null;
   }
   const at = date + (minutes ?? NOON_MIN) * 60_000;
-  // A receipt "from the future" (wrong clock, misread year) never moves the entry.
-  return at <= now && now - at < 400 * DAY_MS ? at : null;
+  // A receipt "from the future" (wrong clock, misread year) never moves the entry. Old receipts do (no age limit, Phương 18/11).
+  return at <= now ? at : null;
 }
 
 export function planFill(form: CaptureFields, r: ParsedReceipt, now: number): FillPlan {
@@ -52,8 +56,10 @@ export function planFill(form: CaptureFields, r: ParsedReceipt, now: number): Fi
     if (form.amountMinor === 0) plan.amountMinor = f.ocrAmountMinor;
     else if (form.amountMinor !== f.ocrAmountMinor) plan.chipMinor = f.ocrAmountMinor;
   }
-  if (f.ocrMerchant && form.note.trim() === '') plan.note = f.ocrMerchant.slice(0, 120);
-  if (f.ocrDate !== null && form.at === null) {
+  // This photo just gave the total: its shop and date win over ones taken from a photo without a total.
+  const anchor = plan.amountMinor !== undefined;
+  if (f.ocrMerchant && (form.note.trim() === '' || (anchor && form.weak?.note))) plan.note = f.ocrMerchant.slice(0, 120);
+  if (f.ocrDate !== null && (form.at === null || (anchor && form.weak?.at))) {
     const at = receiptAt(f.ocrDate, r.confidence.date >= 0.6 ? r.minutes : null, now);
     if (at !== null) plan.at = at;
   }
@@ -63,13 +69,18 @@ export function planFill(form: CaptureFields, r: ParsedReceipt, now: number): Fi
 export const planIsEmpty = (p: FillPlan) =>
   p.amountMinor === undefined && p.note === undefined && p.at === undefined && p.chipMinor === undefined;
 
+/** The reading confidently gave a total. */
+export const readingHasAmount = (r: ParsedReceipt) => readingToEntryFields(r).ocrAmountMinor !== null;
+
 /**
  * One reading for an entry with several photos: each field from the first photo that read it confidently (photo
- * order = the order the driver took them). Returns the columns saved on the entry (receiptSignal contract).
+ * order = the order the driver took them), except that the first photo with a readable total goes first — shop, date
+ * and amount then come from the same receipt. Returns the columns saved on the entry (receiptSignal contract).
  */
 export function mergeReadings(readings: (ParsedReceipt | null)[]) {
   const out: ReturnType<typeof readingToEntryFields> = { ocrAmountMinor: null, ocrMerchant: null, ocrDate: null };
-  for (const r of readings) {
+  const anchor = readings.find((r): r is ParsedReceipt => !!r && readingHasAmount(r));
+  for (const r of anchor ? [anchor, ...readings.filter((x) => x !== anchor)] : readings) {
     if (!r) continue;
     const f = readingToEntryFields(r);
     out.ocrAmountMinor ??= f.ocrAmountMinor;

@@ -17,6 +17,7 @@ import { vehicle } from './v2/vehicle';
 export const en = {
   common: {
     save: 'Save',
+    moreBelow: 'More below',
     cancel: 'Cancel',
     delete: 'Delete',
     undo: 'Undo',
@@ -386,6 +387,10 @@ export const en = {
     discardConfirm: 'Discard this trip?',
     discardBody: "The {distance} you recorded won't be saved.",
     discarded: 'Trip discarded',
+    shortTitle: 'Only {distance} — keep this trip?',
+    shortBody: 'This trip started on its own and hardly moved. Discard it, or keep it in Miles.',
+    shortDiscard: 'Discard',
+    shortKeep: 'Keep',
     gpsOffTitle: 'Location is off',
     startFailed: "Couldn't start GPS recording. Try again, or add the trip manually.",
     permissionNeeded: 'Location access is needed to record a trip.',

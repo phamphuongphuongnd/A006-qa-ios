@@ -1,0 +1,162 @@
+[
+ {
+  "eventType": "WAIT",
+  "delayTime": 4000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Get started"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "United Kingdom. £ · Tax year 6 Apr – 5 Apr · Self Assessment & MTD"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Continue"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Continue"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Looks good"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Continue free"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Not now"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 1500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Entries"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Sort"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Miles"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Reports"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Home"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "New expense"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2500
+ }
+]

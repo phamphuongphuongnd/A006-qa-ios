@@ -36,12 +36,14 @@ interface Line {
   text: string;
   up: string;
   box: RawLine['box'];
+  /** ML Kit / Vision line confidence (0..1; 0 or missing = not given). */
+  conf: number;
 }
 
 /** Lines in reading order (top to bottom, then left to right) when boxes are known. */
 function prepare(raw: RawOcr): Line[] {
   const lines = raw.lines
-    .map((l, i) => ({ i, text: l.text.replace(/\s+/g, ' ').trim(), up: '', box: l.box }))
+    .map((l, i) => ({ i, text: l.text.replace(/\s+/g, ' ').trim(), up: '', box: l.box, conf: l.confidence ?? 0 }))
     .filter((l) => l.text !== '');
   const boxed = lines.every((l) => l.box);
   if (boxed) lines.sort((a, b) => a.box!.y + a.box!.h / 2 - (b.box!.y + b.box!.h / 2) || a.box!.x - b.box!.x);
@@ -58,9 +60,14 @@ interface Money {
   minor: number;
   /** Position in the line (rightmost wins when a line has several). */
   at: number;
+  /** OCR confidence of the line the figure was read from (set where rows are paired). */
+  conf?: number;
 }
 
-const MONEY_RE = /([£$€]?)\s?(\d{1,3}(?:,\d{3})+|\d{1,6})(?:\.\s?|,)(\d{2})(?!\d)/g;
+// Whole part: "1,250" (comma thousands), "1.575" before ",01" (dot thousands, comma decimal — QA-100 B-102 r22), or plain.
+const MONEY_RE = /([£$€]?)\s?(\d{1,3}(?:,\d{3})+|\d{1,3}(?:\.\d{3})+(?=,\d{2}(?!\d))|\d{1,6})(?:\.\s?|,)(\d{2})(?!\d)/g;
+/** Whole amounts after a currency sign ("$5400", "$5,000", "£5") — never a bare number, never one with decimals. */
+const WHOLE_RE = /([£$€])\s?(\d{1,3}(?:,\d{3})+|\d{1,6})(?![\dOoA-Za-z]|[.,][\dOo])/g;
 
 /** Amounts in one line, skipping dates (12.11.26), litres (45.20L), rates (20.00%) and per-unit prices. */
 export function moneyIn(raw: string): Money[] {
@@ -78,11 +85,17 @@ export function moneyIn(raw: string): Money[] {
     const after = text.slice(end, end + 6);
     if (/\d[./-]$/.test(before) || /^[./-]\d/.test(after)) continue;
     if (/^\s?(%|l\b|ltr|lit|gal|kg|p\/|\/)/i.test(after)) continue;
-    // "1,250.50" groups thousands; a lone "72,40" is a decimal comma.
-    const whole = Number(m[2].replace(/,/g, ''));
+    // "1,250.50" groups thousands; a lone "72,40" is a decimal comma; "1.575,01" groups with dots.
+    const whole = Number(m[2].replace(/[.,]/g, ''));
     out.push({ minor: whole * 100 + Number(m[3]), at: start });
   }
-  return out.filter((x) => x.minor > 0);
+  for (const m of text.matchAll(WHOLE_RE)) {
+    const start = m.index ?? 0;
+    const after = text.slice(start + m[0].length, start + m[0].length + 6);
+    if (/^\s?(%|l\b|ltr|lit|gal|kg|p\/|\/|[:\/-]\d)/i.test(after)) continue;
+    out.push({ minor: Number(m[2].replace(/,/g, '')) * 100, at: start });
+  }
+  return out.filter((x) => x.minor > 0).sort((a, b) => a.at - b.at);
 }
 
 const TOTAL_STRONG = /\b(GRAND\s*TOTAL|AMOUNT\s*DUE|BALANCE\s*DUE|TOTAL\s*(TO\s*PAY|DUE|PAID)|AMOUNT\s*TO\s*PAY|TO\s*PAY)\b/;
@@ -94,44 +107,154 @@ const NOT_TOTAL = /\b(SUB\s*-?\s*TOTAL|CHANGE|CASH\s*BACK|CASHBACK|TENDER(ED)?|S
 const TAX = /\b(VAT|TAX|GST)\b/;
 const INCL = /\b(INC|INCL|INCLUDING|INC\.)\b/;
 
+const centre = (l: Line) => l.box!.y + l.box!.h / 2;
+/** Letters left once currency marks are gone ("E33.50" — £ read as E — still counts as a bare figure). */
+const wordsIn = (l: Line) => l.up.replace(/GBP|USD|EUR|[£$€]/g, '').replace(/[^A-Z]/g, '');
+const isFigure = (l: Line) => wordsIn(l).length <= 1 && moneyIn(l.text).length > 0;
+const isLabel = (l: Line) => /[A-Z]{2}/.test(l.up) && !moneyIn(l.text).length;
+
+/**
+ * QA-100 B-102 (real A13 reads of two Tesco receipts): on a photo taken a few degrees off, the whole right-hand figure
+ * column sits ~0.6 of a line below its labels, so "TOTAL: £33.50"'s figure ended up nearer the "Cash" label under it
+ * and was thrown away. Estimate that column shift once from all label/figure pairs (the shift that lines up the most
+ * figures with a label; the smallest one on a tie), then compare rows after taking it off.
+ */
+function columnShift(lines: Line[]): number {
+  const boxed = lines.filter((l) => l.box);
+  const figs = boxed.filter(isFigure);
+  const labels = boxed.filter(isLabel);
+  if (figs.length < 2 || !labels.length) return 0;
+  const hs = boxed.map((l) => l.box!.h).sort((a, b) => a - b);
+  const h = hs[Math.floor(hs.length / 2)];
+  const shifts = figs.map((f) => labels.filter((l) => l.box!.x < f.box!.x).map((l) => centre(f) - centre(l)));
+  // At most ~0.9 of a line: real tilted photos shifted 0.55–0.7 line. On an evenly spaced till roll a shift of 1.5 lines
+  // lines up just as many pairs — every figure with the label one row off (r03 took "£0.95" as its TOTAL that way).
+  const cands = [0, ...shifts.flat().filter((d) => Math.abs(d) <= 0.9 * h)];
+  let best = 0;
+  let bestScore = -1;
+  for (const s of cands) {
+    const score = shifts.filter((ds) => ds.some((d) => Math.abs(d - s) < 0.3 * h)).length;
+    if (score > bestScore || (score === bestScore && Math.abs(s) < Math.abs(best))) {
+      best = s;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
 /** Amounts printed on the same row as `line` (a label on the left, the figure in another OCR block on the right). */
-function rowAmounts(line: Line, lines: Line[]): Money[] {
+function rowAmounts(line: Line, lines: Line[], shift: number): Money[] {
   const own = moneyIn(line.text);
-  if (own.length) return own;
+  if (own.length) return own.map((m) => ({ ...m, conf: line.conf }));
   if (!line.box) {
     const next = lines[line.i + 1];
     return next && !/[A-Z]{3}/.test(next.up.replace(/GBP|USD|EUR/g, '')) ? moneyIn(next.text) : [];
   }
-  // A hand-held photo is a few degrees off: the figure's row may sit up to about a line height away. Take the figure
-  // whose centre is nearest this label's row, never one nearer to another row's label.
-  const cy = line.box.y + line.box.h / 2;
-  const tol = Math.max(line.box.h, 0.01);
-  const right = line.box.x + line.box.w * 0.5;
-  const dy = (o: Line) => Math.abs(o.box!.y + o.box!.h / 2 - cy);
-  const near = lines
-    .filter((o) => o !== line && o.box && dy(o) <= tol && o.box.x >= right && moneyIn(o.text).length > 0)
-    .sort((a, b) => dy(a) - dy(b))[0];
-  if (!near) return [];
-  const nearCy = near.box!.y + near.box!.h / 2;
+  const near = rowFigure(line, lines, shift, (o) => moneyIn(o.text).length > 0);
+  return near ? moneyIn(near.text).map((m) => ({ ...m, conf: near.conf })) : figureBelow(line, lines);
+}
+
+/**
+ * The figure block on `line`'s row once the column shift is taken off: nearest centre within about a line, never one
+ * that another label's row claims more closely.
+ */
+function rowFigure(line: Line, lines: Line[], shift: number, ok: (o: Line) => boolean): Line | null {
+  const b = line.box!;
+  const cy = centre(line) + shift;
+  const tol = Math.max(b.h, 0.01);
+  const right = b.x + b.w * 0.5;
+  const dy = (o: Line) => Math.abs(centre(o) - cy);
+  const near = lines.filter((o) => o !== line && o.box && dy(o) <= tol && o.box.x >= right && ok(o)).sort((p, q) => dy(p) - dy(q))[0];
+  if (!near) return null;
+  const nearCy = centre(near);
   const closerLabel = lines.some(
-    (o) => o !== line && o.box && o.box.x < right && !moneyIn(o.text).length && Math.abs(o.box.y + o.box.h / 2 - nearCy) < dy(near) * 0.6,
+    (o) => o !== line && o.box && o.box.x < right && !moneyIn(o.text).length && Math.abs(centre(o) + shift - nearCy) < dy(near) * 0.6,
   );
-  return closerLabel ? [] : moneyIn(near.text);
+  return closerLabel ? null : near;
+}
+
+/**
+ * QA-100 B-102: a label with its figure printed underneath ("FUEL TOTAL" over "$ 20.00", "TOTAL :" over "$ 150.00").
+ * Only a figure-only line starting within about two line heights below the label and overlapping its column (or to
+ * its right); a line that carries its own words is another row, not this one.
+ */
+function figureBelow(line: Line, lines: Line[]): Money[] {
+  const b = line.box!;
+  const bottom = b.y + b.h;
+  const below = lines
+    .filter((o) => {
+      if (o === line || !o.box) return false;
+      const gap = o.box.y - bottom;
+      if (gap < -b.h * 0.3 || gap > b.h * 2) return false;
+      if (o.box.x + o.box.w < b.x) return false;
+      if (!isFigure(o)) return false;
+      // The figure of the next row ("CASH  £80.00" under a tilted "TOTAL") has its own label beside it: not ours.
+      const ob = o.box;
+      const cy = ob.y + ob.h / 2;
+      return !lines.some((l) => l !== line && l.box && isLabel(l) && Math.abs(centre(l) - cy) < ob.h * 0.6);
+    })
+    .sort((p, q) => p.box!.y - q.box!.y);
+  return below.length ? moneyIn(below[0].text).map((m) => ({ ...m, conf: below[0].conf })) : [];
 }
 
 const rightmost = (ms: Money[]) => ms.reduce((a, b) => (b.at > a.at ? b : a));
+/** OCR splits words ("Subtota l", "TOTA L"): labels are also checked with the spaces taken out. */
+const squash = (s: string) => s.replace(/\s+/g, '');
+const isSubtotal = (l: Line) => /SUB-?TOTAL/.test(squash(l.up));
+
+/**
+ * QA-100 B-102 (FreshHarvest on the A13): a big-font total lost its point ("2174" next to "Total"). Read a bare
+ * 3–6 digit figure on the total row as pence/cents only when the receipt proves it: subtotal + tax, or a paid-by line.
+ */
+function lostPointTotal(
+  line: Line,
+  lines: Line[],
+  shift: number,
+  sum: { sub: number | null; tax: number | null },
+  paid: number[],
+): number | null {
+  if (!line.box) return null;
+  const fig = rowFigure(line, lines, shift, (o) => /^[£$€E]?\s?\d{3,6}$/.test(o.text.trim()));
+  if (!fig) return null;
+  const minor = Number(fig.text.replace(/\D/g, ''));
+  if (sum.sub !== null && sum.tax !== null && sum.sub + sum.tax === minor) return minor;
+  return paid.includes(minor) ? minor : null;
+}
 
 function readAmount(lines: Line[]): { minor: number | null; confidence: number } {
-  type Cand = { minor: number; score: number; kind: 'strong' | 'total' | 'paid' };
+  const shift = columnShift(lines);
+  type Cand = { minor: number; score: number; kind: 'strong' | 'total' | 'paid'; conf?: number };
   const cands: Cand[] = [];
+  const totalRows: Line[] = [];
+  // QA-100 B-102 r01: below "CHANGE DUE" the till prints a VAT/GST summary whose own "Total" (net + tax columns) is not
+  // what was paid — it only counts when nothing above the change line does.
+  const changeAt = lines.findIndex((l) => /\bCHANGE\b/.test(l.up));
   for (const l of lines) {
-    if (NOT_TOTAL.test(l.up)) continue;
+    if (NOT_TOTAL.test(l.up) || isSubtotal(l)) continue;
     if (TAX.test(l.up) && !INCL.test(l.up)) continue;
-    const kind = TOTAL_STRONG.test(l.up) ? 'strong' : TOTAL.test(l.up) ? 'total' : PAID_BY.test(l.up) ? 'paid' : null;
+    const kind = TOTAL_STRONG.test(l.up) ? 'strong' : TOTAL.test(l.up) || /TOTAL/.test(squash(l.up)) ? 'total' : PAID_BY.test(l.up) ? 'paid' : null;
     if (!kind) continue;
-    const ms = rowAmounts(l, lines);
-    if (!ms.length) continue;
-    cands.push({ minor: rightmost(ms).minor, score: kind === 'strong' ? 0.95 : kind === 'total' ? 0.9 : 0.75, kind });
+    const ms = rowAmounts(l, lines, shift);
+    if (!ms.length) {
+      if (kind !== 'paid') totalRows.push(l);
+      continue;
+    }
+    const base = kind === 'strong' ? 0.95 : kind === 'total' ? 0.9 : 0.75;
+    cands.push({ minor: rightmost(ms).minor, conf: rightmost(ms).conf, score: changeAt >= 0 && l.i > changeAt && kind !== 'paid' ? 0.7 : base, kind });
+  }
+
+  if (!cands.some((c) => c.kind !== 'paid') && totalRows.length) {
+    const first = (pick: (l: Line) => boolean) => {
+      const l = lines.find(pick);
+      const ms = l ? rowAmounts(l, lines, shift) : [];
+      return ms.length ? rightmost(ms).minor : null;
+    };
+    const sum = { sub: first(isSubtotal), tax: first((l) => TAX.test(l.up) && !INCL.test(l.up)) };
+    const paid = cands.map((c) => c.minor);
+    for (const l of totalRows) {
+      const minor = lostPointTotal(l, lines, shift, sum, paid);
+      if (minor !== null) cands.push({ minor, score: 0.85, kind: 'total' });
+    }
   }
 
   if (cands.length) {
@@ -147,10 +270,13 @@ function readAmount(lines: Line[]): { minor: number | null; confidence: number }
   }
 
   // No label at all (parking ticket, till slip): a single figure is probably it; several → not sure.
-  const all = lines.filter((l) => !NOT_TOTAL.test(l.up) && !TAX.test(l.up)).flatMap((l) => moneyIn(l.text));
+  const all = lines.filter((l) => !NOT_TOTAL.test(l.up) && !isSubtotal(l) && !TAX.test(l.up)).flatMap((l) => moneyIn(l.text));
   if (!all.length) return { minor: null, confidence: 0 };
   const distinct = new Set(all.map((m) => m.minor));
   const max = Math.max(...distinct);
+  // QA-100 A13-6: the receipt HAS a TOTAL label but its figure wasn't read — then the lone price left ("£7.00" twice on a
+  // £55.30 Tesco receipt) is an item, not the total. Offer it, never fill it.
+  if (totalRows.length) return { minor: max, confidence: 0.4 };
   return { minor: max, confidence: distinct.size === 1 ? 0.65 : 0.4 };
 }
 
@@ -229,6 +355,20 @@ const BRANDS: [RegExp, string][] = [
 
 const NOT_NAME =
   /(\bVAT\b|\bREG\b|\bTEL\b|\bPHONE\b|\bWWW\.|\.CO\b|\.COM\b|@|\bRECEIPT\b|\bINVOICE\b|\bWELCOME\b|\bCOPY\b|\bCUSTOMER\b|\bMERCHANT\b|\bTERMINAL\b|\bTILL\b|\bCASHIER\b|\bSTORE\s*(NO|#)|\bTRANS|\bAUTH|\bROAD\b|\bRD\b|\bSTREET\b|\bST\b\.?$|\bLANE\b|\bAVE(NUE)?\b|\bWAY\b|\bUNIT\b|\bPARK\b|\bESTATE\b|\bBLVD\b|\bSUITE\b|\bHIGHWAY\b|\bHWY\b|\bDRIVE\b|\bTHANK)/;
+/** Template / sample text that is never a shop ("Shop Name", "Lorem Ipsum" on receipt mock-ups). */
+const PLACEHOLDER =
+  /\b(LOREM|IPSUM|SAMPLE|NAME|ADDRESS|LOCATION\s*HERE|YOUR\s*(SHOP|STORE|COMPANY)|MM\/DD|DD\/MM|YYYY)\b|^\W*COMPANY\W*$/;
+/** Ticket titles and slip lines that sit where a shop name would (QA-100 B-102 r25/r26/r31). */
+const NOT_SHOP = /\b(TICKET|CHECK\s*FOR|PIN\s*(USED|VERIFIED)|NUMBER\s*OF)\b/;
+/** Upper case without accents ("IESÇO" → "IESCO"). */
+const plain = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+const LOGO_SLIPS: [RegExp, string][] = [
+  [/(^|\s)[TI1]ESC[O0Q](\s|$)/, 'Tesco'],
+  [/(^|\s)SHE[L1I]\s?[L1I](\s|$)/, 'Shell'],
+];
+const US_STATE_ZIP =
+  /\b(A[KLRZ]|C[AOT]|D[CE]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[ADEINOST]|N[CDEHJMVY]|O[HKR]|PA|RI|S[CD]|T[NX]|UT|V[AT]|W[AIVY])\s+\d{5}(-\d{4})?\b/;
+const UK_POSTCODE = /\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/;
 const POSTCODE = /\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b|\b\d{5}(-\d{4})?\b/;
 
 /** "TESCO EXPRESS" → "Tesco Express"; mixed case is kept as printed. */
@@ -246,16 +386,28 @@ function readMerchant(lines: Line[]): { name: string | null; confidence: number 
     const hit = lines.find((l) => re.test(l.up));
     if (hit) return { name, confidence: hit.i < topCut ? 0.92 : 0.8 };
   }
+  // QA-100 B-102: logos read with a slip ("Iesço" for TESCO, "ShelI" for Shell) — only for these two, near the top.
+  for (const [re, name] of LOGO_SLIPS) {
+    const hit = lines.slice(0, topCut).find((l) => re.test(plain(l.up)));
+    if (hit) return { name, confidence: 0.8 };
+  }
   // No known chain: the first plausible name in the top lines (biggest text = shop name on most till rolls).
   const top = lines.slice(0, Math.min(n, Math.max(4, Math.ceil(n * 0.2))));
   const named = top.filter((l) => {
-    const letters = (l.text.match(/[A-Za-z]/g) ?? []).length;
-    const digits = (l.text.match(/\d/g) ?? []).length;
-    return letters >= 3 && digits <= letters * 0.3 && l.text.length <= 40 && !NOT_NAME.test(l.up) && !POSTCODE.test(l.up) && !moneyIn(l.text).length && !findDate(l.text, 'UK');
+    // "UNITED PACIFIC 5651" (first line): a trailing store number doesn't make the name a reference line. Item lines
+    // further down ("MILK GALLON 895426") keep their code and stay out.
+    const t = l.i <= 1 ? l.text.replace(/\s*#?\d{1,6}$/, '') : l.text;
+    // "250 TIBURON BLVD": a line starting with a house number is the address.
+    if (/^\d{1,5}\s+[A-Za-z]/.test(l.text)) return false;
+    // "Date:" / "Tel:" — a field label, not a name.
+    if (/:\s*$/.test(l.text)) return false;
+    const letters = (t.match(/[A-Za-z]/g) ?? []).length;
+    const digits = (t.match(/\d/g) ?? []).length;
+    return letters >= 3 && digits <= letters * 0.3 && l.text.length <= 40 && !NOT_NAME.test(l.up) && !PLACEHOLDER.test(l.up) && !NOT_SHOP.test(l.up) && !POSTCODE.test(l.up) && !moneyIn(l.text).length && !findDate(l.text, 'UK');
   });
   if (!named.length) return { name: null, confidence: 0 };
-  const tallest = named.every((l) => l.box) ? named.reduce((a, b) => (b.box!.h > a.box!.h * 1.15 ? b : a)) : named[0];
-  return { name: tidyName(tallest.text) || null, confidence: tallest === named[0] || tallest.i <= 1 ? 0.62 : 0.6 };
+  const tallest = named.every((l) => l.box) ? named.reduce((a, b) => (b.box!.h > a.box!.h * 1.35 ? b : a)) : named[0];
+  return { name: tidyName(tallest.text.replace(/\s*#?\d{1,6}$/, '')) || null, confidence: tallest === named[0] || tallest.i <= 1 ? 0.62 : 0.6 };
 }
 
 // ---------------------------------------------------------------- date
@@ -270,16 +422,24 @@ interface FoundDate {
   confidence: number;
 }
 
-const year4 = (y: string) => (y.length === 2 ? 2000 + Number(y) : Number(y));
+/** Two-digit years: "26" → 2026, but "94" → 1994 (never a year further ahead than next year). */
+const year4 = (y: string) => {
+  if (y.length !== 2) return Number(y);
+  const n = 2000 + Number(y);
+  // "94" → 1994 (a real old receipt); "28" stays 2028 — a future year that is never filled (OCR noise read "1928").
+  return n > new Date().getFullYear() + 1 && Number(y) >= 50 ? n - 100 : n;
+};
 const validDay = (y: number, m: number, d: number) => m >= 1 && m <= 12 && d >= 1 && d <= new Date(y, m, 0).getDate();
 
 /** First date in a line. UK reads 03/04/26 as 3 Apr, US as Mar 4; an impossible order is swapped either way. */
 function findDate(text: string, region: Region): FoundDate | null {
-  const up = text.toUpperCase();
+  // OCR reads the O of OCT / NOV as a zero ("06 0CT 2026", QA-100 B-102 r06).
+  const up = text.toUpperCase().replace(/(^|[\s\d-])0CT\b/g, '$1OCT').replace(/\bN0V\b/g, 'NOV');
   let m = up.match(/\b(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})\b/);
   if (m) return { y: Number(m[1]), m: Number(m[2]), d: Number(m[3]), confidence: 0.92 };
 
-  m = up.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4}|\d{2})(?![\d.])/);
+  // "DATE06/21/06": a label glued to the date (no word break before the digits).
+  m = up.match(/(?<!\d)(\d{1,2})[-/.](\d{1,2})[-/.](\d{4}|\d{2})(?![\d.])/);
   if (m) {
     const a = Number(m[1]);
     const b = Number(m[2]);
@@ -312,10 +472,22 @@ function findTime(text: string): number | null {
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function readDate(lines: Line[], region: Region, now: number): { date: number | null; minutes: number | null; confidence: number } {
-  for (const l of lines) {
-    // Card expiry lines ("EXP 12/27") never hold the receipt date.
-    if (/\bEXP|\bEXPIRY|\bVALID\b/.test(l.up)) continue;
-    const f = findDate(l.text, region);
+  // QA-100 B-102 r12: "DATE 3/10/26" on a dollar receipt is March 10th even when the app is set to the UK — the receipt's
+  // own currency says which way round its dates are. Only a clear sign switches (dollars and no pounds, or the reverse).
+  const all = lines.map((l) => l.text).join(' ');
+  const up = all.toUpperCase();
+  // r32 (Speedway, Bakersfield): no "$" printed at all — a state + ZIP or a 1-800 number says American just as well.
+  const us = [/\$\s?\d/, US_STATE_ZIP, /\b1-8\d\d-\d{3}-\d{4}\b/].filter((re) => re.test(up)).length;
+  const uk = [/£\s?\d/, UK_POSTCODE, /\bVAT\b/].filter((re) => re.test(up)).length;
+  const order: Region = us > uk ? 'US' : uk > us ? 'UK' : region;
+  // A date printed with its time is the transaction; "TOTAL UP TO 22/04/12" (points statement) and expiry lines are not.
+  const usable = lines.filter((l) => !/\bEXP|\bEXPIRY|\bEXPIRES|\bVALID\b|\bUP\s*TO\b|\bPOINTS\b|\bDUE\b/.test(l.up) && findDate(l.text, order));
+  const withTime = usable.find((l) => findTime(l.text.replace(/(?<!\d)\d{1,4}[-/.]\d{1,2}[-/.]\d{2,4}(?!\d)/, ' ')) !== null);
+  // r27 (car park): "Entry Time 03/18" then "Exit Time 03/20" — the stay is paid on the way out.
+  const entry = (l: Line) => /\b(ENTRY|ENTERED|ARRIV\w*|TIME\s*IN)\b/.test(l.up);
+  const ordered = withTime ? [withTime, ...usable.filter((x) => x !== withTime)] : usable;
+  for (const l of [...ordered.filter((x) => !entry(x)), ...ordered.filter(entry)]) {
+    const f = findDate(l.text, order);
     if (!f) continue;
     const today = new Date(now);
     let y = f.y ?? today.getFullYear();
@@ -325,7 +497,8 @@ function readDate(lines: Line[], region: Region, now: number): { date: number | 
     const date = new Date(y, f.m - 1, f.d).getTime();
     let confidence = f.confidence;
     if (date > now + DAY_MS) confidence = 0.2;
-    else if (now - date > 400 * DAY_MS) confidence = 0.3;
+    // No age limit (Phương, 18/11): a driver catching up before the 31 Jan deadline enters receipts 600+ days old, and
+    // "Now" put them in the wrong tax year. An old date is filled like any other (highlighted "from receipt").
     // Time on the date line, else the first time on the line just below / above.
     const near = [l, lines[l.i + 1], lines[l.i - 1]].filter(Boolean) as Line[];
     const timeText = near.map((x) => (x === l ? x.text.replace(/\b\d{1,4}[-/.]\d{1,2}[-/.]\d{2,4}\b/, ' ') : x.text));

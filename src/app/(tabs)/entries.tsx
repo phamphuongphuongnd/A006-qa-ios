@@ -1,4 +1,4 @@
-import { FlashList } from '@shopify/flash-list';
+import { FlashList, type FlashListRef } from '@shopify/flash-list';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { router } from '@/services/router';
 import { ArrowDownUp, Briefcase, ChevronDown, Combine, Plus, Search, SearchX, Tags, Trash2, X } from '@/ui/icons';
@@ -136,6 +136,14 @@ export default function EntriesScreen() {
   const repoFilter = toRepoFilter({ ...filter, search }, now, taxYear);
   const repoKey = JSON.stringify(repoFilter);
   const total = useLive(() => entryCount(db), [], ['entries']);
+  // QA-100 A13-8: after Save the list kept its old scroll position and today's new entry sat above the top edge. A new
+  // entry (newest first) brings the list back to the top so the driver sees it.
+  const listRef = useRef<FlashListRef<ListItem>>(null);
+  const lastTotal = useRef(total);
+  useEffect(() => {
+    if (total > lastTotal.current && !oldestFirst) listRef.current?.scrollToOffset({ offset: 0, animated: true });
+    lastTotal.current = total;
+  }, [total, oldestFirst]);
   const cats = useLive(() => listCategories(db, { includeHidden: true }), [], ['categories']);
   // Load in pages of ~PAGE entries (whole days); scrolling near the end loads the next page.
   // A new filter / sort order starts again from page 1.
@@ -321,6 +329,7 @@ export default function EntriesScreen() {
         </View>
       ) : (
         <FlashList
+          ref={listRef}
           data={items}
           keyExtractor={(it) => it.key}
           // B-20: recycle a row only into a row with the same category icon, so scrolling swaps text/colours

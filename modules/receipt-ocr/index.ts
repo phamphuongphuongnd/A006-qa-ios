@@ -26,6 +26,8 @@ interface ReceiptOcrNative {
   isAvailable(): boolean;
   /** `uri`: file:// (app receipts dir) or content:// on Android. */
   recognize(uri: string): Promise<OcrRaw>;
+  /** Android only: small upright JPEG copy (long side ≤ maxSide) in the cache; returns its file:// uri. */
+  shrink?(uri: string, maxSide: number, quality: number): Promise<string>;
 }
 
 /** null in Jest / Expo Go / web: OCR silently does nothing (P1-12: "không đọc được thì im lặng"). */

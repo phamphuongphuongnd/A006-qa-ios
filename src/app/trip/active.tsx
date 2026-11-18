@@ -22,6 +22,7 @@ import {
 } from '@/features/trips/controller';
 import { distanceValue, formatClock, formatDay, formatDistance, formatDuration } from '@/features/trips/format';
 import { useActiveTrip } from '@/features/trips/hooks';
+import { MIN_AUTO_TRIP_M } from '@/features/trips/auto/engine';
 import { setTripScope } from '@/features/trips/auto/repo';
 import { ModalHeader } from '@/features/trips/ModalHeader';
 import { useAmountExpr } from '@/features/ocr/useAmountExpr';
@@ -53,6 +54,7 @@ export default function ActiveTripScreen() {
   const { colors } = useTheme();
   const [starting, setStarting] = useState(false);
   const [gpsOff, setGpsOff] = useState(false);
+  const [shortTrip, setShortTrip] = useState<TripRow | null>(null);
   const [endedId, setEndedId] = useState<string | null>(null);
   const handled = useRef('');
 
@@ -97,6 +99,12 @@ export default function ActiveTripScreen() {
         await resumeActiveTrip();
       } else {
         const done = await endActiveTrip();
+        // QA-100 B-107: an automatic trip that never went anywhere (phone picked up while charging at a desk) was saved as
+        // "0.0 km" when the driver ended it by hand. Phương (18/11): ask — Discard or Keep — never drop it silently.
+        if (done && done.startedBy === 'auto' && done.distanceM < MIN_AUTO_TRIP_M) {
+          setShortTrip(done);
+          return;
+        }
         if (done) setEndedId(done.id);
       }
     } catch {
@@ -127,6 +135,41 @@ export default function ActiveTripScreen() {
   const points = useLive(() => (trip ? countedPath(tripPointsOf(db, trip.id)) : []), [trip?.id], ['trip_points']);
   const ended = useLive(() => (endedId ? getTrip(db, endedId) : undefined), [endedId], ['trips']);
   const paused = trip?.status === 'paused';
+
+  const shortDialog = (
+    <Dialog
+      visible={shortTrip !== null}
+      title={t('trip.shortTitle', { distance: formatDistance(shortTrip?.distanceM ?? 0, unit) })}
+      body={t('trip.shortBody')}
+      onClose={() => {
+        // Closing without a choice keeps it (nothing is lost by accident).
+        const keep = shortTrip;
+        setShortTrip(null);
+        if (keep) setEndedId(keep.id);
+      }}
+      actions={[
+        {
+          label: t('trip.shortDiscard'),
+          onPress: async () => {
+            const drop = shortTrip;
+            setShortTrip(null);
+            if (drop) await discardTrip(drop.id);
+            snack({ message: t('trip.discarded') });
+            close();
+          },
+        },
+        {
+          label: t('trip.shortKeep'),
+          variant: 'primary',
+          onPress: () => {
+            const keep = shortTrip;
+            setShortTrip(null);
+            if (keep) setEndedId(keep.id);
+          },
+        },
+      ]}
+    />
+  );
 
   const gpsDialog = (
     <Dialog
@@ -190,6 +233,7 @@ export default function ActiveTripScreen() {
           </View>
         )}
         {gpsDialog}
+        {shortDialog}
         {endSheet}
       </View>
     );
@@ -266,6 +310,7 @@ export default function ActiveTripScreen() {
         <EndButton onPress={() => act('end')} />
       </View>
       {gpsDialog}
+      {shortDialog}
       {endSheet}
     </View>
   );

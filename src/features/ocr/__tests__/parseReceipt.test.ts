@@ -205,9 +205,11 @@ describe('parseReceipt — dates', () => {
     expect(dateOf('20 Dec').date).toBe(day(2025, 12, 20));
   });
 
-  it('future or very old dates are not trusted; card expiry lines are skipped', () => {
+  it('future dates are not trusted, old ones are (no age limit, 18/11); card expiry lines are skipped', () => {
     expect(dateOf('01/01/2027').confidence.date).toBeLessThan(OCR_FILL_CONFIDENCE);
-    expect(dateOf('01/01/2024').confidence.date).toBeLessThan(OCR_FILL_CONFIDENCE);
+    // A driver catching up before the 31 Jan deadline: a receipt from the tax year before last still gets its date.
+    expect(dateOf('01/01/2024').confidence.date).toBeGreaterThanOrEqual(OCR_FILL_CONFIDENCE);
+    expect(dateOf('19/04/94 19:04').date).toBe(new Date(1994, 3, 19).getTime());
     expect(dateOf('EXP 12/11/29').date).toBeNull();
     expect(dateOf('31/02/2026').date).toBeNull();
   });
@@ -230,5 +232,69 @@ describe('parseReceipt — US', () => {
     expect(r.merchant).toBe('Chevron');
     expect(r.date).toBe(day(2026, 11, 12));
     expect(r.minutes).toBe(7 * 60 + 15);
+  });
+});
+
+describe('parseReceipt — QA-100 B-102 layouts from the receipt set Phương collected', () => {
+  const at = (text: string, y: number, x: number, w = 0.3, h = 0.03): RawLine => ({ text, box: { x, y, w, h } });
+
+  it('reads dot-thousands with a decimal comma and whole amounts after a currency sign', () => {
+    expect(moneyIn('Total 1.575,01').map((m) => m.minor)).toEqual([157501]);
+    expect(moneyIn('Amount Due $5400').map((m) => m.minor)).toEqual([540000]);
+    expect(moneyIn('$5,000').map((m) => m.minor)).toEqual([500000]);
+    expect(moneyIn('PRICE/GAL $4.269')).toEqual([]);
+    expect(moneyIn('$2.969')).toEqual([]);
+    expect(moneyIn('12.11.26')).toEqual([]);
+  });
+
+  it('takes the figure printed under its label (Shell "FUEL TOTAL" over "$ 20.00")', () => {
+    const raw: RawOcr = {
+      text: '',
+      lines: [
+        at('SHELL', 0.2, 0.1),
+        at('PUMP PRODUCT $/G', 0.5, 0.05, 0.8),
+        at('04 UNLD $2.969', 0.54, 0.05, 0.8),
+        at('GALLONS FUEL TOTAL', 0.62, 0.05, 0.85),
+        at('6.736', 0.66, 0.08, 0.2),
+        at('$ 20.00', 0.66, 0.55, 0.3),
+      ],
+    };
+    const r = parseReceipt(raw, 'US', NOW);
+    expect(r.amountMinor).toBe(2000);
+    expect(r.confidence.amount).toBeGreaterThanOrEqual(OCR_FILL_CONFIDENCE);
+  });
+
+  it('never takes the next row\'s figure as the one under a label', () => {
+    const raw: RawOcr = {
+      text: '',
+      lines: [at('MILK', 0.45, 0.05, 0.2), at('£1.20', 0.45, 0.7, 0.2), at('TOTAL', 0.5, 0.05, 0.2), at('CASH', 0.55, 0.05, 0.2), at('£80.00', 0.55, 0.7, 0.2)],
+    };
+    const r = parseReceipt(raw, 'UK', NOW);
+    expect(r.amountMinor === 8000 && r.confidence.amount >= OCR_FILL_CONFIDENCE).toBe(false);
+  });
+});
+
+describe('parseReceipt — real A13 camera reads (QA-100 B-102)', () => {
+  // ML Kit lines exactly as the phone returned them (322acd6 / 08cdb7b diagnostics). expectMinor null = OCR missed the
+  // total's figure (it saw "TOTAL" but no number beside it): the amount must stay empty, not take an item price (A13-6).
+  const reads = require('./fixtures/a13-receipts.json') as { name: string; expectMinor: number | null; lines: RawLine[] }[];
+  it.each(reads.map((r) => [r.name, r] as const))('%s', (_n, r) => {
+    const out = parseReceipt({ text: '', lines: r.lines }, 'UK', NOW);
+    if (r.expectMinor === null) {
+      expect(out.confidence.amount).toBeLessThan(OCR_FILL_CONFIDENCE);
+    } else {
+      expect(out.amountMinor).toBe(r.expectMinor);
+      expect(out.confidence.amount).toBeGreaterThanOrEqual(OCR_FILL_CONFIDENCE);
+    }
+  });
+
+  it('keeps a bare figure on the total row unless subtotal + tax or the card line prove it', () => {
+    const at = (text: string, y: number, x: number, w = 0.1): RawLine => ({ text, box: { x, y, w, h: 0.016 } });
+    const raw = (tax: string): RawOcr => ({
+      text: '',
+      lines: [at('MILK', 0.3, 0.2), at('$1.18', 0.3, 0.6), at('Subtotal', 0.44, 0.35), at('$20.32', 0.44, 0.56), at('Tax', 0.465, 0.35), at(tax, 0.465, 0.57), at('Total', 0.51, 0.35), at('2174', 0.505, 0.51)],
+    });
+    expect(parseReceipt(raw('$1.42'), 'US', NOW).amountMinor).toBe(2174);
+    expect(parseReceipt(raw('$1.40'), 'US', NOW).confidence.amount).toBeLessThan(OCR_FILL_CONFIDENCE);
   });
 });

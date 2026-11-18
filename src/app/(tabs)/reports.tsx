@@ -311,9 +311,10 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
         <Row label={t('reports.income')} value={formatMoney(report.incomeMinor, currency)} color="incomeText" />
         <Row label={t('reports.expenses')} value={formatMoney(report.expenseMinor, currency)} color="expenseText" />
         <Divider />
-        <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+        {/* QA-100 A37-8: at 320dp + 200% text "−$1,073,09…" was cut — the figure drops under the label instead. */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', columnGap: 8 }}>
           <Txt v="h3">{t('reports.profit')}</Txt>
-          <Txt v="amount" size={32} style={{ lineHeight: 38 }} adjustsFontSizeToFit numberOfLines={1}>
+          <Txt v="amount" size={32} style={{ lineHeight: 38, flexShrink: 1, marginLeft: 'auto' }}>
             {formatMoney(report.profitMinor, currency)}
           </Txt>
         </View>
@@ -494,20 +495,24 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
 function LineRow({ label, value, income, first }: { label: string; value: string; income: boolean; first: boolean }) {
   const { colors } = useTheme();
   return (
+    // QA-100 A37-8: "By tax form line" at 320dp + 200% broke the label into syllables and cut the figure. The label keeps
+    // a sensible width and the figure wraps to its own line when both don't fit.
     <View
       style={{
         flexDirection: 'row',
+        flexWrap: 'wrap',
         alignItems: 'center',
-        gap: 12,
+        columnGap: 12,
+        rowGap: 2,
         minHeight: 48,
         paddingVertical: 8,
         borderTopWidth: first ? 0 : 1,
         borderTopColor: colors.line,
       }}>
-      <Txt v="small" style={{ flex: 1 }}>
+      <Txt v="small" style={{ flexGrow: 1, flexShrink: 1, flexBasis: 140 }}>
         {label}
       </Txt>
-      <Txt v="small" c={income ? 'incomeText' : 'text'} style={{ fontFamily: fonts.bold, fontVariant: ['tabular-nums'] }}>
+      <Txt v="small" c={income ? 'incomeText' : 'text'} style={{ marginLeft: 'auto', fontFamily: fonts.bold, fontVariant: ['tabular-nums'] }}>
         {value}
       </Txt>
     </View>

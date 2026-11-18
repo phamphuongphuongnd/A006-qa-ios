@@ -405,11 +405,15 @@
 > Phiên B (18/11): 40 persona Android 8/11 có kết quả thật (39 PASS, P074 = B-74); Android 7.0 x86 32-bit 8/8 PASS (mở nguội 1,24 s, PSS 84 MB, 0 crash/ANR).
 > Phiên B (18/11, 97ceb60): **B-93 ✅** (API 26 chữ 0.85/1.3 + Android 7: đủ 4 ký hiệu, 12.50+4.20 = £16.70 lưu được); **B-74/OLD-10 ✅** (bộ nhớ đầy: bàn
 > phím ẩn, "Couldn't save…" thấy rõ, số giữ nguyên) → tick B-57/B-58/B-72 (thay bằng B-93 + B-72 phần số tiền ✅).
-- [ ] **B-98** 🟡 (QA OLD-12, phiên B) Android 8/7: nút **Save** ở Ghi nhanh vẫn nằm sau bàn phím khi đang gõ (API 26 chữ 0.85 lộ 65/112px; chữ 1.3 lộ 43px;
+- [x] **B-98** 🟡 (QA OLD-12, phiên B) Android 8/7: nút **Save** ở Ghi nhanh vẫn nằm sau bàn phím khi đang gõ (API 26 chữ 0.85 lộ 65/112px; chữ 1.3 lộ 43px;
   Android 7 che hết) — thiếu đúng ~24dp = thanh trạng thái (cùng gốc B-58). Sửa: bù `insets.top + insets.bottom` cho Android < 11 (`capture.tsx`); phím ✓ của
   bàn phím số giờ lưu khi số tiền > 0. Phiên B (1dd73db): phím ✓ lưu ✅; nút Save **không nhích pixel nào** (offset không có tác dụng trên Android < 11).
   Sửa lần 2: bỏ offset; Android < 11 đo khối nút Save (`measureInWindow`) so với mép trên bàn phím **quy về toạ độ cửa sổ** (`screenY − StatusBar.currentHeight`)
-  rồi đệm thêm đúng phần bị che (≤ 200dp). ⏳ phiên B (`qa/tools/oldb98.py`).
+  rồi đệm thêm đúng phần bị che (≤ 200dp). Lần 2 ❌ (không đổi). Lần 3 (771234e): RN báo screenY = cao màn − cao bàn phím (bỏ qua thanh điều hướng
+  48dp) → trừ thêm thanh điều hướng: mép bàn phím đúng (363/305dp) nhưng Save vẫn che — **gốc thật: thiếu chỗ** (phần trên 216dp, còn 89–147dp, khối
+  dưới cần 157–211dp; đệm chỉ làm khối dài ra). Lần 4 (4f297e1): bàn phím mở + khối vẫn bị che → tạm ẩn hàng Photo/Work/Note, gợi ý, ảnh nhỏ, dòng phụ;
+  giữ ô Note + Save tới khi bàn phím đóng. ✅ phiên B (0bdfed4): API 26 + Android 7, chữ 0.85/1.3: Save trọn trên bàn phím, ô Note + Save khi gõ ghi chú,
+  đóng bàn phím hàng hiện lại, phím ✓ lưu (`qa-runs/android-old/verify-4f297e1/`).
 > Phiên E (A13 thật, 8cb9c8f, dữ liệu thật + vân tay thật, 18/11): **B-62 ✅**, B-63 ✅, B-65 ✅ (Recents trắng; deep link khi khoá chỉ hiện Unlock), B-73 ✅,
 > B-84 ✅, widget cập nhật ✅, CPU nền 10 phút 0,01% (B-51 không tái hiện), 20.000 khoản: cuộn giật 12%.
 - [ ] **B-99** 🟠 (QA A13-3, phiên E — A13 thật, vân tay thật) App lock (Lock after 1 minute) → Ghi nhanh → Take photo → chụp hoá đơn > 1 phút → quay lại app
@@ -425,10 +429,57 @@
 > liệu chờ Phương duyệt thêm phút.
 - [ ] **B-100** 🟡 (QA iOS QI-1, phiên C) iPhone SE + chữ lớn: màn chọn vùng — thẻ United States khuất dưới nút Continue, không có gợi ý cuộn (màn đã cuộn được).
   Sửa: `ui/HintScroll.tsx` — nháy thanh cuộn khi nội dung dài hơn màn (màn chào + màn chọn vùng). (Màn chào cắt chữ = B-66.)
+  iOS lượt 4b (phiên C, P091 SE AX-Large): tiêu đề đủ, nhưng thanh cuộn iOS chỉ nháy ~1 s → không thấy gợi ý. Sửa lần 2: thêm viên "More below ⌄" ở
+  đáy, ở lại tới khi cuộn tới cuối, chạm = cuộn xuống ~1 màn (cả iOS + Android). ⏳ phiên C.
 - [ ] **B-101** 🟡 (QA iOS QI-3, phiên C) Ô Note ở Ghi nhanh đảo ký tự khi gõ nhanh (P052: "QA-P052 Shell M62" → "QA-052 Shell M62P"; 1/14). Sửa: ô không còn
   điều khiển `value` (dựng lại khi app tự điền: chip, đọc hoá đơn); nháp ghi file trễ 400 ms thay vì mỗi phím.
 - [ ] **B-102** 🟠 (QA A13-4, phiên E — hoá đơn Tesco thật chụp bằng A13) 2/3 hoá đơn không ra số tiền (#2 giấy cong; #3 in phẳng "TOTAL: £33.50" có
-  Subtotal/Savings phía trên và Cash/Change phía dưới) dù nơi bán + ngày đúng. Chưa rõ nguyên nhân (nghi `parseReceipt.ts` `rowAmounts`: "TOTAL:" và số là 2
-  khối lệch dòng do ảnh nghiêng). Bước 1: 3 lần đọc gần nhất (dòng OCR thô + kết quả) lưu trong cache và có trong "Share trip diagnostics" (`receipts`). ⏳ phiên
-  E lấy file → sửa parser + test bằng dòng thật.
+  Subtotal/Savings phía trên và Cash/Change phía dưới) dù nơi bán + ngày đúng. **Gốc (dòng OCR thật, chẩn đoán 322acd6):** ảnh nghiêng vài độ → cả cột số
+  lệch xuống ~0,6 dòng (TOTAL: cy 0,664, số 0,676, nhãn Cash 0,682) → luật "nhãn khác gần hơn" trong `rowAmounts` bỏ số → fallback 0,4 → trống; Tesco
+  2022 y hệt; FreshHarvest: chữ to đọc "2174" mất dấu chấm. **Sửa (2 đợt):** đo độ lệch cột nhãn↔số từ mọi cặp rồi bù (`columnShift`); số dưới nhãn
+  ("FUEL TOTAL" / "$ 20.00"); số nguyên sau ký hiệu tiền ("$5400"); "1.575,01"; nhãn tách chữ ("Subtota l"); tổng mất dấu chấm chỉ nhận khi = subtotal +
+  tax hoặc = dòng thẻ. 3 lần đọc thật của A13 thành fixture Jest — cả 3 điền đúng.
+  **Đợt 2 (phiên F đọc thật 20 ảnh Phương gom trên giả lập API 37, 2 bản 322acd6/4f297e1 = 40 lần đọc → `receiptSet.test.ts`):** trước sửa số tiền 18/20,
+  nơi bán 16, ngày điền sai 1 (r12 "3/10/26" hoá đơn $ đọc kiểu UK). Sửa: dòng "Total" bảng VAT/GST sau CHANGE hạ ưu tiên; logo đọc lệch ("Iesço",
+  "ShelI"); tên có số cửa hàng; bỏ dòng địa chỉ / nhãn "Date:" / chữ mẫu (Lorem Ipsum, Shop Name, MM/DD/YYYY); tiền tệ trên hoá đơn quyết định thứ tự
+  ngày; "DATE06/21/06", "0CT", năm 94 → 1994; ưu tiên dòng ngày có giờ, bỏ "TOTAL UP TO"/"EXPIRES". Bản 4f297e1 thụt lùi 2 ca (r03, r18) do nén lại ảnh
+  vốn đã nhỏ → `shrink` giữ nguyên ảnh nhỏ + đúng chiều, JPEG 92. Sau sửa (dòng ảnh gốc): số tiền 19/20, nơi bán 20/20 (r20 mẫu không tên → để trống),
+  0 ngày sai. Giới hạn OCR: r11 ảnh 255 px có watermark, ML Kit đọc "$69.03" thành "$69.83" (độ tin cậy dòng 0,46 nhưng số đúng chỉ 0,50 → không
+  dùng làm ngưỡng được) → điền sai, ghi nhận. ⏳ chạy lại trên A13 + giả lập với APK mới; 12 ảnh r21–r32 chờ Phương lưu file.
+- [ ] **B-103** 🟠 (QA A13-5, phiên E — Phương: "chụp hoá đơn rất đơ, nhận diện cũng đơ") Từ lúc bấm OK ở camera tới lúc bắt đầu đọc 14,9–17,8 s trên A13
+  (camera 50 MP). Gốc: `photo.tsx` gọi picker với `quality: 0.6` → expo-image-picker giải nén + nén lại cả ảnh 50 MP (`CompressionImageExporter`); ML Kit
+  lại giải nén ảnh gốc lần nữa. Sửa: Android dùng `quality: 1` (picker chỉ chép file) + `ReceiptOcr.shrink` native (giải nén lấy mẫu, xoay theo EXIF,
+  cạnh dài ≤ 2400 px, JPEG 85) → đọc và lưu bản nhỏ, xoá bản to trong cache. iOS không đổi. Chẩn đoán ghi thời gian từng bước (`timing`: pickedAt,
+  shrinkMs, ocrStartedAt, ocrMs). ⏳ phiên E đo lại trên A13.
+- [ ] **B-104** 🟡 (QA F-1, phiên G — Firebase Test Lab máy thật Galaxy S26, Pixel 11 + máy ảo A17, 3/3) Bấm "Try Pro free for 7 days" → "Trial · 8 days
+  left", thanh tiến độ âm. Gốc: `usePro()` dùng `now` của `useNow(60_000)` (cũ tới 1 phút) < `trialStartedAt` → `ceil` ra 8 (`domain/pro.ts`). Sửa: đếm từ
+  `max(now, trialStartedAt)`, kẹp `daysLeft` 1..7 + test. ⏳ phiên G kiểm lại lượt máy thật sau.
+- [ ] **B-105** 🟠 (QA A13-6, phiên E — A13 bản 08cdb7b) Tesco Shrewsbury chụp thẳng: OCR thấy nhãn TOTAL/CASH/CHANGE DUE nhưng sót cả cột số → app
+  **tự điền £7.00** (giá 1 món, đúng là £55.30). Gốc: `readAmount` nhánh "không có nhãn" vẫn chạy khi đã thấy nhãn TOTAL; còn đúng 1 số → 0,65 ≥ 0,6.
+  Sửa: đã thấy nhãn tổng mà không đọc được số → 0,4 (gợi ý, không điền). 3 lần đọc mới thành fixture (`a13-receipts.json`). ⏳ A13.
+- [x] **B-106** 🟠 (QA A13-7, phiên E — A13, 3/3 lần) Bấm Take photo → camera Samsung mở bằng **camera trước** (chế độ làm đẹp) dù expo-image-picker xin
+  camera sau; Phương phải tự đổi 3–14 s. Samsung bỏ qua CAMERA_FACING/LENS_FACING nên app không ép được qua intent. Đã thử camera trong app
+  (147d3e2) rồi **gỡ** theo Phương (18/11): "tôi muốn dùng camera của điện thoại không code hay làm thêm camera riêng" → **giới hạn đã biết, Phương
+  chấp nhận**.
+- [ ] **B-107** 🟡 (QA A13, phiên E — dữ liệu thật) Cắm cáp vào máy tính + cầm máy → chuyến tự động "Start when charging" bắt đầu (đúng thiết kế: không phân
+  biệt sạc xe / sạc máy tính); Phương bấm End trip → **"Trip saved · 0.0 km"** (bộ tự động tự bỏ chuyến < 500 m, nhưng kết thúc tay thì lưu). Sửa:
+  `trip/active.tsx` kết thúc tay chuyến startedBy=auto < 500 m → **hỏi "Only 0.0 km — keep this trip?" 2 nút Discard / Keep** (Phương chốt
+  18/11 qua phiên E: không tự bỏ; bản 2ac9e15 tự bỏ là sai ý — đã đổi). Chuyến 0 km đang nằm trong dữ liệu thật
+  của Phương — phiên E hỏi Phương trước khi xoá.
+- [ ] **B-108** 🟠 (QA — phiên "A006 chụp nhập tự động" báo, Phương duyệt 18/11) Hoá đơn cũ hơn 400 ngày: OCR không điền ngày (độ tin cậy 0,3 +
+  `receiptAt` chặn) → ô vẫn "Now". Tài xế dồn nhập trước hạn Self Assessment 31/1: hoá đơn tháng 4–5 năm thuế trước đã ~600–665 ngày → khoản ghi ngày
+  hôm nay = **sai năm thuế**. Phương: bỏ giới hạn (năm "94" = 1994, "22/04/12" = 2012 là ngày thật). Sửa: bỏ luật 400 ngày ở `parseReceipt.readDate` và
+  `fill.receiptAt`; vẫn chặn ngày tương lai; vẫn bỏ dòng hạn điểm / hết hạn / "TOTAL UP TO". Bộ 20 hoá đơn: mọi hoá đơn có in ngày đều điền đúng ngày
+  (r11 OCR đọc rác → không điền). ⏳ kiểm trên máy.
+- [ ] **B-109** 🟡 (QA A13-8, phiên E) Sau Save, tab Entries giữ vị trí cuộn cũ → mục TODAY + khoản mới nằm trên mép màn hình. Sửa: số khoản tăng (xếp
+  mới nhất trước) → cuộn danh sách lên đầu. ⏳ A13.
+- [ ] **B-110** 🟡 (QA A37-8/A37-9, phiên A — 320dp + chữ 200%) Reports: "Profit" cắt "−$1,073,09…", "By tax form line" bẻ chữ từng âm tiết + cắt số,
+  "Expenses by category" cắt tên còn "Eq..". Sửa: số tiền xuống dòng dưới nhãn khi không đủ chỗ (bỏ adjustsFontSizeToFit), tên danh mục 2 dòng,
+  số + % xuống dòng. ⏳ phiên A.
+- [ ] **B-111** 🟡 (QA A13, phiên E) Backup & restore hiện "Backup folder, Google Drive — not reachable" nhưng không rõ lỗi thật hay nhãn sai; "Back up now"
+  chỉ mở bảng chia sẻ nên không kiểm được. Bước 1: file chẩn đoán (giữ lâu Version) có mục `backup` (provider, nightly, failCount, lastError, kết quả
+  liệt kê thư mục + câu lỗi thật) — không đổi cài đặt. ⏳ phiên E lấy file.
+- [ ] **B-112** 🟡 (QA A13, phiên E, bản 2ac9e15) Hoá đơn FreshHarvest 2019 (B-108 giờ điền ngày cũ) hiện chip ngày "Wed 20 Nov, 11:09" — không có năm,
+  dễ tưởng là tuần này trong khi khoản vào năm thuế 2019. Sửa: `dateTimeLabel` ghi năm khi khác năm hiện tại ("Wed 20 Nov 2019, 11:09") — chip Ghi nhanh
+  + dòng Date & time ở Sửa khoản. ⏳ A13.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
