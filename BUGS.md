@@ -370,3 +370,7 @@
   "damaged" đúng nhưng RAM vẫn lên ~520 MB. Gốc: `fail()` chỉ ghi lỗi, mục đang giải nén không dừng, mỗi lần nạp 1 MB nén có thể nở hàng trăm MB.
   Sửa (`streamRestore.ts`): kích thước khai báo trong header vượt giới hạn → từ chối trước khi giải nén; nạp 64 KB/lần; vượt → `terminate()`.
   Test "REG-1". ⏳ phiên D đo lại PSS.
+- [ ] **B-92** 🟡 (QA SPE-9, phiên D) 2 máy cùng sao lưu đêm vào 1 thư mục: máy A xoá bản cũ nhất của máy B (giữ 7 bản tính chung), danh sách Khôi phục trộn
+  bản 2 máy không ghi máy nào; 2 máy cùng phút → trùng tên ghi đè. Sửa: tên file đêm có mã máy 6 ký tự (`SundaySort-backup-…-HHMM-<tag>`,
+  `features/backup/deviceTag.ts`, lưu file riêng — không theo bản sao lưu sang máy khác); mỗi máy chỉ tỉa file của mình (+ file không mã cũ); danh sách
+  Khôi phục ghi "· another phone". Test `nightly.test.ts` "SPE-9". ⏳ phiên D mô phỏng lại.

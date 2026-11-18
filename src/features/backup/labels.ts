@@ -42,4 +42,5 @@ export function sizeLabel(bytes: number): string {
 }
 
 /** Second line of a "Restore from backup" row. */
-export const itemSub = (i: BackupListItem) => (i.counts ? countsLabel(i.counts) : sizeLabel(i.size));
+export const itemSub = (i: BackupListItem, ownTag?: string) =>
+  `${i.counts ? countsLabel(i.counts) : sizeLabel(i.size)}${ownTag && i.tag && i.tag !== ownTag ? ' · another phone' : ''}`;

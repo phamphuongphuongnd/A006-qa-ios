@@ -22,6 +22,7 @@ import { useSettings } from '@/state/settings';
 import { fonts, GUTTER, useTheme } from '@/theme';
 import { Button, Card, Dialog, Group, Progress, SettingRow, StatusDot, Toggle, Txt, useSnackbar } from '@/ui';
 import { Bell, ChevronRight, Cloud, FileText, Folder, RotateCcw, Upload } from '@/ui/icons';
+import { deviceTag } from '@/features/backup/deviceTag';
 
 const ERRORS: Record<BackupError, () => string> = {
   not_backup: () => t('backup.notBackup'),
@@ -297,7 +298,7 @@ export default function BackupScreen() {
                     <Pressable
                       key={i.name}
                       accessibilityRole="button"
-                      accessibilityLabel={`${listDate(i.createdAt)}, ${itemSub(i)}`}
+                      accessibilityLabel={`${listDate(i.createdAt)}, ${itemSub(i, deviceTag())}`}
                       disabled={restoring}
                       onPress={() => setConfirm({ uri: i.uri, name: i.name, createdAt: i.createdAt, counts: i.counts })}
                       style={({ pressed }) => [
@@ -310,7 +311,7 @@ export default function BackupScreen() {
                       <View style={{ flex: 1, minWidth: 0 }}>
                         <Txt style={{ fontFamily: fonts.bold }}>{listDate(i.createdAt)}</Txt>
                         <Txt v="small" c="textSecondary">
-                          {itemSub(i)}
+                          {itemSub(i, deviceTag())}
                         </Txt>
                       </View>
                       <ChevronRight size={18} color={colors.textTertiary} />

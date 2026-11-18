@@ -10,6 +10,7 @@ import { createBackupFile } from './backupFile';
 import type { BackupTables } from './pack';
 import { runNightlyBackup, type BackupFolderPort, type FolderEntry, type MadeFile, type RunResult } from './nightly';
 import { folderLabel } from './folderLabel';
+import { deviceTag } from './deviceTag';
 
 /** Device side of nightly backup: the picked folder (Android SAF / iOS bookmark) and the ZIP in the app cache. */
 
@@ -165,7 +166,7 @@ export function runNightlyNow(opts: { force?: boolean; now?: number } = {}): Pro
       fetch: () => Promise.reject(new Error('no folder')),
     };
   }
-  running = runNightlyBackup({ db, port, now: opts.now ?? Date.now(), makeFile, force: opts.force }).finally(() => {
+  running = runNightlyBackup({ db, port, now: opts.now ?? Date.now(), makeFile, force: opts.force, tag: deviceTag() }).finally(() => {
     running = null;
   });
   return running;

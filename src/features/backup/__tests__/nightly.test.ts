@@ -207,3 +207,17 @@ describe('runNightlyBackup', () => {
   });
 });
 
+
+describe('QA-100 SPE-9: two phones, one backup folder', () => {
+  it('names carry the phone tag and each phone prunes only its own (plus untagged older files)', () => {
+    expect(nightlyFileName(at(2026, 11, 13, 2, 10), 'aaaa11')).toBe('SundaySort-backup-2026-11-13-0210-aaaa11.sundaysort');
+    expect(parseBackupName('SundaySort-backup-2026-11-13-0210-bbbb22.sundaysort')).toEqual({ at: at(2026, 11, 13, 2, 10), nightly: true, tag: 'bbbb22' });
+    const mine = Array.from({ length: 9 }, (_, i) => nightlyFileName(at(2026, 11, 1 + i), 'aaaa11'));
+    const theirs = Array.from({ length: 7 }, (_, i) => nightlyFileName(at(2026, 11, 10 + i), 'bbbb22'));
+    const legacy = nightlyFileName(at(2026, 10, 1));
+    const manual = 'SundaySort-backup-2026-10-02.sundaysort';
+    const pruned = filesToPrune([...mine, ...theirs, legacy, manual], 7, 'aaaa11');
+    expect(pruned.sort()).toEqual([legacy, mine[0], mine[1]].sort());
+    expect(pruned.some((n) => n.includes('bbbb22'))).toBe(false);
+  });
+});
