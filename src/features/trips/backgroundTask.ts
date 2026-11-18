@@ -14,6 +14,7 @@ import { appendPoints, getActiveTrip, getTrip } from '@/db/tripsRepo';
 import { refreshWidgets } from '@/features/widgets/refresh';
 
 import { addSignalListener, TRIP_DETECT_TASK } from '../../../modules/trip-detect';
+import { syncIosBackstops } from './auto/backstop';
 import { processAutoSignals, syncAutoDetection } from './auto/runner';
 import { TRIP_TASK } from './constants';
 import { formatDistance } from './format';
@@ -61,6 +62,8 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
       speed: l.coords.speed,
     })),
   );
+  // iOS (B-96): move the booked "Still on a trip?" / "Trip isn't recording" past this fix.
+  if (Platform.OS === 'ios') await syncIosBackstops();
   const trip = getTrip(db, active.id);
   if (!trip) return;
   const unit = getSettings(db).distanceUnit;

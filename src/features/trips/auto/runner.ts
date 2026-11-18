@@ -1,5 +1,7 @@
 // Runs the automatic-trip engine against the DB: called by the headless task "SundayTripDetect" (native receivers),
 // on app start / foreground, and after the S-07d switch changes. Never throws.
+import { Platform } from 'react-native';
+
 import { db } from '@/db/client';
 import { getProStatus } from '@/db/proRepo';
 import { getSettings } from '@/db/settingsRepo';
@@ -14,7 +16,18 @@ import { formatDistance } from '../format';
 import { classifyTrip } from './classify';
 import { INITIAL_ENGINE_STATE, MIN_AUTO_TRIP_M, step, type EngineSignal, type EngineState } from './engine';
 import { configureNative, hasActivityPermission, isCharging, isSamsung, nativeHealth, readSignals, scheduleWake, setTransitions } from './native';
-import { notifyAutoPaused, notifyAutoSaved, notifyProEnded, notifySilent, notifyStartFailed, notifyStill } from './notifyAuto';
+import { syncIosBackstops } from './backstop';
+import {
+  isPresented,
+  NOTIF_SILENT,
+  NOTIF_STILL,
+  notifyAutoPaused,
+  notifyAutoSaved,
+  notifyProEnded,
+  notifySilent,
+  notifyStartFailed,
+  notifyStill,
+} from './notifyAuto';
 import { finishAutoTrip, getKV, lastParkedPoint, seedStartPoint, setKV, tripEnds } from './repo';
 import { routeScopeFor } from './routes';
 import { syncTripActive } from './sync';
@@ -100,10 +113,11 @@ async function runOnce(now: number) {
         await endAutoTrip(a.at, state);
         break;
       case 'notifyStill':
-        if (s.notify.missedTrip) await notifyStill();
+        // iOS: the booked backstop (backstop.ts) may already be on screen — don't alert twice.
+        if (s.notify.missedTrip && !(Platform.OS === 'ios' && (await isPresented(NOTIF_STILL)))) await notifyStill();
         break;
       case 'notifySilent':
-        if (s.notify.missedTrip) await notifySilent();
+        if (s.notify.missedTrip && !(Platform.OS === 'ios' && (await isPresented(NOTIF_SILENT)))) await notifySilent();
         break;
       case 'wake':
         scheduleWake(a.at);
@@ -111,6 +125,7 @@ async function runOnce(now: number) {
     }
   }
   setFlags({ lastRunAt: now });
+  await syncIosBackstops();
 }
 
 /** A departure wake-up this long after the drive began still belongs to it (iOS logs it ~150 m in). */

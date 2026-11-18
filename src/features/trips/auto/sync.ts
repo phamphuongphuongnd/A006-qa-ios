@@ -5,6 +5,7 @@ import { db } from '@/db/client';
 import { getSettings } from '@/db/settingsRepo';
 import { getActiveTrip } from '@/db/tripsRepo';
 
+import { syncIosBackstops } from './backstop';
 import { STILL_NOTIFY_MS } from './engine';
 import { cancelWake, configureNative, scheduleWake, watchDeparture } from './native';
 import { lastParkedPoint } from './repo';
@@ -14,6 +15,8 @@ import { lastParkedPoint } from './repo';
  * pending for the end-of-trip / "Still on a trip?" check.
  */
 export function syncTripActive(now = Date.now()) {
+  // iOS: book / cancel the "Still on a trip?" / "Trip isn't recording" backstops (B-96).
+  syncIosBackstops(now).catch(() => {});
   const trip = getActiveTrip(db);
   configureNative({ tripActive: !!trip });
   if (!trip) {

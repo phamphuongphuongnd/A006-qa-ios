@@ -1,4 +1,4 @@
-# B-95 (+ một phần B-96) — Chuyến tự động trên iOS · phiên H · 2026-11-18
+# B-95 + B-96 — Chuyến tự động trên iOS · phiên H · 2026-11-18
 
 Nhánh `ios-auto-trips` (worktree `apps/A006-wt/ios-auto-trips`, từ `dev` 99ecae0). Chưa push.
 
@@ -20,6 +20,12 @@ Nhánh `ios-auto-trips` (worktree `apps/A006-wt/ios-auto-trips`, từ `dev` 99ec
   (cũng có lợi cho Android, không đổi luật dò).
 - **Kết thúc chuyến / "Still on a trip?" / "Trip isn't recording" (B-96):** `scheduleWake` trên iOS = hẹn giờ (đồng hồ thật)
   chạy được vì khi có chuyến `TRIP_TASK` giữ app chạy nền. Luật giữ nguyên (`mergeStopMinutes`, `MIN_AUTO_TRIP_M` 500 m).
+- **B-96 — dự phòng không cần app chạy** (`auto/backstop.ts`, `backstopPlan.ts`): iOS không có báo thức mở app, và app
+  ngừng chạy đúng lúc ghi bị hỏng (bị tắt, mất quyền vị trí) → ngoài hẹn giờ, 2 thông báo "Still on a trip?" / "Trip isn't
+  recording" được **hẹn sẵn bằng thông báo cục bộ** (cùng identifier với engine → không trùng), tính như `engine.step`
+  (+90 s): Still = lần di chuyển cuối + 45 phút (chuyến tay, không đang lái); Silent = điểm GPS cuối + 10 phút khi CoreMotion
+  đang "driving". Hẹn lại khi có điểm GPS mới (`TRIP_TASK`, ~1 lần/phút), sau mỗi lượt engine, huỷ khi hết chuyến/tạm dừng/
+  tắt "missed trip" trong cài đặt. Engine thấy thông báo dự phòng đã hiện thì không gửi lại. Silent cần quyền Motion (như Android).
 - **Đoạn đầu chuyến:** iOS biết muộn vài trăm mét → nếu lần thức là "rời chỗ đỗ" thì chèn điểm đầu tại chỗ đỗ, giờ = giờ bắt
   đầu (`seedStartPoint`, không đổi `lastPointAt`) → quãng đường gồm cả đoạn trước khi GPS chạy.
 - **Màn Automatic trips / Home / thông báo:** `iosNote` nói đúng cách iPhone dò; thẻ cam iOS: thiếu quyền (Motion, Location
@@ -41,6 +47,10 @@ Cần chạy xe thật trên iPhone, ghi "Share trip diagnostics" sau mỗi lư�
 5. Độ trễ thực tế: rời chỗ đỗ → chuyến bắt đầu; độ tin cậy CoreMotion "automotive" ở UK (đèn đỏ, kẹt xe, xe buýt).
 6. Background App Refresh tắt có làm iOS không mở lại app cho sự kiện vị trí không (hiện chỉ báo "may miss drives").
 7. Quyền: luồng S-07e trên iOS xin "Always" (iOS có thể chỉ cho "While Using" rồi hỏi lại sau) → trạng thái đổi đúng không.
+
+8. B-96: thông báo hẹn sẵn có hiện đúng giờ khi app bị vuốt tắt giữa chuyến tay; bấm "End trip" trên thông báo kết thúc
+   đúng giờ dừng; không hiện sai khi chỉ dừng đèn đỏ / kẹt xe (Silent chỉ hẹn khi CoreMotion "driving" — kẹt xe đứng im
+   > 10 phút mà GPS bỏ điểm đứng yên có thể báo nhầm "Trip isn't recording", giống Android).
 
 ## Giới hạn đã biết
 - Lần thức chỉ bằng đổi vị trí (không rời vùng) → đoạn trước điểm GPS đầu không tính; khoảng trống giữa 2 chuyến hiện "Missing trip?" (Q26).
