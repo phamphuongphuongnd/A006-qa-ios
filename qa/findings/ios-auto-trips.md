@@ -35,6 +35,12 @@ Nhánh `ios-auto-trips` (worktree `apps/A006-wt/ios-auto-trips`, từ `dev` 99ec
 - Test: `iosAutoTrips.test.ts` (đổi tín hiệu, lùi giờ, kết thúc, đèn đỏ/hầm, chuyến biết muộn, điểm đầu), `iosNative.test.ts`.
   jest 908/908 · tsc · lint xanh.
 
+## Build
+- EAS `ios-simulator-preview` từ commit 55db0eb (toàn bộ Swift B-95; B-96 chỉ đổi JS) → **xanh**:
+  https://expo.dev/accounts/phamthuphuong/projects/sundaysort/builds/ab575790-4e80-4cde-83dc-18e8e287dc08
+- Gói JS iOS của bản cuối (B-96) kiểm bằng `npx expo export --platform ios` → OK.
+- Simulator không có chip chuyển động → màn Automatic trips hiện "can't recognise driving" (đúng); không thử được dò lái trên simulator.
+
 ## CHƯA thử trên máy thật (không có Apple Developer + iPhone — TC-340)
 Cần chạy xe thật trên iPhone, ghi "Share trip diagnostics" sau mỗi lượt:
 1. iOS có thật mở lại app (đã vuốt tắt) khi đổi vị trí / rời vùng 150 m không; JS có kịp bật chuyến trong ~25 s không.
