@@ -429,6 +429,8 @@
 > liệu chờ Phương duyệt thêm phút.
 - [ ] **B-100** 🟡 (QA iOS QI-1, phiên C) iPhone SE + chữ lớn: màn chọn vùng — thẻ United States khuất dưới nút Continue, không có gợi ý cuộn (màn đã cuộn được).
   Sửa: `ui/HintScroll.tsx` — nháy thanh cuộn khi nội dung dài hơn màn (màn chào + màn chọn vùng). (Màn chào cắt chữ = B-66.)
+  iOS lượt 4b (phiên C, P091 SE AX-Large): tiêu đề đủ, nhưng thanh cuộn iOS chỉ nháy ~1 s → không thấy gợi ý. Sửa lần 2: thêm viên "More below ⌄" ở
+  đáy, ở lại tới khi cuộn tới cuối, chạm = cuộn xuống ~1 màn (cả iOS + Android). ⏳ phiên C.
 - [ ] **B-101** 🟡 (QA iOS QI-3, phiên C) Ô Note ở Ghi nhanh đảo ký tự khi gõ nhanh (P052: "QA-P052 Shell M62" → "QA-052 Shell M62P"; 1/14). Sửa: ô không còn
   điều khiển `value` (dựng lại khi app tự điền: chip, đọc hoá đơn); nháp ghi file trễ 400 ms thay vì mỗi phím.
 - [ ] **B-102** 🟠 (QA A13-4, phiên E — hoá đơn Tesco thật chụp bằng A13) 2/3 hoá đơn không ra số tiền (#2 giấy cong; #3 in phẳng "TOTAL: £33.50" có
