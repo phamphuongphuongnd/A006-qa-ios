@@ -482,4 +482,8 @@
 - [ ] **B-112** 🟡 (QA A13, phiên E, bản 2ac9e15) Hoá đơn FreshHarvest 2019 (B-108 giờ điền ngày cũ) hiện chip ngày "Wed 20 Nov, 11:09" — không có năm,
   dễ tưởng là tuần này trong khi khoản vào năm thuế 2019. Sửa: `dateTimeLabel` ghi năm khi khác năm hiện tại ("Wed 20 Nov 2019, 11:09") — chip Ghi nhanh
   + dòng Date & time ở Sửa khoản. ⏳ A13.
+- [ ] **B-113** 🟠 (QA A13-10, phiên E, bản 3f26b33 — dữ liệu thật) Có khoản "FreshHarvest Market −£21.74, **Fri 20 Nov 2020**, 11:09" (hoá đơn ghi 2019) mà
+  phiên E không bấm Save (nháp trước đó đã Discard lúc 14:41). Kiểm: Discard chỉ xoá nháp, không tạo khoản; 2 đường tạo khoản ở Ghi nhanh là Save và phím
+  ✓ bàn phím số (B-98); cả 2 lần OCR FreshHarvest trong chẩn đoán ra 20/11/**2019**; khoản không có trong backup 14:28. Phiên E đã xoá khoản (mất
+  createdAt). **Chưa rõ nguyên nhân** — chờ trả lời phiên E (✓ bàn phím? chọn ngày trong lịch?) / tái hiện + chẩn đoán trước khi xoá.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
