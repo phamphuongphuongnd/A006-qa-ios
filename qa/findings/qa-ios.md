@@ -17,7 +17,15 @@
 | 4 | 44236852419 | dev 4853823 + QA | 0 | 14 | Huỷ chủ động: dev có thêm B-100/B-101 (322acd6) sau khi merge |
 | 4b | 44238847151 | dev 322acd6 + QA (+ bước 15_auto_trips) | 0 | 0 | ❌ GitHub không khởi chạy job: "recent account payments have failed or your spending limit needs to be increased" (Billing & plans) |
 
-Tổng phút macOS đã dùng: **168** (78 + 5 + 71 + 14). Lượt 4b chờ Phương xử lý thanh toán / hạn mức GitHub Actions.
+| 4c | 44241312809 (repo công khai `A006-qa-ios`) | e25dc9a (dev 322acd6 + QA) | 17/29 có chạy, **0 bước ✅ ngoài onboarding** | 0 (repo công khai, miễn phí; job 136 phút) | ❌ **hạ tầng**: runner chậm gấp 3–4 lần (build 18 phút thay vì 7, khởi động simulator 14 phút). 9 persona `IOSDriverTimeoutException` (XCTest driver không sẵn sàng sau 240 s); P001/P076 `DeviceUnreachableException`; 5 persona qua onboarding (2–6 phút/persona) rồi hết hạn 600 s. 10 persona + 2 iPad ⏭ hết ngân sách. 0 crash. → tăng driver 480 s, 25 phút/persona |
+| 4d | 44258898134 (công khai) | 94de76a | đang chạy | 0 | Lượt nhắm đích: P052 (B-101), P016 + P031 (B-100/B-66), P041 (B-90, tối), bước 15 (B-95) trên mọi persona; chạy tuần tự |
+
+Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ lượt 4c chạy trên repo công khai `phamphuongphuongnd/A006-qa-ios` (Phương chọn; không tính phút) — **xoá repo này sau QA-100 khi Phương đồng ý**.
+
+### Thấy được trong lượt 4c (dù hạ tầng lỗi)
+- **B-90** ✅ (một phần): P077 (Pro Max, tối, `extra-extra-extra-large`) màn "Free forever. Pro when you want it." — nút vàng "Continue free" chữ tối đọc rõ, "See Pro" chữ vàng trên nền tối. P092 (tối) qua onboarding. Các nút `sun` khác (Sort first, End trip, Back up now…) chưa tới. Ảnh `qa-runs/ios/44241312809/art/personas/P077/shots/P077_01e_free_pro.jpg`.
+- **B-66 / B-100** (P091, iPhone SE, `accessibility-large`, UK): tiêu đề màn chào nay hiện đủ "Log it in 10 seconds. Sort it on Sunday." (lượt 1 bị cắt); đoạn mô tả vẫn bị cắt ở "mileage log for self-" sát chấm trang; màn chọn vùng thẻ UK cắt ở "Self…", thẻ US vẫn khuất. **Không thấy thanh cuộn trong ảnh** — bản sửa B-100 chỉ *nháy* thanh cuộn ~1 s (`ui/HintScroll.tsx`, `flashScrollIndicators` sau 400 ms; `persistentScrollbar` chỉ có tác dụng trên Android), ảnh chụp sau khi màn đứng yên nên không bắt được → ⏭ cần mắt người trên máy thật/simulator. Ảnh `…/P091/shots/P091_01a_welcome.jpg`, `P091_01b_region.jpg`.
+- Khôi phục (02): đã tìm được thư mục File Provider bằng metadata (cả 2 máy) và đặt file; trình chọn file mở nhưng **trắng trơn** (`P067_02c_picker_files.jpg`) trên runner chậm → chưa kết luận.
 
 
 ### Kết quả lượt 3 theo bước (14 persona)
