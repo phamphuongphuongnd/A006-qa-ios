@@ -94,6 +94,53 @@ B-70 ✅ (P056, P057) · B-61 ✅ · B-60 ✅ (`P003/10_tab_Reports.png`: nút x
   che phần chữ "Actual co|sts" (367–656, 762–858). Cuộn được nên vẫn bấm được nút khi cuộn, nhưng ở vị trí mặc định thì bấm vào giữa-phải nút sẽ mở
   màn nhập khoản thay vì chọn "Actual costs".
 
+### Kiểm lại trên APK 5ce0626 (2026-11-18, API 26 360dp `-gpu host -memory 1536`; B-69 trên API 30 swiftshader) — `qa-runs/android-old/verify-5ce0626/`
+| Lỗi | KQ | Bằng chứng + số đo |
+|---|---|---|
+| B-72 (OLD-9) số tiền | ✅ | `b72_typed_1234.png`: "$12.34" cao 58 px = **29 dp** (chữ 0.85); `b72_font13_draft_restored.png` chữ 1.3: **34 dp** |
+| B-72 (OLD-9) hàng + − × ÷ trên bàn phím | ❌ | bàn phím bắt đầu y=774 px; phím CalcBar bắt đầu y≈726 → chỉ lộ ~47/85 px, ký hiệu bị cắt (~19 dp bị che). Chữ 1.3: dải CalcBar y=735→774, **chỉ lộ 39 px**, không thấy ký hiệu nào |
+| B-73 Back ẩn bàn phím → chạm số tiền → bàn phím lại | ✅ | `b73_compare.png`: ẩn bàn phím thì "Tap for Personal", "20 of 20 free photos", "No category needed" hiện lại; chạm số tiền → bàn phím + màn gọn |
+| B-74 (OLD-8) bộ nhớ đầy → Save báo lỗi | ⚠️ (OLD-10) | snack "Couldn't save. Free up some storage on your phone and try again." **có**, nhưng nằm sau bàn phím: 10 ảnh/3 s sau Save không thấy (`b74_strip3.png`); ẩn bàn phím mới lộ (`b74_strip4.png`) |
+| B-75 (OLD-7) bộ nhớ đầy → mở app 3 lần | ✅ | `b75_open_0..2.png`, `b75_logcat.txt`: 3/3 mở được, WorkManager vẫn log SQLiteFull (D) nhưng không "bad state"/crash dialog của app (các hộp "has stopped" là Google Play Music/Gmail) |
+| B-84 bị giết khi đang chọn ảnh → mở lại | ✅ | gõ 43.21 → Photo → Choose from library → `kill -9` (như lowmemorykiller; `am kill` không giết được vì app còn "perceptible") → Back → Ghi nhanh mở lại "$43.21" (`b84_c3_after_return.png`, `capture-draft.json` còn) |
+| B-65 Recents khi App lock bật | ✅ | API 26: Settings và khi đang mở sheet → ảnh Recents 1 màu (trống); tắt App lock → Recents 64 màu, chụp màn được lại (`b65_*`). API 30 (538ede9) cũng ✅ (`_dbg/b65/`) |
+| B-69 Miles trên swiftshader | ✅ | API 30 swiftshader, P023 12 chuyến: mở Miles + màn chi tiết chuyến (MapView) 3 lần, **0** Fatal signal (`b69_*`). Lỗi gốc không tái hiện nên nhánh "sập tối đa 1 lần" chưa được thử tới |
+| B-59 migration trước tác vụ nền | ✅ | 40/40 logcat lượt 538ede9 có lần mở đầu, **0** dòng "no such table" |
+
+### Android 7.0 x86 32-bit (minSdk 24) — APK 5ce0626, 2026-11-18 · `qa-runs/android-old/api24/` (`summary.md`)
+AVD `qa_min_api24_x86` (google_apis x86 r27, **32-bit**, RAM 1536 MB, 720×1280 @320 = 360dp, cổng 5568, `-gpu host`). APK cài bằng
+`adb push` + `pm install` (`adb install` kiểu streamed treo trên API 24); `primaryCpuAbi=x86`.
+
+**8/8 persona ✅** (chạy trên API 24, chọn từ nhóm api26_small): P003 P020 P024 P028 P032 P036 P061 P082 — mở nguội lần đầu trung vị **1 239 ms**
+(tối đa 1 340), sau hành trình 1 473 ms; PSS trung vị 84 MB; khôi phục 2 000 khoản ≤ 3,9 s; 0 FATAL/ANR/crash native/kill.
+(GPU host nhanh hơn swiftshader của lượt API 26 nên số mở nguội không so trực tiếp được.) P020/P032 là persona "tối" nhưng Android 7 không có
+chế độ tối hệ thống → chạy nền sáng (ghi trong bước device profile). ⏭ PDF (Pro).
+
+Kiểm riêng Android 7:
+- **Khôi phục qua SAF** ✅ — DocumentsUI 7: mục "Downloads" chỉ liệt kê file của DownloadManager và **bỏ qua `input tap`** trên lưới → runner
+  bật "Show internal storage" rồi đi bằng phím (DPAD/ENTER; mỗi lần `uiautomator dump` xen giữa làm mất tiêu điểm phím). Giới hạn công cụ, không phải app.
+- **Chọn thư mục sao lưu (OPEN_DOCUMENT_TREE)** ✅ có điều kiện (OLD-11): chọn bộ nhớ máy → "Nightly backup on · This phone / primary:", app ghi ngay
+  `SundaySort-backup-2026-11-18-0337.sundaysort` + `SundaySort-backups.json` vào thư mục đó (`checks/saf_after_select.png`).
+- **JobScheduler/sao lưu đêm** ✅ đăng ký: `dumpsys jobscheduler` có job WorkManager `SystemJobService` của app (latency ~2h55m). ⏭ ép chạy job:
+  Android 7 từ chối `cmd jobscheduler run -f` (kể cả root).
+- **Foreground service + thông báo chuyến** ✅ (P024: "RECORDING · GPS good · 1.6 mi", có thông báo, sau Save không còn service).
+- **Widget** ✅ "Week & trip" trên Launcher3: hiện "£180.66 · 25 to sort", bấm "Start trip" → màn xin quyền vị trí (`checks/widget_*.png`).
+- **Phông / RTL** ✅ Inter + "مرحبا بالعالم" hiển thị đúng (`P082/14_entries_weird.png`).
+- WebView in PDF: ⏭ (PDF là tính năng Pro).
+
+### OLD-11 🟡 Android 7: "Choose backup folder" mở bộ chọn chỉ có "Recent · No items"
+- **Máy:** API 24, 5ce0626. **Bước:** Settings → Backup & restore → Choose backup folder.
+- **Thực tế:** ngăn "Open from" chỉ có "Recent", màn chính "No items" — không có chỗ nào để chọn. Phải biết mở ⋮ → "Show internal storage" mới thấy
+  bộ nhớ máy (`checks/saf_tree_picker.png`, `saf_tree_root.png`). Sau khi chọn gốc bộ nhớ, nhãn hiện "This phone / **primary:**" (lộ id tài liệu).
+- **Gợi ý:** thêm extra `android.content.extra.SHOW_ADVANCED = true` vào intent OPEN_DOCUMENT_TREE (và OPEN_DOCUMENT khi khôi phục) để bộ nhớ máy hiện
+  sẵn trên Android 7–9; với gốc bộ nhớ, đặt nhãn "This phone" thay vì "primary:".
+
+### OLD-10 🟡 (từ B-74) Android 8: snackbar lỗi/“Saved” ở màn Ghi nhanh nằm sau bàn phím
+- **Máy:** API 26 360dp, APK 5ce0626. **Bước:** bộ nhớ đầy → Expense → gõ 888 → Save (bàn phím đang mở như bình thường).
+- **Thực tế:** 3 s không thấy gì; nhấn Back ẩn bàn phím thì snack đỏ "Couldn't save…" hiện ở đáy (đè lên nút Save). Người dùng nghĩ Save không ăn.
+- **Nguyên nhân gốc nghi ngờ:** cùng gốc B-58: trên API < 30 vùng cửa sổ không co lại theo bàn phím, nên mọi thứ ở đáy (CalcBar, snack `above: 'none'`)
+  nằm sau bàn phím. Gợi ý: ở màn Ghi nhanh đặt snack phía trên (`above: 'keyboard'`/top) hoặc ẩn bàn phím khi báo lỗi.
+
 ### OLD-7 🟠 Bộ nhớ máy đầy → app sập ngay khi mở ("Sunday Sort has stopped") vì WorkManager
 - **Máy:** API 26 (emulator-5558), APK `538ede9-all`, dữ liệu P074. `/data` còn 16 MB (`dd` lấp đầy, như máy 16 GB rẻ tiền đầy ảnh).
 - **Bước:** đầy bộ nhớ → force-stop → mở app (`am start`). Lần 1 mở được; lần 2 (và lần mở trong lúc chạy runner) → hộp **"Sunday Sort has stopped"**,
