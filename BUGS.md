@@ -509,7 +509,9 @@
   được "Split & sort" (ScrollView của thẻ lồng trong ScrollView màn → Android cần `nestedScrollEnabled`); tiêu đề vẫn chiếm nửa màn, List view cạnh
   tiêu đề, FAB che Skip. Sửa lần 2: `nestedScrollEnabled` ở thẻ khoản + thẻ chuyến; màn cuộn → tiêu đề cuộn cùng thẻ; chữ ≥ 1.5 → List view dòng riêng;
   ẩn FAB ở Sort khi màn cuộn. Phiên B (07f4aac = bản lần 1): ở chữ **1.3** trên 640dp form Split cũng không tới được "Split & sort" (lần 1 bật bố
-  cục cuộn từ 1.3) — hồi quy cho cỡ "Large". Lần 3: bố cục cuộn chỉ khi chữ ≥ 1.8 (1.3–1.7 về bố cục thường đã chạy đúng ở 3f26b33). ⏳ phiên B.
+  cục cuộn từ 1.3) — hồi quy cho cỡ "Large". Lần 3: bố cục cuộn chỉ khi chữ ≥ 1.8 (1.3–1.7 về bố cục thường đã chạy đúng ở 3f26b33).
+  iOS QI-4 (phiên C, lượt 4d trên 322acd6 — chưa có sửa nào): AX-Large → thẻ Sort cắt mất danh mục / Work-Personal (P041 Pro Max), còn "Expense" +
+  nút cắt (P016 SE) — cùng gốc; lần 3 áp cho iOS (fontScale AX > 1.8 → màn cuộn). ⏳ phiên B (Android) + iOS bản mới.
 - [ ] **B-115** 🔴 (QA OLD-14, phiên B — 3f26b33, API 26) Android 7/8/9 (API 24–28): Ghi nhanh → Photo → "Take photo" **không bao giờ mở camera** (cấp quyền
   CAMERA rồi vẫn không); "Choose from library" vẫn được. Gốc: trên SDK < Q expo-image-picker đòi cả WRITE_EXTERNAL_STORAGE lẫn CAMERA
   (`ensureCameraPermissionsAreGranted`), mà `plugins/withReleasePermissions.js` xoá WRITE_EXTERNAL_STORAGE khỏi manifest release (B-19) → không xin
