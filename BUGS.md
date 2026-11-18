@@ -478,7 +478,9 @@
   số + % xuống dòng. ⏳ phiên A.
 - [ ] **B-111** 🟡 (QA A13, phiên E) Backup & restore hiện "Backup folder, Google Drive — not reachable" nhưng không rõ lỗi thật hay nhãn sai; "Back up now"
   chỉ mở bảng chia sẻ nên không kiểm được. Bước 1: file chẩn đoán (giữ lâu Version) có mục `backup` (provider, nightly, failCount, lastError, kết quả
-  liệt kê thư mục + câu lỗi thật) — không đổi cài đặt. ⏳ phiên E lấy file.
+  liệt kê thư mục + câu lỗi thật) — không đổi cài đặt. **Kết quả (phiên E, 3f26b33):** provider Google Drive, probe `folder gone` → thư mục Drive đã chọn
+  không còn mở được (xoá/đổi hoặc mất quyền sau các lần cài đè / pm clear 17/11) — lỗi thật, không phải nhãn sai. Sửa: dòng báo "… can't be opened. Tap
+  to choose it again." (chạm = chọn lại thư mục). Phương chọn lại thư mục khi tiện (đổi cài đặt trên dữ liệu thật → để Phương tự làm).
 - [ ] **B-112** 🟡 (QA A13, phiên E, bản 2ac9e15) Hoá đơn FreshHarvest 2019 (B-108 giờ điền ngày cũ) hiện chip ngày "Wed 20 Nov, 11:09" — không có năm,
   dễ tưởng là tuần này trong khi khoản vào năm thuế 2019. Sửa: `dateTimeLabel` ghi năm khi khác năm hiện tại ("Wed 20 Nov 2019, 11:09") — chip Ghi nhanh
   + dòng Date & time ở Sửa khoản. ⏳ A13.
