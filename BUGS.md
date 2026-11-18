@@ -451,11 +451,11 @@
   £33.50, FreshHarvest $21.74 + ngày có nhãn. **Giới hạn đã biết:** r11 OCR đọc nhầm số (ảnh 255 px); nơi bán điền sai ở 3 hoá đơn mẫu kiểu công ty /
   vé phạt (r22 "lexnet" logo cắt, r23 "Jane Smith" tên người trên mẫu, r28 "Ala Moana Center" = nơi gửi xe) ở 0,62 — nâng ngưỡng sẽ mất tên đúng
   (FreshHarvest, WideMart, Fuelmax…) cùng mức; ô nơi bán sửa được. 104 lần đọc thật là bộ test `receiptSet.test.ts`.
-- [ ] **B-103** 🟠 (QA A13-5, phiên E — Phương: "chụp hoá đơn rất đơ, nhận diện cũng đơ") Từ lúc bấm OK ở camera tới lúc bắt đầu đọc 14,9–17,8 s trên A13
+- [x] **B-103** 🟠 (QA A13-5, phiên E — Phương: "chụp hoá đơn rất đơ, nhận diện cũng đơ") Từ lúc bấm OK ở camera tới lúc bắt đầu đọc 14,9–17,8 s trên A13
   (camera 50 MP). Gốc: `photo.tsx` gọi picker với `quality: 0.6` → expo-image-picker giải nén + nén lại cả ảnh 50 MP (`CompressionImageExporter`); ML Kit
   lại giải nén ảnh gốc lần nữa. Sửa: Android dùng `quality: 1` (picker chỉ chép file) + `ReceiptOcr.shrink` native (giải nén lấy mẫu, xoay theo EXIF,
   cạnh dài ≤ 2400 px, JPEG 85) → đọc và lưu bản nhỏ, xoá bản to trong cache. iOS không đổi. Chẩn đoán ghi thời gian từng bước (`timing`: pickedAt,
-  shrinkMs, ocrStartedAt, ocrMs). ⏳ phiên E đo lại trên A13.
+  shrinkMs, ocrStartedAt, ocrMs). ⏳ phiên E đo lại trên A13. ✅ A13 (08cdb7b/3f26b33, phiên E): bấm OK → ô số tiền điền ≈ 4,3 s (trước 15–18 s); thu nhỏ 2,1–2,5 s + OCR 1,0–1,7 s.
 - [ ] **B-104** 🟡 (QA F-1, phiên G — Firebase Test Lab máy thật Galaxy S26, Pixel 11 + máy ảo A17, 3/3) Bấm "Try Pro free for 7 days" → "Trial · 8 days
   left", thanh tiến độ âm. Gốc: `usePro()` dùng `now` của `useNow(60_000)` (cũ tới 1 phút) < `trialStartedAt` → `ceil` ra 8 (`domain/pro.ts`). Sửa: đếm từ
   `max(now, trialStartedAt)`, kẹp `daysLeft` 1..7 + test. ⏳ phiên G kiểm lại lượt máy thật sau.
@@ -471,11 +471,11 @@
   `trip/active.tsx` kết thúc tay chuyến startedBy=auto < 500 m → **hỏi "Only 0.0 km — keep this trip?" 2 nút Discard / Keep** (Phương chốt
   18/11 qua phiên E: không tự bỏ; bản 2ac9e15 tự bỏ là sai ý — đã đổi). Chuyến 0 km đang nằm trong dữ liệu thật
   của Phương — phiên E hỏi Phương trước khi xoá.
-- [ ] **B-108** 🟠 (QA — phiên "A006 chụp nhập tự động" báo, Phương duyệt 18/11) Hoá đơn cũ hơn 400 ngày: OCR không điền ngày (độ tin cậy 0,3 +
+- [x] **B-108** 🟠 (QA — phiên "A006 chụp nhập tự động" báo, Phương duyệt 18/11) Hoá đơn cũ hơn 400 ngày: OCR không điền ngày (độ tin cậy 0,3 +
   `receiptAt` chặn) → ô vẫn "Now". Tài xế dồn nhập trước hạn Self Assessment 31/1: hoá đơn tháng 4–5 năm thuế trước đã ~600–665 ngày → khoản ghi ngày
   hôm nay = **sai năm thuế**. Phương: bỏ giới hạn (năm "94" = 1994, "22/04/12" = 2012 là ngày thật). Sửa: bỏ luật 400 ngày ở `parseReceipt.readDate` và
   `fill.receiptAt`; vẫn chặn ngày tương lai; vẫn bỏ dòng hạn điểm / hết hạn / "TOTAL UP TO". Bộ 20 hoá đơn: mọi hoá đơn có in ngày đều điền đúng ngày
-  (r11 OCR đọc rác → không điền). ⏳ kiểm trên máy.
+  (r11 OCR đọc rác → không điền). ⏳ kiểm trên máy. ✅ phiên F (3f26b33, 32 ảnh): ngày cũ điền đúng kèm năm (30/32); A13: FreshHarvest 2019 điền ngày có năm.
 - [ ] **B-109** 🟡 (QA A13-8, phiên E) Sau Save, tab Entries giữ vị trí cuộn cũ → mục TODAY + khoản mới nằm trên mép màn hình. Sửa: số khoản tăng (xếp
   mới nhất trước) → cuộn danh sách lên đầu. ✅ A13 (3f26b33): khoản mới hiện ngay đầu Entries.
   ❌ phiên B (API 26, 3f26b33): cuộn xuống rồi ghi khoản (FAB / tab Home) → Entries vẫn ở chỗ cũ — lệnh cuộn chạy lúc Entries bị che, FlashList bỏ qua
