@@ -1,0 +1,167 @@
+# QA-100 — phiên B `qa-android-old` (Android 8 / API 26 + Android 11 / API 30)
+
+APK lượt chính thức: **`sundaysort-qa-538ede9-all.apk`** (dev 538ede9, có bản sửa B-56..B-70). Lượt trước: ece3819 (khám phá → OLD-1..4),
+7fd7305 (→ OLD-5, OLD-6; kết quả giữ ở `qa-runs/android-old/_apk7fd7305/`).
+Máy ảo (`-no-window -gpu swiftshader_indirect`): `qa_old_api26` (emulator-5558, Android 8.0 google_apis x86_64 r16, RAM 1536 MB,
+720×1280 @320dpi = 360×640dp) · `qa_mid_api30` (emulator-5560, Android 11 google_apis x86_64 r16, RAM 3 GB, 1080×2340 @440dpi).
+Runner riêng phiên B: `qa/tools/oldrun.py` + `behaviours.py` (20 hành vi) + `oldbatch.sh` (1 lô/máy, tự chạy lại khi adb rớt) + `oldsummary.py`.
+Bằng chứng: `qa-runs/android-old/<persona>/` (result.json, ảnh từng bước, logcat.txt, meminfo.txt), `summary.md`, `_dbg/` (tái hiện tay). Gitignore.
+
+## 40 persona của phiên B
+| Máy | Persona |
+|---|---|
+| api26_small (20) | P003 P007 P011 P020 P024 P028 P032 P036 P045 P049 P053 P057 P061 P070 P074 P078 P082 P086 P095 P099 |
+| api30_mid (20) | P002 P006 P015 P019 P023 P027 P031 P040 P044 P048 P052 P056 P065 P069 P073 P077 P081 P090 P094 P098 |
+
+## Điểm dễ vỡ riêng Android cũ → bước kiểm thêm
+1. **Vị trí nền ≤ Android 9 (API 26):** không có quyền nền riêng; `trip/permission.tsx` gọi `getBackgroundPermissionsAsync`
+   sau khi cấp vị trí trước → phải `granted` ngay, không được kẹt ở bước 2 "Allow all the time". API 30: chỉ cấp được ở trang cài đặt.
+2. **Nhận diện hoạt động (ACTIVITY_RECOGNITION) chỉ có từ API 29:** `requestMotionActivityPermissionsAsync` trên API 26 không được treo/crash.
+3. **Thông báo:** API 26 không cần quyền POST_NOTIFICATIONS (chỉ kênh); API 30 cũng vậy → nhắc Chủ nhật / thông báo chuyến phải hiện mà không hỏi quyền.
+4. **Foreground service vị trí (chuyến):** API 26 `startForegroundService` không có `foregroundServiceType`; API 30 cần type location → bắt đầu/kết thúc chuyến không crash.
+5. **SAF:** bộ chọn file DocumentsUI đời cũ (API 26 giao diện khác) — khôi phục sao lưu + chọn thư mục sao lưu.
+6. **Widget** (react-native-android-widget) trên launcher cũ: thêm widget, hiển thị, bấm mở app.
+7. **In PDF (expo-print/WebView cũ):** WebView API 26 bản cũ (Chrome 58-ish trên ảnh hệ thống) — CSS hiện đại có thể vỡ.
+8. **Phông Inter / emoji / RTL** trên API 26 (bộ phông emoji cũ: emoji mới hiện ô vuông là giới hạn hệ thống, không phải lỗi app).
+9. **RAM thấp 1.5 GB:** mở nguội `am start -W`, `dumpsys meminfo`, app bị kill nền khi mở bộ chọn file/camera → mất dữ liệu đang nhập?
+10. **Cỡ chữ 0.85 (API 26) / 1.3 (API 30), màn 360dp:** chữ bị cắt, nút bị đẩy ra ngoài.
+
+## Kết quả (APK 538ede9, 2026-11-17 15:03–16:51 · `qa-runs/android-old/summary.md`, `summary.json`)
+
+**40/40 persona có `result.json` thật · 39 ✅ · 1 ❌ (P074 = OLD-8, lỗi app).** Mỗi persona 9–15 bước kiểm thật trên máy.
+
+| | API 26 (20) | API 30 (20) |
+|---|---|---|
+| Kết quả | 19 ✅ · 1 ❌ (P074) | 20 ✅ |
+| Mở nguội lần đầu (`am start -W` sau `pm clear`) | trung vị 2 351 ms · tối đa 3 837 ms | trung vị 2 019 ms · tối đa 2 548 ms |
+| Mở nguội sau hành trình | trung vị 2 943 ms · tối đa 3 858 ms | trung vị 2 296 ms · tối đa 3 129 ms |
+| PSS sau hành trình | trung vị 104 MB · tối đa 111 MB | trung vị 110 MB · tối đa 115 MB |
+| Khôi phục sao lưu (2 000–12 000 khoản) | tối đa 11,4 s | tối đa 9,5 s |
+| FATAL / ANR / crash native / bị kill nền (logcat lọc theo app) | 0 | 0 |
+
+Đã kiểm thật (✅ ở 538ede9): onboarding UK/US · khôi phục file persona qua DocumentsUI Android 8 và 11 · 5 tab · ghi nhanh (expense/income/ghi
+chú/"7.5"→7.50) · phân loại thẻ (kể cả chọn tuần cũ) · "Split & sort" + gộp · chuyến GPS **giả lập** (`emu geo fix`, ~1,6 mi; thông báo chuyến hiện
+không cần hỏi quyền ở API 26/30; sau Save không còn foreground service) · dặm tay + đồng hồ công-tơ-mét · xuất CSV → share sheet · sao lưu →
+share sheet + hỏi "đã lưu chưa" · khôi phục file của người khác · màn Pro online/máy bay · xoá toàn bộ (gõ DELETE) · đổi vùng có quy đổi
+(£179.46×1.27=$227.91, $210.02×0.79=£165.92) · chạm đúp Save = 1 khoản · force-stop 60 ms sau Save / giữa lúc khôi phục (không trùng, không mất) ·
+từ chối / thu hồi quyền vị trí giữa chuyến ("Saved 0.1 mi up to that point") · bộ nhớ đầy: sao lưu báo lỗi đúng · đồng hồ qua 5/4 23:59:30 (UK)
+và 31/12 23:59:30 (US) → "Tax year 2026/27" / "Tax year 2027" · ghi chú `=SUM(A1:A9)`, unicode/RTL/emoji, xuất CSV · App lock bằng PIN máy (Lock
+after Immediately; Recents trống; mở lại / deep link ra màn khoá) · màn Recurring/Rules khi Free · 12 000 khoản trên RAM 1,5 GB (P099): lướt
+15 lần, Reports ~6 s, tìm kiếm. Mạng mỗi persona: online / 3G `umts` / EDGE + trễ 2 s / mất mạng giữa chừng / máy bay. Chữ 0,85 (API 26) /
+1,3 (API 30); nền tối 15 persona.
+Ngoài 40 persona: **widget** "Quick add" thêm được vào launcher Android 8, hiện "99+ to sort", bấm "+" mở màn Income ✅ (`_dbg/widget/`).
+
+**Lưu ý trung thực:**
+- Runner chấm bước ghi nhanh theo snackbar "Saved", **không** chấm cỡ chữ số tiền → OLD-9 (số tiền ~4px ở 360dp) có trên mọi persona API 26
+  dù bảng ghi ✅.
+- `gfxinfo` (P098: 93% khung giật) vô nghĩa với GPU phần mềm swiftshader — không dùng kết luận độ mượt.
+- Fixture P048 (wipe_all) vốn rỗng → runner nhập 2 khoản trước khi xoá.
+- Lượt 7fd7305 nhiều ❌ là lỗi runner (đã sửa, chạy lại); chỉ giữ các lỗi đã tái hiện tay (OLD-5, OLD-6).
+
+**⏭ không chạy được thật:** PDF report (Pro → bấm là mở màn Pro, không mua) · dùng thử / mua Pro (cấm giao dịch thật; google_apis không có Play
+Store) · "Sort list view" P006/P007 (tuần đã phân loại hết nên app không hiện nút — đúng) · chạy xe GPS thật · NFC · vân tay (dùng PIN máy) ·
+chuyến tự động / Activity Recognition (Pro) · chụp hoá đơn bằng camera.
+
+**Hồi quy bản sửa trên Android cũ (538ede9):** B-65 ✅ (P086, P090) · B-69 ✅ (P023: 12 chuyến, Miles không crash, 0 Fatal signal) ·
+B-70 ✅ (P056, P057) · B-61 ✅ · B-60 ✅ (`P003/10_tab_Reports.png`: nút xếp dọc, FAB không đè) · **B-57/B-58 ❌ trên API 26** (OLD-9).
+
+**Lỗi còn mở sau lượt này:** OLD-7 🟠 · OLD-8 🟡 · OLD-9 🟠 (hồi quy B-57/B-58).
+
+## Lỗi tìm được
+
+### OLD-1 🟠 Màn nhập khoản (capture) trên màn cao 640dp: số tiền đang gõ co còn ~4px, không đọc được
+- **Máy:** API 26 720×1280@320dpi (360×640dp) — tái hiện cả trên **API 30 đặt `wm size 720x1280` + `wm density 320`** → do cỡ màn, không do đời Android.
+  API 30 1080×2340@440 (392×851dp) hiển thị bình thường.
+- **Bước:** onboarding → Home → Expense → gõ `1234`.
+- **Kỳ vọng:** "£12.34" chữ lớn ở giữa màn (như API 30 màn lớn). **Thực tế:** số tiền chỉ còn chữ ~4px nằm dính trên nút Photo; vạch caret đỏ cao
+  chồng lên nút Note. Đây là luồng chính "Log it in 10 seconds" — người dùng máy nhỏ không thấy mình gõ bao nhiêu.
+- **Bằng chứng:** `qa-runs/android-old/_smoke26/16_expense.png`, `17_expense_typed.png` (API 26); `qa-runs/android-old/_smoke30/expense_api30_360dp.png`
+  (API 30 ở 360dp) vs `expense_api30.png` (màn lớn, bình thường).
+- **Nguyên nhân gốc nghi ngờ:** `src/app/capture.tsx:509` `middle: { flex: 1 }` không có `minHeight`; khi bàn phím mở (adjustResize) phần trên còn
+  ~386dp, hàng Photo/Work/Note + gợi ý ghi chú + Save + CalcBar chiếm hết → `middle` còn ~0dp → `Txt adjustsFontSizeToFit` (`capture.tsx:303-306`)
+  co chữ tới cỡ tối thiểu. Gợi ý: `minHeight` cho vùng số tiền (vd 72dp) và/hoặc ẩn hàng gợi ý ghi chú / dòng "20 of 20 free photos" khi
+  bàn phím mở trên màn thấp, hoặc `minimumFontScale`.
+
+### OLD-2 🟡 Android 8: hàng phím phép tính (+ − × ÷, CalcBar) bị bàn phím che nửa dưới
+- **Máy:** chỉ API 26 (API 30 cùng cỡ 360dp hiển thị trọn hàng CalcBar) → khác biệt đời Android.
+- **Bước:** như OLD-1. **Thực tế:** CalcBar (`capture.tsx:450`) top y=720, bàn phím từ y=773 → chỉ thấy ~nửa trên của 4 nút.
+- **Bằng chứng:** `qa-runs/android-old/_smoke26/17_expense_typed.png` vs `_smoke30/expense_api30_360dp.png`.
+- **Nguyên nhân gốc nghi ngờ:** `capture.tsx:258` `KeyboardAvoidingView behavior='height'` trên Android cộng với `windowSoftInputMode=adjustResize` +
+  edge-to-edge: trên API < 30 không có WindowInsets IME chuẩn nên phần bù chiều cao bị lệch (thiếu ~1 hàng). Cần kiểm thêm trên máy Android 8–10 thật.
+
+### OLD-3 🟡 360dp: nút nổi "+" (New entry) đè lên nút "Actual costs" ở Reports
+- **Máy:** API 26 360dp, persona P003 (UK, chưa chọn cách tính xe). **Bằng chứng:** `qa-runs/android-old/_smoke26/15_reports.png` — FAB (560–688, 736–864)
+  che phần chữ "Actual co|sts" (367–656, 762–858). Cuộn được nên vẫn bấm được nút khi cuộn, nhưng ở vị trí mặc định thì bấm vào giữa-phải nút sẽ mở
+  màn nhập khoản thay vì chọn "Actual costs".
+
+### OLD-7 🟠 Bộ nhớ máy đầy → app sập ngay khi mở ("Sunday Sort has stopped") vì WorkManager
+- **Máy:** API 26 (emulator-5558), APK `538ede9-all`, dữ liệu P074. `/data` còn 16 MB (`dd` lấp đầy, như máy 16 GB rẻ tiền đầy ảnh).
+- **Bước:** đầy bộ nhớ → force-stop → mở app (`am start`). Lần 1 mở được; lần 2 (và lần mở trong lúc chạy runner) → hộp **"Sunday Sort has stopped"**,
+  app không vào được. Giải phóng bộ nhớ → mở lại bình thường (dữ liệu còn).
+- **Log:** `E WM-ForceStopRunnable: The file system on the device is in a bad state. WorkManager cannot access the app's internal data store.`
+  `android.database.sqlite.SQLiteFullException: database or disk is full (code 13)` → `Showing crash dialog for package com.phiotron.sundaysort`.
+- **Bằng chứng:** `qa-runs/android-old/_dbg/full/crash_dialog_storage_full.png`, `coldstart_full_1_logcat.txt` (dòng ~1109), `logcat_full.txt` (02:37:21).
+- **Nguyên nhân gốc:** WorkManager (kéo vào bởi `expo-background-task` — sao lưu đêm `sundaysort-nightly` — và `react-native-android-widget`) khởi tạo
+  mặc định lúc app start; `ForceStopRunnable` ghi DB nội bộ của WorkManager, gặp SQLITE_FULL thì sau vài lần thử **ném IllegalStateException** —
+  hành vi mặc định khi không có `Configuration.Builder().setInitializationExceptionHandler(...)`. App không có `Configuration.Provider` nào
+  (`grep InitializationExceptionHandler|Configuration.Provider` trong `modules/`, `plugins/` = 0).
+- **Gợi ý:** config plugin thêm `Application : Configuration.Provider` với `setInitializationExceptionHandler { log }` (WorkManager tắt êm, app
+  vẫn mở; sao lưu đêm bỏ qua đến khi có chỗ) + tắt `WorkManagerInitializer` mặc định trong manifest (`tools:node="remove"`).
+
+### OLD-8 🟡 Bộ nhớ đầy: bấm Save ở màn nhập khoản không lưu, không báo gì
+- **Máy/APK:** như OLD-7 (API 26, 538ede9); lặp lại 2/4 lần chạy (P073 API 30 lần đầu, P074 API 26 lần chạy lại + tái hiện tay).
+- **Bước:** đầy bộ nhớ (≈12–16 MB trống) → Expense → gõ 777 → Save. **Thực tế:** 3 giây sau vẫn ở màn nhập, không snackbar "Saved", không lỗi;
+  khoản không có trong Entries. Người dùng không biết là chưa lưu. (Back up now trong cùng tình huống báo lỗi đúng "Couldn't create the file.
+  Free up some storage…" → chỉ màn nhập thiếu.)
+- **Bằng chứng:** `qa-runs/android-old/_dbg/full/k0_before.png` + `k0_after0..5.png` (6 ảnh / 3 s không đổi), `qa-runs/android-old/P074/` (bước
+  "capture while storage is full").
+- **Nguyên nhân gốc:** `src/app/capture.tsx:199-208` `save()` bắt lỗi rồi `throw e` lại → promise từ `onPress` bị từ chối không ai bắt; bản release
+  bỏ qua im lặng. `createEntry` ném SQLITE_FULL. Gợi ý: bắt lỗi và hiện snack "Couldn't save. Free up some storage and try again." (dùng lại chuỗi
+  của backup), giữ nguyên số tiền trên màn.
+
+### OLD-9 🟠 (hồi quy B-57/B-58 trên APK 538ede9) Android 8, 360dp: số tiền đang gõ vẫn co ~4px; CalcBar vẫn bị bàn phím che nửa
+- **Máy:** API 26 720×1280@320, font 0.85, dữ liệu P074 (có hàng gợi ý ghi chú "M6 toll · Car wash · …"), APK `538ede9-all`.
+- **Bước:** Home → Expense → gõ 777. **Thực tế:** chế độ gọn đã chạy (dòng "20 of 20 free photos" ẩn, vùng số tiền cao ~55dp, caret cao bình thường)
+  nhưng chữ "$7.77" vẫn chỉ ~4px. Hàng + − × ÷ vẫn bị bàn phím che nửa dưới.
+- **Bằng chứng:** `qa-runs/android-old/_dbg/full/k0_before.png` (538ede9) so với `_smoke26/17_expense_typed.png` (ece3819).
+- **Nguyên nhân gốc nghi ngờ:** `adjustsFontSizeToFit` trên Android tính cỡ chữ ở lần layout đầu (khi vùng còn ~0 lúc bàn phím đang mở) và không phóng
+  to lại khi vùng được nới → cần cỡ chữ tính theo chiều cao đo được (`onLayout` → `fontSize`) hoặc `minimumFontScale` (vd 0.5) thay vì để Android
+  co tự do; B-58 (`keyboardOffset` cho API < 30, `capture.tsx:160`) chưa đủ bù trên máy này.
+
+### OLD-6 🟠 App crash native (SIGABRT) khi mở tab Miles có chuyến: MapLibre snapshotter "Failed to choose ARGB config"
+- **Máy:** API 30 `qa_mid_api30` chạy GPU phần mềm (`-gpu swiftshader_indirect`), APK `7fd7305-all`, persona P023 (UK, 411 khoản, **12 chuyến**).
+- **Bước:** khôi phục P023 → bấm tab **Miles**. **Thực tế:** app biến mất về launcher (không hộp "app has stopped"), log:
+  `F libc: Fatal signal 6 (SIGABRT) … tid (Snapshotter), pid (tron.sundaysort)` · `Abort message: 'terminating due to uncaught exception of type
+  std::runtime_error: Failed to choose ARGB config.'` · backtrace toàn `libmaplibre.so` (`__cxa_throw`). Mở lại app → vào Miles lại crash
+  (ảnh thu nhỏ chưa tạo được nên lần nào cũng thử lại).
+- **Kỳ vọng:** không vẽ được ảnh bản đồ thì hiện ô trống/RouteSketch, app không chết.
+- **Bằng chứng:** `qa-runs/android-old/_apk7fd7305/P023/crash_maplibre_snapshotter.txt`, `logcat.txt`, `09_tab_Miles.png`, `result.json` (bước tour: "left app on Miles").
+- **Phạm vi:** chỉ tái hiện khi EGL của máy không có cấu hình ARGB mà MapLibre đòi (ở đây: GPU phần mềm của emulator). Cùng máy với GPU host
+  (lần chạy trước, `-gpu auto`) tab Miles mở bình thường; API 26 cũng swiftshader + 12 chuyến (P024) thì Miles **không** crash → phụ thuộc
+  bộ cấu hình EGL mà driver đưa ra. Máy thật Android cũ/GPU lạ (Mali/PowerVR đời cũ, một số máy Trung Quốc) có thể gặp —
+  và khi gặp thì crash cứng mỗi lần mở Miles, vì lỗi C++ không bắt được từ JS.
+- **Nguyên nhân gốc:** `src/features/trips/map/thumbs.ts` — `StaticMapImageManager` (snapshotter offscreen của `@maplibre/maplibre-react-native`
+  11.5) tạo ảnh 56dp cho từng chuyến khi mở Miles; snapshotter ném `std::runtime_error` ở luồng native → `abort()`. `withTimeout` chỉ đỡ trường hợp
+  promise không settle, không đỡ được abort. Gợi ý: mặc định dùng `RouteSketch` (SVG, đã có) cho ảnh thu nhỏ; chỉ dùng snapshotter khi một lần
+  thử trước đó thành công (ghi cờ bền vào settings TRƯỚC khi gọi, xoá sau khi xong → lần mở sau thấy cờ còn = lần trước chết giữa chừng → tắt
+  snapshotter vĩnh viễn trên máy đó). Cần kiểm thêm màn chi tiết chuyến (`TripMap.tsx`, MapView) trên cùng cấu hình GPU.
+
+### OLD-5 🟠 App lock bật ("Lock after: Immediately") nhưng màn Recents vẫn hiện rõ dữ liệu của app
+- **Máy:** API 26 (emulator-5570 `qa_dbg_api26`, APK `7fd7305-all`), persona P086 (US, app_lock). PIN máy đặt bằng `locksettings set-pin`.
+- **Bước:** Settings → App lock (nhập PIN máy) → Lock after → Immediately → nút Home → mở Recents (KEYCODE_APP_SWITCH).
+- **Kỳ vọng:** ảnh thu nhỏ trong Recents bị che (trống / logo) — người dùng bật khoá để người khác cầm máy không xem được sổ thu chi.
+  **Thực tế:** ảnh Recents hiện nguyên màn Settings (và bất kỳ màn nào đang mở, kể cả Entries có số tiền + ghi chú). Mở lại app thì có màn khoá
+  đúng, nhưng chỉ cần nhìn Recents là đã thấy dữ liệu. Xác minh điểm phiên điều phối ghi "Recents không che nội dung khi bật App lock (chưa xác minh)".
+- **Bằng chứng:** `qa-runs/android-old/_dbg/al_recents.png` (Recents), `al_reopen.png`/`al_deeplink.png` (màn khoá đúng khi mở lại).
+- **Nguyên nhân gốc:** không có chỗ nào đặt `FLAG_SECURE` / che nội dung khi app vào nền (`grep FLAG_SECURE|preventScreenCapture` trong `src/`,
+  `modules/` = 0 kết quả); `LockGate` (`src/services/data.tsx:47-59`) chỉ khoá khi app **quay lại** active, không che lúc vào nền.
+  Gợi ý: khi App lock bật → `FLAG_SECURE` trên MainActivity (expo-screen-capture `preventScreenCaptureAsync`, chặn luôn chụp màn) hoặc
+  phủ màn trắng/logo khi `AppState` → `inactive`/`background` (Android chụp ảnh Recents lúc onPause).
+- **Đã kiểm, không lỗi:** khi khoá, cây accessibility "compressed" (như TalkBack thấy) chỉ có "Sunday Sort is locked / Unlock" — dữ liệu phía sau đã
+  `no-hide-descendants` (`data.tsx:64`). `uiautomator dump` thường vẫn liệt kê dữ liệu phía sau vì nó lấy cả node "không quan trọng" → giới hạn công cụ.
+  Deep link `sundaysort://entries` khi đang khoá → vẫn hiện màn khoá ✅.
+
+### OLD-4 🟡 Lần mở đầu tiên: log `[auto-trip] sync failed … no such table: settings`
+- **Máy:** API 26 + API 30, ngay sau `pm clear` mở app lần đầu (`qa-runs/android-old/_smoke26` logcat 11:34:04). Không crash, chỉ cảnh báo JS.
+- **Nguyên nhân gốc nghi ngờ:** tác vụ đồng bộ auto-trip chạy trước khi migration DB tạo bảng `settings` (thứ tự khởi động). Vô hại nếu lần sau
+  chạy lại, nhưng nếu đồng bộ cấu hình native (Activity Recognition) chỉ chạy lúc khởi động thì lần đầu bị bỏ qua.

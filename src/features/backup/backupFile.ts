@@ -7,6 +7,7 @@ import { receiptsDir } from '@/files/receipts';
 import { referencedPhotos, replaceAllData, snapshotTables } from './dataStore';
 import { NoSpaceError } from './nightly';
 import { backupFileName, packBackup, type BackupCounts, type BackupManifest, type PhotoSource } from './pack';
+import { readBackupStream, type ChunkSource, type PhotoSink, type StreamResult } from './streamRestore';
 
 export const appVersion = () => Constants.expoConfig?.version ?? '1.0.0';
 
@@ -92,6 +93,79 @@ export function restoreFromBackup(manifest: BackupManifest, photos: Map<string, 
   const current = receiptsDir();
   if (current.exists) current.delete();
   staging.rename('receipts');
+}
+
+const CHUNK = 1024 * 1024;
+
+/** The backup file 1 MB at a time (B-87: never the whole file in memory). */
+function fileSource(uri: string): ChunkSource & { close(): void } {
+  const h = new File(uri).open(FileMode.ReadOnly);
+  let open = true;
+  const close = () => {
+    if (open) {
+      open = false;
+      h.close();
+    }
+  };
+  return {
+    close,
+    next: async () => {
+      if (!open) return null;
+      const b = h.readBytesSync(CHUNK);
+      if (b.length === 0) {
+        close();
+        return null;
+      }
+      return b;
+    },
+  };
+}
+
+/** Restore preview: reads only backup.json (photos are skipped, not held). */
+export async function inspectBackupFile(uri: string): Promise<StreamResult> {
+  const src = fileSource(uri);
+  try {
+    return await readBackupStream(src, null);
+  } finally {
+    src.close();
+  }
+}
+
+/**
+ * B-87: restore straight from the file — photos stream into a staging folder, the DB is swapped in one transaction,
+ * then the staging folder replaces receipts/. Anything failing before the swap leaves the phone as it was.
+ */
+export async function restoreFromBackupFile(uri: string): Promise<StreamResult> {
+  const staging = new Directory(Paths.document, 'receipts-restore');
+  if (staging.exists) staging.delete();
+  staging.create({ intermediates: true });
+  const sink: PhotoSink = {
+    open: (name) => {
+      const f = new File(staging, name);
+      f.create({ overwrite: true });
+      const h = f.open(FileMode.WriteOnly);
+      return { write: (c) => h.writeBytesSync(c), close: () => h.close() };
+    },
+  };
+  const src = fileSource(uri);
+  let r: StreamResult;
+  try {
+    r = await readBackupStream(src, sink);
+    if (r.ok) replaceAllData(db, r.manifest.tables, r.manifest.createdAt);
+  } catch (e) {
+    if (staging.exists) staging.delete();
+    throw e;
+  } finally {
+    src.close();
+  }
+  if (!r.ok) {
+    if (staging.exists) staging.delete();
+    return r;
+  }
+  const current = receiptsDir();
+  if (current.exists) current.delete();
+  staging.rename('receipts');
+  return r;
 }
 
 /** Deletes every receipt photo (Delete all data). */

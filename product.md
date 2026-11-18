@@ -203,7 +203,7 @@ bất kỳ dữ liệu, ảnh, luật nào**; xuất CSV thô luôn mở.
 ### F-01 · Onboarding — S-01a…S-01f **[Đổi]**
 
 **S-01a Welcome** — minh hoạ van + mặt trời. "Log it in 10 seconds. Sort it on Sunday." · "A simple money and mileage log
-for self-employed drivers. No account. No bank link. Your data stays on your phone." · nút "Get started".
+for self-employed drivers. No account. No bank link. No Sunday Sort servers: we never see your data." · nút "Get started".
 
 **S-01b Choose your region** — "Where do you file your taxes?" · 2 thẻ có cờ: "United Kingdom" ("£ · Tax year 6 Apr – 5 Apr ·
 Self Assessment & MTD") / "United States" ("$ · Calendar year · Schedule C"). Mặc định theo vùng máy; ngoài UK/US không
@@ -237,12 +237,14 @@ Mở từ: 2 nút lớn Home, FAB "+", widget, phím tắt icon app (long-press:
 
 **S-03 Quick capture** (sheet toàn màn hình, < 300ms, bàn phím số tự bật)
 - Hàng trên: "✕" · công tắc **"Expense" | "Income"** · chip ngày giờ "Now" (chạm chọn; đổi hiện "Tue 10 Nov, 13:05").
-- Số tiền rất lớn "£0.00", gõ "1250" → "£12.50".
+- Số tiền rất lớn "£0.00", gõ "1250" → "£12.50". Gõ dấu chấm (bàn phím Android có) thì hiểu là số thập phân: "7.5" → "£7.50",
+  "120." → "£120.00", tối đa 2 số sau dấu (Phương chốt 2026-11-17, QA-100).
 - **Máy tính trong ô số tiền** **[Mới]** (Q20): bàn phím có thêm hàng "+ − × ÷"; gõ "12.50+4.20" hiện biểu thức nhỏ phía trên
   và số lớn "= £16.70"; Save lưu kết quả. Biểu thức lỗi → số lớn mờ + chữ "Check the sum".
 - Hàng 3 nút tròn 56dp:
-  - "Photo" → camera ngay. **Nhiều ảnh** **[Mới]** (Q21): chụp xong quay lại sheet, hiện ảnh nhỏ 56dp có ✕; nút "Photo"
-    thành "+ Photo" cho tới **3 ảnh**/lần ghi. Giữ lâu → chọn từ thư viện (chọn được nhiều).
+  - "Photo" → bảng "Add a receipt photo": "Take photo" / "Choose from library" (B-86, Phương 2026-11-18). **Nhiều ảnh** **[Mới]** (Q21): chụp xong quay lại sheet, hiện ảnh nhỏ 56dp có ✕; nút "Photo"
+    thành "+ Photo" cho tới **3 ảnh**/lần ghi. Giữ lâu → vào thẳng thư viện (chọn được nhiều).
+  - Đang nhập mà app bị Android tắt (camera / bộ chọn, máy ít RAM) → lần mở sau mở lại Ghi nhanh với số, ghi chú, ảnh đang có (B-84).
   - "Work" / "Personal" (chip bật tắt, mặc định theo Settings).
   - "Note" → ô 1 dòng "Add a note (e.g. Shell, M62)", ≤ 120 ký tự.
 - Chip ghi chú hay dùng cuộn ngang (5 cái).
@@ -453,7 +455,7 @@ Personal" · "Purpose" ("e.g. Amazon route DLS4") · "Save trip". Lỗi: End < S
 - **[Mới] Odometer check (Q27):** nhập số đồng hồ định kỳ (S-08b) → lệch với tổng dặm app ghi ≥ max(10 mi, 5%) → thẻ Home.
 
 **S-07a Location permission explainer** (2 bước): "Track business miles with GPS" · "Sunday Sort records your route only while
-a trip is running." · "Location stays on your phone." · "Allow location" / "Not now"; bước 2 Android "To keep recording with the
+a trip is running." · "Your route is never sent to us." · "Allow location" / "Not now"; bước 2 Android "To keep recording with the
 screen off, choose 'Allow all the time'." · "Open settings".
 
 **S-07b Active trip** — số dặm rất lớn · thời gian · **bản đồ thật nhỏ** (Q25: đường vẽ dần, chấm vàng vị trí hiện tại; không
@@ -651,7 +653,8 @@ Ghép từ thẻ / sheet / chip / dòng có sẵn của mockup v2 (như Q26/Q27)
 - Báo cáo không đổi: vẫn là khoản chi "Parking…" cộng ngoài mức dặm (X2).
 
 **Q29 · Đánh dấu đã xuất** (MileIQ "Mark drives as reported") — S-04, S-07, S-05, S-07c, S-10
-- Mỗi lần xuất file ở S-10 (mọi loại, free lẫn Pro) xong → khoản / chuyến trong kỳ đó được ghi "đã xuất lúc …".
+- Mỗi lần xuất file ở S-10 (mọi loại, free lẫn Pro) xong → sau bảng chia sẻ hỏi "Did you send or save the files?" (Yes, sent /
+  Not sent) như sao lưu; chỉ "Yes, sent" mới ghi khoản / chuyến trong kỳ "đã xuất lúc …" (Phương chốt 2026-11-17, QA-100).
 - Entries / Miles: nhãn nhỏ "Exported" (cạnh nhãn Auto/Recurring). S-05 / S-07c: dòng "Exported on 12 Nov".
 - Sửa / xoá / tách / gộp khoản đã xuất → dòng báo dưới tiêu đề (không chặn): "Already in your export of 12 Nov. Export
   again to include this change." Từ lúc đó khoản tính là "changed since export".
@@ -785,6 +788,7 @@ giá "$31.99 / year".
 - Không Android Auto / CarPlay (dễ bị store từ chối — Q18).
 - Không nhiều xe / nhiều sổ / nhiều doanh nghiệp ở bản 2 (một xe, một cách tính xe).
 - Không quảng cáo; không gói tháng, không trọn đời; không thông báo bán hàng; không khoá / xoá dữ liệu khi hết Pro.
-- Không gửi tuyến GPS, ảnh hay dữ liệu OCR ra khỏi máy (bản đồ nền + A → B dùng mạng từ Q25 — xem §0; P6 sửa privacy
-  policy + Data safety).
+- Không gửi tuyến GPS, ảnh hay dữ liệu OCR về server nào của mình (bản đồ nền + A → B dùng mạng từ Q25 — xem §0).
+  **Giữ sao lưu hệ thống** (Android `allowBackup`, iCloud Backup) — Phương chốt 2026-11-17 (QA-100): lời hứa trong app
+  là "we never see your data", không hứa "dữ liệu không rời máy"; `docs/privacy.html` đã sửa theo, Data safety khai theo.
 - Chỉ tiếng Anh (i18n dựng sẵn).

@@ -6,6 +6,7 @@ import { Linking, Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { syncAutoDetection } from '@/features/trips/auto/runner';
+import { isApproximate } from '@/features/trips/controller';
 import { ModalHeader } from '@/features/trips/ModalHeader';
 import { t, type TKey } from '@/i18n';
 import { router } from '@/services/router';
@@ -30,6 +31,12 @@ async function askMotion() {
 async function askBackgroundLocation() {
   const fg = await Location.requestForegroundPermissionsAsync().catch(() => null);
   if (!fg?.granted) return false;
+  // MOD-1: automatic trips with approximate location would save 0.0 mi — precise is needed (only Settings can grant it
+  // once the system stopped asking).
+  if (isApproximate(fg)) {
+    await Linking.openSettings();
+    return false;
+  }
   const bg = await Location.requestBackgroundPermissionsAsync().catch(() => null);
   if (bg?.granted) return true;
   // Android 11+ only grants "all the time" from the settings page.

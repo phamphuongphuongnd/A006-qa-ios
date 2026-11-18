@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Image, Pressable, View } from 'react-native';
 
 import { db } from '@/db/client';
@@ -57,11 +57,14 @@ function NewReading({ unit, close, onSaved }: { unit: DistanceUnit; close: () =>
   const [cameraDenied, setCameraDenied] = useState(false);
   const [askLower, setAskLower] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
+  // QA-100 MOD-7: `busy` is state — two taps in one frame both saw false. The ref latches at once.
+  const busyRef = useRef(false);
   const value = parseNumberInput(text);
   const error = touched && (value === null || value <= 0) ? t('tripCheck.odoInvalid') : null;
 
   const save = async (v: number) => {
-    if (busy) return;
+    if (busy || busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
     let photoPath: string | null = null;
     try {

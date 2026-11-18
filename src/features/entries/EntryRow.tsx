@@ -8,7 +8,7 @@ import { t } from '@/i18n';
 import { useTheme } from '@/theme';
 import { Avatar, Badge, Dot, ListRow, SelectCircle, Tag, Txt } from '@/ui';
 
-import { signedAmount, timeLabel, weekdayTime } from './format';
+import { entryWhen, signedAmount, timeLabel } from './format';
 import { categoryIcon } from './icons';
 
 /** Leading avatar: category icon in its colour, or the yellow "?" when unsorted. */
@@ -58,7 +58,7 @@ export function EntryRow({
         accessibilityLabel={`${note}, ${amount}${category ? '' : `, ${t('common.unsorted')}`}`}
         left={<EntryAvatar category={category} />}
         title={note}
-        subtitle={`${weekdayTime(entry.occurredAt)} · ${scopeLabel}${entry.exportedAt ? ` · ${t('s6.exported')}` : ''}`}
+        subtitle={`${entryWhen(entry.occurredAt)} · ${scopeLabel}${entry.exportedAt ? ` · ${t('s6.exported')}` : ''}`}
         right={
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <SourceBadge entry={entry} />

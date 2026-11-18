@@ -22,6 +22,7 @@ import {
 } from '@/db/schema';
 import type { AppDb } from '@/db/types';
 import { defaultMtdCategory, isVehicleRunningCostKey } from '@/domain/mtd';
+import { sanitizeRestoredPro } from '@/domain/pro';
 
 import type { BackupTables } from './pack';
 
@@ -124,7 +125,11 @@ export function replaceAllData(db: AppDb, t: BackupTables, backupCreatedAt?: num
     insertChunks(t.tripGapDismissals ?? [], (p) => d.insert(tripGapDismissals).values(p).run());
     insertChunks(t.odometerReadings ?? [], (p) => d.insert(odometerReadings).values(p).run());
     insertChunks(t.savedTrips ?? [], (p) => d.insert(savedTrips).values(p).run());
-    if (!d.select().from(proState).get()) insertChunks(t.proState ?? [], (p) => d.insert(proState).values(p).run());
+    // SPE-2: never more Pro than the rules allow from a (possibly hand-edited) file.
+    if (!d.select().from(proState).get()) {
+      const now = Date.now();
+      insertChunks((t.proState ?? []).map((r) => sanitizeRestoredPro(r, now)), (p) => d.insert(proState).values(p).run());
+    }
     insertChunks(t.settings, (p) => d.insert(settings).values(p).run());
     if (backupCreatedAt !== undefined) {
       const raw = t.settings.find((r) => r.key === 'lastBackupAt')?.value;

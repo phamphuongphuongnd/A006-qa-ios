@@ -25,12 +25,15 @@ import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { fonts } from '@/theme';
 import { Avatar, Badge, Button, Card, IconButton, Screen, SectionHeader, StatusDot, Txt } from '@/ui';
+import { formatCount } from '@/features/settings/ui';
+import { useResumeCaptureDraft } from '@/features/entries/captureDraft';
 
 /** S-02 Home: greeting, backup banner, this week, to-sort, trip, recent; Expense / Income fixed above the tab bar. */
 export default function HomeScreen() {
   const { settings } = useSettings();
   const { status: proStatus, pro } = usePro();
   const now = useNow(30_000);
+  useResumeCaptureDraft();
   useAppShortcuts();
   // Card text beside a button: with large text or a narrow screen the button drops below instead of squeezing the
   // text into a one-word column ("bu / siness", B-34).
@@ -112,7 +115,7 @@ export default function HomeScreen() {
         data.unsorted > 0 ? (
           <Card variant="sun" style={styles.rowCard}>
             <View style={[rowText, { gap: 2 }]}>
-              <Txt v="h2">{data.unsorted === 1 ? t('home.toSortOne') : t('home.toSort', { count: data.unsorted })}</Txt>
+              <Txt v="h2">{data.unsorted === 1 ? t('home.toSortOne') : t('home.toSort', { count: formatCount(data.unsorted) })}</Txt>
               <Txt v="small" c="sunText">
                 {sortMinutes(data.unsorted) === 1 ? t('home.toSortSubOne') : t('home.toSortSub', { minutes: sortMinutes(data.unsorted) })}
               </Txt>

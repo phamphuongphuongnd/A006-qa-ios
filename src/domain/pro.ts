@@ -95,3 +95,35 @@ export function monthOf(now: number): { start: number; end: number } {
   const d = new Date(now);
   return { start: new Date(d.getFullYear(), d.getMonth(), 1).getTime(), end: new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime() };
 }
+
+/** The `pro_state` columns a backup file carries (any of them may have been edited by hand). */
+export interface RestoredProRow extends ProRow {
+  id: string;
+  productId?: string | null;
+  lastVerifiedAt?: number | null;
+}
+
+/**
+ * QA-100 SPE-2: a phone with no Pro state takes the backup's — but a hand-edited file ("trialEndsAt": year 2100,
+ * "entitlement": "active") unlocked Pro for ever. Keep only what can't hand out more than the rules allow:
+ * a trial lasts at most 7 days from a start that is not in the future; a store subscription is never trusted from a
+ * file — it comes back as 'expired' so the store check on start (refreshProFromStore) confirms it or "Restore purchase".
+ */
+export function sanitizeRestoredPro<T extends RestoredProRow>(row: T, now: number): T {
+  const int = (v: unknown): number | null => (typeof v === 'number' && Number.isInteger(v) ? v : null);
+  let start = int(row.trialStartedAt);
+  if (start !== null && start > now) start = now;
+  const maxEnd = start !== null ? start + TRIAL_DAYS * DAY_MS : null;
+  const fileEnd = int(row.trialEndsAt);
+  const trialEndsAt = maxEnd === null ? null : fileEnd === null ? maxEnd : Math.min(fileEnd, maxEnd);
+  const entitlement: ProEntitlement = row.entitlement === 'active' || row.entitlement === 'expired' ? 'expired' : 'none';
+  return {
+    ...row,
+    trialStartedAt: start,
+    trialEndsAt,
+    entitlement,
+    expiresAt: entitlement === 'expired' ? int(row.expiresAt) : null,
+    autoRenewing: false,
+    lastVerifiedAt: null,
+  };
+}

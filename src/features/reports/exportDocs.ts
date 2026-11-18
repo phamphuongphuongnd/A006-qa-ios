@@ -101,6 +101,16 @@ function monthLabel(x: MonthPoint): string {
 export const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string);
 
+/**
+ * QA-100 SPE-6: the PDF is built in one WebView page — ~8,000 rows took > 12 min and ~3 GB before printing. The PDF
+ * is the readable summary; past this many rows a table stops and points to the CSV (which always has every row).
+ */
+export const PDF_MAX_ROWS = 2000;
+const capNote = (shown: number, total: number, what: string) =>
+  total > shown
+    ? `<p class="note">Showing the first ${shown.toLocaleString('en-GB')} of ${total.toLocaleString('en-GB')} ${what}. The full list is in the CSV export.</p>`
+    : '';
+
 export interface PdfInput {
   periodLabel: string;
   currency: Currency;
@@ -180,14 +190,16 @@ export function reportHtml(p: PdfInput): string {
       ? `<h2>Mileage log</h2><table class="trips">${head(['Date', 'Miles', 'Work/Personal', 'Purpose', 'Source'])}${[...p.trips]
           // Oldest first, like the entries table below.
           .sort((a, b) => a.startedAt - b.startedAt)
+          .slice(0, PDF_MAX_ROWS)
           .map((t) =>
             row([isoDate(t.startedAt), formatDistanceNumber(t.miles, 1), scopeLabel(t.scope), e(t.purpose), `${e(t.source)}${t.edited ? ' · Edited' : ''}`]),
           )
-          .join('')}</table>`
+          .join('')}</table>${capNote(Math.min(PDF_MAX_ROWS, p.trips.length), p.trips.length, 'trips')}`
       : '',
     `<h2>Entries</h2><table class="entries">${head(['Date', 'Type', 'Amount', 'Category', 'Work/Personal', 'Note'])}${p.entries
+      .slice(0, PDF_MAX_ROWS)
       .map((x) => row([isoDate(x.occurredAt), typeLabel(x.type), m(x.amountMinor), e(x.categoryName ?? 'Unsorted'), scopeLabel(x.scope), e(x.note)]))
-      .join('')}</table>`,
+      .join('')}</table>${capNote(Math.min(PDF_MAX_ROWS, p.entries.length), p.entries.length, 'entries')}`,
   ];
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">

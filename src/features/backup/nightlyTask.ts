@@ -2,6 +2,7 @@ import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
 
 import { db } from '@/db/client';
+import { ensureMigrated } from '@/db/migrate';
 import { getSettings } from '@/db/settingsRepo';
 import { syncProNotices } from '@/features/pro/notices';
 import { generateDueRecurring } from '@/features/recurring/repo';
@@ -52,6 +53,7 @@ export async function runBackgroundWork(now = Date.now(), opts: { notifyOnFail: 
 if (!TaskManager.isTaskDefined(NIGHTLY_TASK)) {
   TaskManager.defineTask(NIGHTLY_TASK, async () => {
     try {
+      await ensureMigrated();
       const r = await runBackgroundWork();
       console.log('[nightly] done', r?.status ?? 'not due');
       return BackgroundTask.BackgroundTaskResult.Success;

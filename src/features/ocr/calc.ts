@@ -5,7 +5,9 @@ import type { Minor } from '@/domain/types';
  * Calculator in the amount field (Q20, S-03 / S-05). The hidden amount input holds an expression string made of
  * digits and the operators `+ - * /` (typed digits come from the system number pad, operators from the bar above it).
  *
- * - Operands after `+` / `-` (and the first one) are money typed cash-register style: "1250" = 12.50.
+ * - Operands after `+` / `-` (and the first one) are money typed cash-register style: "1250" = 12.50 — unless the
+ *   driver types a decimal point (Android number pads show one; QA-100, Phương 2026-11-17): "7.5" = 7.50, "120." = 120.00,
+ *   at most 2 digits after it. `,` counts as the point.
  * - Operands after `*` / `/` are whole numbers (a count or a share): "1250*3" = 12.50 × 3 = 37.50.
  * - `*` / `/` bind tighter than `+` / `-`. A trailing operator is ignored while typing ("12.50+" → 12.50).
  * - Result rounds half up to whole pence/cents; ≤ 0, ÷ 0 or over 999,999.99 is an error ("Check the sum").
@@ -38,6 +40,25 @@ function tokens(expr: string): Token[] {
   return out;
 }
 
+/** Money operand → minor units: cash-register digits, or a decimal when it has a point. */
+function moneyMinor(digits: string): number {
+  const dot = digits.indexOf('.');
+  if (dot < 0) return Number(digits || '0');
+  const whole = Number(digits.slice(0, dot) || '0');
+  return whole * 100 + Number(digits.slice(dot + 1).padEnd(2, '0'));
+}
+
+/** Digits (and for money, one point) of an operand, capped like the old keypad. */
+function cleanOperand(raw: string, count: boolean): string {
+  if (count || !raw.includes('.')) {
+    return raw.replace(/\./g, '').replace(/^0+(?=\d)/, '').slice(0, count ? COUNT_DIGITS : MONEY_DIGITS);
+  }
+  const dot = raw.indexOf('.');
+  const whole = raw.slice(0, dot).replace(/\./g, '').replace(/^0+(?=\d)/, '').slice(0, MONEY_DIGITS - 2);
+  const frac = raw.slice(dot + 1).replace(/\./g, '').slice(0, 2);
+  return `${whole || '0'}.${frac}`;
+}
+
 const isCount = (op: CalcOp | null) => op === '*' || op === '/';
 
 /**
@@ -46,8 +67,8 @@ const isCount = (op: CalcOp | null) => op === '*' || op === '/';
  */
 export function sanitizeExpr(raw: string): string {
   let s = '';
-  for (const ch of raw.replace(/[×x]/g, '*').replace(/÷/g, '/').replace(/[−–]/g, '-')) {
-    if (/\d/.test(ch)) s += ch;
+  for (const ch of raw.replace(/[×x]/g, '*').replace(/÷/g, '/').replace(/[−–]/g, '-').replace(/,/g, '.')) {
+    if (/[\d.]/.test(ch)) s += ch;
     else if (OP_SET.has(ch)) {
       if (s === '') continue;
       if (OP_SET.has(s[s.length - 1])) s = s.slice(0, -1);
@@ -55,12 +76,8 @@ export function sanitizeExpr(raw: string): string {
     }
   }
   return tokens(s)
-    .map((tk) => {
-      const max = isCount(tk.op) ? COUNT_DIGITS : MONEY_DIGITS;
-      // Leading zeros carry no value; keep one so "0" still shows while typing a count.
-      const digits = tk.digits.replace(/^0+(?=\d)/, '').slice(0, max);
-      return (tk.op ?? '') + digits;
-    })
+    // Leading zeros carry no value; keep one so "0" still shows while typing a count.
+    .map((tk) => (tk.op ?? '') + (tk.digits === '' ? '' : cleanOperand(tk.digits, isCount(tk.op))))
     .join('');
 }
 
@@ -80,7 +97,7 @@ export function evaluate(expr: string): CalcResult {
   let term = 0;
   let sign = 1;
   for (const tk of tks) {
-    const n = Number(tk.digits || '0');
+    const n = isCount(tk.op) ? Number(tk.digits || '0') : moneyMinor(tk.digits);
     if (tk.op === '*') term *= n;
     else if (tk.op === '/') {
       if (n === 0) return { kind: 'error', reason: 'div_zero', expression: true };
@@ -110,7 +127,7 @@ export function formatExpr(expr: string): string {
       const op = tk.op === '*' ? '×' : tk.op === '/' ? '÷' : tk.op === '-' ? '−' : (tk.op ?? '');
       if (tk.digits === '') return op;
       if (isCount(tk.op)) return op + String(Number(tk.digits));
-      const v = Number(tk.digits);
+      const v = moneyMinor(tk.digits);
       return `${op}${Math.floor(v / 100)}.${String(v % 100).padStart(2, '0')}`;
     })
     .join('');

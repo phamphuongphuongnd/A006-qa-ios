@@ -18,6 +18,22 @@ export interface MonthPoint {
  * year gives 12 tax months (6 Apr – 5 May …) and a US year 12 calendar months. Buckets starting after `now` are left
  * out so the line stops at today.
  */
+const MAX_BUCKETS = 121;
+
+/** Buckets are consecutive and sorted: binary search (20,000 entries × 120 months was a visible pause). */
+function bucketOf(buckets: MonthPoint[], at: number): MonthPoint | undefined {
+  let lo = 0;
+  let hi = buckets.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    const b = buckets[mid];
+    if (at < b.start) hi = mid - 1;
+    else if (at >= b.end) lo = mid + 1;
+    else return b;
+  }
+  return undefined;
+}
+
 export function monthlySeries(
   entries: { type: EntryType; amountMinor: Minor; occurredAt: number; scope: Scope }[],
   period: Period,
@@ -26,15 +42,17 @@ export function monthlySeries(
   const now = opts.now ?? Date.now();
   const first = new Date(period.start);
   const buckets: MonthPoint[] = [];
-  for (let i = 0; ; i++) {
+  if (Number.isNaN(first.getTime())) return buckets;
+  // SPE-1: a hard stop (10 years of months) and no NaN loop for dates outside JS's range.
+  for (let i = 0; i < MAX_BUCKETS; i++) {
     const start = i === 0 ? period.start : new Date(first.getFullYear(), first.getMonth() + i, first.getDate()).getTime();
-    if (start >= period.end || (start > now && buckets.length > 0)) break;
+    if (!Number.isFinite(start) || start >= period.end || (start > now && buckets.length > 0)) break;
     const next = new Date(first.getFullYear(), first.getMonth() + i + 1, first.getDate()).getTime();
     buckets.push({ start, end: Math.min(next, period.end), label: MONTHS[new Date(start).getMonth()], incomeMinor: 0, expenseMinor: 0 });
   }
   for (const e of entries) {
     if (e.scope === 'personal' && !opts.includePersonal) continue;
-    const b = buckets.find((x) => e.occurredAt >= x.start && e.occurredAt < x.end);
+    const b = bucketOf(buckets, e.occurredAt);
     if (!b) continue;
     if (e.type === 'income') b.incomeMinor += e.amountMinor;
     else b.expenseMinor += e.amountMinor;

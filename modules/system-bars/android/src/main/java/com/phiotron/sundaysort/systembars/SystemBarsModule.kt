@@ -2,6 +2,7 @@ package com.phiotron.sundaysort.systembars
 
 import android.os.Build
 import android.view.Window
+import android.view.WindowManager
 import android.view.WindowInsetsController
 import androidx.core.view.WindowInsetsControllerCompat
 import com.facebook.react.bridge.ReactApplicationContext
@@ -30,6 +31,10 @@ internal fun Window.applyNavigationBarLight(light: Boolean) {
   }
 }
 
+internal fun Window.applySecure(on: Boolean) {
+  if (on) addFlags(WindowManager.LayoutParams.FLAG_SECURE) else clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+}
+
 class SystemBarsModule : Module(), ExtraWindowEventListener {
   private val reactContext get() = appContext.reactContext as? ReactApplicationContext
 
@@ -50,12 +55,28 @@ class SystemBarsModule : Module(), ExtraWindowEventListener {
       extraWindows.forEach { it.applyNavigationBarLight(light) }
       return@AsyncFunction
     }.runOnQueue(Queues.MAIN)
+
+    // QA-100 OLD-5: with App lock on, the Recents thumbnail showed the driver's numbers. Android 13+ can drop just the
+    // thumbnail (screenshots still work); older versions only have FLAG_SECURE (also blocks screenshots) — on the
+    // activity and on <Modal> windows, which are part of the task snapshot.
+    AsyncFunction("setHideInRecents") { hide: Boolean ->
+      hideInRecents = hide
+      val activity = appContext.currentActivity
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        activity?.setRecentsScreenshotEnabled(!hide)
+      } else {
+        activity?.window?.applySecure(hide)
+        extraWindows.forEach { it.applySecure(hide) }
+      }
+      return@AsyncFunction
+    }.runOnQueue(Queues.MAIN)
   }
 
   // <Modal> (Sheet / Dialog) windows get the phone's light/dark from React Native's enableEdgeToEdge;
   // re-apply the app's choice after that has run.
   override fun onExtraWindowCreate(window: Window) {
     extraWindows.add(window)
+    if (hideInRecents && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) window.applySecure(true)
     val light = lastLight ?: return
     window.decorView.post { window.applyNavigationBarLight(light) }
   }
@@ -66,6 +87,7 @@ class SystemBarsModule : Module(), ExtraWindowEventListener {
 
   companion object {
     private var lastLight: Boolean? = null
+    private var hideInRecents = false
     private val extraWindows = Collections.newSetFromMap<Window>(WeakHashMap())
   }
 }

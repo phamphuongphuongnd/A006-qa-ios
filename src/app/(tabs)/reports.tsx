@@ -2,7 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { router } from '@/services/router';
 import { BarChart3, ChevronDown, Download, Truck } from '@/ui/icons';
 import { useState } from 'react';
-import { Platform, Pressable, View } from 'react-native';
+import { Platform, Pressable, useWindowDimensions, View } from 'react-native';
 
 import { db } from '@/db/client';
 import { entryCount } from '@/db/entriesRepo';
@@ -17,6 +17,8 @@ import {
   availableTaxYears,
   endOfDay,
   PERIOD_MODES,
+  REPORT_MIN_AT,
+  saneReportRange,
   periodFor,
   startOfDay,
   type MtdPeriodKind,
@@ -32,7 +34,7 @@ import { CaptureFab } from '@/features/entries/CaptureFab';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
-import { fonts, useTheme } from '@/theme';
+import { fonts, touch, useTheme } from '@/theme';
 import { Avatar, Button, Card, Chip, ChipRow, Dialog, Divider, EmptyState, Progress, Screen, Segmented, Sheet, Tag, Toggle, Txt, useSnackbar } from '@/ui';
 
 const MODE_LABEL: Record<PeriodMode, () => string> = {
@@ -52,7 +54,7 @@ const grouped = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d
 function linkedPeriod(p: { from?: string; to?: string }): Period | null {
   const start = Number(p.from);
   const end = Number(p.to);
-  return p.from && p.to && Number.isFinite(start) && Number.isFinite(end) && end > start ? { start, end } : null;
+  return p.from && p.to && saneReportRange(start, end) ? { start, end } : null;
 }
 
 /**
@@ -208,6 +210,7 @@ export default function ReportsScreen() {
 function ReportBody({ period, region }: { period: ReportPeriod; region: Region }) {
   const { settings, update } = useSettings();
   const { colors } = useTheme();
+  const narrow = useWindowDimensions().width < 420;
   const { report, months, currency, miles, mileageEstimateMinor, ratesText, entries, method, treatment, trips, businessUse } = useReport(
     period,
     settings,
@@ -272,13 +275,15 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
   return (
     <>
       {toSort > 0 ? (
-        <Card variant="sun" style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.sun, alignItems: 'center', justifyContent: 'center' }}>
-            <Txt v="h3" style={{ color: '#1F2A44' }}>
+        // QA-100 A37-4: at 200% text on a narrow phone the sentence was squeezed to one word per line — wrap the button
+        // under the text instead (the badge grows with the text).
+        <Card variant="sun" style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
+          <View style={{ minWidth: 40, minHeight: 40, paddingHorizontal: 6, borderRadius: 20, backgroundColor: colors.sun, alignItems: 'center', justifyContent: 'center' }}>
+            <Txt v="h3" maxFontSizeMultiplier={1.4} style={{ color: '#1F2A44' }}>
               {toSort > 99 ? '99+' : toSort}
             </Txt>
           </View>
-          <Txt v="small" style={{ flex: 1, fontFamily: fonts.bold }}>
+          <Txt v="small" style={{ flex: 1, minWidth: 150, fontFamily: fonts.bold }}>
             {unsortedText}
           </Txt>
           <Button label={t('reports.sortNow')} size="sm" onPress={() => router.push('/sort')} style={{ paddingHorizontal: 14 }} />
@@ -294,9 +299,10 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
               <Txt c="textSecondary">{t('mtd.reports.chooseBody')}</Txt>
             </View>
           </View>
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Button label={t('mtd.reports.mileageRate')} size="sm" style={{ flex: 1 }} onPress={() => pickMethod('mileage')} />
-            <Button label={t('mtd.reports.actualCosts')} size="sm" variant="outline" style={{ flex: 1 }} onPress={() => pickMethod('actual')} />
+          {/* B-60: on narrow phones the floating "+" sat on top of "Actual costs" — stack the two and keep clear of it. */}
+          <View style={narrow ? { gap: 10, marginRight: touch.fab - 8 } : { flexDirection: 'row', gap: 10 }}>
+            <Button label={t('mtd.reports.mileageRate')} size="sm" style={narrow ? undefined : { flex: 1 }} onPress={() => pickMethod('mileage')} />
+            <Button label={t('mtd.reports.actualCosts')} size="sm" variant="outline" style={narrow ? undefined : { flex: 1 }} onPress={() => pickMethod('actual')} />
           </View>
         </View>
       ) : null}
@@ -510,11 +516,12 @@ function LineRow({ label, value, income, first }: { label: string; value: string
 
 function Row({ label, value, color }: { label: string; value: string; color: 'incomeText' | 'expenseText' }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+    // QA-100 A37-5: "$2,053,740.86" at 200% ran off the card — the amount drops under its label when it doesn't fit.
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: 8 }}>
       <Txt c="textSecondary" style={{ fontFamily: fonts.bold }}>
         {label}
       </Txt>
-      <Txt v="amount" c={color} size={20}>
+      <Txt v="amount" c={color} size={20} style={{ flexShrink: 1, marginLeft: 'auto' }}>
         {value}
       </Txt>
     </View>
@@ -524,7 +531,8 @@ function Row({ label, value, color }: { label: string; value: string; color: 'in
 function CustomPeriodSheet({ initial, onApply, onClose }: { initial: Period; onApply: (p: Period) => void; onClose: () => void }) {
   const [from, setFrom] = useState(new Date(initial.start));
   const [to, setTo] = useState(new Date(initial.end - 1));
-  const valid = startOfDay(from.getTime()) <= startOfDay(to.getTime());
+  const ordered = startOfDay(from.getTime()) <= startOfDay(to.getTime());
+  const valid = ordered && saneReportRange(startOfDay(from.getTime()), endOfDay(to.getTime()));
   return (
     <Sheet
       visible
@@ -538,11 +546,11 @@ function CustomPeriodSheet({ initial, onApply, onClose }: { initial: Period; onA
           onPress={() => onApply({ start: startOfDay(from.getTime()), end: endOfDay(to.getTime()) })}
         />
       }>
-      <DateField label={t('reports.from')} value={from} display={formatDate(from.getTime())} onChange={setFrom} maximumDate={to} />
+      <DateField label={t('reports.from')} value={from} display={formatDate(from.getTime())} onChange={setFrom} maximumDate={to} minimumDate={new Date(REPORT_MIN_AT)} />
       <DateField label={t('reports.to')} value={to} display={formatDate(to.getTime())} onChange={setTo} minimumDate={from} />
       {!valid ? (
         <Txt v="small" c="error">
-          {t('reports.customError')}
+          {ordered ? t('reports.customRangeError') : t('reports.customError')}
         </Txt>
       ) : null}
     </Sheet>

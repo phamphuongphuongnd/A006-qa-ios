@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { router } from '@/services/router';
 import { X } from '@/ui/icons';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { db } from '@/db/client';
 import { addManualTrip } from '@/db/tripsRepo';
@@ -55,6 +55,8 @@ export default function NewTripScreen() {
   const [initialDate] = useState(() => gap?.from ?? num(p.date) ?? Date.now());
   const trim1 = (n: number) => String(Math.round(n * 10) / 10);
   const close = () => (router.canGoBack() ? router.back() : router.replace('/miles'));
+  // QA-100 MOD-7: a double tap on Save must not add the trip twice (the screen is closing anyway).
+  const saved = useRef(false);
   const [parkingEditing, setParkingEditing] = useState(false);
   const parking = useAmountExpr(0);
   const currency = currencyOf(settings.region ?? 'UK');
@@ -112,6 +114,8 @@ export default function NewTripScreen() {
               }
         }
         onSubmit={(r) => {
+          if (saved.current) return;
+          saved.current = true;
           // A gap trip keeps the gap's times (shifted with the day if the driver changed the date).
           const extra = estimated && !r.route ? { source: 'gap' as const, ...(gap ? { endedAt: r.date + (gap.to - gap.from) } : {}) } : {};
           // A regular trip keeps its A → B ends (free: the distance was saved, nothing is routed again).

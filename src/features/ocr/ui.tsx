@@ -254,3 +254,26 @@ const styles = StyleSheet.create({
   lock: { position: 'absolute', right: -6, bottom: -6, width: 24, height: 24, borderRadius: 12, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   sheetIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
 });
+
+/**
+ * QA-100 MOD-5 / B-86: the photo library only opened on a long press nobody found. Tapping Photo now asks where the
+ * receipt comes from (a long press still goes straight to the library).
+ */
+export function PhotoSourceSheet({
+  visible,
+  onPick,
+  onClose,
+}: {
+  visible: boolean;
+  onPick: (source: 'camera' | 'library') => void;
+  onClose: () => void;
+}) {
+  return (
+    <Sheet visible={visible} onClose={onClose} title={t('capture.photoSourceTitle')} scroll={false}>
+      <View style={{ gap: 10 }}>
+        <Button label={t('capture.takePhoto')} full onPress={() => onPick('camera')} />
+        <Button label={t('capture.chooseLibrary')} variant="outline" full onPress={() => onPick('library')} />
+      </View>
+    </Sheet>
+  );
+}

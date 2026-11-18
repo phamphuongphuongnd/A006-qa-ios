@@ -114,13 +114,59 @@ export const DEFAULT_SETTINGS: AppSettings = {
   exportLog: {},
 };
 
+const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+const ENUMS: Partial<Record<keyof AppSettings, readonly unknown[]>> = {
+  region: ['UK', 'US', null],
+  defaultScope: ['work', 'personal'],
+  distanceUnit: ['mi', 'km'],
+  lockAfterMs: [0, 60_000, 300_000],
+  theme: ['system', 'light', 'dark'],
+  vehicleCostMethod: ['mileage', 'actual', 'unsure'],
+  mergeStopMinutes: [10, 20, 45],
+  mtdPeriod: ['standard', 'calendar'],
+  odometerCheck: ['off', 'weekly', 'monthly'],
+};
+const NULLABLE_NUM = new Set<keyof AppSettings>(['lastBackupAt', 'backupBannerSnoozedUntil', 'lastAutoBackupAt']);
+const NULLABLE_OBJ = new Set<keyof AppSettings>(['vanBtDevice', 'backupFolder', 'backupRun', 'freeagentVehicle']);
+const ratesOk = (v: unknown) =>
+  Array.isArray(v) && v.length > 0 && v.every((t) => isObj(t) && isNum(t.minorPerMile) && (t.upToMiles === null || isNum(t.upToMiles)));
+
+/**
+ * QA-100 SPE-4: a backup file with a wrong-typed setting (`region: "ZZ"`, `mileageRates: "x"`, `notify: null`) crashed
+ * Miles / Reports / Settings on every open. A value that doesn't fit its setting is dropped (the default is used);
+ * objects keep the default's fields the stored one lacks.
+ */
+export function saneSetting(key: keyof AppSettings, v: unknown): unknown {
+  const def = DEFAULT_SETTINGS[key] as unknown;
+  const allowed = ENUMS[key];
+  if (allowed) return allowed.includes(v) ? v : undefined;
+  if (NULLABLE_NUM.has(key)) return v === null || isNum(v) ? v : undefined;
+  if (NULLABLE_OBJ.has(key)) return v === null || isObj(v) ? v : undefined;
+  if (key === 'mileageRates') return isObj(v) && ratesOk(v.UK) && ratesOk(v.US) ? v : undefined;
+  if (Array.isArray(def)) return Array.isArray(v) ? v : undefined;
+  if (isObj(def)) {
+    if (!isObj(v)) return undefined;
+    // Fields of the wrong type fall back one by one (e.g. notify.tripAuto: "yes").
+    const merged: Record<string, unknown> = { ...def };
+    for (const [k, x] of Object.entries(v)) {
+      const d = (def as Record<string, unknown>)[k];
+      if (d === undefined || typeof x === typeof d || (Array.isArray(d) && Array.isArray(x))) merged[k] = x;
+    }
+    return merged;
+  }
+  if (typeof def === 'number') return isNum(v) ? v : undefined;
+  return typeof v === typeof def ? v : undefined;
+}
+
 export function getSettings(db: AppDb): AppSettings {
   const rows = db.select().from(settings).all();
   const out: Record<string, unknown> = { ...DEFAULT_SETTINGS };
   for (const r of rows) {
     if (!(r.key in DEFAULT_SETTINGS)) continue;
     try {
-      out[r.key] = JSON.parse(r.value);
+      const v = saneSetting(r.key as keyof AppSettings, JSON.parse(r.value));
+      if (v !== undefined) out[r.key] = v;
     } catch {
       // Corrupt value: keep the default.
     }

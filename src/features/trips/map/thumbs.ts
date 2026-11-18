@@ -19,6 +19,30 @@ const RETRY_MS = 5 * 60_000;
 
 const dir = () => new Directory(Paths.document, 'trip-maps');
 
+// QA-100 OLD-6: on some GPUs (seen: Android 11 with a software GL driver) MapLibre's snapshotter aborts natively
+// ("Failed to choose ARGB config", SIGABRT) — JS can't catch it and Miles crashed on every open. A flag file is
+// written right before each snapshot and removed after; finding it at the next launch means the app died mid-snapshot,
+// so thumbnails stay off on this phone (rows keep their icon).
+const snappingFlag = () => new File(Paths.document, 'trip-maps-snapping.flag');
+const offFlag = () => new File(Paths.document, 'trip-maps-off.flag');
+let snapshotsOff: boolean | null = null;
+
+export function thumbsDisabled(): boolean {
+  if (snapshotsOff !== null) return snapshotsOff;
+  snapshotsOff = false;
+  try {
+    if (offFlag().exists) snapshotsOff = true;
+    else if (snappingFlag().exists) {
+      offFlag().create();
+      snappingFlag().delete();
+      snapshotsOff = true;
+    }
+  } catch {
+    // unreadable storage: keep thumbnails on
+  }
+  return snapshotsOff;
+}
+
 const hash = (s: string) => {
   let h = 5381;
   for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
@@ -101,17 +125,29 @@ async function make(t: TripRow, dark: boolean, colors: { work: string; personal:
       },
     ],
   };
-  const tmp = await withTimeout(
-    StaticMapImageManager.createImage({
-      mapStyle: withRoute,
-      bounds: padBounds(lines.bounds, 0.18),
-      width: THUMB_DP,
-      height: THUMB_DP,
-      output: 'file',
-      logo: false,
-    }),
-    SNAP_TIMEOUT_MS,
-  );
+  try {
+    snappingFlag().create({ overwrite: true });
+  } catch {
+    // no flag → no crash guard this time, the picture is still worth trying
+  }
+  let tmp: string;
+  try {
+    tmp = await withTimeout(
+      StaticMapImageManager.createImage({
+        mapStyle: withRoute,
+        bounds: padBounds(lines.bounds, 0.18),
+        width: THUMB_DP,
+        height: THUMB_DP,
+        output: 'file',
+        logo: false,
+      }),
+      SNAP_TIMEOUT_MS,
+    );
+  } finally {
+    try {
+      snappingFlag().delete();
+    } catch {}
+  }
   const d = dir();
   if (!d.exists) d.create({ intermediates: true });
   const src = new File(tmp.startsWith('file:') ? tmp : `file://${tmp}`);
@@ -129,6 +165,7 @@ export function ensureThumb(t: TripRow, dark: boolean, colors: { work: string; p
   const name = thumbName(t, dark);
   const have = thumbUri(t, dark);
   if (have) return Promise.resolve(have);
+  if (thumbsDisabled()) return Promise.resolve(null);
   const failed = failedAt.get(name);
   if (failed && Date.now() - failed < RETRY_MS) return Promise.resolve(null);
   const running = inflight.get(name);

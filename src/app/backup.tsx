@@ -1,17 +1,16 @@
 import * as DocumentPicker from 'expo-document-picker';
-import { File } from 'expo-file-system';
 import { useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { backupPlan, createBackupFile, restoreFromBackup } from '@/features/backup/backupFile';
+import { backupPlan, createBackupFile, inspectBackupFile, restoreFromBackupFile } from '@/features/backup/backupFile';
 import { folderPort, folderReachable, pickBackupFolder, runNightlyNow, saveFolder, shownFolderLabel } from '@/features/backup/folder';
 import { countsLabel, itemSub, listDate, shortDate, whenLabel } from '@/features/backup/labels';
 import { backupFailures, listFolderBackups, type BackupListItem, type RunResult } from '@/features/backup/nightly';
 import { BACKUP_FAILS_FOR_ALERT } from '@/features/backup/homeAlerts';
-import { inspectBackup, unpackBackup, type BackupError, type BackupManifest } from '@/features/backup/pack';
+import { type BackupError, type BackupManifest } from '@/features/backup/pack';
 import { clearBackupNeedsTap } from '@/features/settings/notifications';
 import { withLockSuspended } from '@/features/settings/lockState';
 import { stopOrphanRecording } from '@/features/trips/controller';
@@ -162,8 +161,7 @@ export default function BackupScreen() {
     if (res.canceled || !res.assets?.length) return;
     const asset = res.assets[0];
     try {
-      const bytes = await new File(asset.uri).bytes();
-      const r = inspectBackup(bytes);
+      const r = await inspectBackupFile(asset.uri);
       if (!r.ok) {
         error(ERRORS[r.error]());
         return;
@@ -193,15 +191,14 @@ export default function BackupScreen() {
     setConfirm(null);
     setRestoring(true);
     try {
-      await new Promise((r) => setTimeout(r, 50)); // let "Restoring…" paint before the synchronous unzip
+      await new Promise((r) => setTimeout(r, 50)); // let "Restoring…" paint
       const local = uri ?? (await folderPort(folder)!.fetch(name));
-      const bytes = await new File(local).bytes();
-      const r = unpackBackup(bytes);
+      // B-87: streamed from the file — photos never all in memory at once.
+      const r = await restoreFromBackupFile(local);
       if (!r.ok) {
         error(ERRORS[r.error]());
         return;
       }
-      restoreFromBackup(r.manifest, r.photos);
       await stopOrphanRecording().catch(() => {});
       update({});
       setPreview(null);

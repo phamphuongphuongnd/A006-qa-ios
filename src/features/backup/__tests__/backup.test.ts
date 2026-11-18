@@ -272,3 +272,87 @@ describe('wipe and names', () => {
     expect(backupFileName(at(2026, 11, 10, 18))).toBe('SundaySort-backup-2026-11-10.sundaysort');
   });
 });
+
+describe('QA-100 SPE-2: Pro state from a hand-edited backup', () => {
+  const NOW = new Date(2026, 10, 17, 12).getTime();
+  const DAY = 86_400_000;
+  const restoreWith = (pro: Record<string, unknown>) => {
+    const db = makeTestDb();
+    const src = makeTestDb();
+    seedCategories(src, 'UK');
+    const t = snapshotTables(src);
+    t.proState = [{ id: 'pro', trialStartedAt: null, trialEndsAt: null, entitlement: 'none', expiresAt: null, productId: null, autoRenewing: null, lastVerifiedAt: null, ...pro }] as typeof t.proState;
+    jest.spyOn(Date, 'now').mockReturnValue(NOW);
+    replaceAllData(db, t, NOW);
+    (Date.now as jest.Mock).mockRestore();
+    return db.select().from(proState).get()!;
+  };
+
+  it('caps a trial at 7 days from its start', () => {
+    const r = restoreWith({ trialStartedAt: NOW - 3600_000, trialEndsAt: 4102444800000 });
+    expect(r.trialEndsAt).toBe(NOW - 3600_000 + 7 * DAY);
+  });
+
+  it('a trial start in the future becomes now', () => {
+    const r = restoreWith({ trialStartedAt: NOW + 400 * DAY, trialEndsAt: NOW + 407 * DAY });
+    expect(r.trialStartedAt).toBe(NOW);
+    expect(r.trialEndsAt).toBe(NOW + 7 * DAY);
+  });
+
+  it('never trusts an "active" subscription from a file', () => {
+    const r = restoreWith({ entitlement: 'active', expiresAt: 4102444800000, autoRenewing: true });
+    expect(r.entitlement).toBe('expired');
+    expect(r.autoRenewing).toBe(false);
+    expect(r.lastVerifiedAt).toBeNull();
+  });
+
+  it("keeps the phone's own Pro state", () => {
+    const db = makeTestDb();
+    db.insert(proState).values({ id: 'pro', trialStartedAt: 1, trialEndsAt: 2, entitlement: 'none', expiresAt: null, productId: null, autoRenewing: null, lastVerifiedAt: null }).run();
+    const t = snapshotTables(makeTestDb());
+    t.proState = [{ id: 'pro', trialStartedAt: NOW, trialEndsAt: NOW + DAY, entitlement: 'active', expiresAt: null, productId: null, autoRenewing: true, lastVerifiedAt: NOW }];
+    replaceAllData(db, t, NOW);
+    expect(db.select().from(proState).get()!.trialStartedAt).toBe(1);
+  });
+});
+
+describe('QA-100 SPE-4/SPE-5: odd backup contents', () => {
+  it('wrong-typed settings fall back to defaults instead of crashing screens', () => {
+    const db = makeTestDb();
+    const t = snapshotTables(makeTestDb());
+    t.settings = [
+      { key: 'region', value: '"ZZ"' },
+      { key: 'mileageRates', value: '"x"' },
+      { key: 'notify', value: 'null' },
+      { key: 'lockAfterMs', value: '"soon"' },
+      { key: 'reminder', value: '{"on":"yes","weekday":3}' },
+      { key: 'exportLog', value: '{"2026-27":123}' },
+    ];
+    replaceAllData(db, t, Date.now());
+    const s = getSettings(db);
+    expect(s.region).toBeNull();
+    expect(s.mileageRates.UK.length).toBeGreaterThan(0);
+    expect(s.notify.tripAuto).toBe(true);
+    expect(s.lockAfterMs).toBe(60_000);
+    expect(s.reminder).toEqual({ on: false, weekday: 3, hour: 18, minute: 0 });
+    expect(s.exportLog['2026-27']).toBe(123);
+  });
+
+  it('refuses a file whose photo inflates far beyond a receipt (zip bomb)', () => {
+    const t = snapshotTables(makeTestDb());
+    const manifest = { format: BACKUP_FORMAT, version: BACKUP_VERSION, createdAt: 1, appVersion: 'qa', counts: { entries: 0, trips: 0, photos: 1, categories: t.categories.length }, tables: t };
+    const bytes = zipSync({ [MANIFEST_NAME]: strToU8(JSON.stringify(manifest)), 'receipts/big.jpg': new Uint8Array(30 * 1024 * 1024) }, { level: 9 });
+    expect(bytes.length).toBeLessThan(1024 * 1024);
+    expect(unpackBackup(bytes)).toEqual({ ok: false, error: 'damaged' });
+  });
+
+  it('refuses amounts the app could never have made', () => {
+    const src = makeTestDb();
+    seedCategories(src, 'UK');
+    createEntry(src, { type: 'expense', amountMinor: 100, currency: 'GBP' });
+    const t = snapshotTables(src);
+    t.entries[0] = { ...t.entries[0], amountMinor: 1e15 };
+    const manifest = { format: BACKUP_FORMAT, version: BACKUP_VERSION, createdAt: 1, appVersion: 'qa', counts: { entries: 1, trips: 0, photos: 0, categories: t.categories.length }, tables: t };
+    expect(unpackBackup(zipSync({ [MANIFEST_NAME]: strToU8(JSON.stringify(manifest)) }))).toEqual({ ok: false, error: 'damaged' });
+  });
+});

@@ -1,5 +1,5 @@
 import { router } from '@/services/router';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { WelcomeArt } from '@/features/entries/art';
@@ -12,14 +12,17 @@ import { Button, Txt } from '@/ui';
 export default function Welcome() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  // Short phone or big text: smaller art so the promise is readable above the button without scrolling.
+  const { height, fontScale } = useWindowDimensions();
+  const roomy = height / Math.max(1, fontScale) >= 700;
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingHorizontal: GUTTER, paddingTop: 48, gap: 28 }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingHorizontal: GUTTER, paddingTop: roomy ? 48 : 16, gap: roomy ? 28 : 16 }}>
         <View style={{ alignItems: 'center' }}>
-          <WelcomeArt />
+          <WelcomeArt scale={roomy ? 1 : 0.55} />
         </View>
         <View style={{ gap: 14 }}>
-          <Txt v="h1" accessibilityRole="header" style={{ fontSize: 34, lineHeight: 40 }}>
+          <Txt v="h1" accessibilityRole="header" maxFontSizeMultiplier={1.6} style={{ fontSize: 34, lineHeight: 40 }}>
             {t('onboarding.welcomeTitle')}
           </Txt>
           <Txt c="textSecondary" style={{ fontSize: 17, lineHeight: 26 }}>

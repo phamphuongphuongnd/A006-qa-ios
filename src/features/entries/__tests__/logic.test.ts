@@ -13,6 +13,7 @@ import {
   signedAmount,
   sortMinutes,
   weekdayTime,
+  entryWhen,
 } from '../format';
 import {
   backupDue,
@@ -209,5 +210,19 @@ describe('mixedQueue (bản 2: entries + Unsorted trips)', () => {
     expect(q.map((i) => i.key)).toEqual(['b', tripKey('t'), 'a']);
     const q2 = mixedQueue([e('a', 1), e('b', 2)], [tr('t', 0)], ['a', tripKey('t')]);
     expect(q2.map((i) => i.key)).toEqual(['b', 'a', tripKey('t')]);
+  });
+});
+
+describe('QA-100 dates in lists', () => {
+  const now = new Date(2026, 10, 17, 12).getTime();
+  const d = (y: number, m: number, day: number, h = 10, mi = 23) => new Date(y, m - 1, day, h, mi).getTime();
+  it('entryWhen: weekday within 6 days, date after that, year when it differs (A37-3)', () => {
+    expect(entryWhen(d(2026, 11, 15), now)).toBe('Sun 10:23');
+    expect(entryWhen(d(2026, 10, 25), now)).toBe('25 Oct 10:23');
+    expect(entryWhen(d(2025, 11, 17), now)).toBe('17 Nov 2025 10:23');
+  });
+  it('dayHeader adds the year for another year (MOD-5)', () => {
+    expect(dayHeader(d(2025, 11, 17), now)).toBe('Mon 17 Nov 2025');
+    expect(dayHeader(d(2026, 11, 9), now)).toBe('Mon 9 Nov');
   });
 });

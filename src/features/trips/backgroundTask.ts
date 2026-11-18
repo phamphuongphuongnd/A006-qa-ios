@@ -8,6 +8,7 @@ import * as TaskManager from 'expo-task-manager';
 import { AppRegistry, AppState } from 'react-native';
 
 import { db } from '@/db/client';
+import { ensureMigrated } from '@/db/migrate';
 import { getSettings } from '@/db/settingsRepo';
 import { appendPoints, getActiveTrip, getTrip } from '@/db/tripsRepo';
 import { refreshWidgets } from '@/features/widgets/refresh';
@@ -22,6 +23,11 @@ let lastWidgetAt = 0;
 
 TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ data, error }) => {
   if (error) return;
+  try {
+    await ensureMigrated();
+  } catch {
+    return;
+  }
   const active = getActiveTrip(db);
   if (!active) {
     // Trip ended or was discarded while updates were still registered.
@@ -62,13 +68,15 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
  * — also with the app closed or locked — to start / end trips. See features/trips/auto/runner.ts.
  */
 AppRegistry.registerHeadlessTask(TRIP_DETECT_TASK, () => async () => {
+  await ensureMigrated();
   await syncAutoDetection();
   await processAutoSignals();
 });
 
 // App start and every return to the foreground: re-check Pro / permissions / registrations and catch up on signals.
 const onActive = () => {
-  syncAutoDetection()
+  ensureMigrated()
+    .then(() => syncAutoDetection())
     .then(() => processAutoSignals())
     .catch(() => {});
 };

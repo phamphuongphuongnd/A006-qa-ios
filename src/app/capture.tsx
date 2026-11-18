@@ -1,9 +1,10 @@
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useNavigation, usePreventRemove } from 'expo-router';
 import { router } from '@/services/router';
 import { Briefcase, FileText, User, X } from '@/ui/icons';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { db } from '@/db/client';
@@ -23,6 +24,7 @@ import {
   FromReceiptTag,
   PendingThumbs,
   PhotoButton,
+  PhotoSourceSheet,
   PhotosLeft,
   PhotosUsedUpSheet,
   ReadingChip,
@@ -33,12 +35,14 @@ import { useAmountExpr } from '@/features/ocr/useAmountExpr';
 import { useCapturePhotos } from '@/features/ocr/useCapturePhotos';
 import { deleteReceiptFiles, saveReceipt } from '@/files/receipts';
 import { useAppLocked } from '@/services/data';
-import { t } from '@/i18n';
+import { t, tn } from '@/i18n';
 import { usePhotoAllowance, usePro } from '@/state/pro';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, useTheme } from '@/theme';
 import { Button, Chip, Dialog, IconButton, RoundButton, Segmented, Txt, useSnackbar } from '@/ui';
+import { refocus } from '@/features/ocr/refocus';
+import { clearDraft, readDraft, saveDraft } from '@/features/entries/captureDraft';
 
 /** Home's fixed Expense/Income bar (72 + 2×12 padding): the Saved snackbar sits above it. */
 const HOME_BAR = 96;
@@ -49,7 +53,7 @@ const HOME_BAR = 96;
  * (Q20). Up to 3 photos (Q21); with Pro each is read on the device and fills empty fields (P1-12). No category field.
  */
 export default function CaptureScreen() {
-  const params = useLocalSearchParams<{ type?: string; from?: string }>();
+  const params = useLocalSearchParams<{ type?: string; from?: string; restore?: string }>();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { settings } = useSettings();
@@ -61,12 +65,15 @@ export default function CaptureScreen() {
   const { status, pro } = usePro();
   const allowance = usePhotoAllowance();
 
-  const [type, setType] = useState<EntryType>(params.type === 'income' ? 'income' : 'expense');
-  const amount = useAmountExpr(0);
-  const [at, setAt] = useState<number | null>(null);
-  const [note, setNote] = useState('');
+  // B-84: an entry typed before Android killed the app comes back as the starting values.
+  // A draft only exists when the last Quick capture was cut off — whatever opened this one (Home, widget, shortcut).
+  const [draft] = useState(() => readDraft());
+  const [type, setType] = useState<EntryType>(draft?.type ?? (params.type === 'income' ? 'income' : 'expense'));
+  const amount = useAmountExpr(0, draft?.expr);
+  const [at, setAt] = useState<number | null>(draft?.at ?? null);
+  const [note, setNote] = useState(draft?.note ?? '');
   const [noteOpen, setNoteOpen] = useState(false);
-  const [scope, setScope] = useState<Scope>(settings.defaultScope);
+  const [scope, setScope] = useState<Scope>(draft?.scope ?? settings.defaultScope);
   const [cameraDenied, setCameraDenied] = useState(false);
   const [usedUp, setUsedUp] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
@@ -108,11 +115,36 @@ export default function CaptureScreen() {
 
   const notes = useLive(() => topNotes(db, type), [type], ['entries']);
   const dirty = amount.expr !== '' || note.trim() !== '' || photos.photos.length > 0;
+
+  // B-84: put back an entry typed before Android killed the app, plus a camera photo it kept for us.
+  const restored = useRef(false);
+  useEffect(() => {
+    if (restored.current) return;
+    restored.current = true;
+    if (draft) {
+      if (draft.photoUris.length) photos.add(draft.photoUris);
+      snack({ message: t('capture.draftRestored'), above: 'none' });
+    }
+    ImagePicker.getPendingResultAsync()
+      .then((r) => {
+        if (r && 'assets' in r && !r.canceled && r.assets?.length) photos.add(r.assets.map((a) => a.uri));
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on open
+  }, []);
+
+  // Keep what is typed until Save / Discard (B-84).
+  const photoKey = photos.uris.join('|');
+  useEffect(() => {
+    if (leaving) return;
+    if (dirty) saveDraft({ type, expr: amount.expr, note, scope, at, photoUris: photoKey ? photoKey.split('|') : [] });
+    else clearDraft();
+  }, [dirty, type, amount.expr, note, scope, at, photoKey, leaving]);
   const chipMinor = receiptMinor !== null && receiptMinor !== amount.minor ? receiptMinor : null;
 
   const focusAmount = () => {
     setNoteOpen(false);
-    amountRef.current?.focus();
+    refocus(amountRef.current);
   };
 
   // Ask before throwing away a typed entry (✕, Android back, swipe down).
@@ -142,14 +174,47 @@ export default function CaptureScreen() {
 
   // With the keyboard down the bottom row must clear the system nav bar (B-21); with it up the keyboard covers it.
   const [keyboardUp, setKeyboardUp] = useState(false);
+  const [photoAsk, setPhotoAsk] = useState(false);
+  const [squeezed, setSqueezed] = useState(false);
+  // QA-100 OLD-9: measured, not guessed — where the keyboard starts and how much the calculator row still sits under it.
+  const keyboardTop = useRef<number | null>(null);
+  const [calcLift, setCalcLift] = useState(0);
+  const calcRef = useRef<ComponentRef<typeof View>>(null);
+  const [middleHeight, setMiddleHeight] = useState(0);
   useEffect(() => {
-    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardUp(true));
-    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardUp(false));
+    const show = Keyboard.addListener('keyboardDidShow', (e) => {
+      keyboardTop.current = e.endCoordinates.screenY;
+      setKeyboardUp(true);
+    });
+    const hide = Keyboard.addListener('keyboardDidHide', () => {
+      keyboardTop.current = null;
+      setKeyboardUp(false);
+      setSqueezed(false);
+      setCalcLift(0);
+    });
     return () => {
       show.remove();
       hide.remove();
     };
   }, []);
+  // QA-100 OLD-1: on short screens (360×640dp) the number pad leaves ~390dp; the helper lines go while it is up so the
+  // amount keeps its room (it had shrunk to ~4px).
+  // QA-100 MOD-2: big text on a tall phone (997dp at 200%) and an unfolded Fold in landscape squeeze the same way.
+  // Besides the size guess, measure: once the amount area is squeezed under 80dp with the keyboard up, stay compact
+  // until the keyboard goes down (no flip-flop as the helper lines come and go).
+  const { height: windowHeight, fontScale } = useWindowDimensions();
+  const tight = keyboardUp && (squeezed || windowHeight / Math.max(1, fontScale) < 720);
+  // QA-100 OLD-2: before Android 11 the keyboard height RN reports leaves out the nav bar the app draws behind
+  // (edge-to-edge), so the calculator row ended up half under the keyboard.
+  const keyboardOffset = Platform.OS === 'android' && Number(Platform.Version) < 30 ? insets.bottom : 0;
+
+  // QA-100 OLD-9: Android's adjustsFontSizeToFit sized the amount once, while its area was still ~0 under the opening
+  // keyboard, and never grew it back (4px on Android 8). Size it from the measured height and the text's length instead.
+  const { width: windowWidth } = useWindowDimensions();
+  const shownText = formatMoney(amount.shownMinor, currency);
+  const byHeight = middleHeight > 0 ? (middleHeight - 16) * 0.78 : 64;
+  const byWidth = (windowWidth - 80) / (Math.max(5, shownText.length + (amount.isExpression ? 2 : 0)) * 0.62);
+  const amountSize = Math.round(Math.max(24, Math.min(64, byHeight, byWidth)));
 
   const close = () => setLeaving(true);
 
@@ -186,6 +251,17 @@ export default function CaptureScreen() {
     const minor = amount.minor;
     if (minor <= 0 || savingRef.current) return;
     savingRef.current = true;
+    try {
+      await saveOnce(minor);
+    } catch {
+      // QA-100 OLD-8: a full phone (SQLITE_FULL) failed silently — the driver thought it was saved. Keep the amount.
+      savingRef.current = false;
+      snack({ message: t('capture.saveFailed'), tone: 'error', above: 'none' });
+    }
+  };
+
+  /** QA-100 MOD-7: a double tap on Save saved two entries — the latch stays shut until the screen has moved on. */
+  const saveOnce = async (minor: number) => {
     const items: PendingRead[] = [];
     let photoFailed = false;
     for (const p of photos.photos) {
@@ -230,9 +306,14 @@ export default function CaptureScreen() {
       above: keep ? 'none' : 'tabs',
       bottomOffset: !keep && params.from === 'home' ? HOME_BAR : 0,
     });
-    savingRef.current = false;
-    if (keep) reset();
-    else close();
+    clearDraft();
+    if (keep) {
+      reset();
+      // Open the latch once the cleared amount has rendered (a second tap in the same frame still saw the old one).
+      setTimeout(() => {
+        savingRef.current = false;
+      }, 300);
+    } else close();
   };
 
   const pickDate = () =>
@@ -255,7 +336,7 @@ export default function CaptureScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.surface, paddingTop: insets.top }}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={keyboardOffset}>
         {/* Top row: close · Expense|Income · date chip */}
         <View style={[styles.top, { paddingHorizontal: Platform.OS === 'ios' ? GUTTER : 12 }]}>
           <IconButton icon={X} label={t('common.close')} onPress={() => (dirty ? setConfirmDiscard(true) : close())} />
@@ -293,6 +374,11 @@ export default function CaptureScreen() {
             setFromReceipt((f) => ({ ...f, amount: false }));
             focusAmount();
           }}
+          onLayout={(e) => {
+            const h = e.nativeEvent.layout.height;
+            setMiddleHeight(h);
+            if (keyboardUp && !squeezed && h < 80) setSqueezed(true);
+          }}
           style={styles.middle}>
           <ExprLine amount={amount} />
           <View style={[styles.amountBox, fromReceipt.amount && { backgroundColor: colors.sunSoft }]}>
@@ -303,10 +389,9 @@ export default function CaptureScreen() {
               <Txt
                 v="amountTyped"
                 c={amount.shownMinor > 0 ? tone : 'textTertiary'}
-                adjustsFontSizeToFit
                 numberOfLines={1}
-                maxFontSizeMultiplier={1.2}
-                style={{ flexShrink: 1 }}>
+                maxFontSizeMultiplier={1}
+                style={{ flexShrink: 1, fontSize: amountSize, lineHeight: Math.round(amountSize * 1.12) }}>
                 {amount.isExpression ? t('ocr.equals', { amount: shown }) : shown}
               </Txt>
               {!noteOpen && !fromReceipt.amount ? <Caret color={caretColor} /> : null}
@@ -340,7 +425,7 @@ export default function CaptureScreen() {
           />
         </Pressable>
 
-        <View style={{ paddingHorizontal: GUTTER, paddingBottom: keyboardUp ? 10 : 12 + insets.bottom, gap: 12 }}>
+        <View style={{ paddingHorizontal: GUTTER, paddingBottom: keyboardUp ? 10 : 12 + insets.bottom, gap: tight ? 8 : 12 }}>
           {chipMinor !== null ? (
             <ReceiptSaysChip
               minor={chipMinor}
@@ -396,7 +481,7 @@ export default function CaptureScreen() {
               count={photos.photos.length}
               max={MAX_PHOTOS_PER_ENTRY}
               locked={slots.locked}
-              onPress={() => addPhotos('camera')}
+              onPress={() => (slots.locked ? addPhotos('camera') : setPhotoAsk(true))}
               onLongPress={() => addPhotos('library')}
             />
             <View style={{ alignItems: 'center', gap: 6 }}>
@@ -411,9 +496,11 @@ export default function CaptureScreen() {
                   {scopeOn ? t('common.work') : t('common.personal')}
                 </Txt>
               </Pressable>
-              <Txt maxFontSizeMultiplier={1.4} numberOfLines={2} center style={{ maxWidth: 150, fontSize: 13, fontFamily: fonts.semibold }} c="textSecondary">
-                {scopeOn ? t('capture.tapForPersonal') : t('capture.tapForWork')}
-              </Txt>
+              {tight ? null : (
+                <Txt maxFontSizeMultiplier={1.4} numberOfLines={2} center style={{ maxWidth: 150, fontSize: 13, fontFamily: fonts.semibold }} c="textSecondary">
+                  {scopeOn ? t('capture.tapForPersonal') : t('capture.tapForWork')}
+                </Txt>
+              )}
             </View>
             <RoundButton
               icon={FileText}
@@ -440,17 +527,42 @@ export default function CaptureScreen() {
             </ScrollView>
           ) : null}
 
-          {slots.left !== null ? <PhotosLeft left={slots.left} low={slots.low} /> : null}
+          {slots.left !== null && !tight ? <PhotosLeft left={slots.left} low={slots.low} /> : null}
 
           <Button label={t('common.save')} variant={type} full disabled={amount.minor <= 0} onPress={save} />
-          <Txt v="caption" c="textTertiary" center style={{ marginTop: -4, fontFamily: fonts.regular }}>
-            {t('capture.noCategory')}
-          </Txt>
+          {tight ? null : (
+            <Txt v="caption" c="textTertiary" center style={{ marginTop: -4, fontFamily: fonts.regular }}>
+              {t('capture.noCategory')}
+            </Txt>
+          )}
         </View>
-        {keyboardUp && !noteOpen ? <CalcBar onOp={amount.op} /> : null}
+        {keyboardUp && !noteOpen ? (
+          <View
+            ref={calcRef}
+            style={{ marginBottom: calcLift }}
+            onLayout={() =>
+              // Lift the row by whatever part of it the keyboard still covers (old Android reports a short keyboard).
+              calcRef.current?.measureInWindow((_x, y, _w, h) => {
+                const top = keyboardTop.current;
+                if (top === null) return;
+                const covered = Math.round(y + h - top);
+                if (covered > 1) setCalcLift((l) => Math.min(l + covered, 160));
+              })
+            }>
+            <CalcBar onOp={amount.op} />
+          </View>
+        ) : null}
       </KeyboardAvoidingView>
 
       <CameraDeniedDialog visible={cameraDenied} onClose={() => setCameraDenied(false)} />
+      <PhotoSourceSheet
+        visible={photoAsk}
+        onClose={() => setPhotoAsk(false)}
+        onPick={(source) => {
+          setPhotoAsk(false);
+          addPhotos(source);
+        }}
+      />
       <PhotosUsedUpSheet
         visible={usedUp}
         onClose={() => setUsedUp(false)}
@@ -465,11 +577,11 @@ export default function CaptureScreen() {
         visible={confirmDiscard}
         onClose={() => setConfirmDiscard(false)}
         title={t('capture.discardTitle')}
-        body={t('capture.discardBody', {
+        body={`${t('capture.discardBody', {
           amount: formatMoney(amount.minor, currency),
           type: type === 'income' ? t('capture.typeIncome') : t('capture.typeExpense'),
           note: note.trim() ? ` · ${note.trim()}` : '',
-        })}
+        })}${photos.photos.length ? ` ${tn('capture.discardPhotos', photos.photos.length)}` : ''}`}
         actions={[
           {
             label: t('common.keepEditing'),
@@ -483,6 +595,7 @@ export default function CaptureScreen() {
             variant: 'danger',
             onPress: () => {
               setConfirmDiscard(false);
+              clearDraft();
               close();
             },
           },
@@ -506,7 +619,7 @@ function Caret({ color }: { color: string }) {
 const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingTop: 10, paddingBottom: 6 },
   dateChip: { minHeight: 36, borderRadius: 18, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center', maxWidth: 150 },
-  middle: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 20 },
+  middle: { flex: 1, minHeight: 64, alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 20 },
   amountRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   amountBox: { borderRadius: 20, paddingHorizontal: 16, paddingVertical: 6, alignItems: 'center', maxWidth: '100%' },
   noteLine: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2, maxWidth: '100%' },

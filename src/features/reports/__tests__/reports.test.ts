@@ -1,8 +1,8 @@
 import { DEFAULT_RATES } from '@/domain/mileage';
 import { buildReport } from '@/domain/report';
 
-import { defaultExportKinds, exportFileName, receiptZipNames, reportHtml } from '../exportDocs';
-import { availableTaxYears, endOfDay, periodFor, startOfDay } from '../period';
+import { defaultExportKinds, exportFileName, PDF_MAX_ROWS, receiptZipNames, reportHtml } from '../exportDocs';
+import { availableTaxYears, endOfDay, periodFor, saneReportRange, startOfDay } from '../period';
 import { linePoints, monthlySeries, periodMileageEstimate, ratesLabel } from '../series';
 
 const at = (y: number, m: number, d: number, h = 12) => new Date(y, m - 1, d, h).getTime();
@@ -172,5 +172,73 @@ describe('export defaults (B-35)', () => {
     expect(defaultExportKinds(false)).toEqual(['entriesCsv']);
     expect(defaultExportKinds(true)).toEqual(['entriesCsv', 'mileageCsv']);
     expect(defaultExportKinds(true, { pro: true, region: 'UK' })).toEqual(['entriesCsv', 'mileageCsv', 'pdf', 'mtdSummary']);
+  });
+});
+
+describe('QA-100 SPE-1: absurd report ranges', () => {
+  it('monthlySeries stops on out-of-range dates and caps at 10 years of months', () => {
+    const t0 = Date.now();
+    expect(monthlySeries([], { start: -99999999999999999, end: 0 })).toHaveLength(0);
+    expect(monthlySeries([], { start: 0, end: 8639000000000000 }, { now: 8639000000000000 }).length).toBeLessThanOrEqual(121);
+    expect(Date.now() - t0).toBeLessThan(1000);
+  });
+
+  it('buckets 20,000 entries quickly and correctly', () => {
+    const start = at(2021, 4, 6, 0);
+    const end = at(2026, 4, 6, 0);
+    const es = Array.from({ length: 20_000 }, (_, i) => ({
+      type: 'expense' as const,
+      amountMinor: 100,
+      occurredAt: start + Math.floor((i / 20_000) * (end - start)),
+      scope: 'work' as const,
+    }));
+    const t0 = Date.now();
+    const months = monthlySeries(es, { start, end }, { now: end });
+    expect(Date.now() - t0).toBeLessThan(500);
+    expect(months).toHaveLength(60);
+    expect(months.reduce((a, m) => a + m.expenseMinor, 0)).toBe(2_000_000);
+  });
+
+  it('saneReportRange: from 2000, at most 10 years, not far in the future', () => {
+    const now = at(2026, 11, 17);
+    expect(saneReportRange(at(2021, 4, 6), at(2026, 4, 6), now)).toBe(true);
+    expect(saneReportRange(-99999999999999999, 0, now)).toBe(false);
+    expect(saneReportRange(0, 99999999999999999, now)).toBe(false);
+    expect(saneReportRange(at(1970, 1, 1), at(2026, 1, 1), now)).toBe(false);
+    expect(saneReportRange(at(2010, 1, 1), at(2026, 1, 1), now)).toBe(false);
+    expect(saneReportRange(at(2026, 1, 1), at(2029, 1, 1), now)).toBe(false);
+    expect(saneReportRange(at(2026, 5, 1), at(2026, 4, 1), now)).toBe(false);
+    expect(saneReportRange(NaN, at(2026, 4, 1), now)).toBe(false);
+  });
+});
+
+describe('QA-100 SPE-6: big PDFs', () => {
+  it('stops the entries table at PDF_MAX_ROWS and points to the CSV', () => {
+    const p = periodFor('UK', 2026, 'year');
+    const n = PDF_MAX_ROWS + 500;
+    const entries = Array.from({ length: n }, (_, i) => ({
+      type: 'expense' as const,
+      amountMinor: 100,
+      occurredAt: p.start + i * 60_000,
+      categoryId: null,
+      scope: 'work' as const,
+      note: `n${i}`,
+    }));
+    const report = buildReport(entries, [], p);
+    const html = reportHtml({
+      periodLabel: p.label,
+      currency: 'GBP',
+      report,
+      months: [],
+      includePersonal: false,
+      mileage: null,
+      trips: [],
+      entries: entries.map((e) => ({ ...e, categoryName: null })),
+      generatedAt: p.start,
+    });
+    expect((html.match(/<td>n\d+<\/td>/g) ?? []).length).toBe(PDF_MAX_ROWS);
+    expect(html).toContain(`Showing the first 2,000 of 2,500 entries. The full list is in the CSV export.`);
+    // Totals still count every entry.
+    expect(html).toContain('£2,500.00');
   });
 });

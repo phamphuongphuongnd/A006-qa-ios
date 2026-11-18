@@ -27,7 +27,7 @@ import { entryOrigin, fillEntryOcr, setReceiptOcrText } from '@/features/ocr/rep
 import { afterSave } from '@/features/ocr/rulesHook';
 import { LinkedLines } from '@/features/entries/LinkedLines';
 import { formatDay } from '@/features/trips/format';
-import { CalcBar, ExprLine, PhotosUsedUpSheet, trialOffered } from '@/features/ocr/ui';
+import { CalcBar, ExprLine, PhotoSourceSheet, PhotosUsedUpSheet, trialOffered } from '@/features/ocr/ui';
 import { useAmountExpr } from '@/features/ocr/useAmountExpr';
 import { openPro } from '@/features/pro/openPro';
 import { receiptUri, saveReceipt } from '@/files/receipts';
@@ -37,6 +37,7 @@ import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, radius, useTheme } from '@/theme';
 import { Badge, Button, Dialog, EmptyState, Group, IconButton, ReceiptThumb, Segmented, Sheet, Txt, useSnackbar } from '@/ui';
+import { refocus } from '@/features/ocr/refocus';
 
 type Draft = Pick<EntryRowT, 'type' | 'amountMinor' | 'occurredAt' | 'note' | 'categoryId' | 'scope'>;
 
@@ -90,6 +91,7 @@ function Editor({ entry }: { entry: EntryRowT }) {
   const [draft, setDraft] = useState<Draft>(() => draftOf(entry));
   const [editingAmount, setEditingAmount] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [photoAsk, setPhotoAsk] = useState(false);
   const [sheet, setSheet] = useState<'category' | 'siblings' | null>(null);
   const [dialog, setDialog] = useState<'delete' | 'discard' | null>(null);
   const [viewer, setViewer] = useState<{ id: string; entryId: string; filePath: string } | null>(null);
@@ -241,7 +243,7 @@ function Editor({ entry }: { entry: EntryRowT }) {
                 accessibilityLabel={`${t('entries.editAmount')}, ${formatMoney(amount.shownMinor, currency)}${amount.invalid ? `. ${t('ocr.checkSum')}` : ''}`}
                 onPress={() => {
                   setEditingAmount(true);
-                  amountRef.current?.focus();
+                  refocus(amountRef.current);
                 }}
                 style={[styles.amountBox, editingAmount && { borderColor: colors.primary }]}>
                 <Txt
@@ -366,11 +368,11 @@ function Editor({ entry }: { entry: EntryRowT }) {
                   accessibilityRole="button"
                   accessibilityLabel={t('common.addPhoto')}
                   accessibilityHint={t('capture.photoHint')}
-                  onPress={() => addPhoto('camera')}
+                  onPress={() => setPhotoAsk(true)}
                   onLongPress={() => addPhoto('library')}
                   style={[styles.addPhoto, { borderColor: colors.lineStrong }]}>
                   <ImagePlus size={22} color={colors.textSecondary} />
-                  <Txt style={{ fontSize: 12, fontFamily: fonts.bold }} c="textSecondary">
+                  <Txt maxFontSizeMultiplier={1.3} numberOfLines={2} center style={{ fontSize: 12, fontFamily: fonts.bold }} c="textSecondary">
                     {t('common.addPhoto')}
                   </Txt>
                 </Pressable>
@@ -446,6 +448,15 @@ function Editor({ entry }: { entry: EntryRowT }) {
         </View>
       </Sheet>
 
+      <PhotoSourceSheet
+        visible={photoAsk}
+        onClose={() => setPhotoAsk(false)}
+        onPick={(source) => {
+          setPhotoAsk(false);
+          addPhoto(source);
+        }}
+      />
+
       <Dialog
         visible={dialog === 'discard'}
         onClose={() => setDialog(null)}
@@ -500,7 +511,8 @@ function Editor({ entry }: { entry: EntryRowT }) {
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <View style={styles.row}>
-      <Txt v="caption" c="textSecondary" style={{ width: 96, fontFamily: fonts.bold }}>
+      {/* QA-100 MOD-6: a fixed 96dp broke "Category" mid-word at 200% text — at least 96, as wide as the word needs. */}
+      <Txt v="caption" c="textSecondary" maxFontSizeMultiplier={1.6} style={{ minWidth: 96, flexShrink: 0, fontFamily: fonts.bold }}>
         {label}
       </Txt>
       {children}
@@ -532,8 +544,9 @@ const styles = StyleSheet.create({
   rowPress: { flex: 1, flexDirection: 'row', alignItems: 'center', minHeight: 44, gap: 8 },
   catChip: { minHeight: 36, borderRadius: 18, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 6, maxWidth: '100%' },
   addPhoto: {
-    width: 72,
-    height: 72,
+    minWidth: 72,
+    minHeight: 72,
+    paddingHorizontal: 4,
     borderRadius: 12,
     borderWidth: 1.5,
     borderStyle: 'dashed',

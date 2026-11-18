@@ -133,6 +133,7 @@
       "expo-iap",
       "./plugins/withNfcTripTag",
       "expo-background-task",
+      "./plugins/withWorkManagerSafeInit",
       "@maplibre/maplibre-react-native"
     ],
     "experiments": {

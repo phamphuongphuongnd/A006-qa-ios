@@ -43,8 +43,19 @@ export const dateTimeLabel = (at: number) => `${dateLabel(at)}, ${timeLabel(at)}
 /** "Mon 9 Nov · 06:12" — Sort card. */
 export const dateDotTime = (at: number) => `${dateLabel(at)} · ${timeLabel(at)}`;
 
-/** "Sat 09:15" — Home recent rows / Sort list. */
+/** "Sat 09:15" — Home recent rows / Sort list; plain weekday time for the trip-end clock in Miles. */
 export const weekdayTime = (at: number) => `${DAYS[new Date(at).getDay()]} ${timeLabel(at)}`;
+
+/**
+ * Entry row time (QA-100 A37-3): "Sat 09:15" within the last 6 days, else "25 Oct 10:23" ("25 Oct 2025 10:23" in
+ * another year) — a weekday alone made a weeks-old entry look recent.
+ */
+export function entryWhen(at: number, now = Date.now()): string {
+  const d = new Date(at);
+  if (startOfDay(now) - startOfDay(at) < 6 * 86_400_000 && at <= now + 86_400_000) return weekdayTime(at);
+  const year = d.getFullYear() !== new Date(now).getFullYear() ? ` ${d.getFullYear()}` : '';
+  return `${d.getDate()} ${MONTHS[d.getMonth()]}${year} ${timeLabel(at)}`;
+}
 
 /** Day group header: "Today", "Yesterday" or "Mon 9 Nov". */
 export function dayHeader(at: number, now = Date.now(), labels = { today: 'Today', yesterday: 'Yesterday' }): string {
@@ -54,7 +65,9 @@ export function dayHeader(at: number, now = Date.now(), labels = { today: 'Today
   const y = new Date(today);
   y.setDate(y.getDate() - 1);
   if (day === y.getTime()) return labels.yesterday;
-  return dateLabel(at);
+  // QA-100 MOD-5: last year's "Mon 17 Nov" sat right under today's "Today" — say the year when it differs.
+  const year = new Date(at).getFullYear();
+  return year !== new Date(now).getFullYear() ? `${dateLabel(at)} ${year}` : dateLabel(at);
 }
 
 /** Greeting bucket by local hour. */

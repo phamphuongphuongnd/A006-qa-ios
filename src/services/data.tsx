@@ -5,7 +5,10 @@ import { AppState, StyleSheet, View } from 'react-native';
 import { useAutoServices } from '@/features/backup/useAutoServices';
 import { lockSuspended } from '@/features/settings/lockState';
 import { LockedView } from '@/features/settings/LockedView';
+import { useTheme } from '@/theme';
 import { useSettings } from '@/state/settings';
+
+import { useHideInRecents } from './recentsPrivacy';
 
 export { withLockSuspended } from '@/features/settings/lockState';
 
@@ -59,6 +62,8 @@ export function LockGate({ children }: { children: ReactNode }) {
   }, []);
 
   const showLock = locked && enabled;
+  const cover = useHideInRecents(enabled);
+  const { colors } = useTheme();
   return (
     <View style={{ flex: 1 }}>
       <View style={{ flex: 1 }} importantForAccessibility={showLock ? 'no-hide-descendants' : 'auto'} accessibilityElementsHidden={showLock}>
@@ -69,6 +74,7 @@ export function LockGate({ children }: { children: ReactNode }) {
           <LockedView onUnlock={() => setLocked(false)} />
         </View>
       ) : null}
+      {cover && !showLock ? <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]} /> : null}
     </View>
   );
 }
