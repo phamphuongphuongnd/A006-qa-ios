@@ -36,17 +36,23 @@ export function CategoryBars({ bars, currency }: { bars: Bar[]; currency: Curren
             accessibilityHint={t('reports.barHint')}
             onPress={b.onPress}
             style={({ pressed }) => [{ gap: 4, paddingVertical: 4, opacity: pressed ? 0.7 : 1 }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              {b.unsorted ? <Dot /> : null}
-              <Txt v="small" numberOfLines={1} style={{ flex: 1, fontFamily: fonts.bold }}>
-                {b.name}
-              </Txt>
-              <Txt v="small" style={{ fontFamily: fonts.bold, fontVariant: ['tabular-nums'] }}>
-                {amount}
-              </Txt>
-              <Txt v="small" c="textTertiary" style={{ minWidth: 44, textAlign: 'right', fontVariant: ['tabular-nums'] }}>
-                {pct.toFixed(1)}%
-              </Txt>
+            {/* QA-100 A37-9: at 320dp + 200% the name was cut to "Eq..": it keeps a usable width (2 lines) and the
+                amount + % move under it when the row is too narrow. */}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8, rowGap: 2 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexGrow: 1, flexShrink: 1, flexBasis: 130 }}>
+                {b.unsorted ? <Dot /> : null}
+                <Txt v="small" numberOfLines={2} style={{ flexShrink: 1, fontFamily: fonts.bold }}>
+                  {b.name}
+                </Txt>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+                <Txt v="small" style={{ fontFamily: fonts.bold, fontVariant: ['tabular-nums'] }}>
+                  {amount}
+                </Txt>
+                <Txt v="small" c="textTertiary" style={{ minWidth: 44, textAlign: 'right', fontVariant: ['tabular-nums'] }}>
+                  {pct.toFixed(1)}%
+                </Txt>
+              </View>
             </View>
             <View style={{ height: 8, borderRadius: 4, backgroundColor: colors.surfaceAlt, overflow: 'hidden' }}>
               <View

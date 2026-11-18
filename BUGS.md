@@ -455,16 +455,26 @@
 - [ ] **B-105** 🟠 (QA A13-6, phiên E — A13 bản 08cdb7b) Tesco Shrewsbury chụp thẳng: OCR thấy nhãn TOTAL/CASH/CHANGE DUE nhưng sót cả cột số → app
   **tự điền £7.00** (giá 1 món, đúng là £55.30). Gốc: `readAmount` nhánh "không có nhãn" vẫn chạy khi đã thấy nhãn TOTAL; còn đúng 1 số → 0,65 ≥ 0,6.
   Sửa: đã thấy nhãn tổng mà không đọc được số → 0,4 (gợi ý, không điền). 3 lần đọc mới thành fixture (`a13-receipts.json`). ⏳ A13.
-- [x] **B-106** 🟠 (QA A13-7, phiên E — A13, 3/3 lần) Bấm Take photo → camera Samsung mở bằng **camera trước** (chế độ làm đẹp) dù expo-image-picker xin
-  camera sau; Phương phải tự đổi 3–14 s ("ấn 3–4 lần mới được"). Samsung bỏ qua CAMERA_FACING/LENS_FACING. **Phương (18/11): giữ camera hệ
-  thống như hiện tại** → giới hạn đã biết (máy quét tài liệu / camera trong app là hướng sau nếu người dùng phàn nàn).
+- [ ] **B-106** 🟠 (QA A13-7, phiên E — A13, 3/3 lần) Bấm Take photo → camera Samsung mở bằng **camera trước** (chế độ làm đẹp) dù expo-image-picker xin
+  camera sau; Phương phải tự đổi 3–14 s ("ấn 3–4 lần mới được"). Samsung bỏ qua CAMERA_FACING/LENS_FACING. Phương muốn "mở máy ảnh là
+  cam sau, chế độ thường". Đã làm thử camera trong app (expo-camera, Android, 147d3e2) — **Phương CHƯA duyệt cách này**, đang so ưu/nhược với
+  camera hệ thống (phiên E). ⏳ chờ Phương chọn; nếu giữ camera hệ thống thì gỡ màn /camera.
 - [ ] **B-107** 🟡 (QA A13, phiên E — dữ liệu thật) Cắm cáp vào máy tính + cầm máy → chuyến tự động "Start when charging" bắt đầu (đúng thiết kế: không phân
   biệt sạc xe / sạc máy tính); Phương bấm End trip → **"Trip saved · 0.0 km"** (bộ tự động tự bỏ chuyến < 500 m, nhưng kết thúc tay thì lưu). Sửa:
-  `trip/active.tsx` kết thúc tay chuyến startedBy=auto < 500 m → bỏ + "Trip discarded" (giống NFC B-50). Chuyến 0 km đang nằm trong dữ liệu thật
+  `trip/active.tsx` kết thúc tay chuyến startedBy=auto < 500 m → **hỏi "Only 0.0 km — keep this trip?" 2 nút Discard / Keep** (Phương chốt
+  18/11 qua phiên E: không tự bỏ; bản 2ac9e15 tự bỏ là sai ý — đã đổi). Chuyến 0 km đang nằm trong dữ liệu thật
   của Phương — phiên E hỏi Phương trước khi xoá.
 - [ ] **B-108** 🟠 (QA — phiên "A006 chụp nhập tự động" báo, Phương duyệt 18/11) Hoá đơn cũ hơn 400 ngày: OCR không điền ngày (độ tin cậy 0,3 +
   `receiptAt` chặn) → ô vẫn "Now". Tài xế dồn nhập trước hạn Self Assessment 31/1: hoá đơn tháng 4–5 năm thuế trước đã ~600–665 ngày → khoản ghi ngày
   hôm nay = **sai năm thuế**. Phương: bỏ giới hạn (năm "94" = 1994, "22/04/12" = 2012 là ngày thật). Sửa: bỏ luật 400 ngày ở `parseReceipt.readDate` và
   `fill.receiptAt`; vẫn chặn ngày tương lai; vẫn bỏ dòng hạn điểm / hết hạn / "TOTAL UP TO". Bộ 20 hoá đơn: mọi hoá đơn có in ngày đều điền đúng ngày
   (r11 OCR đọc rác → không điền). ⏳ kiểm trên máy.
+- [ ] **B-109** 🟡 (QA A13-8, phiên E) Sau Save, tab Entries giữ vị trí cuộn cũ → mục TODAY + khoản mới nằm trên mép màn hình. Sửa: số khoản tăng (xếp
+  mới nhất trước) → cuộn danh sách lên đầu. ⏳ A13.
+- [ ] **B-110** 🟡 (QA A37-8/A37-9, phiên A — 320dp + chữ 200%) Reports: "Profit" cắt "−$1,073,09…", "By tax form line" bẻ chữ từng âm tiết + cắt số,
+  "Expenses by category" cắt tên còn "Eq..". Sửa: số tiền xuống dòng dưới nhãn khi không đủ chỗ (bỏ adjustsFontSizeToFit), tên danh mục 2 dòng,
+  số + % xuống dòng. ⏳ phiên A.
+- [ ] **B-111** 🟡 (QA A13, phiên E) Backup & restore hiện "Backup folder, Google Drive — not reachable" nhưng không rõ lỗi thật hay nhãn sai; "Back up now"
+  chỉ mở bảng chia sẻ nên không kiểm được. Bước 1: file chẩn đoán (giữ lâu Version) có mục `backup` (provider, nightly, failCount, lastError, kết quả
+  liệt kê thư mục + câu lỗi thật) — không đổi cài đặt. ⏳ phiên E lấy file.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.

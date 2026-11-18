@@ -174,13 +174,22 @@ export function runNightlyNow(opts: { force?: boolean; now?: number } = {}): Pro
 
 /** Can the saved folder be opened right now? (S-12 "— not reachable"). */
 export async function folderReachable(folder: Folder | null): Promise<boolean> {
+  return (await folderProbe(folder)).ok;
+}
+
+/**
+ * QA-100 (A13): "Backup folder, Google Drive — not reachable" with no way to tell why. Same check as folderReachable,
+ * keeping the error text for "Share trip diagnostics" (no file names, only what the provider said).
+ */
+export async function folderProbe(folder: Folder | null): Promise<{ ok: boolean; error: string | null; ms: number }> {
+  const t0 = Date.now();
   try {
     const port = folderPort(folder);
-    if (!port) return false;
+    if (!port) return { ok: false, error: 'no folder', ms: 0 };
     await port.list();
-    return true;
-  } catch {
-    return false;
+    return { ok: true, error: null, ms: Date.now() - t0 };
+  } catch (e) {
+    return { ok: false, error: String((e as Error)?.message ?? e).slice(0, 300), ms: Date.now() - t0 };
   }
 }
 
