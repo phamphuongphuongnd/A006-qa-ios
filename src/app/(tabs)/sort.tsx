@@ -28,7 +28,7 @@ import { Button, Card, Txt, useKeyboardUp, useSnackbar } from '@/ui';
  */
 export default function SortScreen() {
   const { colors } = useTheme();
-  const { height: windowHeight } = useWindowDimensions();
+  const { height: windowHeight, fontScale } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { settings } = useSettings();
   const [chosen, setChosen] = useState<number | null>(null);
@@ -47,7 +47,7 @@ export default function SortScreen() {
 
   const header = (
     <View style={[styles.top, { paddingTop: insets.top + 14, paddingHorizontal: GUTTER }]}>
-      <Txt v="h1" accessibilityRole="header" style={{ flex: 1 }}>
+      <Txt v="h1" accessibilityRole="header" style={{ flexGrow: 1, flexShrink: 1, flexBasis: 180 }}>
         {t('sort.title')}
       </Txt>
       {top ? (
@@ -152,7 +152,11 @@ export default function SortScreen() {
     if (isLast) finish();
   };
 
-  const short = windowHeight < 520;
+  // QA-100 OLD-13: 360×640dp at text size 2.0 squeezed the card to 2px — the header, week chip and progress bar took the
+  // whole height. Big text needs as much room as a short window: count the height in "text lines" (dp ÷ font scale), and
+  // give the card more height when the text is large.
+  const short = windowHeight / Math.max(1, fontScale) < 520;
+  const cardHeight = Math.round(360 * Math.min(Math.max(fontScale, 1), 1.6));
   const mergeEntry = mergeFor ? s.entries.find((e) => e.id === mergeFor) ?? null : null;
 
   return (
@@ -163,10 +167,10 @@ export default function SortScreen() {
           gone and the card got squeezed to its button row — give it a real height and let the screen scroll. */}
       <Body
         short={short}
-        style={{ flexGrow: 1, paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: keyboardUp || short ? 12 : 96, gap: 12 }}>
+        style={{ flexGrow: 1, paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: keyboardUp || windowHeight < 520 ? 12 : 96, gap: 12 }}>
         <WeekProgress week={week} done={s.done} total={s.total} onPick={() => setWeekSheet(true)} />
         {autoLine}
-        <View style={short ? { height: 360, marginTop: 6 } : { flex: 1, marginTop: 6 }}>
+        <View style={short ? { height: cardHeight, marginTop: 6 } : { flex: 1, marginTop: 6 }}>
           {s.queue.length > 2 ? <Card style={[styles.ghost, { left: 24, right: 24, top: 0, opacity: 0.5 }]}>{null}</Card> : null}
           {s.queue.length > 1 ? <Card style={[styles.ghost, { left: 12, right: 12, top: 8, opacity: 0.8 }]}>{null}</Card> : null}
           {top.kind === 'entry' ? (
@@ -223,7 +227,8 @@ export default function SortScreen() {
 }
 
 const styles = StyleSheet.create({
-  top: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingBottom: 6 },
+  // OLD-13: "Sort your wee/k" broke mid-word next to List view at 200% — List view wraps under the title instead.
+  top: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 12, rowGap: 8, paddingBottom: 6 },
   sunCircle: { width: 112, height: 112, borderRadius: 56, alignItems: 'center', justifyContent: 'center' },
   ghost: { position: 'absolute', height: 60 },
   autoLine: { minHeight: 36, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

@@ -488,4 +488,8 @@
   phiên E không bấm Save (nháp trước đó đã Discard lúc 14:41). Kiểm: Discard chỉ xoá nháp, không tạo khoản; 2 đường tạo khoản ở Ghi nhanh là Save và phím
   ✓ bàn phím số (B-98); cả 2 lần OCR FreshHarvest trong chẩn đoán ra 20/11/**2019**; khoản không có trong backup 14:28. Phiên E đã xoá khoản (mất
   createdAt). **Chưa rõ nguyên nhân** — chờ trả lời phiên E (✓ bàn phím? chọn ngày trong lịch?) / tái hiện + chẩn đoán trước khi xoá.
+- [ ] **B-114** 🟠 (QA OLD-13, phiên B — 3f26b33, API 26, 360×640dp, chữ 2.0) Tab Sort: thẻ bị ép còn ~2px (header "Sort your wee/k" bẻ giữa chữ cạnh
+  List view + chip tuần + thanh tiến độ chiếm hết chiều cao) → không thấy / không dùng được thẻ; List view vẫn sort được. Chữ 1.3–1.7 ổn. Gốc: chế độ
+  cuộn (MOD-11) chỉ bật khi cửa sổ < 520dp, không tính cỡ chữ. Sửa: tính theo dp ÷ cỡ chữ, thẻ cao 360 × cỡ chữ (≤ 1.6), List view xuống dòng dưới
+  tiêu đề, đệm dưới giữ chỗ FAB khi FAB còn hiện. ⏳ phiên B.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
