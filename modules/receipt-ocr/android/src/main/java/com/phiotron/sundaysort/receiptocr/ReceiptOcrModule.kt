@@ -69,11 +69,10 @@ class ReceiptOcrModule : Module() {
       FileOutputStream(file).use { out.compress(Bitmap.CompressFormat.JPEG, quality.coerceIn(50, 100), it) }
       if (out !== decoded) out.recycle()
       decoded.recycle()
-      // The picker's / in-app camera's full-size copy in our own cache is no longer needed (a few MB each).
+      // The picker's full-size copy in our own cache is no longer needed (a few MB each).
       if (src.scheme == "file") {
         val f = File(src.path ?: "")
-        val ours = listOf("ImagePicker", "Camera").any { f.canonicalPath.startsWith(File(context.cacheDir, it).canonicalPath) }
-        if (ours) f.delete()
+        if (f.canonicalPath.startsWith(File(context.cacheDir, "ImagePicker").canonicalPath)) f.delete()
       }
       Uri.fromFile(file).toString()
     }

@@ -111,7 +111,6 @@ function Navigator({ onboarded }: { onboarded: boolean }) {
             <Stack.Protected guard={onboarded}>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="capture" options={{ presentation: 'fullScreenModal' }} />
-              <Stack.Screen name="camera" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
               <Stack.Screen name="entry/[id]" options={{ presentation: 'modal' }} />
               <Stack.Screen name="split/[id]" options={{ presentation: 'modal' }} />
               <Stack.Screen name="sort-list" />

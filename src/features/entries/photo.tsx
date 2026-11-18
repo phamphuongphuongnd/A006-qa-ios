@@ -3,7 +3,6 @@ import { Linking, Platform } from 'react-native';
 
 import { ReceiptOcr } from '../../../modules/receipt-ocr';
 
-import { openInAppCamera } from '@/features/entries/inAppCamera';
 import { notePhotoTiming } from '@/features/ocr/reader';
 import { withLockSuspended } from '@/features/settings/lockState';
 import { t } from '@/i18n';
@@ -40,13 +39,6 @@ export async function takePhoto(source: 'camera' | 'library'): Promise<PhotoResu
     if (source === 'camera') {
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (!perm.granted) return { ok: false, reason: 'denied' };
-      if (Platform.OS === 'android') {
-        // QA-100 B-106: the app's own camera screen — always the back camera, normal photo (Samsung's camera app opened
-        // the selfie camera in beauty mode whatever the intent asked for). It never leaves the app: no App lock dance.
-        const uri = await openInAppCamera();
-        if (!uri) return { ok: false, reason: 'cancelled' };
-        return { ok: true, uri: await prepared(uri, Date.now()) };
-      }
       // QA-100 A13-3: time in the camera / photo picker isn't "leaving the app" — App lock must not lock behind them
       // (the receipt photo and the typed entry were lost after unlocking), same as the share sheet and file pickers.
       const res = await withLockSuspended(() => ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: QUALITY }));

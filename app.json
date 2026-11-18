@@ -70,15 +70,6 @@
         }
       ],
       [
-        "expo-camera",
-        {
-          "cameraPermission": "Sunday Sort uses the camera to photograph receipts. Photos stay on your phone.",
-          "microphonePermission": false,
-          "recordAudioAndroid": false,
-          "barcodeScannerEnabled": false
-        }
-      ],
-      [
         "expo-local-authentication",
         {
           "faceIDPermission": "Unlock Sunday Sort with Face ID."

@@ -455,10 +455,10 @@
 - [ ] **B-105** 🟠 (QA A13-6, phiên E — A13 bản 08cdb7b) Tesco Shrewsbury chụp thẳng: OCR thấy nhãn TOTAL/CASH/CHANGE DUE nhưng sót cả cột số → app
   **tự điền £7.00** (giá 1 món, đúng là £55.30). Gốc: `readAmount` nhánh "không có nhãn" vẫn chạy khi đã thấy nhãn TOTAL; còn đúng 1 số → 0,65 ≥ 0,6.
   Sửa: đã thấy nhãn tổng mà không đọc được số → 0,4 (gợi ý, không điền). 3 lần đọc mới thành fixture (`a13-receipts.json`). ⏳ A13.
-- [ ] **B-106** 🟠 (QA A13-7, phiên E — A13, 3/3 lần) Bấm Take photo → camera Samsung mở bằng **camera trước** (chế độ làm đẹp) dù expo-image-picker xin
-  camera sau; Phương phải tự đổi 3–14 s ("ấn 3–4 lần mới được"). Samsung bỏ qua CAMERA_FACING/LENS_FACING. Phương muốn "mở máy ảnh là
-  cam sau, chế độ thường". Đã làm thử camera trong app (expo-camera, Android, 147d3e2) — **Phương CHƯA duyệt cách này**, đang so ưu/nhược với
-  camera hệ thống (phiên E). ⏳ chờ Phương chọn; nếu giữ camera hệ thống thì gỡ màn /camera.
+- [x] **B-106** 🟠 (QA A13-7, phiên E — A13, 3/3 lần) Bấm Take photo → camera Samsung mở bằng **camera trước** (chế độ làm đẹp) dù expo-image-picker xin
+  camera sau; Phương phải tự đổi 3–14 s. Samsung bỏ qua CAMERA_FACING/LENS_FACING nên app không ép được qua intent. Đã thử camera trong app
+  (147d3e2) rồi **gỡ** theo Phương (18/11): "tôi muốn dùng camera của điện thoại không code hay làm thêm camera riêng" → **giới hạn đã biết, Phương
+  chấp nhận**.
 - [ ] **B-107** 🟡 (QA A13, phiên E — dữ liệu thật) Cắm cáp vào máy tính + cầm máy → chuyến tự động "Start when charging" bắt đầu (đúng thiết kế: không phân
   biệt sạc xe / sạc máy tính); Phương bấm End trip → **"Trip saved · 0.0 km"** (bộ tự động tự bỏ chuyến < 500 m, nhưng kết thúc tay thì lưu). Sửa:
   `trip/active.tsx` kết thúc tay chuyến startedBy=auto < 500 m → **hỏi "Only 0.0 km — keep this trip?" 2 nút Discard / Keep** (Phương chốt
@@ -477,4 +477,7 @@
 - [ ] **B-111** 🟡 (QA A13, phiên E) Backup & restore hiện "Backup folder, Google Drive — not reachable" nhưng không rõ lỗi thật hay nhãn sai; "Back up now"
   chỉ mở bảng chia sẻ nên không kiểm được. Bước 1: file chẩn đoán (giữ lâu Version) có mục `backup` (provider, nightly, failCount, lastError, kết quả
   liệt kê thư mục + câu lỗi thật) — không đổi cài đặt. ⏳ phiên E lấy file.
+- [ ] **B-112** 🟡 (QA A13, phiên E, bản 2ac9e15) Hoá đơn FreshHarvest 2019 (B-108 giờ điền ngày cũ) hiện chip ngày "Wed 20 Nov, 11:09" — không có năm,
+  dễ tưởng là tuần này trong khi khoản vào năm thuế 2019. Sửa: `dateTimeLabel` ghi năm khi khác năm hiện tại ("Wed 20 Nov 2019, 11:09") — chip Ghi nhanh
+  + dòng Date & time ở Sửa khoản. ⏳ A13.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
