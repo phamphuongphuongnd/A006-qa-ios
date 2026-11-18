@@ -391,3 +391,7 @@
 
 > **QA-100 kiểm lại trên máy (18/11):** đã tick các mục phiên con xác nhận đạt — B-59 (B), B-61 (E), B-63/64/70/73/79/82/84/85/86/89 (F), B-65/75 (B),
 > B-67/68/76/80/87/91/92 (D), B-77 (A); B-69 (B: 0 sập trên máy lỗi EGL, nhánh "sập 1 lần" là giới hạn Phương đã chấp nhận); B-81 (thay bằng B-91 ✅). Còn mở: chờ kiểm lại hoặc chờ dữ liệu (B-88).
+- [ ] **B-95** 🔴 (đọc code, phiên hỏi đáp của Phương 18/11) **Chuyến tự động trên iOS chưa chạy**: `modules/trip-detect/ios/TripDetectModule.swift`
+  chỉ là khung — `getRecentEvents` trả `[]`, `startTransitions` chỉ phát `onSignal` khi app đang mở, và JS không nghe `onSignal` → `readSignals` luôn rỗng →
+  engine không bao giờ thấy 'driving'. Chưa có "significant location change" để đánh thức app nền (PLAN-v2 §Rủi ro). Màn Automatic trips trên iOS vẫn bật
+  được ("iPhone starts trips from motion") → người dùng tưởng đang chạy. Chưa thử được trên iPhone thật (không có Apple Developer + iPhone, TC-340).
