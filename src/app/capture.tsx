@@ -4,7 +4,7 @@ import { useLocalSearchParams, useNavigation, usePreventRemove } from 'expo-rout
 import { router } from '@/services/router';
 import { Briefcase, FileText, User, X } from '@/ui/icons';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { AppState, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StatusBar, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { AppState, Dimensions, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StatusBar, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { db } from '@/db/client';
@@ -207,6 +207,7 @@ export default function CaptureScreen() {
   const [squeezed, setSqueezed] = useState(false);
   // QA-100 OLD-9: measured, not guessed — where the keyboard starts and how much the calculator row still sits under it.
   const keyboardTop = useRef<number | null>(null);
+  const keyboardHeight = useRef(0);
   const [calcLift, setCalcLift] = useState(0);
   // QA-100 B-98: on Android < 11 the Save row stayed partly under the keyboard whatever offset KeyboardAvoidingView got —
   // measure it and lift it by what is still covered.
@@ -217,6 +218,7 @@ export default function CaptureScreen() {
   useEffect(() => {
     const show = Keyboard.addListener('keyboardDidShow', (e) => {
       keyboardTop.current = e.endCoordinates.screenY;
+      keyboardHeight.current = e.endCoordinates.height;
       setKeyboardUp(true);
     });
     const hide = Keyboard.addListener('keyboardDidHide', () => {
@@ -248,7 +250,19 @@ export default function CaptureScreen() {
   const keyboardTopInWindow = () => {
     const top = keyboardTop.current;
     if (top === null) return null;
-    return oldAndroid ? top - (StatusBar.currentHeight ?? 0) : top;
+    if (!oldAndroid) return top;
+    // QA-100 B-98 v3 (measured on API 26 + Android 7): there RN reports screenY = screen height − keyboard height, as if
+    // the keyboard reached the bottom edge — it sits on top of the nav bar (48dp). Only when that is what RN reported,
+    // take the nav bar off too; a correct screenY is left alone.
+    const screenH = Dimensions.get('screen').height;
+    const kb = keyboardHeight.current;
+    const status = StatusBar.currentHeight ?? 0;
+    let y = top;
+    if (kb > 0 && Math.abs(top + kb - screenH) < 2) {
+      const nav = insets.bottom > 0 ? insets.bottom : Math.max(0, screenH - Dimensions.get('window').height - status);
+      y = top - nav;
+    }
+    return y - status;
   };
   // QA-100 B-58/B-72: before Android 11 the window doesn't shrink for the keyboard the way RN measures, and the row
   // at the bottom stayed half under it (19dp ≈ the status bar). There the calculator row sits right under the amount.
@@ -495,6 +509,8 @@ export default function CaptureScreen() {
               const top = keyboardTopInWindow();
               if (top === null) return;
               const covered = Math.round(y + h - top);
+              // Numbers only (no user data): lets QA read the real geometry from logcat on a release build.
+              console.log(`[B98v3] screenY=${keyboardTop.current} kb=${keyboardHeight.current} top=${top} y=${y} h=${h} covered=${covered} insetsBottom=${insets.bottom}`);
               if (covered > 1) setSaveLift((l) => Math.min(l + covered, 200));
             });
           }}
