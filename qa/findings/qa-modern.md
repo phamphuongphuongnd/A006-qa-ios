@@ -29,6 +29,20 @@ Cài đặt gốc từng máy: `qa-runs/modern/_baseline/`.
 - Lưu ý vận hành: máy chủ Windows chạm trần commit (7 máy ảo) nên phải tạm tắt XL để chạy máy 16 KB; lần đầu `adb install` (stream) làm
   máy 16 KB rơi offline — cài bằng `adb push` + `pm install` thì ổn.
 
+## 2e. Chạy lại trên APK `sundaysort-qa-97ceb60-all.apk` (dev 97ceb60, B-56…B-94) — 2026-11-18 10:12–10:18
+
+Bằng chứng: `qa-runs/modern/regress-97ceb60/`. Fold mở, chia đôi ngang 852×436dp (`--windowingMode 6` + `am task resize`).
+
+| Lỗi | Kiểm | Kết quả |
+|---|---|---|
+| B-94 (MOD-11) | Sort ở cửa sổ 436dp | ✅ thẻ hiện đủ thân (Expense, $119.99, Phone bill, ngày); cả màn cuộn được tới MOST USED / Work-Personal / Edit-Split-Merge-Skip (`s436-0.png`, `s436-1-scrolled.png`) |
+| | Edit | ✅ bảng sửa mở ngay trong thẻ (Amount, Note, Done), cuộn được (`s436-2-edit.png`) |
+| | Split | ✅ "Split into parts" 60.00 / 59.99, chọn nhóm + W/P (`s436-3-split.png`) |
+| | Phân loại: chạm "Phone & data" | ✅ "Sorted as Phone & data", 2 → 3 of 6, sang thẻ kế (Evri $242.38) (`s436-4-sorted.png`) |
+| | Về toàn màn 852×883dp | ✅ thẻ Sort như cũ, nút "+" hiện lại, đếm giữ 3 of 6 (`full-sort.png`) |
+
+Ghi chú: đang mở bảng Edit trong thẻ mà bấm Back → về tab Home; quay lại Sort thì bảng Edit vẫn mở (giữ trạng thái) — chấp nhận được.
+
 ## 2d. Chạy lại trên APK `sundaysort-qa-bcc8c7a-all.apk` (dev bcc8c7a, "B-89 v2") — 2026-11-18 09:57–10:07
 
 Bằng chứng: `qa-runs/modern/regress-bcc8c7a/`. Kịch bản B-89 (script `b89.py` trong scratchpad): Ghi nhanh → Take photo → camera mở →
