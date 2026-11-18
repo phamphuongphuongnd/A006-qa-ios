@@ -29,8 +29,9 @@ name: 14_wipe_all
       - waitForAnimationToEnd:
           timeout: 5000
       - takeScreenshot: ${PID}_14c_after_wipe
-      - runFlow: common/home.yaml
-      - tapOn: "Entries.*"
-      - waitForAnimationToEnd:
-          timeout: 3000
-      - takeScreenshot: ${PID}_14d_entries_empty
+      # A wiped app starts again at the welcome screen.
+      - launchApp
+      - extendedWaitUntil:
+          visible: "Get started"
+          timeout: 30000
+      - takeScreenshot: ${PID}_14d_relaunch_after_wipe

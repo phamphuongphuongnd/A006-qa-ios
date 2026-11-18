@@ -13,12 +13,12 @@ name: 07_split_one
 - tapOn: "More"
 - tapOn: "Split"
 - extendedWaitUntil:
-    visible: "Left to assign"
+    visible: "Left to assign.*"
     timeout: 10000
 - takeScreenshot: ${PID}_07a_split
 - tapOn:
     text: "Split"
-    below: "Left to assign"
+    below: "Left to assign.*"
 - extendedWaitUntil:
     visible: "Split into .* entries"
     timeout: 8000

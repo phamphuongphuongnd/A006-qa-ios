@@ -2,13 +2,20 @@
 appId: com.phiotron.sundaysort
 name: 99_final_state
 ---
-- runFlow: common/home.yaml
+- launchApp
+- extendedWaitUntil:
+    visible: "Settings|Get started"
+    timeout: 30000
 - takeScreenshot: ${PID}_99a_home
-- tapOn: "Entries.*"
-- waitForAnimationToEnd:
-    timeout: 3000
-- takeScreenshot: ${PID}_99b_entries
-- tapOn: "Reports"
-- waitForAnimationToEnd:
-    timeout: 3000
-- takeScreenshot: ${PID}_99c_reports
+- runFlow:
+    when:
+      visible: "Settings"
+    commands:
+      - tapOn: "Entries.*"
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - takeScreenshot: ${PID}_99b_entries
+      - tapOn: "Reports"
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - takeScreenshot: ${PID}_99c_reports

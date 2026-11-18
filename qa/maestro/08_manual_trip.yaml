@@ -22,6 +22,8 @@ name: 08_manual_trip
 - inputText: "48210"
 - tapOn: 'e\.g\. 48,338'
 - inputText: "48238"
+# Decimal pad has no return key: close it so it does not cover the next field.
+- hideKeyboard
 - takeScreenshot: ${PID}_08b_odometer_typed
 - scrollUntilVisible:
     element:

@@ -15,7 +15,7 @@ name: 06_sort_one
       - tapOn: "Fuel"
 - runFlow:
     when:
-      notVisible: "Sorted as .*"
+      notVisible: "Sorted as .*|Week sorted.*"
     commands:
       - tapOn:
           text: "More…"
@@ -27,6 +27,6 @@ name: 06_sort_one
           text: "Fuel|Delivery income"
           index: 0
 - extendedWaitUntil:
-    visible: "Sorted as .*"
+    visible: "Sorted as .*|Week sorted.*"
     timeout: 8000
 - takeScreenshot: ${PID}_06c_sorted

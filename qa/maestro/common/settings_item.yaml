@@ -9,7 +9,7 @@ appId: com.phiotron.sundaysort
 - scrollUntilVisible:
     element:
       text: "${ITEM}.*"
-    timeout: 20000
+    timeout: 40000
 - tapOn:
     text: "${ITEM}.*"
     index: 0

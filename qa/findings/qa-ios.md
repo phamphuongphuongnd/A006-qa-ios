@@ -1,0 +1,75 @@
+# QA-100 · phiên C · iOS (GitHub Actions macOS, Simulator)
+
+> Chỉ ghi điều đã thấy thật trong artifact (ảnh / log / result.json). Chưa chạy được → ⏭ + lý do.
+> Mức: 🔴 chặn / mất dữ liệu / crash · 🟠 sai chức năng hoặc bố cục hỏng · 🟡 lỗi nhỏ, thẩm mỹ.
+
+## Cách chạy
+- Workflow `.github/workflows/qa-ios.yml` (nhánh `qa-ios`): build Release cho Simulator (không ký) → Maestro
+  `qa/maestro` cho từng persona có trường `ios` (27 persona: 14 iPhone nhỏ, 13 Pro Max) + 2 lượt iPad (chế độ tương thích,
+  app `supportsTablet: false`). Bằng chứng: artifact `qa-ios-<run>` → tải về `qa-runs/ios/<run>/` (gitignore).
+
+## Lượt chạy
+| lượt | run | commit | persona có kết quả | phút macOS | ghi chú |
+|---|---|---|---|---|---|
+| 1 | 44017774856 | 4e8a150 (= dev dc6d0a6 + QA) | 10/29 (đều kẹt onboarding) | 78 | Build Release simulator 7 phút OK, app chạy trên iPhone SE (3rd gen) + iPhone 16 Pro Max, 0 crash. **Lỗi kịch bản** (không phải app): tap đúng chữ "United Kingdom" nhưng nhãn trợ năng của thẻ là "United Kingdom. £ · Tax year…" → mọi bước sau ❌; 17 persona + 2 iPad ⏭ hết ngân sách 55 phút. |
+| 2 | 44220110475 | a92c60b (+ merge dev 189106e) | 0 | 5 | ❌ hạ tầng: `pod install` tải Hermes từ repo.reactnative.dev bị "Connection reset by peer" → thêm thử lại 3 lần |
+| 3 | 44221266865 | 2a9a1d3 (dev 189106e + QA) | 14/27 (+0/2 iPad) | 71 | iOS 26.5, iPhone SE (3rd gen) + iPhone 16 Pro Max. **0 crash.** 13 persona + 2 iPad ⏭ hết ngân sách 50 phút. Kết quả theo bước bên dưới. |
+
+Tổng phút macOS đã dùng: **154** (78 + 5 + 71) — vượt trần 150 khoảng 4 phút (lượt 3 dài hơn ước tính). Lượt sau cần Phương duyệt.
+
+### Kết quả lượt 3 theo bước (14 persona)
+| bước | ✅ | ❌ | ghi chú |
+|---|---|---|---|
+| 01 onboarding (UK/US, Continue free) | 13 | 1 | P016 (SE + AX-Large): thẻ "United States" nằm dưới mép màn → kịch bản không cuộn (đã sửa); xem QI-1 |
+| 02 khôi phục bản sao lưu persona | 0 | 0 | ⏭ không đặt được file vào Files: `simctl get_app_container … FileProvider.LocalStorage` không trả về trên iOS 26.5 (đã thêm cách tìm khác) |
+| 03 đi 5 tab + Settings/Backup/Categories/Export/Mileage rates | 12 | 2 | P016 kẹt onboarding; P037 (SE + AX-Large) cuộn 20 s chưa tới "Export" trong Settings (tăng 40 s) |
+| 04 nhập nhanh 1 khoản | 12 | 2 | P052: **QI-3** (chữ trong ghi chú bị đảo); P016 kẹt onboarding |
+| 05 chi tiết khoản + menu More | 12 | 2 | P052 hệ quả QI-3 |
+| 06 phân loại 1 khoản ở Sort | 0 | 14 | **lỗi kịch bản**: phân loại THÀNH CÔNG (ảnh "Week sorted ✓"), kịch bản chờ snack "Sorted as…" — đã sửa |
+| 07 tách khoản | 0 | 14 | **lỗi kịch bản**: màn Split hiện đúng (2 phần chia đều, "Left to assign $0.00"), nhãn gộp "Left to assign…" — đã sửa |
+| 08 chuyến nhập tay (odometer) | 1 | 13 | **lỗi kịch bản**: bàn phím số che ô Purpose, cú tap rơi vào phím "2" → chữ vào ô End reading; app báo "Enter a number" đúng — đã thêm hideKeyboard |
+| 09 xuất CSV → bảng chia sẻ → "Not sent" | 3 | 11 | US ✅ (bảng chia sẻ mở, hỏi "Did you send or save the files?"). UK: nút "Export 1 file" dưới các dòng MTD, kịch bản assert trước khi cuộn — đã sửa |
+| 10 ghi chú chữ lạ (é ☕ 日本語 العربية 👨‍👩‍👧 'q', x) | 13 | 1 | lưu và hiện trong danh sách đúng |
+| 11 bấm Save 2 lần nhanh | 13 | 1 | chỉ 1 khoản được tạo ✅ |
+| 12 đổi vùng US→UK (P052) | 1 | 0 | |
+| 13 tắt app ngay sau Save (P061, P062) | 2 | 0 | không nhân đôi, app mở lại bình thường |
+| 14 xoá hết dữ liệu (P046, P047) | 0 | 2 | **lỗi kịch bản**: xoá thành công, app về màn chào (ảnh 14c) — kịch bản chờ Home; đã sửa |
+
+## Lỗi tìm thấy
+
+### QI-1 🟡 Màn chào bị cắt chữ trên iPhone SE khi chữ cỡ lớn
+- Persona/thiết bị: P016 (iPhone SE 3rd gen, Dynamic Type `accessibility-large`, sáng, US), P031 (iPhone SE, `extra-extra-extra-large`, UK). Lượt 1.
+- Bước: mở app lần đầu (màn Welcome).
+- Kỳ vọng: đọc được trọn tiêu đề + đoạn mô tả, hoặc thấy rõ là cuộn được.
+- Thực tế: P016 — tiêu đề "Log it in 10 seconds." bị cắt ngang dòng "seconds." ngay trên chấm trang, phần "Sort it on Sunday." và đoạn mô tả không thấy; P031 — đoạn mô tả chỉ còn dòng đầu. Không có gợi ý cuộn. Pro Max cùng cỡ chữ (P002) hiển thị đủ.
+- Ảnh: `qa-runs/ios/44017774856/personas/P016/shots/P016_01a_welcome.jpg`, `…/P031/shots/P031_01a_welcome.jpg`.
+- Nguyên nhân nghi ngờ: `src/app/onboarding/index.tsx:17-29` — nội dung trong `ScrollView` (cuộn được) nhưng vùng nút cố định bên dưới chiếm chỗ, không có fade/chỉ báo cuộn; tiêu đề `fontSize: 34` không giới hạn `maxFontSizeMultiplier`. Chưa kiểm thao tác cuộn (lượt sau).
+
+### QI-2 🟡 Log lỗi JS mỗi lần mở app: expo-notifications
+- Thấy trong `app.log` (mức E, `com.facebook.react.log:javascript`) mọi persona lượt 1: `[expo-notifications] Error reading persisted server registration info: … Calling the 'getRegistration…` (dòng bị cắt).
+- Ảnh hưởng chưa rõ (app không crash, không có hộp lỗi). Nguyên nhân nghi ngờ: gọi API đăng ký push token khi app không dùng push từ server.
+
+### QI-1 (bổ sung lượt 3) 🟡 Màn chọn vùng: thẻ thứ hai khuất hẳn khi chữ cỡ trợ năng
+- P016 (iPhone SE, `accessibility-large`, máy en_US): màn "Where do you file your taxes?" chỉ thấy thẻ United Kingdom (cắt ở "Self…"), thẻ United States nằm hẳn dưới vùng nút, không có gợi ý cuộn. Nếu vùng mặc định theo máy là US, người dùng bấm Continue mà không thấy lựa chọn đang được chọn.
+- Ảnh: `qa-runs/ios/44221266865/personas/P016/shots/step-008-tapOnElement-${REGION_LABEL}.jpg`. Nghi ngờ: `src/app/onboarding/region.tsx` — tiêu đề không giới hạn cỡ chữ, nút Continue cố định đáy.
+
+### QI-3 🟡 Ghi chú bị đảo ký tự khi gõ nhanh (ô Note màn nhập nhanh)
+- Persona/thiết bị: P052 (iPhone SE 3rd gen, `extra-extra-extra-large`, US, sáng). Lượt 3. 1/14 persona (13 persona khác cùng bước đúng).
+- Bước: New expense → gõ số tiền → Note → gõ "QA-P052 Shell M62" (tốc độ gõ của XCTest) → Save.
+- Kỳ vọng: ghi chú "QA-P052 Shell M62". Thực tế: ô hiện và lưu "QA-052 Shell M62P" — ký tự "P" thứ 4 bị dời xuống cuối.
+- Ảnh: `qa-runs/ios/44221266865/personas/P052/shots/P052_04a_capture_filled.jpg` (ô Note), `P052_04c_in_entries.jpg` (danh sách "QA-052 Sh…").
+- Nguyên nhân nghi ngờ: ô Note là TextInput có kiểm soát (`value={note}` + `onChangeText` gọi `setNote` và `setFromReceipt`) ở `src/app/capture.tsx` (khối `noteOpen`, ~dòng 365-380) — trên iOS, khi JS bận (vừa mở ô, cỡ chữ lớn) giá trị cũ ghi đè lên chữ vừa gõ → ký tự bị đảo/mất. Có thể chỉ xảy ra ở tốc độ gõ máy; cần thử tay trên iPhone thật. Hướng sửa thường dùng: bỏ `setFromReceipt` khi không cần, hoặc dùng `defaultValue` + ref.
+
+### Ghi chú khác (không phải lỗi app)
+- Số tiền gõ "5" thành "$0.05": nhập kiểu dồn từ phải (iOS number-pad không có dấu chấm) — đúng thiết kế theo điều phối.
+- Log `container_create_or_lookup_app_group_path_by_app_group_identifier: client is not entitled`: bản build simulator **không ký** nên thiếu entitlement App Group → widget không nhận dữ liệu trong bản này; không phải lỗi app.
+- Ô "End reading" (decimal-pad) nhận được chữ khi gõ bằng XCTest; app báo "Enter a number" → kiểm tra hợp lệ hoạt động.
+
+## ⏭ Không kiểm được (lý do)
+- Khôi phục dữ liệu persona (2000–8000 khoản) trên iOS: lượt 3 không đặt được file vào Files (xem bước 02). Chưa chạy lại.
+- iPad (A16) 2 lượt + 13 persona (P001, P007, P011, P022, P026, P041, P067, P071, P076, P077, P086, P091, P092): hết ngân sách thời gian lượt 3.
+- Widget màn hình chính: chưa tới lượt (chạy cuối làn iPhone nhỏ); bản không ký cũng không chia sẻ dữ liệu App Group.
+- `app.log` làn Pro Max và một số persona chỉ có 1 dòng (`log show` trả rỗng khi 2 làn chạy song song) — bằng chứng log thiếu cho các persona đó.
+- Mạng (slow_3g / airplane / drops_midway…): simulator dùng chung mạng của runner, app không có server; Network Link Conditioner cần giao diện.
+- Múi giờ: đặt `launchctl setenv TZ` + `SIMCTL_CHILD_TZ` cho từng persona nhưng **chưa xác nhận** app nhận đúng (ghi `tz_applied: … (unverified)` trong result.json).
+- Hành vi app_lock (Face ID), revoke_permissions, low_storage, gps_trips, pro_trial (không bấm Pro/dùng thử theo luật), clock_tax_boundary, recurring_rules: chưa có kịch bản iOS ở vòng này.

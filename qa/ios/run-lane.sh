@@ -55,6 +55,13 @@ for PIDX in ${PERSONAS//,/ }; do
 
     FIXTURE_PLACED=no
     FP=$(xcrun simctl get_app_container "$UDID" com.apple.FileProvider.LocalStorage groups 2>/dev/null | awk '/group.com.apple.FileProvider.LocalStorage/ {print $2}')
+    if [ -z "$FP" ]; then
+      # iOS 26 runtimes: simctl get_app_container no longer resolves this group → find it by its container metadata.
+      META=$(grep -l "group.com.apple.FileProvider.LocalStorage" \
+        "$HOME/Library/Developer/CoreSimulator/Devices/$UDID/data/Containers/Shared/AppGroup"/*/.com.apple.mobile_container_manager.metadata.plist 2>/dev/null | head -1)
+      [ -n "$META" ] && FP=$(dirname "$META")
+      log "File Provider container by metadata: '${FP:-none}'"
+    fi
     if [ -n "$FP" ]; then
       mkdir -p "$FP/File Provider Storage"
       find "$FP/File Provider Storage" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null
@@ -94,6 +101,8 @@ for PIDX in ${PERSONAS//,/ }; do
       if grep -q "SundaySort\|$BUNDLE" "$c" 2>/dev/null; then cp "$c" "$OUT/crash/"; fi
     done
     collect_shots "$MARKER" "$OUT/shots" "$OUT" "$PID"
+    # Maestro copies the whole simulator log per flow (~90 MB each) — drop it, app.log keeps the app's lines.
+    find "$OUT" -name 'device-simulator.log' -delete 2>/dev/null
     python3 "$REPO/qa/ios/collect_result.py" "$OUT" "$CODE" "$DUR"
   )
 done

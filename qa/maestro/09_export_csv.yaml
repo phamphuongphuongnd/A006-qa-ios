@@ -11,9 +11,8 @@ name: 09_export_csv
       text: "Export"
     timeout: 15000
 - tapOn: "Export"
-- extendedWaitUntil:
-    visible: 'Export \d+ files?'
-    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 3000
 - takeScreenshot: ${PID}_09a_export_panel
 - scrollUntilVisible:
     element:

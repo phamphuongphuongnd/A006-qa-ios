@@ -11,6 +11,11 @@ name: 01_onboarding
 - extendedWaitUntil:
     visible: 'Where do you file your taxes\?'
     timeout: 15000
+# Big Dynamic Type on a small iPhone pushes the second card below the fold.
+- scrollUntilVisible:
+    element:
+      text: "${REGION_LABEL}.*"
+    timeout: 15000
 - tapOn: "${REGION_LABEL}.*"
 - takeScreenshot: ${PID}_01b_region
 - scrollUntilVisible:
