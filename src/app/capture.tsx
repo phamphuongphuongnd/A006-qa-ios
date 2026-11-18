@@ -492,7 +492,7 @@ export default function CaptureScreen() {
             value={amount.expr}
             selection={amount.selection}
             onChangeText={onAmountText}
-            keyboardType="number-pad"
+            keyboardType="decimal-pad"
             // OLD-12: the pad's ✓ key saves (it only closed the keyboard before).
             returnKeyType="done"
             onSubmitEditing={() => {

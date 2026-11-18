@@ -263,7 +263,7 @@ function Editor({ entry }: { entry: EntryRowT }) {
                 selection={amount.selection}
                 onChangeText={amount.onChangeText}
                 onBlur={() => setEditingAmount(false)}
-                keyboardType="number-pad"
+                keyboardType="decimal-pad"
                 caretHidden
                 contextMenuHidden
                 style={styles.hidden}

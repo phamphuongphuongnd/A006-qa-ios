@@ -22,7 +22,7 @@
 | TC-011 | F-01 | Thoát app (vuốt khỏi đa nhiệm) ở S-01c rồi mở lại | Bắt đầu lại onboarding, không vào Home dở dang | M | ✅ |
 | TC-012 | F-01 | Mở lại app sau khi xong onboarding | Vào thẳng Home | M | ✅ |
 | TC-013 | F-01 | Danh mục mặc định được tạo đúng 1 lần | 3 income + 9 expense, mở lại không nhân đôi | T repos | ✅ |
-| TC-014 | F-02 | Gõ "1250" | "£12.50" (kiểu máy tính tiền) | T logic, money | ✅ |
+| TC-014 | F-02 | Gõ "1250" | ~~"£12.50" (kiểu máy tính tiền)~~ → **"£1,250.00"; "1" = £1.00, "7,7" = £7.70** (Phương 18/11, B-122) | T calc | ✅ T (941 test) · ⏳ máy |
 | TC-015 | F-02 | Gõ quá 999,999.99; ký tự lạ; xoá lùi | Không nhận thêm số; bỏ ký tự lạ; xoá lùi đúng | T logic, money | ✅ |
 | TC-016 | F-02 | Số tiền = 0 | Nút "Save" mờ, bấm không lưu | M | ✅ |
 | TC-017 | F-02 | Mở từ "− Expense" trên Home | Sheet bật "Expense" (cam), "£0.00", bàn phím số tự bật | M | ✅ |

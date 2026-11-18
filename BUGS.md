@@ -547,4 +547,9 @@
 - [x] **B-121** 🟡 (QA SPE-10, phiên D — đọc code) File chẩn đoán ghi MAC + tên mọi thiết bị Bluetooth đã nối trong 7 ngày, không chỉ xe (BluetoothReceiver.kt:30).
   File chỉ rời máy khi người dùng tự chia sẻ. Sửa (JS, không cần native): file chẩn đoán chỉ ghi "van" cho thiết bị xe đã chọn, mọi thiết bị khác
   thành "other device", bỏ tên. ✅ A13 (b843037): 6 tín hiệu bt chỉ ghi "van", không MAC / tên (mẫu chưa có thiết bị khác ngoài xe).
+- [ ] **B-122** 🟡 (QA A13, phiên E — Phương gõ "1" ra £0.01) Ô số tiền nhập kiểu máy tính tiền ("1250" = £12.50) dễ hiểu lầm. **Phương chốt 18/11:**
+  "nhập thế nào viết bằng đó" — "1" = 1.00, "7,7" = 7.70, "1250" = 1250.00. Sửa: `calc.ts` (số không có dấu chấm = đơn vị nguyên; `exprOf`
+  viết "72.40"/"72"; tối đa 999,999.99), bàn phím `decimal-pad` ở Ghi nhanh / Sửa khoản / phí đỗ xe (iPhone mới có dấu chấm), nháp cũ đổi
+  sang dạng mới (`exprV`, `legacyToPlain`) để không thành ×100. Các ô số khác (tách khoản, khoản lặp lại, luật…) vốn đã nhập kiểu này.
+  941 test xanh. ⏳ A13 (Phương bấm) + iOS.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.

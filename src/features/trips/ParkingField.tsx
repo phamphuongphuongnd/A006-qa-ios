@@ -71,7 +71,7 @@ export function ParkingField({
           onEditingChange?.(false);
           onDone?.();
         }}
-        keyboardType="number-pad"
+        keyboardType="decimal-pad"
         caretHidden
         contextMenuHidden
         style={styles.hidden}
