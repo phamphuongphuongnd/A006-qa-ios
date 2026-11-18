@@ -16,9 +16,9 @@ name: 09_export_csv
 - takeScreenshot: ${PID}_09a_export_panel
 - scrollUntilVisible:
     element:
-      text: 'Export \d+ files?'
+      text: '.*Export \d+ files?.*'
     timeout: 10000
-- tapOn: 'Export \d+ files?'
+- tapOn: '.*Export \d+ files?.*'
 - waitForAnimationToEnd:
     timeout: 3000
 - runFlow:

@@ -22,8 +22,13 @@ name: 08_manual_trip
 - inputText: "48210"
 - tapOn: 'e\.g\. 48,338'
 - inputText: "48238"
-# Decimal pad has no return key: close it so it does not cover the next field.
-- hideKeyboard
+# Decimal pad has no return key: close it so it does not cover the next field. Maestro's hideKeyboard can fail on
+# a number pad (run 44258898134) → tap the sheet title instead, which leaves the field.
+- hideKeyboard:
+    optional: true
+- tapOn:
+    text: "Add trip"
+    optional: true
 - takeScreenshot: ${PID}_08b_odometer_typed
 - scrollUntilVisible:
     element:

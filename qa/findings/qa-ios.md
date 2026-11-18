@@ -18,7 +18,9 @@
 | 4b | 44238847151 | dev 322acd6 + QA (+ bước 15_auto_trips) | 0 | 0 | ❌ GitHub không khởi chạy job: "recent account payments have failed or your spending limit needs to be increased" (Billing & plans) |
 
 | 4c | 44241312809 (repo công khai `A006-qa-ios`) | e25dc9a (dev 322acd6 + QA) | 17/29 có chạy, **0 bước ✅ ngoài onboarding** | 0 (repo công khai, miễn phí; job 136 phút) | ❌ **hạ tầng**: runner chậm gấp 3–4 lần (build 18 phút thay vì 7, khởi động simulator 14 phút). 9 persona `IOSDriverTimeoutException` (XCTest driver không sẵn sàng sau 240 s); P001/P076 `DeviceUnreachableException`; 5 persona qua onboarding (2–6 phút/persona) rồi hết hạn 600 s. 10 persona + 2 iPad ⏭ hết ngân sách. 0 crash. → tăng driver 480 s, 25 phút/persona |
-| 4d | 44258898134 (công khai) | 94de76a | đang chạy | 0 | Lượt nhắm đích: P052 (B-101), P016 + P031 (B-100/B-66), P041 (B-90, tối), bước 15 (B-95) trên mọi persona; chạy tuần tự |
+| 4d | 44258898134 (công khai) | 94de76a (dev 322acd6) | 4/4 (P016 7 bước ✅, P041 6 bước ✅ trước khi hết 25 phút, P031 ❌ do hộp hệ thống còn treo, P052 ⏭ DeviceUnreachable) | 0 | Tuần tự. **0 crash.** Thấy **QI-4 🟠**. Bước 15: hộp "Open in “Sunday Sort”?" hiện chậm, app ở Home → B-95 ⏭; hộp đó treo sang P031 → sửa kịch bản (febb184) |
+| 4e | 44264516648 (công khai) | 67fd42b (dev f424978) | đang chạy | 0 | P091, P016, P052 (SE) ‖ P041 (Pro Max): viên "More below" (B-100 lần 2), B-101, B-90 |
+| 4f | 44274384593 (công khai) | febb184 | 0 | 0 | ❌ GitHub không khởi chạy job (lỗi thanh toán tài khoản) — cả repo công khai |
 
 Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ lượt 4c chạy trên repo công khai `phamphuongphuongnd/A006-qa-ios` (Phương chọn; không tính phút) — **xoá repo này sau QA-100 khi Phương đồng ý**.
 
@@ -71,9 +73,18 @@ Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ 
 - Ảnh: `qa-runs/ios/44221266865/personas/P052/shots/P052_04a_capture_filled.jpg` (ô Note), `P052_04c_in_entries.jpg` (danh sách "QA-052 Sh…").
 - Nguyên nhân nghi ngờ: ô Note là TextInput có kiểm soát (`value={note}` + `onChangeText` gọi `setNote` và `setFromReceipt`) ở `src/app/capture.tsx` (khối `noteOpen`, ~dòng 365-380) — trên iOS, khi JS bận (vừa mở ô, cỡ chữ lớn) giá trị cũ ghi đè lên chữ vừa gõ → ký tự bị đảo/mất. Có thể chỉ xảy ra ở tốc độ gõ máy; cần thử tay trên iPhone thật. Hướng sửa thường dùng: bỏ `setFromReceipt` khi không cần, hoặc dùng `defaultValue` + ref.
 
+### QI-4 🟠 Thẻ ở màn Sort bị cắt mất phần chọn danh mục khi chữ cỡ trợ năng
+- Persona/thiết bị: P041 (iPhone 16 Pro Max, `accessibility-large`, tối, UK), P016 (iPhone SE 3rd gen, `accessibility-large`, sáng, US). Lượt 4d.
+- Bước: có 1 khoản chưa phân loại → tab Sort.
+- Kỳ vọng: thẻ hiện số tiền, ghi chú, "MOST USED" (Fuel, Vehicle repairs…, More…), Work/Personal, rồi Edit/Split/Merge/Skip (như P002 cỡ chữ thường, lượt 3) — hoặc cuộn được tới chúng.
+- Thực tế: P041 — thẻ chỉ còn "Expense · £0.56 · QA-P041 Shell M62 · ngày" rồi nhảy thẳng xuống hàng Edit/Split/Merge/Skip: **không có nút danh mục, không có Work/Personal** → không phân loại được ngay trên thẻ (phải vào Edit/List view). P016 (SE) — thẻ chỉ còn tiêu đề "Expense" và hàng nút bị cắt thành "E… S… Mer… S…", mất luôn số tiền và ghi chú. Kịch bản 06 ❌ ở cả hai ("Fuel|Delivery income" không có).
+- Ảnh: `qa-runs/ios/44258898134/dl/qa-ios-2/personas/P041/shots/P041_06a_sort.jpg`, `…/P016/shots/P016_06a_sort.jpg`; đối chiếu `qa-runs/ios/44221266865/personas/P002/shots/P002_06a_sort.jpg`.
+- Nguyên nhân nghi ngờ: `src/app/(tabs)/sort.tsx:155` `const short = windowHeight < 520` chỉ xét chiều cao cửa sổ, không xét `fontScale`; dòng 169 thẻ nằm trong `View { flex: 1 }` cố định theo phần màn còn lại → nội dung cao hơn bị cắt (không cuộn). Hướng sửa: tính `short` theo `windowHeight / fontScale` (như `onboarding/index.tsx` dùng `roomy`) hoặc cho thẻ tự cao + màn cuộn khi chữ lớn; xem lại `src/features/entries/SortEntryCard.tsx` phần ẩn khối khi thiếu chỗ.
+
 ### Ghi chú khác (không phải lỗi app)
 - Số tiền gõ "5" thành "$0.05": nhập kiểu dồn từ phải (iOS number-pad không có dấu chấm) — đúng thiết kế theo điều phối.
 - Log `container_create_or_lookup_app_group_path_by_app_group_identifier: client is not entitled`: bản build simulator **không ký** nên thiếu entitlement App Group → widget không nhận dữ liệu trong bản này; không phải lỗi app.
+- Lượt 4d: 08 ❌ "Couldn't hide the keyboard" (Maestro không đóng được bàn phím số; số đọc odometer 48210→48238, Distance 28.0 hiện đúng) và 09 ❌ (nút "Export 1 file" có trong ảnh nhưng nhãn trợ năng có thêm biểu tượng) — **lỗi kịch bản**, đã sửa.
 - Ô "End reading" (decimal-pad) nhận được chữ khi gõ bằng XCTest; app báo "Enter a number" → kiểm tra hợp lệ hoạt động.
 
 ## ⏭ Không kiểm được (lý do)
