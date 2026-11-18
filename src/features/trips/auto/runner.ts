@@ -15,7 +15,7 @@ import { classifyTrip } from './classify';
 import { INITIAL_ENGINE_STATE, MIN_AUTO_TRIP_M, step, type EngineSignal, type EngineState } from './engine';
 import { configureNative, hasActivityPermission, isCharging, isSamsung, nativeHealth, readSignals, scheduleWake, setTransitions } from './native';
 import { notifyAutoPaused, notifyAutoSaved, notifyProEnded, notifySilent, notifyStartFailed, notifyStill } from './notifyAuto';
-import { finishAutoTrip, getKV, setKV, tripEnds } from './repo';
+import { finishAutoTrip, getKV, lastParkedPoint, seedStartPoint, setKV, tripEnds } from './repo';
 import { routeScopeFor } from './routes';
 import { syncTripActive } from './sync';
 
@@ -37,16 +37,27 @@ export const getAutoFlags = (): Flags => ({ ...DEFAULT_FLAGS, ...getKV<Partial<F
 const setFlags = (patch: Partial<Flags>) => setKV(db, KEY_FLAGS, { ...getAutoFlags(), ...patch });
 
 let running: Promise<void> | null = null;
+let again = false;
 
-/** One engine pass. Concurrent calls share the pass in progress. */
+/**
+ * One engine pass. Concurrent calls share the pass in progress, and one more pass follows it: a signal logged after
+ * the running pass read the log (iOS: CoreMotion history copied in while JS was already busy) is not left waiting
+ * for the next wake-up.
+ */
 export function processAutoSignals(now = Date.now()): Promise<void> {
-  if (!running) {
-    running = runOnce(now)
-      .catch((e: unknown) => console.warn('[auto-trip] run failed', e))
-      .finally(() => {
-        running = null;
-      });
+  if (running) {
+    again = true;
+    return running;
   }
+  running = runOnce(now)
+    .catch((e: unknown) => console.warn('[auto-trip] run failed', e))
+    .finally(() => {
+      running = null;
+      if (again) {
+        again = false;
+        processAutoSignals().catch(() => {});
+      }
+    });
   return running;
 }
 
@@ -66,7 +77,8 @@ async function runOnce(now: number) {
     active && (active.status === 'running' || active.status === 'paused')
       ? { id: active.id, status: active.status, startedBy: active.startedBy, startedAt: active.startedAt, lastPointAt: active.lastPointAt }
       : null;
-  const { state, actions } = step({ ...state0, seenUntil: since }, toEngineSignals(since + 1), {
+  const signals = toEngineSignals(since + 1);
+  const { state, actions } = step({ ...state0, seenUntil: since }, signals, {
     enabled,
     vanAddress: s.vanBtDevice?.address ?? null,
     startOnCharge: s.startOnCharge,
@@ -78,7 +90,8 @@ async function runOnce(now: number) {
     switch (a.type) {
       case 'start':
         try {
-          await startGpsTrip({ startedBy: 'auto', at: a.at, askNotifications: false });
+          const row = await startGpsTrip({ startedBy: 'auto', at: a.at, askNotifications: false });
+          if (row.startedBy === 'auto' && row.startedAt === a.at) seedDeparture(row.id, a.at, signals);
         } catch {
           await notifyStartFailed();
         }
@@ -98,6 +111,22 @@ async function runOnce(now: number) {
     }
   }
   setFlags({ lastRunAt: now });
+}
+
+/** A departure wake-up this long after the drive began still belongs to it (iOS logs it ~150 m in). */
+export const DEPARTURE_WINDOW_MS = 10 * 60_000;
+
+/**
+ * iOS (B-95): the phone left the region around the last parking spot and this drive started → count from that spot.
+ * Android never logs 'departure'.
+ */
+function seedDeparture(tripId: string, startAt: number, signals: EngineSignal[]) {
+  const departed = signals.some(
+    (s) => s.kind === 'wake' && s.reason === 'departure' && s.at >= startAt - DEPARTURE_WINDOW_MS,
+  );
+  if (!departed) return;
+  const parked = lastParkedPoint(db);
+  if (parked && parked.endedAt <= startAt) seedStartPoint(db, tripId, parked);
 }
 
 async function endAutoTrip(at: number, state: EngineState) {

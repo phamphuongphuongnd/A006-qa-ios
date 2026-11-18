@@ -7,7 +7,7 @@ export type Activity = 'driving' | 'walking' | 'cycling' | 'running' | 'still' |
 export type EngineSignal =
   | { kind: 'activity' | 'sample'; activity: Activity; transition?: 'enter' | 'exit'; confidence?: number; at: number; eventAt?: number }
   | { kind: 'bt_connected' | 'bt_disconnected'; address: string | null; at: number }
-  | { kind: 'power_connected' | 'power_disconnected' | 'wake' | 'boot'; at: number };
+  | { kind: 'power_connected' | 'power_disconnected' | 'wake' | 'boot'; at: number; reason?: string };
 
 /** Persisted between runs (features/trips/auto/store.ts). */
 export interface EngineState {

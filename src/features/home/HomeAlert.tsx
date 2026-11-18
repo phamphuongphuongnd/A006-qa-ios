@@ -67,9 +67,15 @@ export function HomeAlert({ now }: { now: number }) {
           tone="warn"
           icon={ShieldAlert}
           title={t('homeV2.alert.autoPausedTitle')}
-          body={trip.samsung ? t('homeV2.alert.autoPausedBodySamsung') : t('homeV2.alert.autoPausedBody')}
+          body={
+            Platform.OS === 'ios'
+              ? t('homeV2.alert.autoPausedBodyIos')
+              : trip.samsung
+                ? t('homeV2.alert.autoPausedBodySamsung')
+                : t('homeV2.alert.autoPausedBody')
+          }
           action={t('homeV2.alert.fixNow')}
-          onAction={() => router.push('/trip/battery')}
+          onAction={() => router.push(Platform.OS === 'ios' ? '/trip/setup' : '/trip/battery')}
           secondary={t('homeV2.alert.later')}
           onSecondary={() => hide('autoPaused')}
           onClose={() => hide('autoPaused')}

@@ -5,7 +5,7 @@
 import type { LocationObject } from 'expo-location';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
-import { AppRegistry, AppState } from 'react-native';
+import { AppRegistry, AppState, Platform } from 'react-native';
 
 import { db } from '@/db/client';
 import { ensureMigrated } from '@/db/migrate';
@@ -13,7 +13,7 @@ import { getSettings } from '@/db/settingsRepo';
 import { appendPoints, getActiveTrip, getTrip } from '@/db/tripsRepo';
 import { refreshWidgets } from '@/features/widgets/refresh';
 
-import { TRIP_DETECT_TASK } from '../../../modules/trip-detect';
+import { addSignalListener, TRIP_DETECT_TASK } from '../../../modules/trip-detect';
 import { processAutoSignals, syncAutoDetection } from './auto/runner';
 import { TRIP_TASK } from './constants';
 import { formatDistance } from './format';
@@ -81,6 +81,20 @@ const onActive = () => {
     .catch(() => {});
 };
 if (AppState.currentState === 'active') setTimeout(onActive, 2_000);
+else if (Platform.OS === 'ios') {
+  // B-95: iOS has no headless task. A significant location change relaunches the whole app in the background
+  // (JS bundle included) with ~10–30 s to run: process what TripWatcher logged straight away. Android starts JS
+  // headless through SundayTripDetect above instead.
+  onActive();
+}
+if (Platform.OS === 'ios') {
+  // Each wake-up (location change, wake timer, live CoreMotion update) logs signals and then sends onSignal.
+  addSignalListener(() => {
+    ensureMigrated()
+      .then(() => processAutoSignals())
+      .catch(() => {});
+  });
+}
 AppState.addEventListener('change', (s) => {
   if (s === 'active') onActive();
 });

@@ -46,9 +46,11 @@ export const notifyStill = () =>
 export const notifySilent = () => post(NOTIF_SILENT, t('autoTrip.notif.silentTitle'), t('autoTrip.notif.silentBody'), { url: '/trip/active' });
 
 export const notifyAutoPaused = (samsung: boolean) =>
-  post(NOTIF_AUTO_OFF, t('homeV2.alert.autoPausedTitle'), samsung ? t('homeV2.alert.autoPausedBodySamsung') : t('homeV2.alert.autoPausedBody'), {
-    url: '/trip/battery',
-  });
+  Platform.OS === 'ios'
+    ? post(NOTIF_AUTO_OFF, t('homeV2.alert.autoPausedTitle'), t('homeV2.alert.autoPausedBodyIos'), { url: '/trip/setup' })
+    : post(NOTIF_AUTO_OFF, t('homeV2.alert.autoPausedTitle'), samsung ? t('homeV2.alert.autoPausedBodySamsung') : t('homeV2.alert.autoPausedBody'), {
+        url: '/trip/battery',
+      });
 
 export const notifyProEnded = () => post(NOTIF_AUTO_OFF, t('autoTrip.notif.proEndedTitle'), t('autoTrip.notif.proEndedBody'), { url: '/trip/auto' });
 
