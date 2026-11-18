@@ -277,9 +277,13 @@ describe('parseReceipt — QA-100 B-102 layouts from the receipt set Phương co
 describe('parseReceipt — real A13 camera reads (QA-100 B-102)', () => {
   // ML Kit lines exactly as the phone returned them (322acd6 / 08cdb7b diagnostics). expectMinor null = OCR missed the
   // total's figure (it saw "TOTAL" but no number beside it): the amount must stay empty, not take an item price (A13-6).
-  const reads = require('./fixtures/a13-receipts.json') as { name: string; expectMinor: number | null; lines: RawLine[] }[];
+  const reads = require('./fixtures/a13-receipts.json') as { name: string; expectMinor: number | null; expectDate?: string; lines: RawLine[] }[];
   it.each(reads.map((r) => [r.name, r] as const))('%s', (_n, r) => {
     const out = parseReceipt({ text: '', lines: r.lines }, 'UK', NOW);
+    if (r.expectDate) {
+      const d = new Date(out.date ?? 0);
+      expect(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`).toBe(r.expectDate);
+    }
     if (r.expectMinor === null) {
       expect(out.confidence.amount).toBeLessThan(OCR_FILL_CONFIDENCE);
     } else {
