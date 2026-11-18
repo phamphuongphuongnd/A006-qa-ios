@@ -359,6 +359,8 @@
   `features/trips/auto/diagnostics.ts`); vòng nhật ký native 200 → 1.000 dòng. Bản release không ghi mẫu dày nên tín hiệu tối 17/11 có thể còn.
   Tín hiệu tối 17/11 **đã mất** (lượt persona sáng 18/11 `pm clear` trước khi có nút chẩn đoán). A13 đã về dữ liệu thật + bản 8cb9c8f, Automatic
   trips "Working". ⏳ lần chạy xe tới (ô tô) → giữ lâu Version → gửi file chẩn đoán → phân tích → sửa engine.
+  18/11 (8cb9c8f, A13): nút chẩn đoán chạy đúng (`qa-runs/a13/diagnostics/…02-44.json`: registered, đủ quyền, không tối ưu pin); **mở chuyến bằng
+  Bluetooth ✅** (nối thiết bị đã chọn → chuyến Auto đúng giây đó). Chưa có dữ liệu Activity Recognition khi lái.
 - [ ] **B-89** 🟡 (QA MOD-10, phiên F — hồi quy một phần B-84) Nháp được mở lại nhưng **ảnh chụp trong lúc app đã bị giết** vẫn mất: `getPendingResultAsync`
   gọi 1 lần lúc màn mở, trước khi kết quả camera tới Activity mới. Sửa (`capture.tsx`): gọi lại sau 1 s, 3 s và mỗi khi app trở lại active, bỏ ảnh trùng.
   Kèm: cửa sổ thấp < 520dp (chia đôi màn 436dp) → ẩn nút nổi "+" (`ui/Layout.tsx`) vì nó đè "Sort now" ở Reports.
