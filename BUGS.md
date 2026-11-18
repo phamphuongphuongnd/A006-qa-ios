@@ -420,3 +420,15 @@
 > + vùng 150 m quanh chỗ đỗ cuối, CoreMotion → vòng nhật ký bền `TripEventLog` → cùng `engine.step` với Android; kết thúc chuyến theo luật cũ; B-96: hẹn sẵn
 > thông báo cục bộ "Still on a trip?" / "Trip isn't recording". jest 915/915, tsc, lint, build EAS iOS simulator xanh. **CHƯA thử iPhone thật** — 8 điểm cần chạy
 > xe + giới hạn đã biết ở `qa/findings/ios-auto-trips.md`. Rủi ro lớn nhất: hẹn giờ không nổ khi máy ngủ → có thể gộp 2 chuyến. B-95/B-96 để mở tới khi thử thật.
+> Phiên C (iOS lượt 3, run 44221266865, iOS 26.5, iPhone SE 3 + 16 Pro Max, 14/27 persona, **0 crash**): onboarding, 5 tab, nhập nhanh, chữ lạ, Save đúp → 1
+> khoản, đổi vùng, tắt app sau Save, xuất CSV + "Did you send…" đều đạt. Phút macOS dùng 154 (vượt trần 150 ~4 phút). Còn 13 persona + iPad + khôi phục dữ
+> liệu chờ Phương duyệt thêm phút.
+- [ ] **B-100** 🟡 (QA iOS QI-1, phiên C) iPhone SE + chữ lớn: màn chọn vùng — thẻ United States khuất dưới nút Continue, không có gợi ý cuộn (màn đã cuộn được).
+  Sửa: `ui/HintScroll.tsx` — nháy thanh cuộn khi nội dung dài hơn màn (màn chào + màn chọn vùng). (Màn chào cắt chữ = B-66.)
+- [ ] **B-101** 🟡 (QA iOS QI-3, phiên C) Ô Note ở Ghi nhanh đảo ký tự khi gõ nhanh (P052: "QA-P052 Shell M62" → "QA-052 Shell M62P"; 1/14). Sửa: ô không còn
+  điều khiển `value` (dựng lại khi app tự điền: chip, đọc hoá đơn); nháp ghi file trễ 400 ms thay vì mỗi phím.
+- [ ] **B-102** 🟠 (QA A13-4, phiên E — hoá đơn Tesco thật chụp bằng A13) 2/3 hoá đơn không ra số tiền (#2 giấy cong; #3 in phẳng "TOTAL: £33.50" có
+  Subtotal/Savings phía trên và Cash/Change phía dưới) dù nơi bán + ngày đúng. Chưa rõ nguyên nhân (nghi `parseReceipt.ts` `rowAmounts`: "TOTAL:" và số là 2
+  khối lệch dòng do ảnh nghiêng). Bước 1: 3 lần đọc gần nhất (dòng OCR thô + kết quả) lưu trong cache và có trong "Share trip diagnostics" (`receipts`). ⏳ phiên
+  E lấy file → sửa parser + test bằng dòng thật.
+  Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.

@@ -1,10 +1,12 @@
+import { File, Paths } from 'expo-file-system';
+
 import { ReceiptOcr } from '../../../modules/receipt-ocr';
 
 import type { AppDb } from '@/db/types';
 import type { Region } from '@/domain/types';
 
 import { mergeReadings } from './fill';
-import { EMPTY_READING, parseReceipt, type ParsedReceipt } from './parseReceipt';
+import { EMPTY_READING, parseReceipt, type ParsedReceipt, type RawOcr } from './parseReceipt';
 import { fillEntryOcr, setReceiptOcrText } from './repo';
 
 /** Past this the chip is gone anyway; a reading that never comes back must not hold anything. */
@@ -25,6 +27,33 @@ export const ocrDev = { forceOn: false };
 export const ocrAvailable = () => !!ReceiptOcr && ReceiptOcr.isAvailable();
 
 /**
+ * QA-100 A13-4: real receipts read on a phone gave no amount and a release build keeps no trace of why. The last 3
+ * readings (raw lines with their boxes + what the parser made of them) stay in the cache folder, on the phone only, and
+ * go into "Share trip diagnostics" — which the driver sends only if they choose to.
+ */
+const lastFile = () => new File(Paths.cache, 'ocr-last-readings.json');
+function rememberLastReading(raw: RawOcr, reading: ParsedReceipt, at: number) {
+  try {
+    const f = lastFile();
+    const prev: unknown[] = f.exists ? (JSON.parse(f.textSync()) as unknown[]) : [];
+    const next = [{ at: new Date(at).toISOString(), lines: raw.lines, parsed: reading }, ...prev].slice(0, 3);
+    f.create({ overwrite: true });
+    f.write(JSON.stringify(next));
+  } catch {
+    // diagnostics only
+  }
+}
+
+export function lastReceiptReadings(): unknown[] {
+  try {
+    const f = lastFile();
+    return f.exists ? (JSON.parse(f.textSync()) as unknown[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Reads one photo on the device. Never throws: no module (Jest, Expo Go), model still downloading (Play services
  * fetches it on first use in debug builds), unreadable image or timeout → null, and the screen stays silent.
  */
@@ -36,7 +65,9 @@ export async function readReceipt(uri: string, region: Region, now = Date.now())
       new Promise<null>((resolve) => setTimeout(() => resolve(null), OCR_TIMEOUT_MS)),
     ]);
     if (!raw) return null;
-    return { reading: parseReceipt(raw, region, now), text: raw.text ?? '' };
+    const reading = parseReceipt(raw, region, now);
+    rememberLastReading(raw, reading, now);
+    return { reading, text: raw.text ?? '' };
   } catch (e) {
     if (__DEV__) console.log('[ocr] recognize failed', String(e));
     return null;
