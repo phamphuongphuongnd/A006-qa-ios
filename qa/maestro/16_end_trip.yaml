@@ -1,0 +1,52 @@
+# B-117: Start a trip by hand → End trip → the end sheet must show, Save must work, and the app must stay usable
+# (iOS bug: "Attempt to present … while a presentation is in progress" froze the screen).
+# Draft written 2026-11-18, not run yet on iOS: permission screens are handled with optional taps.
+appId: com.phiotron.sundaysort
+name: 16_end_trip
+---
+- runFlow: common/home.yaml
+- setLocation:
+    latitude: 51.5007
+    longitude: -0.1246
+- scrollUntilVisible:
+    element:
+      text: "Start trip"
+    timeout: 15000
+- tapOn: "Start trip"
+# App's own location screens, then the iOS alerts.
+- tapOn:
+    text: "Continue|Allow.*location.*"
+    optional: true
+- tapOn:
+    text: "Allow While Using App|Allow Once"
+    optional: true
+- tapOn:
+    text: "Allow precise location"
+    optional: true
+- tapOn:
+    text: "Allow While Using App|Allow Once"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "End trip"
+    timeout: 30000
+- takeScreenshot: ${PID}_16a_trip_running
+- tapOn: "End trip"
+- extendedWaitUntil:
+    visible: "Trip saved.*|Save"
+    timeout: 15000
+- takeScreenshot: ${PID}_16b_end_sheet
+- tapOn:
+    text: "Save"
+    index: 0
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: ${PID}_16c_after_save
+# Not frozen: the tab bar still answers.
+- tapOn: "Miles"
+- extendedWaitUntil:
+    visible: "Add manually|Start trip"
+    timeout: 15000
+- takeScreenshot: ${PID}_16d_miles_after

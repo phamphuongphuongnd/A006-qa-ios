@@ -20,4 +20,5 @@ executionOrder:
     - 13_kill_mid_save
     - 14_wipe_all
     - 15_auto_trips
+    - 16_end_trip
     - 99_final_state
