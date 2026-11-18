@@ -42,6 +42,8 @@ describe('Pro status (product.md §6)', () => {
     expect(proStatus(r, NOW)).toEqual({ kind: 'trial', endsAt: w.trialEndsAt, daysLeft: 7 });
     expect(proStatus(r, NOW + 2 * DAY_MS + 1)).toMatchObject({ kind: 'trial', daysLeft: 5 });
     expect(proStatus(r, w.trialEndsAt - 1)).toMatchObject({ kind: 'trial', daysLeft: 1 });
+    // QA-100 F-1: a screen's minute tick older than the trial start must not show "8 days left".
+    expect(proStatus(r, NOW - 59_000)).toMatchObject({ kind: 'trial', daysLeft: 7 });
     expect(proStatus(r, w.trialEndsAt)).toEqual({ kind: 'expired', endedAt: w.trialEndsAt, trialAvailable: false });
     expect(trialWindow(r, NOW + 30 * DAY_MS)).toBeNull();
     expect(trialEndingNoticeAt(r)).toBe(w.trialEndsAt - DAY_MS);

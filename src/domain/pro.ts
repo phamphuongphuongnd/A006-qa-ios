@@ -56,7 +56,11 @@ export function proStatus(row: Row | null | undefined, now: number): ProStatus {
     // Clock set back before the trial started: treat the trial as over rather than restarting the count.
     const tampered = now < row.trialStartedAt - DAY_MS;
     if (!tampered && now < row.trialEndsAt) {
-      return { kind: 'trial', endsAt: row.trialEndsAt, daysLeft: Math.max(1, Math.ceil((row.trialEndsAt - now) / DAY_MS)) };
+      // QA-100 F-1 (Firebase, 3/3 devices): screens pass a `now` ticked up to a minute ago, older than a trial started
+      // just now → "8 days left" on a 7-day trial and a negative progress bar. Count from the trial start at the earliest.
+      const from = Math.max(now, row.trialStartedAt);
+      const daysLeft = Math.min(TRIAL_DAYS, Math.max(1, Math.ceil((row.trialEndsAt - from) / DAY_MS)));
+      return { kind: 'trial', endsAt: row.trialEndsAt, daysLeft };
     }
   }
 

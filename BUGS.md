@@ -442,4 +442,7 @@
   lại giải nén ảnh gốc lần nữa. Sửa: Android dùng `quality: 1` (picker chỉ chép file) + `ReceiptOcr.shrink` native (giải nén lấy mẫu, xoay theo EXIF,
   cạnh dài ≤ 2400 px, JPEG 85) → đọc và lưu bản nhỏ, xoá bản to trong cache. iOS không đổi. Chẩn đoán ghi thời gian từng bước (`timing`: pickedAt,
   shrinkMs, ocrStartedAt, ocrMs). ⏳ phiên E đo lại trên A13.
+- [ ] **B-104** 🟡 (QA F-1, phiên G — Firebase Test Lab máy thật Galaxy S26, Pixel 11 + máy ảo A17, 3/3) Bấm "Try Pro free for 7 days" → "Trial · 8 days
+  left", thanh tiến độ âm. Gốc: `usePro()` dùng `now` của `useNow(60_000)` (cũ tới 1 phút) < `trialStartedAt` → `ceil` ra 8 (`domain/pro.ts`). Sửa: đếm từ
+  `max(now, trialStartedAt)`, kẹp `daysLeft` 1..7 + test. ⏳ phiên G kiểm lại lượt máy thật sau.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
