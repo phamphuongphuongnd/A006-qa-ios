@@ -116,6 +116,15 @@ B-70 ✅ (P056, P057) · B-61 ✅ · B-60 ✅ (`P003/10_tab_Reports.png`: nút x
 | Nút **Save** khi bàn phím mở | ⚠️ chỉ lộ 65/112 px (đỉnh y=709, bàn phím y=774) — chữ "Save" bị cắt, bấm phần lộ vẫn lưu | ❌ chỉ lộ 43 px, không thấy chữ "Save" | ❌ bị che hoàn toàn (bàn phím Android 7 cao hơn, có dải gợi ý; mép trên y=657) |
 Ghi chú: ở 16 MB trống lưu vẫn được (lần đầu "Saved · £9.99"); phải chừa ~2 MB mới vào nhánh lỗi.
 
+### Kiểm lại B-97 (OLD-11) trên APK c5e0d3e, Android 7, 2026-11-18 · `qa-runs/android-old/verify-c5e0d3e/`
+- DocumentsUI đặt về mặc định (`pm clear com.android.documentsui`, "Show internal storage" tắt — như máy mới). Màn Backup & restore có dòng
+  **"If the list is empty, tap ⋮ → Show internal storage."** dưới nút Choose backup folder ✅ (`b97_backup_screen.png`).
+- Làm theo hướng dẫn: bộ chọn mở "Recent · No items" → ⋮ → Show internal storage → bộ nhớ máy → SELECT → app hiện **"Backup folder · This phone"**,
+  "Nightly backup on · … · This phone" (không còn "primary:") ✅ (`b97_3_after_select.png`); file `SundaySort-backup-2026-11-18-0406-ecbcz7.sundaysort`
+  được ghi ngay.
+- B-93 kiểm nhanh lại trên bản này (Android 7): "12.50+4.20 = £16.70", đủ 4 ký hiệu, ✓ → Save → "Saved · £16.70 expense" ✅ (`b93_android7_sum.png`).
+  Từ 97ceb60 → c5e0d3e chỉ đổi màn sao lưu (`git diff --stat`), nên kết quả B-93/OLD-10 trên API 26 ở 97ceb60 vẫn áp dụng. OLD-12 vẫn còn (Save sau bàn phím).
+
 ### OLD-12 🟡 Android < 11: nút Save ở Ghi nhanh nằm (một phần / hoàn toàn) sau bàn phím khi đang gõ
 - **Máy/APK:** API 26 360dp và Android 7, APK 97ceb60. Bảng trên. Nút ✓ của bàn phím chỉ ẩn bàn phím (không lưu); sau đó Save hiện đủ.
 - **Nguyên nhân gốc nghi ngờ:** vẫn lệch đúng ~24dp: Save đỉnh y=709 + cao 112 px = 821 so với bàn phím y=774 → 47 px = 23,5dp ≈ chiều cao thanh
