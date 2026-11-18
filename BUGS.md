@@ -512,13 +512,15 @@
   cục cuộn từ 1.3) — hồi quy cho cỡ "Large". Lần 3: bố cục cuộn chỉ khi chữ ≥ 1.8 (1.3–1.7 về bố cục thường đã chạy đúng ở 3f26b33).
   iOS QI-4 (phiên C, lượt 4d trên 322acd6 — chưa có sửa nào): AX-Large → thẻ Sort cắt mất danh mục / Work-Personal (P041 Pro Max), còn "Expense" +
   nút cắt (P016 SE) — cùng gốc; lần 3 áp cho iOS (fontScale AX > 1.8 → màn cuộn). ⏳ phiên B (Android) + iOS bản mới.
-- [ ] **B-115** 🔴 (QA OLD-14, phiên B — 3f26b33, API 26) Android 7/8/9 (API 24–28): Ghi nhanh → Photo → "Take photo" **không bao giờ mở camera** (cấp quyền
+- [x] **B-115** 🔴 (QA OLD-14, phiên B — 3f26b33, API 26) Android 7/8/9 (API 24–28): Ghi nhanh → Photo → "Take photo" **không bao giờ mở camera** (cấp quyền
   CAMERA rồi vẫn không); "Choose from library" vẫn được. Gốc: trên SDK < Q expo-image-picker đòi cả WRITE_EXTERNAL_STORAGE lẫn CAMERA
   (`ensureCameraPermissionsAreGranted`), mà `plugins/withReleasePermissions.js` xoá WRITE_EXTERNAL_STORAGE khỏi manifest release (B-19) → không xin
-  được → 'failed'. Android 10+ (A13) không bị. Sửa: giữ WRITE_EXTERNAL_STORAGE với `maxSdkVersion="28"` trong manifest release. ⏳ phiên B.
-- [ ] **B-116** 🟡 (QA OLD-15, phiên B — 360dp chữ 1.0) Chip ngày có năm "Tue 18 Nov 2025, 03:33" xuống 2 dòng, đẩy chữ "Expense" tràn khỏi nút. Sửa: khác
+  được → 'failed'. Android 10+ (A13) không bị. Sửa: giữ WRITE_EXTERNAL_STORAGE với `maxSdkVersion="28"` trong manifest release. ✅ phiên B
+  (07f4aac): API 26 + Android 7 — hỏi quyền camera + ảnh/tệp → camera mở → ảnh vào khoản, đúng chiều.
+- [x] **B-116** 🟡 (QA OLD-15, phiên B — 360dp chữ 1.0) Chip ngày có năm "Tue 18 Nov 2025, 03:33" xuống 2 dòng, đẩy chữ "Expense" tràn khỏi nút. Sửa: khác
   năm thì bỏ thứ ("18 Nov 2025, 03:33"). Kèm OLD-14 phụ: camera không mở báo nhầm "Couldn't save the photo. Your entry was saved without it." → câu
-  riêng "Couldn't open the camera. Try again, or hold Photo to choose from your library." ⏳ phiên B.
+  riêng "Couldn't open the camera. Try again, or hold Photo to choose from your library." ✅ phiên B (07f4aac, 360dp): chip 1 dòng "18 Nov 2025, 04:18";
+  nút Expense|Income hơi chật nhưng không cắt.
 - [ ] **B-117** 🔴 (QA iOS — phiên H thử Appetize, iPhone 14 Pro iOS 17.2, bản 55db0eb; 3/3 lần) End trip → màn chỉ còn "0.0", EndTripSheet không hiện,
   nút thu nhỏ không bấm được → phải tắt app. Log: "Attempt to present RCTFabricModalHostViewController … while a presentation is in progress". Gốc:
   `trip/active.tsx` — gpsDialog / shortDialog / endSheet ở vị trí con khác nhau trong 2 nhánh (còn chuyến / hết chuyến) → đổi nhánh thì React gỡ rồi
