@@ -33,7 +33,7 @@ import { useAmountExpr } from '@/features/ocr/useAmountExpr';
 import { useCapturePhotos } from '@/features/ocr/useCapturePhotos';
 import { deleteReceiptFiles, saveReceipt } from '@/files/receipts';
 import { useAppLocked } from '@/services/data';
-import { t } from '@/i18n';
+import { t, tn } from '@/i18n';
 import { usePhotoAllowance, usePro } from '@/state/pro';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
@@ -536,11 +536,11 @@ export default function CaptureScreen() {
         visible={confirmDiscard}
         onClose={() => setConfirmDiscard(false)}
         title={t('capture.discardTitle')}
-        body={t('capture.discardBody', {
+        body={`${t('capture.discardBody', {
           amount: formatMoney(amount.minor, currency),
           type: type === 'income' ? t('capture.typeIncome') : t('capture.typeExpense'),
           note: note.trim() ? ` · ${note.trim()}` : '',
-        })}
+        })}${photos.photos.length ? ` ${tn('capture.discardPhotos', photos.photos.length)}` : ''}`}
         actions={[
           {
             label: t('common.keepEditing'),

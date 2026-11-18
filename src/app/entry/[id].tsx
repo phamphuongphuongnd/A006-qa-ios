@@ -371,7 +371,7 @@ function Editor({ entry }: { entry: EntryRowT }) {
                   onLongPress={() => addPhoto('library')}
                   style={[styles.addPhoto, { borderColor: colors.lineStrong }]}>
                   <ImagePlus size={22} color={colors.textSecondary} />
-                  <Txt style={{ fontSize: 12, fontFamily: fonts.bold }} c="textSecondary">
+                  <Txt maxFontSizeMultiplier={1.3} numberOfLines={2} center style={{ fontSize: 12, fontFamily: fonts.bold }} c="textSecondary">
                     {t('common.addPhoto')}
                   </Txt>
                 </Pressable>
@@ -501,7 +501,8 @@ function Editor({ entry }: { entry: EntryRowT }) {
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <View style={styles.row}>
-      <Txt v="caption" c="textSecondary" style={{ width: 96, fontFamily: fonts.bold }}>
+      {/* QA-100 MOD-6: a fixed 96dp broke "Category" mid-word at 200% text — at least 96, as wide as the word needs. */}
+      <Txt v="caption" c="textSecondary" maxFontSizeMultiplier={1.6} style={{ minWidth: 96, flexShrink: 0, fontFamily: fonts.bold }}>
         {label}
       </Txt>
       {children}
@@ -533,8 +534,9 @@ const styles = StyleSheet.create({
   rowPress: { flex: 1, flexDirection: 'row', alignItems: 'center', minHeight: 44, gap: 8 },
   catChip: { minHeight: 36, borderRadius: 18, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 6, maxWidth: '100%' },
   addPhoto: {
-    width: 72,
-    height: 72,
+    minWidth: 72,
+    minHeight: 72,
+    paddingHorizontal: 4,
     borderRadius: 12,
     borderWidth: 1.5,
     borderStyle: 'dashed',

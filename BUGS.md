@@ -328,3 +328,6 @@
 - [ ] **B-81** 🟡 (QA SPE-5, phiên D) "Zip bomb" (file 207 KB giải nén 200 MB) → RAM > 1 GB khi khôi phục (không mất dữ liệu nhưng máy RAM thấp có
   thể tắt app). Sửa (`pack.ts`): bỏ qua/báo "damaged" nếu `backup.json` > 64 MB hoặc 1 ảnh > 25 MB trước khi giải nén. Còn lại (giới hạn đã biết):
   bản sao lưu thật rất nhiều ảnh vẫn nạp cả vào RAM khi khôi phục — chưa dựng được file thật cỡ đó để đo.
+- [ ] **B-82** 🟡 (QA MOD-6 + MOD-5, phiên F) Chi tiết khoản ở chữ 1.3–2.0: nhãn "Category" gãy giữa từ (cột nhãn cố định 96dp), "Add photo" tràn khung
+  72×72. Hộp "Discard this entry?" không nhắc ảnh đã chụp sẽ mất. Sửa: nhãn `minWidth 96` + không co (tối đa ×1.6); ô Add photo `minWidth/minHeight`
+  + chữ tối đa ×1.3, 2 dòng; hộp Discard thêm "The photo(s) will be deleted too." khi có ảnh.

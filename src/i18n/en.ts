@@ -92,6 +92,8 @@ export const en = {
     tapForPersonal: 'Tap for Personal',
     tapForWork: 'Tap for Work',
     discardBody: "{amount} {type}{note} won't be saved.",
+    discardPhotos: 'The {count} photos will be deleted too.',
+    discardPhotosOne: 'The photo will be deleted too.',
     photoHint: 'Hold for library',
     removePhoto: 'Remove photo',
     editNote: 'Edit note',
