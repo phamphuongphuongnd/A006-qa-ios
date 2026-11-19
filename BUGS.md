@@ -407,7 +407,9 @@
   **v2 (Phương nhờ qua phiên D, 19/11 — theo luật B-123):** chuyến tay giờ tự kết thúc sau Merge stops không di chuyển thật, nhưng chỉ khi JS chạy. Thông báo
   hẹn trước (iOS tự hiện cả khi app bị tắt) đổi từ "Still on a trip? / 45 phút" thành **"Trip ended at {giờ đỗ} · {km}" + Continue trip**, cùng định danh
   với thông báo engine (`notifyTripEnded`) → không bao giờ 2 cái; hẹn lại theo `lastMoveAt` + Merge stops. Bấm Continue khi app không chạy (chuyến còn
-  'running' trong DB) → `resumeFrom` (dừng tính từ lúc bấm) + bật lại GPS. + test. 959 test xanh. ⏳ iOS simulator (phiên C) + iPhone thật.
+  'running' trong DB) → `resumeFrom` (dừng tính từ lúc bấm) + bật lại GPS. + test. 959 test xanh. ✅ iOS simulator (phiên C, run
+  44462217035, P022 SE, Merge 10): tắt app → đúng 1 "Trip ended at 21:29 · 0.0 mi" ~phút 11; về Home → đúng 1 thông báo, mở app "No trip running".
+  ⏭ bấm Continue trên màn khoá (Maestro không giữ lâu được), máy ngủ thật → iPhone thật.
 - [x] **B-97** 🟡 (QA OLD-11, phiên B — Android 7.0) "Choose backup folder": bộ chọn thư mục Android 7 chỉ hiện "Recent · No items" tới khi bật ⋮ → Show internal
   storage; nhãn thư mục gốc hiện "This phone / primary:". Bộ chọn của expo-file-system không truyền được `SHOW_ADVANCED`. Sửa: Android < 8 hiện dòng hướng
   dẫn "If the list is empty, tap ⋮ → Show internal storage." dưới nút; nhãn bỏ "primary:" → "This phone".
@@ -651,4 +653,7 @@
 - [ ] **B-136** 🟡 (QA OLD-19, phiên B — f3795bf) Gõ số lẻ thứ 3 ("12.34" rồi "5") hiện "Max £999,999.99" — sai nghĩa (tiền lưu vẫn đúng); màn Split riêng gõ
   số rồi X đóng luôn, không hỏi. Sửa: `moneyLimitHit` (chỉ khi chữ số bị bỏ ở phần nguyên của số tiền, không phải số lẻ / số nhân) + test; màn Split hỏi
   "Discard this split?" khi đã đổi. ⏳ máy.
+- [ ] **B-137** 🟠 (QA QI-6, phiên C — iOS simulator, cũng đúng trên Android) Màn chuyến đang chạy không bao giờ hiện bản đồ (chỉ hình vẽ dự phòng) nếu
+  điểm GPS đầu tiên về sau 12 s. Mạng tới tiles.openfreemap.org bình thường (HTTP 200, 0,2–0,7 s). Gốc: `TripMap.tsx` đếm 12 s từ lúc gắn, kể cả khi chưa có
+  điểm → `failed` cả chuyến. Sửa: chỉ đếm khi bản đồ đã có khung (có điểm). 965 test xanh. ⏳ máy (GPS lạnh / iOS lượt sau).
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.

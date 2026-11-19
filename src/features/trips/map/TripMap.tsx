@@ -50,12 +50,6 @@ export function TripMap({
   const { colors, dark } = useTheme();
   const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading');
 
-  useEffect(() => {
-    if (state !== 'loading') return;
-    const timer = setTimeout(() => setState((s) => (s === 'loading' ? 'failed' : s)), LOAD_TIMEOUT_MS);
-    return () => clearTimeout(timer);
-  }, [state]);
-
   const lines = useMemo(() => {
     if (line) {
       return {
@@ -70,6 +64,15 @@ export function TripMap({
     return tripLines(points, personal, allPersonal, stops);
   }, [line, points, personal, allPersonal, stops]);
   const shape = useMemo(() => linesFeatureCollection(lines), [lines]);
+  const hasBounds = !!lines.bounds;
+
+  // QA QI-6 (iOS simulator, also Android): the load timer ran from mount, before the first GPS fix — a cold GPS slower
+  // than LOAD_TIMEOUT_MS meant no map for the whole trip. It only counts once the map is actually drawn.
+  useEffect(() => {
+    if (state !== 'loading' || !hasBounds) return;
+    const timer = setTimeout(() => setState((s) => (s === 'loading' ? 'failed' : s)), LOAD_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [state, hasBounds]);
 
   if (state === 'failed' || !lines.bounds) return <>{fallback}</>;
 
