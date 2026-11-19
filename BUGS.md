@@ -539,19 +539,22 @@
 - [ ] **B-118** 🟠 (QA iOS — phiên H) Câu xin quyền vị trí iOS (app.json) hứa "only while a trip you started is running" / "Recording stops when you end the
   trip" — sai từ khi có chuyến tự động (theo dõi rời chỗ đỗ / vùng 150 m ở nền) → Apple 5.1.1. Sửa: câu mới nói rõ chuyến tự động; câu trong app
   (`trip.permBody`) cũng sửa. Cần build iOS mới mới có hiệu lực. ⏳ Phương xem chữ trước khi nộp.
-- [ ] **B-119** 🟡 (QA SPE-11, phiên D) `sundaysort://dev/gallery` mở được trong bản release (gallery.tsx thiếu chặn `__DEV__`). Sửa: chuyển về Home như dev/ocr,
+- [x] **B-119** 🟡 (QA SPE-11, phiên D) `sundaysort://dev/gallery` mở được trong bản release (gallery.tsx thiếu chặn `__DEV__`). Sửa: chuyển về Home như dev/ocr,
   dev/probe. Link lạ khác ra màn "Unmatched Route" + nút Sitemap → thêm `src/app/+not-found.tsx` chuyển về Home. ✅ A13 (b843037):
-  `sundaysort://abc`, `sundaysort://abc/xyz?q=1` → Home, logcat sạch (app đang chạy). ⏳ `dev/gallery` trên máy.
-- [ ] **B-120** 🟡 (QA SPE-12, phiên D) `export?mode=custom&end=1e17` hiện "NaN undefined NaN", tên file "…NaN-NaN-NaN.zip". Sửa: khoảng ngày qua `saneReportRange`
-  như Reports (B-67); sai thì về năm thuế. ⏳ phiên D.
+  `sundaysort://abc`, `sundaysort://abc/xyz?q=1` → Home, logcat sạch (app đang chạy). ✅ phiên D (19daeae, emulator): `dev/gallery` → Home; link lạ / chuỗi RTL → Home; 34 deep link lạ 0 crash/ANR.
+- [x] **B-120** 🟡 (QA SPE-12, phiên D) `export?mode=custom&end=1e17` hiện "NaN undefined NaN", tên file "…NaN-NaN-NaN.zip". Sửa: khoảng ngày qua `saneReportRange`
+  như Reports (B-67); sai thì về năm thuế. ✅ phiên D (19daeae): "Tax year 1970", file SundaySort-export-1970.zip, không NaN. 🟡 còn (chỉ link tự chế): `year=999999`/`-5`
+  vẫn hiện "Tax year 999999" + file rỗng; mở link export khi màn Export đang mở giữ kỳ cũ — ghi nhận, không sửa.
 - [x] **B-121** 🟡 (QA SPE-10, phiên D — đọc code) File chẩn đoán ghi MAC + tên mọi thiết bị Bluetooth đã nối trong 7 ngày, không chỉ xe (BluetoothReceiver.kt:30).
   File chỉ rời máy khi người dùng tự chia sẻ. Sửa (JS, không cần native): file chẩn đoán chỉ ghi "van" cho thiết bị xe đã chọn, mọi thiết bị khác
   thành "other device", bỏ tên. ✅ A13 (b843037): 6 tín hiệu bt chỉ ghi "van", không MAC / tên (mẫu chưa có thiết bị khác ngoài xe).
-- [ ] **B-122** 🟡 (QA A13, phiên E — Phương gõ "1" ra £0.01) Ô số tiền nhập kiểu máy tính tiền ("1250" = £12.50) dễ hiểu lầm. **Phương chốt 18/11:**
+- [x] **B-122** 🟡 (QA A13, phiên E — Phương gõ "1" ra £0.01) Ô số tiền nhập kiểu máy tính tiền ("1250" = £12.50) dễ hiểu lầm. **Phương chốt 18/11:**
   "nhập thế nào viết bằng đó" — "1" = 1.00, "7,7" = 7.70, "1250" = 1250.00. Sửa: `calc.ts` (số không có dấu chấm = đơn vị nguyên; `exprOf`
   viết "72.40"/"72"; tối đa 999,999.99), bàn phím `decimal-pad` ở Ghi nhanh / Sửa khoản / phí đỗ xe (iPhone mới có dấu chấm), nháp cũ đổi
   sang dạng mới (`exprV`, `legacyToPlain`) để không thành ×100. Các ô số khác (tách khoản, khoản lặp lại, luật…) vốn đã nhập kiểu này.
-  941 test xanh. ⏳ A13 (Phương bấm) + iOS.
+  941 test xanh. ✅ phiên B (19daeae, API 26 + Android 7): "1"/"7,7"/"1250"/"0.5" → 1.00/7.70/1,250.00/0.50, nháp cũ "1250" vẫn £12.50, sửa khoản
+  "3" → 3.00. ✅ phiên F (Pixel 9 Pro XL API 37): như trên + "72.4"/"0.05"/"5+2.5", chip receipt, bàn phím có "." ",". 🟡 gõ "12345678" bị cắt
+  còn 123,456.00 không báo (trần 999,999.99) — ghi nhận. ⏳ A13 (Phương bấm) + iOS.
 - [ ] **B-123** 🟠 (Phương thử A13 tối 18/11) (1) Start tay trong nhà 20:50→21:48: đứng yên mà quãng đường vẫn tăng; (2) chuyến Bluetooth 17:46→20:50 về
   nhà ngồi > 20 phút không tự tắt; (3) Bluetooth xe chỉ bật chuyến 1 lần. Gốc (code): trong nhà Android trả điểm GPS **không có tốc độ**, nhảy
   25–80 m → `isStationaryFix` giữ lại (chỉ lọc khi có tốc độ) → cộng quãng đường + `lastPointAt` cứ mới → luật "20 phút không có điểm" không bao giờ
