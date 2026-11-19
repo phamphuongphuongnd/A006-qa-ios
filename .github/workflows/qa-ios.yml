@@ -28,7 +28,7 @@ on:
         description: 'Run the small-iPhone and Pro Max lanes at the same time (false = one simulator at a time; slow public runners)'
         default: 'false'
       extra:
-        description: 'Extra scenario after the personas: b96 = trip-ended notification (needs ~50 min); empty = none'
+        description: 'Extra scenarios after the personas, comma list: b96 = trip-ended notification (~50 min), b137 = map with a late GPS fix (~5 min); empty = none'
         default: ''
 
 concurrency:
@@ -268,7 +268,7 @@ jobs:
           fi
 
       - name: Extra B-96 (trip-ended notification, ~50 min)
-        if: ${{ inputs.extra == 'b96' }}
+        if: ${{ contains(inputs.extra, 'b96') }}
         run: |
           chmod +x qa/ios/run-b96.sh
           xcrun simctl shutdown "$PM_UDID" >/dev/null 2>&1 || true
@@ -278,6 +278,18 @@ jobs:
           mkdir -p out
           qa/ios/run-b96.sh "$SE_UDID" "$APP" "$PWD/out" P022 || true
           { echo "## B-96"; echo '```'; cat out/b96/result.txt 2>/dev/null; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Extra B-137 (trip map with a late first GPS fix, Pro Max)
+        if: ${{ contains(inputs.extra, 'b137') }}
+        run: |
+          chmod +x qa/ios/run-b137.sh
+          xcrun simctl shutdown "$SE_UDID" >/dev/null 2>&1 || true
+          xcrun simctl boot "$PM_UDID" >/dev/null 2>&1 || true
+          xcrun simctl bootstatus "$PM_UDID" -b >/dev/null
+          APP=$(ls -d "$PWD"/build/app/*.app | head -1)
+          mkdir -p out
+          qa/ios/run-b137.sh "$PM_UDID" "$APP" "$PWD/out" P092 || true
+          { echo "## B-137"; echo '```'; cat out/b137/result.txt 2>/dev/null; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Summary
         if: always()

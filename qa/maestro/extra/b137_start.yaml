@@ -1,0 +1,36 @@
+# B-137 part 1: the simulator has NO location (run-b137.sh cleared it) → Start trip → screen sits on "Finding GPS…".
+# run-b137.sh sets a location ~20 s later, then b137_check.yaml looks at 30 s and 60 s: the MapLibre map must show,
+# not the RouteSketch fallback (before B-137 the 12 s timer ran from mount and the map never came).
+appId: com.phiotron.sundaysort
+name: b137_start
+---
+- launchApp:
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible: "Settings"
+    timeout: 60000
+- scrollUntilVisible:
+    element:
+      text: "Start trip"
+    timeout: 15000
+- tapOn: "Start trip"
+- tapOn:
+    text: "Continue|Allow.*location.*"
+    optional: true
+- tapOn:
+    text: "Allow While Using App|Allow Once"
+    optional: true
+- tapOn:
+    text: "Allow precise location"
+    optional: true
+- tapOn:
+    text: "Allow While Using App|Allow Once"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "End trip"
+    timeout: 30000
+- takeScreenshot: ${PID}_b137a_finding_gps
