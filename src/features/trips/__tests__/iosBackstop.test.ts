@@ -1,6 +1,9 @@
 // B-96: iPhone books "Still on a trip?" / "Trip isn't recording" ahead, mirroring the engine.
 import { BACKSTOP_SLACK_MS, needsRebook, planBackstops, REBOOK_MIN_SHIFT_MS } from '../auto/backstopPlan';
-import { INITIAL_ENGINE_STATE, SILENT_NOTIFY_MS, step, STILL_NOTIFY_MS, type EngineState, type EngineTrip } from '../auto/engine';
+import { INITIAL_ENGINE_STATE, SILENT_NOTIFY_MS, step, type EngineState, type EngineTrip } from '../auto/engine';
+
+// Since 19/11 a Trip the driver started ends after the merge threshold (20 min here); the booked notice mirrors it.
+const MERGE = 20 * 60_000;
 
 const MIN = 60_000;
 const T0 = new Date(2026, 10, 18, 8, 0).getTime();
@@ -9,14 +12,14 @@ const driving: EngineState = { ...INITIAL_ENGINE_STATE, activity: 'driving', act
 const still: EngineState = { ...INITIAL_ENGINE_STATE, activity: 'still', activityAt: T0 + 11 * MIN };
 
 describe('iOS missed-trip backstops', () => {
-  it('manual trip standing still: "Still on a trip?" just after 45 min from the last move, no "not recording"', () => {
-    expect(planBackstops(manual(), still, T0 + 12 * MIN)).toEqual({ still: T0 + 10 * MIN + STILL_NOTIFY_MS + BACKSTOP_SLACK_MS, silent: null });
+  it('manual trip standing still: "Still on a trip?" just after the merge threshold from the last move, no "not recording"', () => {
+    expect(planBackstops(manual(), still, T0 + 12 * MIN, MERGE)).toEqual({ still: T0 + 10 * MIN + MERGE + BACKSTOP_SLACK_MS, silent: null });
   });
 
-  it('while driving: "not recording" 10 min after the last fix, "Still on a trip?" pushed 45 min ahead', () => {
+  it('while driving: "not recording" 10 min after the last fix, "Still on a trip?" pushed a merge threshold ahead', () => {
     const now = T0 + 11 * MIN;
-    expect(planBackstops(manual(), driving, now)).toEqual({
-      still: now + STILL_NOTIFY_MS + BACKSTOP_SLACK_MS,
+    expect(planBackstops(manual(), driving, now, MERGE)).toEqual({
+      still: now + MERGE + BACKSTOP_SLACK_MS,
       silent: T0 + 10 * MIN + SILENT_NOTIFY_MS + BACKSTOP_SLACK_MS,
     });
   });
@@ -26,10 +29,10 @@ describe('iOS missed-trip backstops', () => {
       [still, T0 + 12 * MIN],
       [driving, T0 + 11 * MIN],
     ] as const) {
-      const p = planBackstops(manual(), state, now);
-      // At the booked time the engine itself would notify.
+      const p = planBackstops(manual(), state, now, MERGE);
+      // At the booked time the engine itself would act (end the trip / keep waiting while driving).
       if (p.still) expect(step(state, [], { enabled: true, vanAddress: null, startOnCharge: false, mergeStopMinutes: 20 }, manual(), p.still - REBOOK_MIN_SHIFT_MS, false).actions.map((a) => a.type)).toContain(
-        state === still ? 'notifyStill' : 'wake',
+        state === still ? 'end' : 'wake',
       );
       if (p.silent) expect(step(state, [], { enabled: true, vanAddress: null, startOnCharge: false, mergeStopMinutes: 20 }, manual(), p.silent - REBOOK_MIN_SHIFT_MS, false).actions.map((a) => a.type)).toContain('notifySilent');
     }

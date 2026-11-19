@@ -431,9 +431,11 @@
   Sửa: `ui/HintScroll.tsx` — nháy thanh cuộn khi nội dung dài hơn màn (màn chào + màn chọn vùng). (Màn chào cắt chữ = B-66.)
   iOS lượt 4b (phiên C, P091 SE AX-Large): tiêu đề đủ, nhưng thanh cuộn iOS chỉ nháy ~1 s → không thấy gợi ý. Sửa lần 2: thêm viên "More below ⌄" ở
   đáy, ở lại tới khi cuộn tới cuối, chạm = cuộn xuống ~1 màn (cả iOS + Android). Phiên B: vuốt bắt đầu trên viên không cuộn trang + viên che chữ
-  "United States" → lần 3: nhãn không bấm (chạm xuyên qua) ở góc phải dưới. ⏳ phiên C / B.
-- [ ] **B-101** 🟡 (QA iOS QI-3, phiên C) Ô Note ở Ghi nhanh đảo ký tự khi gõ nhanh (P052: "QA-P052 Shell M62" → "QA-052 Shell M62P"; 1/14). Sửa: ô không còn
+  "United States" → lần 3: nhãn không bấm (chạm xuyên qua) ở góc phải dưới. ✅ Android — phiên B (ef470b7): vuốt bắt đầu trên nhãn cuộn được trang.
+  iOS lượt 4e (lần 2): viên hiện rõ ✅ nhưng đè dòng thẻ US → lần 3 ở góc ⏳ lượt 4g.
+- [x] **B-101** 🟡 (QA iOS QI-3, phiên C) Ô Note ở Ghi nhanh đảo ký tự khi gõ nhanh (P052: "QA-P052 Shell M62" → "QA-052 Shell M62P"; 1/14). Sửa: ô không còn
   điều khiển `value` (dựng lại khi app tự điền: chip, đọc hoá đơn); nháp ghi file trễ 400 ms thay vì mỗi phím.
+  ✅ iOS lượt 4e (phiên C, dev f424978, P052 SE chữ XXXL): ô Note + danh sách đúng "QA-P052 Shell M62".
 - [x] **B-102** 🟠 (QA A13-4, phiên E — hoá đơn Tesco thật chụp bằng A13) 2/3 hoá đơn không ra số tiền (#2 giấy cong; #3 in phẳng "TOTAL: £33.50" có
   Subtotal/Savings phía trên và Cash/Change phía dưới) dù nơi bán + ngày đúng. **Gốc (dòng OCR thật, chẩn đoán 322acd6):** ảnh nghiêng vài độ → cả cột số
   lệch xuống ~0,6 dòng (TOTAL: cy 0,664, số 0,676, nhãn Cash 0,682) → luật "nhãn khác gần hơn" trong `rowAmounts` bỏ số → fallback 0,4 → trống; Tesco
@@ -456,9 +458,9 @@
   lại giải nén ảnh gốc lần nữa. Sửa: Android dùng `quality: 1` (picker chỉ chép file) + `ReceiptOcr.shrink` native (giải nén lấy mẫu, xoay theo EXIF,
   cạnh dài ≤ 2400 px, JPEG 85) → đọc và lưu bản nhỏ, xoá bản to trong cache. iOS không đổi. Chẩn đoán ghi thời gian từng bước (`timing`: pickedAt,
   shrinkMs, ocrStartedAt, ocrMs). ⏳ phiên E đo lại trên A13. ✅ A13 (08cdb7b/3f26b33, phiên E): bấm OK → ô số tiền điền ≈ 4,3 s (trước 15–18 s); thu nhỏ 2,1–2,5 s + OCR 1,0–1,7 s.
-- [ ] **B-104** 🟡 (QA F-1, phiên G — Firebase Test Lab máy thật Galaxy S26, Pixel 11 + máy ảo A17, 3/3) Bấm "Try Pro free for 7 days" → "Trial · 8 days
+- [x] **B-104** 🟡 (QA F-1, phiên G — Firebase Test Lab máy thật Galaxy S26, Pixel 11 + máy ảo A17, 3/3) Bấm "Try Pro free for 7 days" → "Trial · 8 days
   left", thanh tiến độ âm. Gốc: `usePro()` dùng `now` của `useNow(60_000)` (cũ tới 1 phút) < `trialStartedAt` → `ceil` ra 8 (`domain/pro.ts`). Sửa: đếm từ
-  `max(now, trialStartedAt)`, kẹp `daysLeft` 1..7 + test. ⏳ phiên G kiểm lại lượt máy thật sau.
+  `max(now, trialStartedAt)`, kẹp `daysLeft` 1..7 + test. ✅ phiên G lượt 2 (19daeae, máy thật Galaxy S26, Z Fold6, Pixel 11 + ảo A17): "Trial · 7 days left", tiến độ không âm.
 - [x] **B-105** 🟠 (QA A13-6, phiên E — A13 bản 08cdb7b) Tesco Shrewsbury chụp thẳng: OCR thấy nhãn TOTAL/CASH/CHANGE DUE nhưng sót cả cột số → app
   **tự điền £7.00** (giá 1 món, đúng là £55.30). Gốc: `readAmount` nhánh "không có nhãn" vẫn chạy khi đã thấy nhãn TOTAL; còn đúng 1 số → 0,65 ≥ 0,6.
   Sửa: đã thấy nhãn tổng mà không đọc được số → 0,4 (gợi ý, không điền). 3 lần đọc mới thành fixture (`a13-receipts.json`). ✅ A13 (3f26b33): Shrewsbury £55.30, Bury để trống.
@@ -476,11 +478,12 @@
   hôm nay = **sai năm thuế**. Phương: bỏ giới hạn (năm "94" = 1994, "22/04/12" = 2012 là ngày thật). Sửa: bỏ luật 400 ngày ở `parseReceipt.readDate` và
   `fill.receiptAt`; vẫn chặn ngày tương lai; vẫn bỏ dòng hạn điểm / hết hạn / "TOTAL UP TO". Bộ 20 hoá đơn: mọi hoá đơn có in ngày đều điền đúng ngày
   (r11 OCR đọc rác → không điền). ⏳ kiểm trên máy. ✅ phiên F (3f26b33, 32 ảnh): ngày cũ điền đúng kèm năm (30/32); A13: FreshHarvest 2019 điền ngày có năm.
-- [ ] **B-109** 🟡 (QA A13-8, phiên E) Sau Save, tab Entries giữ vị trí cuộn cũ → mục TODAY + khoản mới nằm trên mép màn hình. Sửa: số khoản tăng (xếp
+- [x] **B-109** 🟡 (QA A13-8, phiên E) Sau Save, tab Entries giữ vị trí cuộn cũ → mục TODAY + khoản mới nằm trên mép màn hình. Sửa: số khoản tăng (xếp
   mới nhất trước) → cuộn danh sách lên đầu. ✅ A13 (3f26b33): khoản mới hiện ngay đầu Entries.
   ❌ phiên B (API 26, 3f26b33): cuộn xuống rồi ghi khoản (FAB / tab Home) → Entries vẫn ở chỗ cũ — lệnh cuộn chạy lúc Entries bị che, FlashList bỏ qua
   (A13 đạt vì danh sách đang ở đầu). Sửa lần 2: so số khoản khi Entries hiện lại (useIsFocused) rồi mới cuộn. Phiên B (07f4aac): vẫn chỉ cuộn được
-  một đoạn (dòng phía trên chưa đo) → lần 3: `scrollToIndex(0)` không hiệu ứng, lặp lại sau 400 ms. ⏳ phiên B / A13.
+  một đoạn (dòng phía trên chưa đo) → lần 3: `scrollToIndex(0)` không hiệu ứng, lặp lại sau 400 ms. ✅ phiên B (ef470b7, API 26): cả 3 đường (FAB+✓,
+  FAB+Save, Home) với danh sách đã cuộn ~4 trang → TODAY + khoản mới ở đầu; A13 (07f4aac) ✅.
 - [ ] **B-110** 🟡 (QA A37-8/A37-9, phiên A — 320dp + chữ 200%) Reports: "Profit" cắt "−$1,073,09…", "By tax form line" bẻ chữ từng âm tiết + cắt số,
   "Expenses by category" cắt tên còn "Eq..". Sửa: số tiền xuống dòng dưới nhãn khi không đủ chỗ (bỏ adjustsFontSizeToFit), tên danh mục 2 dòng,
   số + % xuống dòng. ⏳ phiên A.
@@ -502,7 +505,9 @@
   Photo, (540,1990) Take photo) kể cả lúc nháp được khôi phục / bàn phím số mở — chạm có thể rơi vào chip ngày (lịch Samsung → đổi năm) và phím ✓ /
   Save; một khoản Tesco £55.30 lúc 15:08 cũng tự lưu sau chuỗi chạm y hệt. **Kết luận tạm: nghi do script chạm mù, không phải người dùng** — chưa tái
   hiện được bằng thao tác người; để mở theo dõi (gặp lại: chụp màn + chẩn đoán trước khi xoá). Phiên E bỏ chạm theo toạ độ (luật xưởng: chờ chữ rồi bấm).
-- [ ] **B-114** 🟠 (QA OLD-13, phiên B — 3f26b33, API 26, 360×640dp, chữ 2.0) Tab Sort: thẻ bị ép còn ~2px (header "Sort your wee/k" bẻ giữa chữ cạnh
+  Phương tự bấm (ef470b7, 16:30–16:51): nháp FreshHarvest khôi phục sau khi app bị tắt (£21.74, nơi bán, ảnh, "20 Nov 2019") → X → Discard → không
+  có khoản nào được lưu; FreshHarvest Save thường lưu đúng 2019. **Không tái hiện bằng tay** → đề xuất đóng là do script (chờ Phương duyệt).
+- [x] **B-114** 🟠 (QA OLD-13, phiên B — 3f26b33, API 26, 360×640dp, chữ 2.0) Tab Sort: thẻ bị ép còn ~2px (header "Sort your wee/k" bẻ giữa chữ cạnh
   List view + chip tuần + thanh tiến độ chiếm hết chiều cao) → không thấy / không dùng được thẻ; List view vẫn sort được. Chữ 1.3–1.7 ổn. Gốc: chế độ
   cuộn (MOD-11) chỉ bật khi cửa sổ < 520dp, không tính cỡ chữ. Sửa: tính theo dp ÷ cỡ chữ, thẻ cao 360 × cỡ chữ (≤ 1.6), List view xuống dòng dưới
   tiêu đề, đệm dưới giữ chỗ FAB khi FAB còn hiện. Phiên B (04fa4f9): một phần — Edit/Split/Merge/Skip tới được, nhưng form Split bị cắt, không tới
@@ -511,7 +516,12 @@
   ẩn FAB ở Sort khi màn cuộn. Phiên B (07f4aac = bản lần 1): ở chữ **1.3** trên 640dp form Split cũng không tới được "Split & sort" (lần 1 bật bố
   cục cuộn từ 1.3) — hồi quy cho cỡ "Large". Lần 3: bố cục cuộn chỉ khi chữ ≥ 1.8 (1.3–1.7 về bố cục thường đã chạy đúng ở 3f26b33).
   iOS QI-4 (phiên C, lượt 4d trên 322acd6 — chưa có sửa nào): AX-Large → thẻ Sort cắt mất danh mục / Work-Personal (P041 Pro Max), còn "Expense" +
-  nút cắt (P016 SE) — cùng gốc; lần 3 áp cho iOS (fontScale AX > 1.8 → màn cuộn). ⏳ phiên B (Android) + iOS bản mới.
+  nút cắt (P016 SE) — cùng gốc; lần 3 áp cho iOS (fontScale AX > 1.8 → màn cuộn). ✅ Android — phiên B (ef470b7, API 26 360×640): chữ 2.0 tiêu đề
+  không bẻ chữ, List view dòng riêng, tiêu đề cuộn cùng thẻ, FAB ẩn, Edit/Split/Merge/Skip bấm được, Skip không mở Ghi nhanh, P016 10/10 (split +
+  merge); chữ 1.3 bố cục thường, "Split & sort" tới được; A13 chữ 2.0 ✅ (phiên E). ⏳ iOS (lượt 4g). 🟡 còn lại: chữ 2.0 khi cuộn thẻ trượt dưới
+  thanh trạng thái (thiếu inset trên); nhãn nút "E… Sp.. Mer… Sk.." vẫn cắt. → lần 4 (Phương 18/11 "đã sửa đâu"): màn cuộn giữ inset trên ở
+  màn (chữ không trượt dưới thanh trạng thái); chữ ≥ 1.3 → nút thẻ icon trên + nhãn nhỏ dưới (4 nút vừa 1 hàng). ✅ A13 (b843037, chữ 2.0):
+  đủ chữ Edit / Split / Merge / Skip, cuộn không chui dưới thanh trạng thái.
 - [x] **B-115** 🔴 (QA OLD-14, phiên B — 3f26b33, API 26) Android 7/8/9 (API 24–28): Ghi nhanh → Photo → "Take photo" **không bao giờ mở camera** (cấp quyền
   CAMERA rồi vẫn không); "Choose from library" vẫn được. Gốc: trên SDK < Q expo-image-picker đòi cả WRITE_EXTERNAL_STORAGE lẫn CAMERA
   (`ensureCameraPermissionsAreGranted`), mà `plugins/withReleasePermissions.js` xoá WRITE_EXTERNAL_STORAGE khỏi manifest release (B-19) → không xin
@@ -529,10 +539,54 @@
 - [ ] **B-118** 🟠 (QA iOS — phiên H) Câu xin quyền vị trí iOS (app.json) hứa "only while a trip you started is running" / "Recording stops when you end the
   trip" — sai từ khi có chuyến tự động (theo dõi rời chỗ đỗ / vùng 150 m ở nền) → Apple 5.1.1. Sửa: câu mới nói rõ chuyến tự động; câu trong app
   (`trip.permBody`) cũng sửa. Cần build iOS mới mới có hiệu lực. ⏳ Phương xem chữ trước khi nộp.
-- [ ] **B-119** 🟡 (QA SPE-11, phiên D) `sundaysort://dev/gallery` mở được trong bản release (gallery.tsx thiếu chặn `__DEV__`). Sửa: chuyển về Home như dev/ocr,
-  dev/probe. Link lạ khác ra màn "Unmatched Route" + nút Sitemap (chưa có `+not-found`) — 🟡 để sau. ⏳ phiên D.
-- [ ] **B-120** 🟡 (QA SPE-12, phiên D) `export?mode=custom&end=1e17` hiện "NaN undefined NaN", tên file "…NaN-NaN-NaN.zip". Sửa: khoảng ngày qua `saneReportRange`
-  như Reports (B-67); sai thì về năm thuế. ⏳ phiên D.
-- [ ] **B-121** 🟡 (QA SPE-10, phiên D — đọc code) File chẩn đoán ghi MAC + tên mọi thiết bị Bluetooth đã nối trong 7 ngày, không chỉ xe (BluetoothReceiver.kt:30).
-  File chỉ rời máy khi người dùng tự chia sẻ, nhưng nên chỉ giữ thiết bị xe / băm địa chỉ. **Để sau (sửa native)**.
+- [x] **B-119** 🟡 (QA SPE-11, phiên D) `sundaysort://dev/gallery` mở được trong bản release (gallery.tsx thiếu chặn `__DEV__`). Sửa: chuyển về Home như dev/ocr,
+  dev/probe. Link lạ khác ra màn "Unmatched Route" + nút Sitemap → thêm `src/app/+not-found.tsx` chuyển về Home. ✅ A13 (b843037):
+  `sundaysort://abc`, `sundaysort://abc/xyz?q=1` → Home, logcat sạch (app đang chạy). ✅ phiên D (19daeae, emulator): `dev/gallery` → Home; link lạ / chuỗi RTL → Home; 34 deep link lạ 0 crash/ANR.
+- [x] **B-120** 🟡 (QA SPE-12, phiên D) `export?mode=custom&end=1e17` hiện "NaN undefined NaN", tên file "…NaN-NaN-NaN.zip". Sửa: khoảng ngày qua `saneReportRange`
+  như Reports (B-67); sai thì về năm thuế. ✅ phiên D (19daeae): "Tax year 1970", file SundaySort-export-1970.zip, không NaN. 🟡 còn (chỉ link tự chế): `year=999999`/`-5`
+  vẫn hiện "Tax year 999999" + file rỗng; mở link export khi màn Export đang mở giữ kỳ cũ — ghi nhận, không sửa.
+- [x] **B-121** 🟡 (QA SPE-10, phiên D — đọc code) File chẩn đoán ghi MAC + tên mọi thiết bị Bluetooth đã nối trong 7 ngày, không chỉ xe (BluetoothReceiver.kt:30).
+  File chỉ rời máy khi người dùng tự chia sẻ. Sửa (JS, không cần native): file chẩn đoán chỉ ghi "van" cho thiết bị xe đã chọn, mọi thiết bị khác
+  thành "other device", bỏ tên. ✅ A13 (b843037): 6 tín hiệu bt chỉ ghi "van", không MAC / tên (mẫu chưa có thiết bị khác ngoài xe).
+- [x] **B-122** 🟡 (QA A13, phiên E — Phương gõ "1" ra £0.01) Ô số tiền nhập kiểu máy tính tiền ("1250" = £12.50) dễ hiểu lầm. **Phương chốt 18/11:**
+  "nhập thế nào viết bằng đó" — "1" = 1.00, "7,7" = 7.70, "1250" = 1250.00. Sửa: `calc.ts` (số không có dấu chấm = đơn vị nguyên; `exprOf`
+  viết "72.40"/"72"; tối đa 999,999.99), bàn phím `decimal-pad` ở Ghi nhanh / Sửa khoản / phí đỗ xe (iPhone mới có dấu chấm), nháp cũ đổi
+  sang dạng mới (`exprV`, `legacyToPlain`) để không thành ×100. Các ô số khác (tách khoản, khoản lặp lại, luật…) vốn đã nhập kiểu này.
+  941 test xanh. ✅ phiên B (19daeae, API 26 + Android 7): "1"/"7,7"/"1250"/"0.5" → 1.00/7.70/1,250.00/0.50, nháp cũ "1250" vẫn £12.50, sửa khoản
+  "3" → 3.00. ✅ phiên F (Pixel 9 Pro XL API 37): như trên + "72.4"/"0.05"/"5+2.5", chip receipt, bàn phím có "." ",". 🟡 gõ "12345678" bị cắt
+  còn 123,456.00 không báo (trần 999,999.99) — ghi nhận. ⏳ A13 (Phương bấm) + iOS.
+- [ ] **B-123** 🟠 (Phương thử A13 tối 18/11) (1) Start tay trong nhà 20:50→21:48: đứng yên mà quãng đường vẫn tăng; (2) chuyến Bluetooth 17:46→20:50 về
+  nhà ngồi > 20 phút không tự tắt; (3) Bluetooth xe chỉ bật chuyến 1 lần. Gốc (code): trong nhà Android trả điểm GPS **không có tốc độ**, nhảy
+  25–80 m → `isStationaryFix` giữ lại (chỉ lọc khi có tốc độ) → cộng quãng đường + `lastPointAt` cứ mới → luật "20 phút không có điểm" không bao giờ
+  tới; chuyến không tắt nên các lần kết nối Bluetooth sau bị bỏ qua (đang có chuyến). **Phương chốt (grill 19/11, CONTEXT.md):** cảm biến báo đứng
+  yên → bỏ mọi điểm; không có quyền cảm biến → điểm không tốc độ phải ≥ 100 m + sai số ≤ 30 m; mọi chuyến (tự động + bấm tay) tự tắt sau Merge
+  stops (20 phút) **không di chuyển thật** (cụm điểm trong 100 m = đỗ), giờ kết thúc = lúc đỗ, thông báo "Trip ended at …" + nút **Continue trip**
+  (≤ 2 giờ); Bluetooth ngắt không có luật riêng; kết nối lại khi chưa có chuyến → chuyến mới; cắm sạc vẫn cần xe chạy; chuyến cũ không tự tính lại.
+  Sửa: `mileage.ts` (`isStationaryFix` + `parkedSince`), `tripsRepo.lastMoveAt` / `reopenTrip`, engine kết thúc theo `lastMoveAt` cho mọi chuyến
+  (bỏ "Still on a trip?" 45 phút), runner `endDriverTrip` + thông báo Continue, task GPS chạy engine mỗi phút, backstop iOS theo Merge stops.
+  Bằng chứng (phiên E, A13-11/12): `qa-runs/a13/diagnostics/SundaySort-trip-diagnostics-2026-11-19-01-50.json` — trong nhà GPS báo tốc độ giả
+  tới 55 km/h; cảm biến 'still' từ 19:00:57; Bluetooth van nối/ngắt nhiều lần 17:35–18:40 trong khi chuyến vẫn mở. Chạy lại điểm thật qua logic mới:
+  chuyến BT mwm01sj7… 11184 m → 10647 m, đỗ từ 18:55:05 → tự tắt ~19:15 (cũ: không tắt tới 20:50); chuyến tay mwm6ism0… 584 m → 0 m, tắt ~21:10.
+  946 test xanh. ✅ A13 (bcf8827, phiên E): chuyến auto do Bluetooth 09:40:29, máy nằm yên → 10:00:47 tự dừng ghi (20 phút), < 500 m nên bỏ cả
+  điểm GPS, không còn chuyến running. ⏳ Phương thử thật: Start tay ngồi nhà ≥ 25 phút (giữ chuyến, ~0 km, thông báo Continue); lái xe về nhà; Continue trip.
+- [x] **B-124** 🟠 (A13-13, phiên E) Bluetooth xe nối khi app ở nền → **không bật chuyến**, chỉ hiện "Driving? Tap to record" (18/11 17:35, tái hiện
+  19/11 09:12); chuyến 17:46 hôm đó là do cảm biến "driving", không phải Bluetooth. Logcat `qa-runs/a13/logcat-1119-bt-start-failed.txt`: Android 14
+  **cho phép** service vị trí khởi động từ nền (`Background started FGS: Allowed … SYSTEM_ALLOW_LISTED`, app đã tắt tối ưu pin + vị trí "luôn luôn"),
+  nhưng không hề có lần gọi `LocationTaskService` nào → gốc: `expo-location` tự chặn `startLocationUpdatesAsync` có foreground service khi không có
+  màn hình mở (`AppForegroundedSingleton.isForegrounded` = false → `ForegroundServiceStartNotAllowedException`). Sửa: hàm native
+  `allowBackgroundLocationStart` (chỉ khi có quyền vị trí nền) bật cờ đó trước khi bắt đầu ghi lúc app ở nền; Android vẫn quyết định cuối (từ chối →
+  "Tap to record" như cũ). Nhật ký chẩn đoán thêm `start_ok` / `start_failed` (lý do + lỗi). ✅ A13 (bcf8827, 09:40, app ở nền): bt_connected → `start_ok {reason: bluetooth, screen: background}`
+  cùng giây, chuyến running + thông báo, `dumpsys location` HIGH_ACCURACY 5 s (diagnostics 2026-11-19-02-43.json, logcat-1119-bcf8827-bt.txt).
+  Thiết bị lúc thử là tai nghe (B-125); ⏳ lần nối Bluetooth xe thật.
+- [x] **B-125** 🟡 (A13, phiên E) Van Bluetooth trên A13 đang là tai nghe Redmi Buds 4 Lite → với B-123 (nối lại khi chưa có chuyến = chuyến mới), đeo
+  tai nghe ở nhà sẽ bật chuyến giả. **Phương chốt 19/11:** cảnh báo, vẫn cho chọn. Sửa: native `getBondedDevices` trả `kind` theo Bluetooth class
+  (car audio / hands-free = 'car'; tai nghe, loa, đồng hồ, điện thoại, máy tính = 'personal'); màn chọn + dòng Van Bluetooth hiện "Looks like
+  headphones or a speaker, not a van…". 946 test xanh. ✅ A13 (dc84207, phiên E): dòng Van Bluetooth + màn chọn hiện cảnh báo cho cả
+  4 thiết bị đã ghép (đều tai nghe / không phải xe — Phương xác nhận; xe chưa ghép với A13). ⏳ thiết bị car audio thật không bị cảnh báo.
+- [x] **B-126** 🟡 (QA F-2, phiên G — Firebase máy thật Pixel 11, 2/2 lượt: 97ceb60 number-pad + 19daeae decimal-pad) Ô số tiền Ghi nhanh mở **Gboard
+  QWERTY** thay vì bàn phím số; ảo A17 (cũng Gboard), S26, S9, Fold6, OPPO đều bàn phím số. Nghi TextInput ẩn (`caretHidden` / `contextMenuHidden`,
+  `capture.tsx` ~480–507) hoặc cờ chữ hoa mặc định (`autoCapitalize`) lẫn vào inputType. Chưa tái hiện được tại chỗ (không có Pixel thật). Thử sửa: ô ẩn thêm `inputMode="decimal"`,
+  `autoCapitalize="none"`, `autoCorrect={false}`, `autoComplete="off"` (bỏ cờ chữ). ✅ phiên G (dc84207, Pixel 11 thật Android 17, matrix-3d94eks0jsst6): bàn phím số, "7,7" → $7.70,
+  inputType 0x282002 (NUMBER|DECIMAL). Phương 19/11: áp cho mọi ô số — `NUMERIC_INPUT` (ui/Controls) tự thêm vào `Field` có
+  bàn phím số + Sửa khoản, tách khoản, thẻ Sort (2 ô), phí đỗ xe. ✅ A13 (dc84207): Ghi nhanh inputType 0x2002, bàn phím số Samsung. ⏳ phiên G: Sửa khoản / phí đỗ xe trên Pixel 11 thật.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.

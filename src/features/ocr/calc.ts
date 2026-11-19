@@ -5,9 +5,10 @@ import type { Minor } from '@/domain/types';
  * Calculator in the amount field (Q20, S-03 / S-05). The hidden amount input holds an expression string made of
  * digits and the operators `+ - * /` (typed digits come from the system number pad, operators from the bar above it).
  *
- * - Operands after `+` / `-` (and the first one) are money typed cash-register style: "1250" = 12.50 — unless the
- *   driver types a decimal point (Android number pads show one; QA-100, Phương 2026-11-17): "7.5" = 7.50, "120." = 120.00,
- *   at most 2 digits after it. `,` counts as the point.
+ * - Operands after `+` / `-` (and the first one) are money, read the way they are written (Phương 2026-11-18, QA-100:
+ *   "nhập thế nào viết bằng đó"): "1" = 1.00, "1250" = 1,250.00, "7.5" / "7,7" = 7.50 / 7.70, at most 2 digits after the
+ *   point. Until 18/11 a number without a point was cash-register style ("1250" = 12.50) — `legacyToPlain` converts
+ *   expressions saved that way (an old Quick capture draft).
  * - Operands after `*` / `/` are whole numbers (a count or a share): "1250*3" = 12.50 × 3 = 37.50.
  * - `*` / `/` bind tighter than `+` / `-`. A trailing operator is ignored while typing ("12.50+" → 12.50).
  * - Result rounds half up to whole pence/cents; ≤ 0, ÷ 0 or over 999,999.99 is an error ("Check the sum").
@@ -17,7 +18,7 @@ export type CalcOp = '+' | '-' | '*' | '/';
 export const CALC_OPS: CalcOp[] = ['+', '-', '*', '/'];
 const OP_SET = new Set<string>(CALC_OPS);
 
-/** Money operands stop at 8 digits (999,999.99); counts at 4 (× 9999). */
+/** Money operands stop at 8 digits in all (999,999.99: 6 before the point); counts at 4 (× 9999). */
 const MONEY_DIGITS = 8;
 const COUNT_DIGITS = 4;
 
@@ -40,10 +41,10 @@ function tokens(expr: string): Token[] {
   return out;
 }
 
-/** Money operand → minor units: cash-register digits, or a decimal when it has a point. */
+/** Money operand → minor units: whole pounds / dollars, or a decimal when it has a point. */
 function moneyMinor(digits: string): number {
   const dot = digits.indexOf('.');
-  if (dot < 0) return Number(digits || '0');
+  if (dot < 0) return Number(digits || '0') * 100;
   const whole = Number(digits.slice(0, dot) || '0');
   return whole * 100 + Number(digits.slice(dot + 1).padEnd(2, '0'));
 }
@@ -51,7 +52,7 @@ function moneyMinor(digits: string): number {
 /** Digits (and for money, one point) of an operand, capped like the old keypad. */
 function cleanOperand(raw: string, count: boolean): string {
   if (count || !raw.includes('.')) {
-    return raw.replace(/\./g, '').replace(/^0+(?=\d)/, '').slice(0, count ? COUNT_DIGITS : MONEY_DIGITS);
+    return raw.replace(/\./g, '').replace(/^0+(?=\d)/, '').slice(0, count ? COUNT_DIGITS : MONEY_DIGITS - 2);
   }
   const dot = raw.indexOf('.');
   const whole = raw.slice(0, dot).replace(/\./g, '').replace(/^0+(?=\d)/, '').slice(0, MONEY_DIGITS - 2);
@@ -133,8 +134,24 @@ export function formatExpr(expr: string): string {
     .join('');
 }
 
-/** Expression that represents a plain amount (OCR fill, "Use", opening S-05). */
-export const exprOf = (minor: Minor): string => (minor > 0 ? String(minor) : '');
+/** Expression that represents a plain amount (OCR fill, "Use", opening S-05): "12.5" → typed form "12.50", "40" → "40". */
+export const exprOf = (minor: Minor): string => {
+  if (!(minor > 0)) return '';
+  const whole = Math.floor(minor / 100);
+  const cents = minor % 100;
+  return cents === 0 ? String(whole) : `${whole}.${String(cents).padStart(2, '0')}`;
+};
+
+/** An expression written the old way (no point = cash-register pence/cents) in the new plain form, same value. */
+export function legacyToPlain(expr: string): string {
+  return tokens(sanitizeExpr(expr))
+    .map((tk) => {
+      if (tk.digits === '' || isCount(tk.op) || tk.digits.includes('.')) return (tk.op ?? '') + tk.digits;
+      const minor = Number(tk.digits);
+      return (tk.op ?? '') + (minor > 0 ? exprOf(minor) : '0');
+    })
+    .join('');
+}
 
 /** A digit was typed (`raw` grew) but the limit kept the expression as it was: buzz instead of silently ignoring. */
 export const digitIgnored = (prev: string, raw: string, next: string): boolean => /\d$/.test(raw) && raw.length > prev.length && next === prev;

@@ -47,8 +47,10 @@ export default function SortScreen() {
 
   // B-114 v2: at 1.5× text and up List view gets its own row — beside the title it broke "Sort your wee/k".
   const bigText = fontScale >= 1.5;
+  // B-114 v4: decided here (not below) so the header knows where the status-bar inset lives.
+  const short = windowHeight < 520 || (fontScale >= 1.8 && windowHeight / fontScale < 520);
   const header = (
-    <View style={[styles.top, bigText && { flexDirection: 'column', alignItems: 'flex-start' }, { paddingTop: insets.top + 14, paddingHorizontal: GUTTER }]}>
+    <View style={[styles.top, bigText && { flexDirection: 'column', alignItems: 'flex-start' }, { paddingTop: (short ? 0 : insets.top) + 14, paddingHorizontal: GUTTER }]}>
       <Txt v="h1" accessibilityRole="header" style={bigText ? undefined : { flexGrow: 1, flexShrink: 1, flexBasis: 180 }}>
         {t('sort.title')}
       </Txt>
@@ -159,13 +161,13 @@ export default function SortScreen() {
   // give the card more height when the text is large.
   // v3 (phiên B): only from 1.8× text — at 1.3 the scrolling layout cut the split form, and 1.3–1.7 were fine in the
   // normal one (3f26b33).
-  const short = windowHeight < 520 || (fontScale >= 1.8 && windowHeight / fontScale < 520);
   const cardHeight = Math.round(360 * Math.min(Math.max(fontScale, 1), 1.6));
   const mergeEntry = mergeFor ? s.entries.find((e) => e.id === mergeFor) ?? null : null;
 
   return (
     // Typing in Edit / Split on the card: the screen shrinks above the keyboard and the FAB hides (B-38).
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, backgroundColor: colors.background }}>
+    // v4 (phiên B): in the scrolling layout the status-bar inset stays on the screen, so scrolled text never slides under it.
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, backgroundColor: colors.background, paddingTop: short ? insets.top : 0 }}>
       {/* B-114 v2: when the screen scrolls (short window / large text) the header scrolls away with the card. */}
       {short ? null : header}
       {/* Bottom padding keeps the card clear of the FAB. QA-100 MOD-11: in a short window (split screen) the FAB is

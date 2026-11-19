@@ -48,13 +48,18 @@ export interface EngineTrip {
   status: 'running' | 'paused';
   startedBy: 'user' | 'auto' | 'nfc' | null;
   startedAt: number;
-  /** Last GPS fix that was kept (fixes while standing still are dropped), i.e. last time the vehicle moved. */
+  /** Last GPS fix that was kept. */
   lastPointAt: number | null;
+  /**
+   * When the vehicle last really moved (start of the final cluster of fixes within the Stop radius — `parkedSince`).
+   * GPS wander while parked doesn't move it. Missing → `lastPointAt`.
+   */
+  lastMoveAt?: number | null;
 }
 
 export type EngineAction =
   | { type: 'start'; at: number; reason: 'motion' | 'bluetooth' | 'charging' }
-  | { type: 'end'; tripId: string; at: number }
+  | { type: 'end'; tripId: string; at: number; startedBy: EngineTrip['startedBy'] }
   | { type: 'notifyStill'; tripId: string; since: number }
   | { type: 'notifySilent'; tripId: string; since: number }
   | { type: 'wake'; at: number };
@@ -143,27 +148,19 @@ export function step(
   if (trip.status !== 'running') return { state, actions };
 
   const lastFix = Math.max(trip.lastPointAt ?? 0, trip.startedAt);
+  // Phương 19/11 (CONTEXT: Trip end): a Trip ends when the vehicle hasn't really moved for the merge threshold —
+  // GPS wander at home no longer counts as moving — automatic or started by the driver, Van Bluetooth or not.
+  const lastMove = Math.max(trip.lastMoveAt ?? trip.lastPointAt ?? 0, trip.startedAt);
   // Activity recognition still says 'driving' (GPS can drop out in tunnels): not a stop. A 'driving' state with no
   // fix for DRIVING_STALE_MS is not trusted any more (a lost exit transition must not keep a trip open forever).
   const driving = isMotion(state.activity) && now - Math.max(lastFix, state.activityAt) < DRIVING_STALE_MS;
-  if (trip.startedBy === 'auto') {
-    const mergeMs = cfg.mergeStopMinutes * 60_000;
-    if (!driving && now - lastFix >= mergeMs) {
-      // End time = when the vehicle really stopped, not when we noticed.
-      actions.push({ type: 'end', tripId: trip.id, at: lastFix });
-      return { state, actions };
-    }
-    actions.push({ type: 'wake', at: (driving ? now : lastFix) + mergeMs + 30_000 });
-  } else {
-    if (!driving && now - lastFix >= STILL_NOTIFY_MS) {
-      if (state.stillNotifiedFor !== lastFix) {
-        state.stillNotifiedFor = lastFix;
-        actions.push({ type: 'notifyStill', tripId: trip.id, since: lastFix });
-      }
-    } else {
-      actions.push({ type: 'wake', at: (driving ? now : lastFix) + STILL_NOTIFY_MS + 30_000 });
-    }
+  const mergeMs = cfg.mergeStopMinutes * 60_000;
+  if (!driving && now - lastMove >= mergeMs) {
+    // End time = when the vehicle really stopped, not when we noticed.
+    actions.push({ type: 'end', tripId: trip.id, at: lastMove, startedBy: trip.startedBy });
+    return { state, actions };
   }
+  actions.push({ type: 'wake', at: (driving ? now : lastMove) + mergeMs + 30_000 });
   if (driving && now - lastFix >= SILENT_NOTIFY_MS && state.silentNotifiedFor !== lastFix) {
     state.silentNotifiedFor = lastFix;
     actions.push({ type: 'notifySilent', tripId: trip.id, since: lastFix });

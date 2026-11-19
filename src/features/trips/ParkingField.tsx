@@ -8,7 +8,7 @@ import { CalcBar } from '@/features/ocr/ui';
 import type { AmountExpr } from '@/features/ocr/useAmountExpr';
 import { t } from '@/i18n';
 import { fonts, radius, useTheme } from '@/theme';
-import { Txt } from '@/ui';
+import { NUMERIC_INPUT, Txt } from '@/ui';
 import { ParkingCircle } from '@/ui/icons';
 import { refocus } from '@/features/ocr/refocus';
 
@@ -71,7 +71,8 @@ export function ParkingField({
           onEditingChange?.(false);
           onDone?.();
         }}
-        keyboardType="number-pad"
+        keyboardType="decimal-pad"
+        {...NUMERIC_INPUT}
         caretHidden
         contextMenuHidden
         style={styles.hidden}

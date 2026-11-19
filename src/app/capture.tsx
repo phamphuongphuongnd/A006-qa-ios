@@ -492,7 +492,12 @@ export default function CaptureScreen() {
             value={amount.expr}
             selection={amount.selection}
             onChangeText={onAmountText}
-            keyboardType="number-pad"
+            keyboardType="decimal-pad"
+            // B-126 (Pixel 11 real device opened QWERTY): no text-only flags on the number field.
+            inputMode="decimal"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="off"
             // OLD-12: the pad's ✓ key saves (it only closed the keyboard before).
             returnKeyType="done"
             onSubmitEditing={() => {

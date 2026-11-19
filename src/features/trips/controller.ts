@@ -4,7 +4,7 @@
  */
 import { eq } from 'drizzle-orm';
 import * as Location from 'expo-location';
-import { Linking, Platform } from 'react-native';
+import { AppState, Linking, Platform } from 'react-native';
 
 import { db } from '@/db/client';
 import type { TripRow } from '@/db/schema';
@@ -14,8 +14,10 @@ import {
   endTrip,
   getActiveTrip,
   getTrip,
+  lastMoveAt,
   markInterrupted,
   pauseTrip,
+  reopenTrip,
   resumeTrip,
   startTrip,
   updateTrip,
@@ -25,11 +27,11 @@ import type { Scope, TripStartedBy } from '@/domain/types';
 import { t } from '@/i18n';
 import { refreshWidgets } from '@/features/widgets/refresh';
 
-import { STILL_NOTIFY_MS } from './auto/engine';
+import { allowBackgroundLocationStart } from './auto/native';
 import { rebuildStops, setTripScope } from './auto/repo';
 import { syncTripActive } from './auto/sync';
 import './backgroundTask';
-import { NOTIF_COLOR, TRIP_TASK } from './constants';
+import { CONTINUE_WINDOW_MS, NOTIF_COLOR, TRIP_TASK } from './constants';
 import { formatDistance } from './format';
 import {
   cancelLongTripReminder,
@@ -67,6 +69,8 @@ export async function needsBackgroundStep(): Promise<boolean> {
 }
 
 async function beginRecording() {
+  // A13-13: an automatic start from Van Bluetooth / activity recognition runs with no screen open.
+  if (AppState.currentState !== 'active') allowBackgroundLocationStart();
   await Location.startLocationUpdatesAsync(TRIP_TASK, {
     accuracy: Location.Accuracy.BestForNavigation,
     timeInterval: 5_000,
@@ -127,6 +131,28 @@ export async function pauseActiveTrip() {
   refreshWidgets().catch(() => {});
 }
 
+/**
+ * "Continue trip" on the notice of a Trip that ended on its own (Phương 19/11): the same Trip records again, if it
+ * ended within CONTINUE_WINDOW_MS and no other Trip has started since. False when it can't be continued.
+ */
+export async function continueTrip(tripId: string, now = Date.now()): Promise<boolean> {
+  const trip = getTrip(db, tripId);
+  if (!trip || trip.status !== 'done' || trip.endedAt === null || now - trip.endedAt > CONTINUE_WINDOW_MS) return false;
+  if (getActiveTrip(db)) return false;
+  reopenTrip(db, trip.id, now);
+  try {
+    await beginRecording();
+  } catch (e) {
+    endTrip(db, trip.id, trip.endedAt);
+    throw e;
+  }
+  const row = getTrip(db, trip.id);
+  if (row) await showTripNotification(row, distanceText(row), true);
+  syncTripActive();
+  refreshWidgets().catch(() => {});
+  return true;
+}
+
 export async function resumeActiveTrip() {
   const trip = getActiveTrip(db);
   if (!trip || trip.status !== 'paused') return;
@@ -153,10 +179,11 @@ export async function endActiveTrip(at?: number): Promise<TripRow | undefined> {
     await stopOrphanRecording();
     return undefined;
   }
-  // Not moved for ≥ 45 min ("Still on a trip?" → End trip): the trip ends when the vehicle stopped (F-12).
+  // Not really moved for the merge threshold (GPS wander doesn't count — Phương 19/11): the trip ends when the vehicle
+  // stopped (F-12).
   const now = Date.now();
-  const lastMove = Math.max(trip.lastPointAt ?? trip.startedAt, trip.startedAt);
-  const endAt = at ?? (trip.status === 'running' && now - lastMove >= STILL_NOTIFY_MS ? lastMove : now);
+  const lastMove = lastMoveAt(db, trip);
+  const endAt = at ?? (trip.status === 'running' && now - lastMove >= getSettings(db).mergeStopMinutes * 60_000 ? lastMove : now);
   const done = endTrip(db, trip.id, endAt);
   await stopRecording();
   await clearTripNotification();

@@ -61,7 +61,18 @@ export async function buildTripDiagnostics(now = Date.now()) {
     health: nativeHealth(),
     engine: getKV<unknown>(db, 'engine', null),
     flags: getAutoFlags(),
-    signals: readRawSignals(now - DAYS * 86_400_000).map((x) => ({ ...x, time: new Date(x.at).toISOString() })),
+    // QA-100 B-121: only the van's own Bluetooth device is named; any other device (headphones, a watch…) is kept as an
+    // event without its name or address — the detector only ever cares whether it was the van.
+    signals: readRawSignals(now - DAYS * 86_400_000).map((x) => {
+      const out: Record<string, unknown> = { ...x, time: new Date(x.at).toISOString() };
+      if ('address' in out) {
+        const van = s.vanBtDevice?.address?.toUpperCase() ?? null;
+        const isVan = !!van && typeof out.address === 'string' && out.address.toUpperCase() === van;
+        out.address = isVan ? 'van' : out.address ? 'other device' : null;
+        delete out.name;
+      }
+      return out;
+    }),
     // iOS logs CoreMotion snapshots: also show the transitions the engine read from them (B-95).
     transitions:
       Platform.OS === 'ios'

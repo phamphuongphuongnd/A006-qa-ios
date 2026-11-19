@@ -196,6 +196,42 @@
   "delayTime": 2000
  },
  {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Sunday Sort Pro. Free · See Pro"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2500
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Try Pro free for 7 days"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 3000
+ },
+ {
+  "eventType": "VIEW_CLICKED",
+  "elementDescriptors": [
+   {
+    "contentDescription": "Back"
+   }
+  ]
+ },
+ {
+  "eventType": "WAIT",
+  "delayTime": 2000
+ },
+ {
   "eventType": "ONE_POINT_GESTURE",
   "coordinates": "(50%,80%)->(50%,25%)"
  },

@@ -4,7 +4,8 @@ import { Platform } from 'react-native';
 
 import { t } from '@/i18n';
 
-import { ACTION_END, ACTION_KEEP, CATEGORY_LONG, CHANNEL_TRIP, CHANNEL_TRIP_REMINDER, NOTIF_COLOR } from '../constants';
+import { ACTION_END, ACTION_KEEP, CATEGORY_ENDED, CATEGORY_LONG, CHANNEL_TRIP, CHANNEL_TRIP_REMINDER, NOTIF_COLOR } from '../constants';
+import { formatClock } from '../format';
 import { setupTripNotifications } from '../notify';
 
 export const NOTIF_AUTO_SAVED = 'trip-auto-saved';
@@ -42,12 +43,23 @@ async function post(
   }
 }
 
-/** Silent "Trip saved · 42.3 mi · Work" / "· Sort on Sunday". */
-export const notifyAutoSaved = (distance: string, scopeText: string, tripId: string) =>
-  post(NOTIF_AUTO_SAVED, t('autoTrip.notif.savedTitle', { distance, scope: scopeText }), t('autoTrip.notif.savedBody'), {
-    channel: CHANNEL_TRIP,
-    url: `/trip/${tripId}`,
-  });
+/** Silent "Trip saved · 42.3 mi · Work" / "· Sort on Sunday" + "Continue trip" (Phương 19/11). */
+export const notifyAutoSaved = (distance: string, scopeText: string, tripId: string, endedAt: number) =>
+  post(
+    NOTIF_AUTO_SAVED,
+    t('autoTrip.notif.savedTitle', { distance, scope: scopeText }),
+    t('autoTrip.notif.endedBody', { time: formatClock(endedAt) }),
+    { channel: CHANNEL_TRIP, url: `/trip/${tripId}`, category: CATEGORY_ENDED, data: { tripId } },
+  );
+
+/** A Trip the driver started ended on its own after standing still: "Trip ended at 17:52 · 3.4 mi" + "Continue trip". */
+export const notifyTripEnded = (distance: string, endedAt: number, tripId: string) =>
+  post(
+    NOTIF_AUTO_SAVED,
+    t('autoTrip.notif.endedTitle', { time: formatClock(endedAt), distance }),
+    t('autoTrip.notif.endedDriverBody'),
+    { url: `/trip/${tripId}`, category: CATEGORY_ENDED, data: { tripId } },
+  );
 
 /** Manual trip not moving 45 min: End trip (ends when it stopped) / Keep going. */
 export const notifyStill = () =>

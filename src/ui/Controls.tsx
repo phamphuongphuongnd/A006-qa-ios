@@ -80,6 +80,14 @@ export function Toggle({ value, onChange, label, disabled }: { value: boolean; o
   );
 }
 
+/**
+ * B-126 (a real Pixel 11 opened Gboard QWERTY on a number field): numeric fields carry no text-only flags
+ * (capitalisation, autocorrect, autofill), so every keyboard shows its number pad.
+ */
+export const NUMERIC_INPUT = { inputMode: 'decimal', autoCapitalize: 'none', autoCorrect: false, autoComplete: 'off' } as const;
+
+const NUMERIC_KEYBOARDS = new Set(['decimal-pad', 'number-pad', 'numeric', 'phone-pad']);
+
 /** `.fld` + `.inp` — labelled text field with error text. */
 export const Field = forwardRef<
   React.ComponentRef<typeof TextInput>,
@@ -111,6 +119,7 @@ export const Field = forwardRef<
           ]}
           onFocus={onFocus}
           onBlur={onBlur}
+          {...(rest.keyboardType && NUMERIC_KEYBOARDS.has(rest.keyboardType) ? NUMERIC_INPUT : null)}
           {...rest}
         />
         {right}

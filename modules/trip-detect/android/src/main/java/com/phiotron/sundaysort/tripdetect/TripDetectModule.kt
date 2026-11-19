@@ -13,6 +13,7 @@ import android.os.BatteryManager
 import android.os.Build
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.ActivityRecognition
+import expo.modules.location.AppForegroundedSingleton
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.modules.Module
@@ -144,6 +145,22 @@ class TripDetectModule : Module() {
 
     Function("getRecentEvents") { sinceMs: Double -> EventLog.read(context, sinceMs.toLong()) }
 
+    /**
+     * A13-13 (Android 14, van Bluetooth with the app closed): expo-location refuses `startLocationUpdatesAsync` with a
+     * foreground service unless an activity is on screen — even when Android itself allows it (the receiver's start
+     * exemption + "Allow all the time"). With background location granted, tell it the app may start one now; Android
+     * still has the last word (a refusal throws → "Tap to record"). False without background location.
+     */
+    Function("allowBackgroundLocationStart") {
+      val bg = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
+      if (bg) AppForegroundedSingleton.isForegrounded = true
+      bg
+    }
+
+    /** Diagnostics: what the JS task decided (e.g. an automatic start and why it failed), next to the signals. */
+    Function("log") { kind: String, extra: Map<String, Any?> -> EventLog.add(context, kind, extra) }
+
     Function("clearEvents") { EventLog.clear(context) }
 
     Function("isCharging") {
@@ -176,7 +193,7 @@ class TripDetectModule : Module() {
       if (!granted || adapter == null) {
         emptyList<Map<String, String?>>()
       } else {
-        adapter.bondedDevices.map { mapOf("address" to it.address, "name" to it.name) }
+        adapter.bondedDevices.map { mapOf("address" to it.address, "name" to it.name, "kind" to deviceKind(it)) }
       }
     }
 
@@ -188,5 +205,27 @@ class TripDetectModule : Module() {
 
   companion object {
     private const val REQ_SAMPLES = 4102
+
+    /**
+     * Phương 19/11: warn when the "van" is really headphones / a speaker / a watch — a trip would start whenever it
+     * connects. 'car' = car audio / hands-free kit, 'personal' = clearly not a vehicle, 'unknown' = can't tell.
+     */
+    @SuppressLint("MissingPermission")
+    fun deviceKind(d: android.bluetooth.BluetoothDevice): String {
+      val cls = try { d.bluetoothClass } catch (_: SecurityException) { null } ?: return "unknown"
+      return when (cls.deviceClass) {
+        android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_CAR_AUDIO,
+        android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_HANDSFREE -> "car"
+        else -> when (cls.majorDeviceClass) {
+          android.bluetooth.BluetoothClass.Device.Major.AUDIO_VIDEO,
+          android.bluetooth.BluetoothClass.Device.Major.WEARABLE,
+          android.bluetooth.BluetoothClass.Device.Major.PHONE,
+          android.bluetooth.BluetoothClass.Device.Major.COMPUTER,
+          android.bluetooth.BluetoothClass.Device.Major.HEALTH,
+          android.bluetooth.BluetoothClass.Device.Major.TOY -> "personal"
+          else -> "unknown"
+        }
+      }
+    }
   }
 }

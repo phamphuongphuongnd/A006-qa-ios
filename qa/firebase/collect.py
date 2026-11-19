@@ -1,6 +1,6 @@
 """Download Firebase Test Lab results and build qa-runs/firebase/summary.json (QA-100 session G).
 
-  python -I qa/firebase/collect.py matrix-id [matrix-id ...]
+  python -I qa/firebase/collect.py [--tag=r2-19daeae] matrix-id [matrix-id ...]
 
 Per execution: copies the device folder from the results bucket to qa-runs/firebase/<model>-<api>/
 (skips if already there), then reads the Tool Results step (outcome, issues, perf series) and the local
@@ -20,7 +20,7 @@ GCLOUD = r'C:\Users\Admin\qa-tools\google-cloud-sdk\bin\gcloud.cmd'
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'qa-runs', 'firebase')
 ROOT = os.path.normpath(ROOT)
 ROBO_STEPS = ['Get started', 'region', 'Continue', 'Continue', 'Looks good', 'Continue free', 'Not now', 'Entries', 'Sort',
-              'Miles', 'Reports', 'Home', 'New expense', 'type 1250', 'Save', 'media scan', 'Settings',
+              'Miles', 'Reports', 'Home', 'New expense', 'type 1250', 'Save', 'media scan', 'Settings', 'See Pro', 'Try Pro free', 'Back',
               'swipe', 'swipe', 'Backup & restore', 'Restore from backup', 'Show roots', 'Downloads', 'P096.sundaysort',
               "Replace this phone's data", 'Restore', 'Back', 'Home', 'Entries', 'Reports', 'Sort', 'Home']
 
@@ -95,7 +95,7 @@ def local(d):
     return r
 
 
-def main(matrices):
+def main(matrices, tag=''):
     tok = token()
     path = os.path.join(ROOT, 'summary.json')
     summary = json.load(open(path, encoding='utf-8')) if os.path.exists(path) else {}
@@ -106,7 +106,7 @@ def main(matrices):
         script = m['testSpecification'].get('androidRoboTest', {}).get('roboScript', {}).get('gcsPath', '')
         for e in m.get('testExecutions', []):
             dev = e['environment']['androidDevice']
-            key = f"{dev['androidModelId']}-{dev['androidVersionId']}"
+            key = (tag + '/' if tag else '') + f"{dev['androidModelId']}-{dev['androidVersionId']}"
             folder = f"{dev['androidModelId']}-{dev['androidVersionId']}-{dev['locale']}-{dev['orientation']}"
             d = os.path.join(ROOT, key)
             if e['state'] == 'FINISHED' and not os.path.exists(os.path.join(d, 'logcat')):
@@ -140,4 +140,8 @@ def main(matrices):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    args = sys.argv[1:]
+    run_tag = ''
+    if args and args[0].startswith('--tag='):
+        run_tag = args.pop(0)[len('--tag='):]
+    main(args, run_tag)

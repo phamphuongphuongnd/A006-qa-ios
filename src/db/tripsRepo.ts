@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 
-import { isStationaryFix, metersToMiles, milesToMeters, trackDistance, TRIP_REMINDER_MS } from '@/domain/mileage';
+import { isStationaryFix, metersToMiles, milesToMeters, parkedSince, trackDistance, TRIP_REMINDER_MS } from '@/domain/mileage';
 import type { Period, Scope, TripScope, TripStartedBy } from '@/domain/types';
 
 import { tripPoints, trips, type TripRow } from './schema';
@@ -59,7 +59,7 @@ export interface PointInput {
  * Fixes taken while the phone stands still (`isStationaryFix`) are dropped. Distance is recomputed from all points
  * so filtering stays consistent with `trackDistance`.
  */
-export function appendPoints(db: AppDb, tripId: string, points: PointInput[]): void {
+export function appendPoints(db: AppDb, tripId: string, points: PointInput[], opts: { sensorStill?: boolean } = {}): void {
   const trip = getTrip(db, tripId);
   if (!trip || trip.status !== 'running' || points.length === 0) return;
   db.transaction((tx) => {
@@ -69,7 +69,7 @@ export function appendPoints(db: AppDb, tripId: string, points: PointInput[]): v
     let ref: { lat: number; lng: number } | null = resumed ? null : (lastStored ?? null);
     const kept: PointInput[] = [];
     for (const p of points) {
-      if (isStationaryFix(ref, p)) continue;
+      if (isStationaryFix(ref, p, opts)) continue;
       kept.push(p);
       ref = p;
     }
@@ -95,6 +95,14 @@ export function pauseTrip(db: AppDb, tripId: string) {
 
 export function resumeTrip(db: AppDb, tripId: string, now = Date.now()) {
   db.update(trips).set({ status: 'running', lastPointAt: now }).where(and(eq(trips.id, tripId), eq(trips.status, 'paused'))).run();
+}
+
+/**
+ * "Continue trip" (Phương 19/11): a Trip that ended on its own records again as the same Trip. `lastPointAt` = now marks
+ * the next fix as the start of a new segment, like a Resume (no miles drawn across the gap).
+ */
+export function reopenTrip(db: AppDb, tripId: string, now = Date.now()) {
+  db.update(trips).set({ status: 'running', endedAt: null, lastPointAt: now }).where(and(eq(trips.id, tripId), eq(trips.status, 'done'))).run();
 }
 
 export function endTrip(db: AppDb, tripId: string, now = Date.now()): TripRow | undefined {
@@ -224,6 +232,17 @@ export function updateTrip(db: AppDb, id: string, patch: { scope?: Scope; purpos
 }
 
 export const deleteTrip = (db: AppDb, id: string) => db.delete(trips).where(eq(trips.id, id)).run();
+
+/**
+ * When the vehicle last really moved (CONTEXT: Stop / Trip end): GPS wander around the parking spot doesn't count. A
+ * Resume / Continue trip marks `lastPointAt` past the last stored fix — the stop is counted from there, not from before.
+ */
+export function lastMoveAt(db: AppDb, trip: { id: string; startedAt: number; lastPointAt: number | null }): number {
+  const points = tripPointsOf(db, trip.id);
+  const lastStored = points.length ? points[points.length - 1].ts : 0;
+  const resumedAt = trip.lastPointAt !== null && trip.lastPointAt > lastStored ? trip.lastPointAt : 0;
+  return Math.max(parkedSince(points, trip.startedAt), resumedAt);
+}
 
 export const tripPointsOf = (db: AppDb, id: string) =>
   db.select().from(tripPoints).where(eq(tripPoints.tripId, id)).orderBy(asc(tripPoints.ts)).all();

@@ -10,17 +10,22 @@ import { AppRegistry, AppState, Platform } from 'react-native';
 import { db } from '@/db/client';
 import { ensureMigrated } from '@/db/migrate';
 import { getSettings } from '@/db/settingsRepo';
-import { appendPoints, getActiveTrip, getTrip } from '@/db/tripsRepo';
+import { appendPoints, getActiveTrip, getTrip, lastMoveAt } from '@/db/tripsRepo';
 import { refreshWidgets } from '@/features/widgets/refresh';
 
 import { addSignalListener, TRIP_DETECT_TASK } from '../../../modules/trip-detect';
 import { syncIosBackstops } from './auto/backstop';
+import type { EngineState } from './auto/engine';
+import { hasActivityPermission } from './auto/native';
+import { getKV } from './auto/repo';
 import { processAutoSignals, syncAutoDetection } from './auto/runner';
 import { TRIP_TASK } from './constants';
 import { formatDistance } from './format';
 import { cancelLongTripReminder, clearTripNotification, showTripNotification } from './notify';
 
 let lastWidgetAt = 0;
+/** Engine pass from the GPS task (Phương 19/11): a Trip standing still ends on time even if no alarm fires. */
+let lastEngineAt = 0;
 
 TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ data, error }) => {
   if (error) return;
@@ -42,7 +47,7 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
     // B-95 backstop: the end-of-trip wake timer should have ended an automatic trip that stood still this long. If it
     // didn't fire (phone asleep), let the engine end it now — before fixes of the next drive join it.
     const mergeMs = getSettings(db).mergeStopMinutes * 60_000;
-    if (Date.now() - Math.max(active.lastPointAt ?? 0, active.startedAt) >= mergeMs) {
+    if (Date.now() - lastMoveAt(db, active) >= mergeMs) {
       await processAutoSignals();
       if (getActiveTrip(db)?.id !== active.id) return;
     }
@@ -51,6 +56,9 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
   // showed "stopped recording at 17:57"); drop anything older than the trip.
   const locations = (data?.locations ?? []).filter((l) => l.timestamp >= active.startedAt);
   if (locations.length === 0) return;
+  // Phương 19/11: when the motion sensor says the phone is still (and the driver allowed it), GPS wander adds nothing.
+  const engine = getKV<EngineState | null>(db, 'engine', null);
+  const sensorStill = engine?.activity === 'still' && hasActivityPermission();
   appendPoints(
     db,
     active.id,
@@ -61,6 +69,7 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
       accuracy: l.coords.accuracy ?? 999,
       speed: l.coords.speed,
     })),
+    { sensorStill },
   );
   // iOS (B-96): move the booked "Still on a trip?" / "Trip isn't recording" past this fix.
   if (Platform.OS === 'ios') await syncIosBackstops();
@@ -69,6 +78,10 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
   const unit = getSettings(db).distanceUnit;
   await showTripNotification(trip, formatDistance(trip.distanceM, unit));
   const now = Date.now();
+  if (now - lastEngineAt > 60_000) {
+    lastEngineAt = now;
+    processAutoSignals().catch(() => {});
+  }
   if (now - lastWidgetAt > 60_000) {
     lastWidgetAt = now;
     refreshWidgets().catch(() => {});

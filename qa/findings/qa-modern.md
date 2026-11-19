@@ -29,6 +29,37 @@ Cài đặt gốc từng máy: `qa-runs/modern/_baseline/`.
 - Lưu ý vận hành: máy chủ Windows chạm trần commit (7 máy ảo) nên phải tạm tắt XL để chạy máy 16 KB; lần đầu `adb install` (stream) làm
   máy 16 KB rơi offline — cài bằng `adb push` + `pm install` thì ổn.
 
+## 2f. Bản cuối `sundaysort-qa-19daeae-all.apk` (B-122 nhập tiền "viết sao ra vậy") — 2026-11-19 09:00–09:16
+
+XL `qa_pixel9proxl` (API 37), chữ 1.0, vùng UK, trial Pro. Ảnh: `qa-runs/modern/final-19daeae/`, `qa-runs/receipts/run-19daeae/`.
+
+**B-122:**
+
+| Kiểm | Kết quả |
+|---|---|
+| Nháp cũ: gõ "1250" trên 3f26b33 (hiện £12.50), về Home, cài đè 19daeae rồi mở | ✅ mở thẳng Ghi nhanh với £12.50 — đổi đúng, không thành £1,250.00 |
+| Gõ "3" sau nháp £12.50 | ✅ giữ £12.50 (không nhận chữ số thập phân thứ 3) |
+| Gõ "1" / "7,7" / "1250" / "72.4" / "0.05" | ✅ £1.00 / £7.70 / £1,250.00 / £72.40 / £0.05 |
+| Gõ "12345678" | ✅ £123,456.00 — chặn ở 6 chữ số nguyên (tối đa 999,999.99), không báo gì |
+| Gõ "5+2.5" | ✅ dòng phép tính "5.00+2.50", kết quả "= £7.50" |
+| Bàn phím | Gboard bàn phím số, có cả "." và "," + hàng + − × ÷ của app (Ghi nhanh và Sửa khoản) |
+| Sửa khoản: £7.70 → xoá → "1" → Save changes | ✅ Home −£1.00 |
+| Chọn ảnh khi đã gõ "1": chip "Receipt says £33.50 · Use" → Use | ✅ £33.50; xoá 3 ký tự → £33.00 |
+
+**Lỗi cũ của F (ô số tiền vừa đổi):**
+- **MOD-7 ✅:** chạm đúp Save với "7,7" → đúng 1 khoản −£7.70 ("1 entry to sort").
+- **MOD-9 ✅:** gõ "12" → Back ẩn bàn phím (`mInputShown=false`) → chạm số tiền → bàn phím hiện (`true`) → gõ "3" ra £123.00.
+- **MOD-2 ✅:**
+  - Đổi cỡ chữ lúc đang mở Ghi nhanh thì app dựng lại về Home, nhưng **nháp vẫn giữ** (mở lại có £123.00).
+  - Ở cỡ 2.0, £123,456.00 vẫn to, đủ đọc, không co.
+- **OCR:** 3 hoá đơn r02 / r12 / r24 cùng kết quả với 3f26b33: ✅ số tiền / nơi bán / ngày.
+  - r02: £33.50, Tesco, Thu 7 May.
+  - r12: £15.04, Shell, Tue 10 Mar.
+  - r24: £5,400.00, "J Stark industries", 1 Jan 2023.
+  - Thời gian: thu nhỏ 20–256 ms, OCR 1225–1650 ms.
+
+Không thấy lỗi mới. Máy ảo đã trả cỡ chữ 1.0, gỡ `qa.rx`, tắt.
+
 ## B-102 OCR 20 hoá đơn — 2026-11-18 11:45–14:40 (3 bản: 322acd6 → 4f297e1 → 08cdb7b)
 
 **Cách chạy:**

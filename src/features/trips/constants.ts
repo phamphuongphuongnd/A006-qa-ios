@@ -19,11 +19,16 @@ export const NOTIF_LONG_TRIP = 'trip-long';
 export const CATEGORY_RUNNING = 'trip-running';
 export const CATEGORY_PAUSED = 'trip-paused';
 export const CATEGORY_LONG = 'trip-long';
+/** A Trip that ended on its own: "Continue trip" (Phương 19/11). */
+export const CATEGORY_ENDED = 'trip-ended';
 
 export const ACTION_PAUSE = 'trip.pause';
 export const ACTION_RESUME = 'trip.resume';
 export const ACTION_END = 'trip.end';
 export const ACTION_KEEP = 'trip.keep';
+export const ACTION_CONTINUE = 'trip.continue';
+/** "Continue trip" is offered this long after a Trip ended on its own. */
+export const CONTINUE_WINDOW_MS = 2 * 60 * 60 * 1000;
 
 /** Brand colour for notification accents. */
 export const NOTIF_COLOR = '#F5B841';

@@ -58,6 +58,24 @@ _Avoid_: day trip, session
 
 **Stop**:
 A period inside a Trip where the vehicle is not moving (a drop, a red light, queueing); short Stops never end a Trip.
+GPS wander while the phone stays put (indoors, parked) is part of a Stop, never distance.
+
+**Trip end**:
+A Trip — automatic or started by the driver — ends on its own when a Stop outlasts the merge threshold, whether or not
+the Van Bluetooth device is still connected. The end time is when the vehicle stopped, and the driver is told.
+_Avoid_: timeout, auto-stop
+
+**Continue trip**:
+Reopening a Trip that ended on its own (shortly afterwards) so the same Trip keeps recording, for a long wait the
+driver didn't mean as the end.
+_Avoid_: resume (that is coming back from Personal stop)
+
+**Van Bluetooth device**:
+The vehicle's own Bluetooth device the driver picks; connecting to it starts an automatic Trip.
+_Avoid_: car kit, paired device
+
+**Start on charge**:
+Starting an automatic Trip when the phone is charging and the vehicle starts moving; charging alone never starts one.
 
 **Personal segment**:
 A part of a Trip re-scoped as Personal after the fact (a detour to or from a Stop), or skipped live with Personal stop.

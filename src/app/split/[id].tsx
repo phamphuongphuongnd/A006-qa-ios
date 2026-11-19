@@ -20,7 +20,7 @@ import { receiptUri } from '@/files/receipts';
 import { t } from '@/i18n';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, radius, useTheme } from '@/theme';
-import { Button, Card, EmptyState, IconButton, ReceiptThumb, Segmented, Txt } from '@/ui';
+import { Button, Card, EmptyState, IconButton, NUMERIC_INPUT, ReceiptThumb, Segmented, Txt } from '@/ui';
 
 interface Part {
   key: number;
@@ -130,6 +130,7 @@ function SplitEditor({ entry }: { entry: EntryRow }) {
                     value={p.text}
                     onChangeText={(v) => update(p.key, { text: v.replace(/[^\d.]/g, '') })}
                     keyboardType="decimal-pad"
+                    {...NUMERIC_INPUT}
                     placeholder="0.00"
                     placeholderTextColor={colors.placeholder}
                     accessibilityLabel={`${t('sort.part', { n: i + 1 })} ${t('capture.amountLabel')}`}

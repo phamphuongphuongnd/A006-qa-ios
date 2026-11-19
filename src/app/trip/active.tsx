@@ -395,7 +395,21 @@ function EndTripSheet({ trip, unit, onDone }: { trip: TripRow; unit: 'mi' | 'km'
     to: formatClock(trip.endedAt ?? trip.startedAt),
   });
   return (
-    <Sheet visible onClose={save}>
+    <Sheet
+      visible
+      onClose={save}
+      // QA-100 (iOS lượt 4g, P091 SE + AX-Large): Save sat below the parking field, out of sight without scrolling —
+      // pinned under the scrolling part now, with Discard next to it.
+      footer={
+        <View style={{ gap: 4, marginTop: 8 }}>
+          <Button label={t('common.save')} full onPress={save} />
+          <Pressable accessibilityRole="button" onPress={() => setAskDiscard(true)} style={{ minHeight: 48, alignItems: 'center', justifyContent: 'center' }}>
+            <Text maxFontSizeMultiplier={1.4} style={{ color: colors.error, fontSize: 17, fontFamily: fonts.bold }}>
+              {t('trip.discardTrip')}
+            </Text>
+          </Pressable>
+        </View>
+      }>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 6 }}>
         <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: colors.incomeSoft, alignItems: 'center', justifyContent: 'center' }}>
           <Check size={28} color={colors.incomeText} strokeWidth={2.6} />
@@ -434,10 +448,6 @@ function EndTripSheet({ trip, unit, onDone }: { trip: TripRow; unit: 'mi' | 'km'
         </ChipRow>
       ) : null}
       <ParkingField amount={parking} currency={currency} inlineCalc />
-      <Button label={t('common.save')} full onPress={save} />
-      <Pressable accessibilityRole="button" onPress={() => setAskDiscard(true)} style={{ minHeight: 48, alignItems: 'center', justifyContent: 'center', marginTop: -8 }}>
-        <Text style={{ color: colors.error, fontSize: 17, fontFamily: fonts.bold }}>{t('trip.discardTrip')}</Text>
-      </Pressable>
       <Dialog
         visible={askDiscard}
         title={t('trip.discardConfirm')}

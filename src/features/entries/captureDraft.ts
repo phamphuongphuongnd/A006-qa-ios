@@ -2,6 +2,7 @@ import { Directory, File, Paths } from 'expo-file-system';
 import { useEffect } from 'react';
 
 import type { EntryType, Scope } from '@/domain/types';
+import { legacyToPlain } from '@/features/ocr/calc';
 import { router } from '@/services/router';
 
 /**
@@ -12,6 +13,8 @@ import { router } from '@/services/router';
 export interface CaptureDraft {
   type: EntryType;
   expr: string;
+  /** 2 = amounts written as typed ("1" = 1.00, Phương 18/11); missing = the old cash-register form. */
+  exprV?: number;
   note: string;
   scope: Scope;
   at: number | null;
@@ -28,7 +31,7 @@ export function saveDraft(d: Omit<CaptureDraft, 'savedAt'>): void {
   try {
     const f = file();
     f.create({ overwrite: true });
-    f.write(JSON.stringify({ ...d, savedAt: Date.now() }));
+    f.write(JSON.stringify({ ...d, exprV: 2, savedAt: Date.now() }));
   } catch {
     // Best effort: a draft is a convenience.
   }
@@ -50,7 +53,9 @@ export function readDraft(now = Date.now()): CaptureDraft | null {
       clearDraft();
       return null;
     }
-    return { ...d, photoUris: (d.photoUris ?? []).filter((u) => new File(u).exists) };
+    // A draft saved before 18/11 holds the amount cash-register style ("1250" = 12.50): same value in today's form.
+    const expr = d.exprV === 2 ? d.expr : legacyToPlain(d.expr);
+    return { ...d, expr, exprV: 2, photoUris: (d.photoUris ?? []).filter((u) => new File(u).exists) };
   } catch {
     return null;
   }

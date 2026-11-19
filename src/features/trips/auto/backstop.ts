@@ -8,7 +8,7 @@ import { Platform } from 'react-native';
 
 import { db } from '@/db/client';
 import { getSettings } from '@/db/settingsRepo';
-import { getActiveTrip } from '@/db/tripsRepo';
+import { getActiveTrip, lastMoveAt } from '@/db/tripsRepo';
 
 import { needsRebook, planBackstops } from './backstopPlan';
 import { INITIAL_ENGINE_STATE, type EngineState, type EngineTrip } from './engine';
@@ -25,10 +25,19 @@ export async function syncIosBackstops(now = Date.now()): Promise<void> {
     const active = getActiveTrip(db);
     const trip: EngineTrip | null =
       active && (active.status === 'running' || active.status === 'paused')
-        ? { id: active.id, status: active.status, startedBy: active.startedBy, startedAt: active.startedAt, lastPointAt: active.lastPointAt }
+        ? {
+            id: active.id,
+            status: active.status,
+            startedBy: active.startedBy,
+            startedAt: active.startedAt,
+            lastPointAt: active.lastPointAt,
+            lastMoveAt: lastMoveAt(db, active),
+          }
         : null;
     // Same key as runner.ts KEY_ENGINE.
-    const plan = s.notify.missedTrip ? planBackstops(trip, getKV<EngineState>(db, 'engine', INITIAL_ENGINE_STATE), now) : { still: null, silent: null };
+    const plan = s.notify.missedTrip
+      ? planBackstops(trip, getKV<EngineState>(db, 'engine', INITIAL_ENGINE_STATE), now, s.mergeStopMinutes * 60_000)
+      : { still: null, silent: null };
     if (needsRebook(booked.still, plan.still)) {
       booked.still = plan.still;
       if (plan.still === null) await cancelScheduled(NOTIF_STILL);

@@ -1,5 +1,5 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Linking, PermissionsAndroid, Platform, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -73,6 +73,12 @@ export default function AutoTripsScreen() {
   const st = autoStatus(on, health, flags.lastRunAt, now);
   const android = Platform.OS === 'android';
   const samsung = isSamsung();
+  const vanAddress = settings.vanBtDevice?.address ?? null;
+  // Phương 19/11: headphones picked as the van would start a trip whenever they connect.
+  const vanIsPersonal = useMemo(
+    () => (android && vanAddress ? bondedDevices().find((d) => d.address === vanAddress)?.kind === 'personal' : false),
+    [android, vanAddress],
+  );
 
   const apply = async (patch: Partial<AppSettings>) => {
     update(patch);
@@ -155,6 +161,7 @@ export default function AutoTripsScreen() {
               icon={<Bluetooth size={20} color={colors.textSecondary} />}
               title={t('autoTrip.vanBt')}
               sub={settings.vanBtDevice?.name ?? settings.vanBtDevice?.address ?? t('autoTrip.vanBtNone')}
+              warn={vanIsPersonal ? t('autoTrip.btNotVan') : undefined}
               right={<ChevronRight size={20} color={colors.textTertiary} />}
               onPress={() => setBtOpen(true)}
             />
@@ -222,11 +229,26 @@ function ScrollBody({ children }: { children: React.ReactNode }) {
   return <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 48 }}>{children}</ScrollView>;
 }
 
-function Row({ icon, title, sub, right, onPress }: { icon?: React.ReactNode; title: string; sub?: string; right?: React.ReactNode; onPress?: () => void }) {
+function Row({
+  icon,
+  title,
+  sub,
+  warn,
+  right,
+  onPress,
+}: {
+  icon?: React.ReactNode;
+  title: string;
+  sub?: string;
+  /** Phương 19/11: e.g. headphones picked as the van. */
+  warn?: string;
+  right?: React.ReactNode;
+  onPress?: () => void;
+}) {
   return (
     <Pressable
       accessibilityRole={onPress ? 'button' : undefined}
-      accessibilityLabel={sub ? `${title}. ${sub}` : title}
+      accessibilityLabel={[title, sub, warn].filter(Boolean).join('. ')}
       disabled={!onPress}
       onPress={onPress}
       style={({ pressed }) => [{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingVertical: 10 }, pressed && { opacity: 0.7 }]}>
@@ -236,6 +258,11 @@ function Row({ icon, title, sub, right, onPress }: { icon?: React.ReactNode; tit
         {sub ? (
           <Txt v="small" c="textSecondary">
             {sub}
+          </Txt>
+        ) : null}
+        {warn ? (
+          <Txt v="small" c="sunText">
+            {warn}
           </Txt>
         ) : null}
       </View>
@@ -280,6 +307,7 @@ function VanBluetoothSheet({
             key={d.address}
             title={d.name ?? d.address}
             sub={d.address === current ? '✓' : undefined}
+            warn={d.kind === 'personal' ? t('autoTrip.btNotVan') : undefined}
             onPress={() => onPick({ address: d.address, name: d.name })}
           />
         ))
