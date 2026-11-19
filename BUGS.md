@@ -566,7 +566,7 @@
   941 test xanh. ✅ phiên B (19daeae, API 26 + Android 7): "1"/"7,7"/"1250"/"0.5" → 1.00/7.70/1,250.00/0.50, nháp cũ "1250" vẫn £12.50, sửa khoản
   "3" → 3.00. ✅ phiên F (Pixel 9 Pro XL API 37): như trên + "72.4"/"0.05"/"5+2.5", chip receipt, bàn phím có "." ",". 🟡 gõ "12345678" bị cắt
   còn 123,456.00 không báo (trần 999,999.99) — ghi nhận. ⏳ A13 (Phương bấm) + iOS.
-- [ ] **B-123** 🟠 (Phương thử A13 tối 18/11) (1) Start tay trong nhà 20:50→21:48: đứng yên mà quãng đường vẫn tăng; (2) chuyến Bluetooth 17:46→20:50 về
+- [x] **B-123** 🟠 (Phương thử A13 tối 18/11) (1) Start tay trong nhà 20:50→21:48: đứng yên mà quãng đường vẫn tăng; (2) chuyến Bluetooth 17:46→20:50 về
   nhà ngồi > 20 phút không tự tắt; (3) Bluetooth xe chỉ bật chuyến 1 lần. Gốc (code): trong nhà Android trả điểm GPS **không có tốc độ**, nhảy
   25–80 m → `isStationaryFix` giữ lại (chỉ lọc khi có tốc độ) → cộng quãng đường + `lastPointAt` cứ mới → luật "20 phút không có điểm" không bao giờ
   tới; chuyến không tắt nên các lần kết nối Bluetooth sau bị bỏ qua (đang có chuyến). **Phương chốt (grill 19/11, CONTEXT.md):** cảm biến báo đứng
@@ -579,7 +579,8 @@
   tới 55 km/h; cảm biến 'still' từ 19:00:57; Bluetooth van nối/ngắt nhiều lần 17:35–18:40 trong khi chuyến vẫn mở. Chạy lại điểm thật qua logic mới:
   chuyến BT mwm01sj7… 11184 m → 10647 m, đỗ từ 18:55:05 → tự tắt ~19:15 (cũ: không tắt tới 20:50); chuyến tay mwm6ism0… 584 m → 0 m, tắt ~21:10.
   946 test xanh. ✅ A13 (bcf8827, phiên E): chuyến auto do Bluetooth 09:40:29, máy nằm yên → 10:00:47 tự dừng ghi (20 phút), < 500 m nên bỏ cả
-  điểm GPS, không còn chuyến running. ⏳ Phương thử thật: Start tay ngồi nhà ≥ 25 phút (giữ chuyến, ~0 km, thông báo Continue); lái xe về nhà; Continue trip.
+  điểm GPS, không còn chuyến running. ✅ A13 Start tay ngồi nhà 10:19 / 10:52 / 11:16 → tự kết thúc, 0.0 km, giờ kết thúc = lúc đỗ, thông báo có
+  Continue (B-130/B-135). Chạy xe thật về nhà → danh sách "chưa test — báo Phương sau".
 - [x] **B-124** 🟠 (A13-13, phiên E) Bluetooth xe nối khi app ở nền → **không bật chuyến**, chỉ hiện "Driving? Tap to record" (18/11 17:35, tái hiện
   19/11 09:12); chuyến 17:46 hôm đó là do cảm biến "driving", không phải Bluetooth. Logcat `qa-runs/a13/logcat-1119-bt-start-failed.txt`: Android 14
   **cho phép** service vị trí khởi động từ nền (`Background started FGS: Allowed … SYSTEM_ALLOW_LISTED`, app đã tắt tối ưu pin + vị trí "luôn luôn"),
