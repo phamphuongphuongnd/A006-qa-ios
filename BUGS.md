@@ -245,8 +245,8 @@
   khi tài xế mở app, các tác vụ nền chạy trên schema cũ → điểm GPS / chuyến tự động / sao lưu đêm / widget lỗi âm thầm. Sửa: `src/db/migrate.ts`
   `ensureMigrated()` (chạy 1 lần mỗi runtime, lỗi thì thử lại), `_layout` dùng chung, mọi điểm vào nền `await ensureMigrated()`
   (`backgroundTask.ts` ×3, `nightlyTask.ts`, `widgets/register.ts`). ⏳ thử: cài mới (logcat không còn "no such table") + cập nhật đè.
-- [ ] **B-60** 🟡 (QA OLD-3) 360dp: nút nổi "+" che nửa phải nút "Actual costs" trong thẻ "Choose how you claim your vehicle" (Reports) ở vị trí
-  mặc định; cuộn lên thì bấm được (đệm 100dp). Phương chọn **xếp dọc**: màn < 420dp → 2 nút thành 2 hàng, chừa lề phải 56dp cho nút + (`reports.tsx`). ⏳ thử 360dp.
+- [x] **B-60** 🟡 (QA OLD-3) 360dp: nút nổi "+" che nửa phải nút "Actual costs" trong thẻ "Choose how you claim your vehicle" (Reports) ở vị trí
+  mặc định; cuộn lên thì bấm được (đệm 100dp). Phương chọn **xếp dọc**: màn < 420dp → 2 nút thành 2 hàng, chừa lề phải 56dp cho nút + (`reports.tsx`). ✅ phiên B (a3a1f6b, API 26 360dp): 2 nút xếp dọc, + không che "Actual costs".
 - [x] **B-61** 🟡 (QA phiên A) Ô số tiền: bàn phím số Android có phím "." nhưng app bỏ dấu chấm (kiểu máy tính tiền) → gõ "7.5" ra £0.75,
   "120" ra £1.20. Phương chốt **nhận dấu chấm**: `features/ocr/calc.ts` — toán hạng tiền có dấu chấm = số thập phân (≤ 2 số sau dấu, "," = "."),
   không dấu vẫn kiểu máy tính tiền; toán hạng × ÷ bỏ dấu; test `calc.test.ts` "decimal point". Áp cho Ghi nhanh, Sửa khoản, Parking & tolls. ⏳ thử máy.
@@ -296,8 +296,8 @@
   giữ chốt; "Keep adding" mở chốt sau 300 ms (khi số đã xoá); lỗi giữa chừng thì mở lại. Cùng mẫu đã sửa luôn: thêm chuyến tay (`trip/new.tsx`),
   số đồng hồ (`trip/odometer.tsx` — chốt bằng state không chặn 2 chạm cùng khung hình → thêm ref), khoản lặp lại (`recurring.tsx`, 1 lần lưu mỗi
   lần mở sheet). Luật (`rules.tsx`) đã có kiểm trùng trong DB. ⏳ phiên F thử lại P056 + thử chạm đúp 3 màn kia.
-- [ ] **B-71** 🟡 (QA A13-1, phiên E) Đổi vùng US → UK có quy đổi: ô tỷ giá gợi ý "e.g. 0.79" nhưng nhập sai thì báo "Enter a rate like 1.27"
-  (chuỗi lỗi cố định). Sửa: `settings.tsx` dùng chung ví dụ theo vùng cho gợi ý và lỗi (`rateError` có `{example}`). ⏳ A13.
+- [x] **B-71** 🟡 (QA A13-1, phiên E) Đổi vùng US → UK có quy đổi: ô tỷ giá gợi ý "e.g. 0.79" nhưng nhập sai thì báo "Enter a rate like 1.27"
+  (chuỗi lỗi cố định). Sửa: `settings.tsx` dùng chung ví dụ theo vùng cho gợi ý và lỗi (`rateError` có `{example}`). ✅ phiên B (a3a1f6b): UK→US "e.g. 1.27" / lỗi "like 1.27", US→UK "0.79", tổng Reports không đổi.
 - [x] **B-72** 🟠 (QA OLD-9, hồi quy B-57/B-58 trên 538ede9, phiên B) Android 8 360dp: chế độ gọn đã chạy nhưng số tiền vẫn ~4px và hàng
   + − × ÷ vẫn bị bàn phím che nửa. Gốc: `adjustsFontSizeToFit` của Android tính cỡ chữ 1 lần lúc vùng số còn ~0 (bàn phím đang mở) và không
   phóng lại; bù `insets.bottom` (B-58) là đoán sai. Sửa (`capture.tsx`): cỡ chữ số tiền tính từ chiều cao đo được của vùng số + độ dài chuỗi
@@ -594,11 +594,12 @@
   `capture.tsx` ~480–507) hoặc cờ chữ hoa mặc định (`autoCapitalize`) lẫn vào inputType. Chưa tái hiện được tại chỗ (không có Pixel thật). Thử sửa: ô ẩn thêm `inputMode="decimal"`,
   `autoCapitalize="none"`, `autoCorrect={false}`, `autoComplete="off"` (bỏ cờ chữ). ✅ phiên G (dc84207, Pixel 11 thật Android 17, matrix-3d94eks0jsst6): bàn phím số, "7,7" → $7.70,
   inputType 0x282002 (NUMBER|DECIMAL). Phương 19/11: áp cho mọi ô số — `NUMERIC_INPUT` (ui/Controls) tự thêm vào `Field` có
-  bàn phím số + Sửa khoản, tách khoản, thẻ Sort (2 ô), phí đỗ xe. ✅ A13 (dc84207): Ghi nhanh inputType 0x2002, bàn phím số Samsung. ⏳ phiên G: Sửa khoản / phí đỗ xe trên Pixel 11 thật.
-- [ ] **B-127** 🟡 (QA phiên D + F, 19/11 — Phương: không chấp nhận lỗi giao diện nhỏ) (a) link `export?year=999999` / `year=-5` hiện "Tax year 999999" +
+  bàn phím số + Sửa khoản, tách khoản, thẻ Sort (2 ô), phí đỗ xe. ✅ A13 (dc84207): Ghi nhanh inputType 0x2002, bàn phím số Samsung. ✅ Pixel 11 thật (phiên G, 0bf4283): Ghi nhanh, Sửa khoản, Sort Edit, mileage rate; ✅ API 26 (phiên B): Sửa khoản, Split, phí đỗ xe, tỷ giá.
+- [x] **B-127** 🟡 (QA phiên D + F, 19/11 — Phương: không chấp nhận lỗi giao diện nhỏ) (a) link `export?year=999999` / `year=-5` hiện "Tax year 999999" +
   file rỗng; (b) mở link export khi màn Export đang mở thì giữ kỳ cũ; (c) gõ quá 999,999.99 thì chữ số bị bỏ, chỉ rung nhẹ (máy không rung / giả lập:
   không biết gì). Sửa: `saneReportYear` (2000 … năm sau, số nguyên; sai → năm thuế hiện tại) + test; `ExportPanel` key theo tham số link (link mới =
-  kỳ mới); `useAmountExpr.atLimit` + `AmountLimitHint` "Max £999,999.99" ở Ghi nhanh, Sửa khoản, phí đỗ xe. 947 test xanh. ⏳ kiểm trên máy.
+  kỳ mới); `useAmountExpr.atLimit` + `AmountLimitHint` "Max £999,999.99" ở Ghi nhanh, Sửa khoản, phí đỗ xe. 947 test xanh. ✅ phiên B (a3a1f6b, API 26): Max ở cả 3 ô, year=999999/-5 → 2026/27, link mới
+  khi Export đang mở → đổi kỳ đúng.
 - [ ] **B-128** 🟠 (QA F-3, phiên G — Pixel 11 thật, 0bf4283) Sort → thẻ → Edit → chạm Amount: bàn phím mở, thẻ tự cuộn xuống cuối → ô Amount, Note, nút Done
   khuất (chỉ thấy Date / MOST USED / Work-Personal) — gõ tiền không thấy số. Ảnh `qa-runs/firebase/numeric-0bf4283/cubs-37/artifacts/17–19.png`.
   Gốc: `SortEntryCard.tsx` `scrollToEnd()` khi bàn phím mở (useEffect + onLayout) dành cho Split (B-38, giữ "Split & sort" trong tầm) nhưng cũng chạy ở Edit.
@@ -619,4 +620,9 @@
   Gốc: `reports.tsx` truyền `report.unsortedCount` thô vào `t('reports.unsortedWarn')`.
   Sửa chung: `t()` nhóm nghìn cho tham số đếm (`count`, `total`, `done`) — mọi câu "N entries / trips" trong app; năm, phút không đổi + test.
   955 test xanh. ⏳ máy.
+- [ ] **B-133** 🟠 (QA OLD-18, phiên B — a3a1f6b API 26) Tách khoản (thẻ Sort → Split; cũng màn Split, Sort → Edit, luật min/max): ô số không đọc như Ghi nhanh
+  (B-122) — "33,01" thành "3301" (£3,267.99 over), "33.011" tính 0, "12345678" nhận hết không báo Max (ô 360dp chỉ hiện "345678"); chạm ô Part 1 → thẻ
+  cuộn xuống đáy, ô đang gõ khuất. Gốc: các ô tự lọc `v.replace(/[^\d.]/g, '')` (bỏ dấu phẩy, không giới hạn), thẻ Split luôn `scrollToEnd` (B-38).
+- [ ] **B-134** 🟡 (QA OLD-17a/b, phiên B) (a) Reports 360dp chưa cuộn: nút + đè chữ "until" ở dòng phụ thẻ vehicle; (b) phí đỗ xe: đang gõ thì thanh tính che
+  dòng Max; đóng bàn phím thanh tính vẫn còn → "Parking & tolls £…" hiện 2 lần; (c) Add trip có phí đỗ xe → X đóng luôn, không hỏi "Discard?".
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
