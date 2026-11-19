@@ -581,5 +581,6 @@
   headphones or a speaker, not a van…". 946 test xanh. ⏳ A13 (Redmi Buds phải hiện cảnh báo, Bluetooth xe thì không).
 - [ ] **B-126** 🟡 (QA F-2, phiên G — Firebase máy thật Pixel 11, 2/2 lượt: 97ceb60 number-pad + 19daeae decimal-pad) Ô số tiền Ghi nhanh mở **Gboard
   QWERTY** thay vì bàn phím số; ảo A17 (cũng Gboard), S26, S9, Fold6, OPPO đều bàn phím số. Nghi TextInput ẩn (`caretHidden` / `contextMenuHidden`,
-  `capture.tsx` ~480–507) hoặc cờ chữ hoa mặc định (`autoCapitalize`) lẫn vào inputType. Chưa tái hiện được tại chỗ (không có Pixel thật).
+  `capture.tsx` ~480–507) hoặc cờ chữ hoa mặc định (`autoCapitalize`) lẫn vào inputType. Chưa tái hiện được tại chỗ (không có Pixel thật). Thử sửa: ô ẩn thêm `inputMode="decimal"`,
+  `autoCapitalize="none"`, `autoCorrect={false}`, `autoComplete="off"` (bỏ cờ chữ). ⏳ phiên G chạy lại Pixel 11 thật.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
