@@ -145,3 +145,24 @@ describe('Stop vs driving (Phương 19/11, A13 test at home)', () => {
     expect(parkedSince([fix(0, 0), fix(60_000, 500)], 0)).toBe(60_000); // still moving: the last fix
   });
 });
+
+describe('walkTrack re-anchors after a bad first fix (QA A37-11)', () => {
+  it('a stale fix far away first does not freeze the trip at 0', () => {
+    const { trackDistance } = jest.requireActual('../mileage') as typeof import('../mileage');
+    const T = 1_800_000_000_000;
+    // London first (stale), then a drive in New York: 10 fixes 10 s apart, ~150 m each (15 m/s).
+    const pts = [{ lat: 51.5, lng: -0.12, ts: T, accuracy: 10 }];
+    for (let i = 1; i <= 10; i++) pts.push({ lat: 40.7 + i * 0.00135, lng: -74.0, ts: T + i * 10_000, accuracy: 10 });
+    const d = trackDistance(pts);
+    expect(d).toBeGreaterThan(1000);
+    expect(d).toBeLessThan(1500);
+  });
+  it('a single glitch is still dropped', () => {
+    const { trackDistance } = jest.requireActual('../mileage') as typeof import('../mileage');
+    const T = 1_800_000_000_000;
+    const pts = [0, 1, 2, 3, 4].map((i) => ({ lat: 53.8 + i * 0.00135, lng: -1.5, ts: T + i * 10_000, accuracy: 10 }));
+    pts.splice(2, 0, { lat: 40.7, lng: -74, ts: T + 15_000, accuracy: 10 });
+    expect(trackDistance(pts)).toBeGreaterThan(550);
+    expect(trackDistance(pts)).toBeLessThan(650);
+  });
+});

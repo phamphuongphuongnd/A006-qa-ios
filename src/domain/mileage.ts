@@ -122,25 +122,52 @@ export function countedPath<T extends GpsPoint>(points: T[]): T[] {
   return walkTrack(points).path;
 }
 
+/** This many fixes in a row that agree with each other but not with the anchor: the anchor was the glitch (QA A37-11). */
+export const REANCHOR_AFTER = 3;
+
+const plausible = (a: GpsPoint, b: GpsPoint) => {
+  const dt = (b.ts - a.ts) / 1000;
+  return dt > 0 && haversine(a, b) / dt <= MAX_SPEED_MPS;
+};
+
 function walkTrack<T extends GpsPoint>(points: T[]): { distance: number; path: T[] } {
   let total = 0;
   let anchor: T | null = null;
   const path: T[] = [];
+  // Fixes dropped as glitches since the last kept one, while they agree with each other.
+  let rejected: T[] = [];
+  const step = (p: T) => {
+    if (!anchor) return;
+    const d = haversine(anchor, p);
+    const threshold = Math.min(MAX_MOVE_THRESHOLD_M, Math.max(MIN_MOVE_M, anchor.accuracy + p.accuracy));
+    if (d < threshold) return; // still within the noise around the anchor
+    total += d;
+    anchor = p;
+    path.push(p);
+  };
   for (const p of points) {
     if (p.accuracy > MAX_ACCURACY_M) continue;
     if (!anchor || p.segmentStart) {
       anchor = p;
       path.push(p);
+      rejected = [];
       continue;
     }
-    const d = haversine(anchor, p);
-    const dt = (p.ts - anchor.ts) / 1000;
-    if (dt <= 0 || d / dt > MAX_SPEED_MPS) continue; // glitch: drop the point, keep the anchor
-    const threshold = Math.min(MAX_MOVE_THRESHOLD_M, Math.max(MIN_MOVE_M, anchor.accuracy + p.accuracy));
-    if (d < threshold) continue; // still within the noise around the anchor
-    total += d;
-    anchor = p;
-    path.push(p);
+    if (!plausible(anchor, p)) {
+      // Glitch: drop the point, keep the anchor — unless the anchor itself was the odd one out (A37-11: a stale fix far
+      // away as the first point made every real fix after it look impossible, and the trip stayed at 0.0 mi).
+      rejected = rejected.length && plausible(rejected[rejected.length - 1], p) ? [...rejected, p] : [p];
+      if (rejected.length >= REANCHOR_AFTER) {
+        const [first, ...rest] = rejected;
+        anchor = first;
+        path.push(first);
+        rejected = [];
+        rest.forEach(step);
+      }
+      continue;
+    }
+    rejected = [];
+    step(p);
   }
   return { distance: total, path };
 }

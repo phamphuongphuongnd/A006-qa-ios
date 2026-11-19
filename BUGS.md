@@ -380,10 +380,12 @@
   ("Tried to access onActivityResult while context is not ready") nên `getPendingResultAsync` luôn rỗng. Sửa lần 2: trước khi mở camera ghi
   `cameraStartedAt` vào nháp; mở lại nháp → lấy ảnh không rỗng mới hơn mốc đó trong `cache/ImagePicker/` (`cameraPhotosSince`); huỷ camera trên khoản
   trống thì xoá nháp. Nút "+" ẩn ở cửa sổ thấp cho mọi tab (`CaptureFab`).
-- [ ] **B-90** 🟠 (QA A37-7, phiên A) Chế độ tối: mọi nút `variant="sun"` chữ vàng trên nền vàng (chỉ thấy viên thuốc trống) — "Sort first" (Export có khoản
+- [x] **B-90** 🟠 (QA A37-7, phiên A) Chế độ tối: mọi nút `variant="sun"` chữ vàng trên nền vàng (chỉ thấy viên thuốc trống) — "Sort first" (Export có khoản
   chưa sort), "End trip" (Home khi đang có chuyến), "Back up now"/"Choose again", "Subscribe now"/"Try free", "See Pro", Save chi tiết chuyến, "Always"…
   Gốc: `ui/Button.tsx` `sun: { fg: 'primary' }`, mà ở theme tối `primary` = `sun` = #F5B841. Sửa: chữ dùng token `onSun` có sẵn (sáng #18202F, tối
-  #12161C). ✅ iOS lượt 4d + 4g (phiên C, tối). ⏳ phiên A: chụp lại 2 màn trên ở chế độ tối (Android).
+  #12161C). ✅ iOS lượt 4d + 4g (phiên C, tối). ✅ Android (phiên A, 62d6558, API 37 tối): "Sort first", "End trip", "Add miles",
+  "Try Pro free", "See Pro", "Choose backup folder", "Choose folder again", Save kết thúc chuyến đọc rõ; ⏭ "Subscribe now" / "Always" / "Back up now" vàng
+  (chỉ hiện khi Pro / lỗi sao lưu; cùng Button variant="sun").
 - [x] **B-91** 🟡 (QA REG-1, phiên D — B-81/B-87 chưa trọn) Chọn file "bom" có `backup.json` 200 MB: không báo gì, RAM giữ ~515 MB 2 phút; bom ảnh báo
   "damaged" đúng nhưng RAM vẫn lên ~520 MB. Gốc: `fail()` chỉ ghi lỗi, mục đang giải nén không dừng, mỗi lần nạp 1 MB nén có thể nở hàng trăm MB.
   Sửa (`streamRestore.ts`): kích thước khai báo trong header vượt giới hạn → từ chối trước khi giải nén; nạp 64 KB/lần; vượt → `terminate()`.
@@ -639,10 +641,10 @@
   Sửa (Android): `gpsPower.ts` `gpsModeFor` (không di chuyển thật ≥ 2 phút và cảm biến không báo lái → 'parked'), `syncGpsMode` đổi tham số GPS (High,
   30 s) / về BestForNavigation 5 s; gọi từ task GPS (≤ 20 s/lần) và sau mỗi lượt engine; nhật ký `gps_mode`. 953 test xanh. ✅ A13 (8619687): Start 11:40:44 nằm yên → 11:42:55 đăng ký lại HIGH_ACCURACY 30 s (giảm 6 lần số lần
   lấy vị trí), CPU 0,28 %, không wakelock (`perf-trip-still-8619687.json`). ⏳ nhánh lái lại → 5 s (cần đi > 100 m / lái xe thật).
-- [ ] **B-132** 🟡 (QA A37-10, phiên A — a3a1f6b) Reports: "1620 entries in this period aren't sorted yet" thiếu dấu phẩy nghìn (như B-79 ở Home).
+- [x] **B-132** 🟡 (QA A37-10, phiên A — a3a1f6b) Reports: "1620 entries in this period aren't sorted yet" thiếu dấu phẩy nghìn (như B-79 ở Home).
   Gốc: `reports.tsx` truyền `report.unsortedCount` thô vào `t('reports.unsortedWarn')`.
   Sửa chung: `t()` nhóm nghìn cho tham số đếm (`count`, `total`, `done`) — mọi câu "N entries / trips" trong app; năm, phút không đổi + test.
-  955 test xanh. ⏳ máy.
+  955 test xanh. ✅ phiên A (62d6558, P004): Reports "1,620 entries…", Export "1,620 entries aren't sorted", Home "2,004 entries to sort", năm "2026".
 - [x] **B-133** 🟠 (QA OLD-18, phiên B — a3a1f6b API 26) Tách khoản (thẻ Sort → Split; cũng màn Split, Sort → Edit, luật min/max): ô số không đọc như Ghi nhanh
   (B-122) — "33,01" thành "3301" (£3,267.99 over), "33.011" tính 0, "12345678" nhận hết không báo Max (ô 360dp chỉ hiện "345678"); chạm ô Part 1 → thẻ
   cuộn xuống đáy, ô đang gõ khuất. Gốc: các ô tự lọc `v.replace(/[^\d.]/g, '')` (bỏ dấu phẩy, không giới hạn), thẻ Split luôn `scrollToEnd` (B-38).
@@ -663,9 +665,13 @@
   giữ khoản nguyên.
 - [ ] **B-137** 🟠 (QA QI-6, phiên C — iOS simulator, cũng đúng trên Android) Màn chuyến đang chạy không bao giờ hiện bản đồ (chỉ hình vẽ dự phòng) nếu
   điểm GPS đầu tiên về sau 12 s. Mạng tới tiles.openfreemap.org bình thường (HTTP 200, 0,2–0,7 s). Gốc: `TripMap.tsx` đếm 12 s từ lúc gắn, kể cả khi chưa có
-  điểm → `failed` cả chuyến. Sửa: chỉ đếm khi bản đồ đã có khung (có điểm). 965 test xanh. ⏳ máy (GPS lạnh / iOS lượt sau).
+  điểm → `failed` cả chuyến. Sửa: chỉ đếm khi bản đồ đã có khung (có điểm). 965 test xanh. ✅ Android (phiên A, 62d6558): khởi động lại máy (không có vị trí
+  cũ) → Start → "Finding GPS…" → có fix → bản đồ ở 10/30/60 s. ⏳ iOS (phiên C).
 - [ ] **B-138** 🟡 (Phương thử A13 19/11 14:32, 62d6558) Ghi nhanh: gõ £12.05 rồi chụp hoá đơn $42 → chip "Receipt says £42.00 · Use" đúng (OCR đúng số), nhưng
   dòng ghi chú đọc từ hoá đơn (tên cửa hàng · From receipt) nằm DƯỚI chip, không đọc được (ảnh scratchpad a13/now.png). Gốc: bàn phím mở, vùng giữa
   chật, số tiền lấy hết chiều cao → dòng ghi chú tràn xuống vùng dưới. Sửa: cỡ số tiền chừa 30dp cho dòng ghi chú; quá chật thì tạm ẩn dòng đó.
   969 test xanh. ⏳ A13. Ghi chú: chụp chậm là camera Samsung — sau bấm chụp 3–4,4 s xử lý ảnh (AutoBeauty, logcat) + màn xác nhận ✓; app đọc hoá đơn ~2 s.
+- [ ] **B-139** 🟡 (QA A37-11, phiên A — 1/3 lần, giả lập) Chuyến đứng 0.0 mi suốt 5 phút dù nhận ~30 fix: fix đầu là vị trí cũ ở rất xa (giả lập phát lại) → mọi
+  fix sau bị coi là nhiễu (> 56 m/s so với mốc). Máy thật hiếm (fix cũ hơn giờ bắt đầu đã bị bỏ) nhưng một fix mạng sai xa cũng gây ra. Sửa: `walkTrack` —
+  3 fix liên tiếp khớp nhau mà đều "không thể" so với mốc → mốc mới là fix đầu của chuỗi (không cộng cú nhảy) + test. 971 test xanh. ⏳ giả lập.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
