@@ -157,6 +157,15 @@ kết quả kick/start. Đã báo điều phối.
   drive (> 100 m) + gps_mode trong chẩn đoán.
 - **57646f8 cài 11:53:13** (không có chuyến, Back up now trước). **B-135 ✅**: Start 11:54:41 → tự kết thúc 12:05:30 → Phương
   chờ ~5 phút → Continue 12:10:34 → tự kết thúc 12:21:30 (10 phút 56 s sau Continue), "Trip ended at 12:10" ≥ giờ bấm.
+- **Drive check (0882755) 13:49–14:15**: Phương đi bộ 2–3 phút → 13:49:54 probe_start + "Checking for a drive…" ✅ → probe_none
+  14:02:05 ✅; CPU probe 0.02%/152 s, 0 wakelock (`perf-drive-check-probe.json`). 13:52:00 start_ok {charging} (Phương cắm lại cáp
+  máy tính khi đang đi) → **A13-16 🟠** probe_none 14:02:05 dừng LocationTaskService dù chuyến 13:52 đang chạy → GPS chỉ chạy lại
+  14:03:11 khi app mở; chuyến bỏ 14:13:58 (< 500 m). `diagnostics/SundaySort-trip-diagnostics-2026-11-19-07-54.json`.
+- **A13-15 (chuyến 11:16 user bị xoá)**: backup Drive 11:39 còn, 11:52 mất; Recently deleted có 4 chuyến 0 km (3 của QA + 1) →
+  Phương xác nhận "hình như tôi xoá" → không phải lỗi app, đóng.
+- **62d6558 cài 14:23:33. B-99 ✅** (vân tay thật, App lock 1 phút): camera mở 2 phút tự đóng → về Ghi nhanh không khoá, nháp còn;
+  chụp sau 1:45 → thêm ảnh, không khoá; thư viện 1:23 → thêm ảnh. Camera Samsung ~4 s từ chụp tới màn xem lại (chế độ làm đẹp) —
+  không phải lỗi app. Đã Discard nháp, tắt App lock.
 - **0882755 cài 12:25:58**. B-136 Max: 12345678 → £123,456.00 CÓ "Max…"; 999999.99 → KHÔNG có dòng Max (ngược mô tả "chỉ khi
   chạm trần" — đã báo). **B-136 Split ✅**: sửa Part 1 → Close → "Discard this split?" → Discard → khoản £189.99 nguyên.
   B-131 chẩn đoán ✅ gps_mode drive 12:10:34 → parked 12:12:46. **B-88 Drive check chưa kích hoạt**: Phương chỉ cầm máy đi vài bước;
