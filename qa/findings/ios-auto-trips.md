@@ -77,3 +77,13 @@ Bản build simulator `55db0eb` (chưa có B-96). Gói Appetize miễn phí: m�
 - 🟠 **Mới — câu xin quyền vị trí iOS sai từ khi có chuyến tự động** (`app.json`): "records your route only while a trip you
   started is running" và "Recording stops when you end the trip" — nhưng bật chuyến tự động thì app theo dõi đổi vị trí /
   vùng 150 m ở nền cả khi không có chuyến. Apple 5.1.1 yêu cầu câu mục đích đúng → cần sửa trước khi nộp App Store.
+
+## Kiểm bản sửa B-117 / B-118 qua lượt iOS 4g (GitHub Actions 44274943533, dev 4e4b030) · 2026-11-19
+Đọc artifact `qa-ios-5` (ảnh + `commands.json` bước `16_end_trip`), iOS 26.5:
+- **B-117 ✅** P052 (iPhone SE): Start trip → End trip → tấm "Trip saved · 0.0 mi" hiện ngay (`P052_16b_end_sheet.jpg`) → Save
+  → Home + thông báo "Trip saved · 0.0 mi" (`P052_16c_after_save.jpg`). P091 (SE, chữ `accessibility-large`): tấm cũng hiện,
+  không treo (`P091_16b_end_sheet.jpg`); bước ❌ chỉ vì kịch bản `tapOn "Save"` không cuộn — nút Save nằm dưới mép, tấm có
+  ScrollView nên cuộn tới được (lỗi kịch bản, không phải app). 🟡 gợi ý: ở chữ rất to trên máy nhỏ, Save nên ghim đáy tấm
+  (`Sheet` có sẵn `footer`). P016: bước 16 không chạy (hết giờ persona); P041 không có kết quả (driver).
+- **B-118 ⏭** chưa thấy: hộp xin quyền hệ thống không nằm trong ảnh/cây màn hình của lượt này → kiểm trên Appetize bản cuối
+  hoặc iPhone thật.
