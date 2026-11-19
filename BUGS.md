@@ -361,6 +361,11 @@
   trips "Working". ⏳ lần chạy xe tới (ô tô) → giữ lâu Version → gửi file chẩn đoán → phân tích → sửa engine.
   18/11 (8cb9c8f, A13): nút chẩn đoán chạy đúng (`qa-runs/a13/diagnostics/…02-44.json`: registered, đủ quyền, không tối ưu pin); **mở chuyến bằng
   Bluetooth ✅** (nối thiết bị đã chọn → chuyến Auto đúng giây đó). Chưa có dữ liệu Activity Recognition khi lái.
+  **19/11 — Phương bổ sung: hôm 17/11 tắc đường, xe đi chậm như đi bộ** → cảm biến có thể báo still / walking, không bao giờ "driving" → không chuyến.
+  **Phương chọn: dự phòng bằng GPS (Drive check, CONTEXT.md).** Sửa (Android): rời 'still' (native kick khi qua cool-down) mà không có chuyến → kiểm
+  GPS Balanced mỗi 30 s tối đa 12 phút (thông báo "Checking for a drive…"); cách điểm đầu ≥ 500 m và nhanh hơn 2,5 m/s — hoặc ≥ 500 m khi cảm biến không
+  báo đi bộ — → chuyến tự động, giờ bắt đầu = lúc rời 'still', 2 điểm của lần kiểm thành đầu chuyến; không thấy → nghỉ 20 phút. Nhật ký probe_start /
+  probe_drive / probe_none. `probeLogic.ts` + test, `probe.ts`, `probeState.ts`. 965 test xanh. ⏳ xe thật (tắc đường) + đi bộ (không được bật chuyến).
 - [x] **B-89** 🟡 (QA MOD-10, phiên F — hồi quy một phần B-84) Nháp được mở lại nhưng **ảnh chụp trong lúc app đã bị giết** vẫn mất: `getPendingResultAsync`
   gọi 1 lần lúc màn mở, trước khi kết quả camera tới Activity mới. Sửa (`capture.tsx`): gọi lại sau 1 s, 3 s và mỗi khi app trở lại active, bỏ ảnh trùng.
   Kèm: cửa sổ thấp < 520dp (chia đôi màn 436dp) → ẩn nút nổi "+" (`ui/Layout.tsx`) vì nó đè "Sort now" ở Reports.

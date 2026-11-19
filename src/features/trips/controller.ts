@@ -30,6 +30,7 @@ import { refreshWidgets } from '@/features/widgets/refresh';
 
 import type { EngineState } from './auto/engine';
 import { allowBackgroundLocationStart, hasActivityPermission, logDiagnostic } from './auto/native';
+import { stopProbe } from './auto/probeState';
 import { getKV, rebuildStops, setKV, setTripScope } from './auto/repo';
 import { syncTripActive } from './auto/sync';
 import './backgroundTask';
@@ -128,6 +129,8 @@ async function stopRecording() {
 export async function startGpsTrip(opts: { startedBy?: TripStartedBy; at?: number; askNotifications?: boolean } = {}): Promise<TripRow> {
   const existing = getActiveTrip(db);
   if (existing) return existing;
+  // B-88: a drive check still running would keep its own GPS on.
+  await stopProbe(true);
   const startedBy = opts.startedBy ?? 'user';
   if (opts.askNotifications !== false) await ensureNotificationPermission();
   const trip = startTrip(db, 'work', opts.at ?? Date.now(), startedBy);

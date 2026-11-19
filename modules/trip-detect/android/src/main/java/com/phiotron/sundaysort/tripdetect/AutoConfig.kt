@@ -35,6 +35,8 @@ internal object AutoConfig {
   fun vanAddress(c: Context): String? = prefs(c).getString("vanAddress", null)
   fun startOnCharge(c: Context) = prefs(c).getBoolean("startOnCharge", false)
   fun registeredAt(c: Context) = prefs(c).getLong("registeredAt", 0L)
+  /** B-88: no new GPS check for a drive before this (JS sets it while one runs and for a cool-down after). */
+  fun probeAfter(c: Context) = prefs(c).getLong("probeAfter", 0L)
 
   fun write(c: Context, cfg: Map<String, Any?>) {
     val e = prefs(c).edit()
@@ -42,6 +44,7 @@ internal object AutoConfig {
     (cfg["tripActive"] as? Boolean)?.let { e.putBoolean("tripActive", it) }
     (cfg["startOnCharge"] as? Boolean)?.let { e.putBoolean("startOnCharge", it) }
     if (cfg.containsKey("vanAddress")) e.putString("vanAddress", cfg["vanAddress"] as? String)
+    (cfg["probeAfter"] as? Number)?.let { e.putLong("probeAfter", it.toLong()) }
     e.apply()
   }
 
