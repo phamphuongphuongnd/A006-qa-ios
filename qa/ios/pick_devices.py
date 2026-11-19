@@ -10,6 +10,14 @@ import subprocess
 rt = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'runtimes', '-j']))['runtimes']
 ios = [r for r in rt if r.get('platform') == 'iOS' and r.get('isAvailable')]
 ios.sort(key=lambda r: [int(x) for x in re.findall(r'\d+', r['version'])])
+import os
+import sys
+want = os.environ.get('IOS_MAJOR', '').strip()
+if want:
+    match = [x for x in ios if x['version'].split('.')[0] == want]
+    if not match:
+        sys.exit(f"no iOS {want} runtime on this runner: {[x['version'] for x in ios]}")
+    ios = match
 r = ios[-1]
 types = [(d['name'], d['identifier']) for d in r.get('supportedDeviceTypes', [])]
 if not types:

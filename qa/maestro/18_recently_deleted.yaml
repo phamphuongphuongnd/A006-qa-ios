@@ -1,0 +1,49 @@
+# Recently deleted (S-21): delete the persona's entry → it is in Settings › Recently deleted → Restore → back in Entries.
+appId: com.phiotron.sundaysort
+name: 18_recently_deleted
+---
+- runFlow: common/home.yaml
+- tapOn: "Entries.*"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn: ".*QA-${PID}.*"
+- extendedWaitUntil:
+    visible: ".*Save changes.*|Date & time.*"
+    timeout: 10000
+- tapOn: "More"
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn: "Delete"
+- extendedWaitUntil:
+    visible: 'Delete this entry\?'
+    timeout: 5000
+- takeScreenshot: ${PID}_18a_delete_ask
+# The dialog's buttons: Cancel, Delete (the menu is closed by now).
+- tapOn: "Delete"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_18b_after_delete
+- runFlow: common/home.yaml
+- tapOn: "Settings"
+- scrollUntilVisible:
+    element:
+      text: "Recently deleted.*"
+    timeout: 20000
+- tapOn: "Recently deleted.*"
+- extendedWaitUntil:
+    visible: ".*QA-${PID}.*"
+    timeout: 10000
+- takeScreenshot: ${PID}_18c_trash
+- assertVisible: ".*30 days left.*|.*29 days left.*"
+- tapOn: ".*QA-${PID}.*"
+- tapOn: "Restore"
+- extendedWaitUntil:
+    visible: "Restored|Nothing deleted in the last 30 days.*"
+    timeout: 5000
+- takeScreenshot: ${PID}_18d_restored
+- runFlow: common/home.yaml
+- tapOn: "Entries.*"
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible: ".*QA-${PID}.*"
+- takeScreenshot: ${PID}_18e_back_in_entries

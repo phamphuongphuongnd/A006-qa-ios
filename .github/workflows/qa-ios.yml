@@ -27,6 +27,12 @@ on:
       parallel:
         description: 'Run the small-iPhone and Pro Max lanes at the same time (false = one simulator at a time; slow public runners)'
         default: 'false'
+      flows:
+        description: 'Only these numbered steps, comma list (e.g. 02,08,18; 01 onboarding always runs); empty = every step'
+        default: ''
+      ios_version:
+        description: 'iOS major version of the simulators (e.g. 18 for older iPhones); empty = newest on the runner'
+        default: ''
       extra:
         description: 'Extra scenarios after the personas, comma list: b96 = trip-ended notification (~50 min), b137 = map with a late GPS fix (~5 min); empty = none'
         default: ''
@@ -176,7 +182,15 @@ jobs:
           path: qa/fixtures
 
       - name: Create and boot simulators
+        env:
+          IOS_MAJOR: ${{ inputs.ios_version }}
         run: |
+          xcrun simctl list runtimes | tee out-runtimes.txt
+          if [ -n "$IOS_MAJOR" ] && ! grep -q "^iOS $IOS_MAJOR\." out-runtimes.txt; then
+            echo "iOS $IOS_MAJOR runtime not on this runner: downloading it"
+            xcodebuild -downloadPlatform iOS -buildVersion "$IOS_MAJOR.0" || xcodebuild -downloadPlatform iOS -buildVersion "$IOS_MAJOR" || true
+            xcrun simctl list runtimes
+          fi
           eval "$(python3 qa/ios/pick_devices.py)"
           echo "runtime $RUNTIME_ID ($RUNTIME_VER) | small: $SE_NAME | max: $PM_NAME | ipad: $IPAD_NAME"
           defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false || true
@@ -218,6 +232,7 @@ jobs:
           BUDGET_MIN: ${{ inputs.test_budget_min || '85' }}
           PER_PERSONA_TIMEOUT: '1500'
           PARALLEL: ${{ inputs.parallel || 'false' }}
+          FLOWS: ${{ inputs.flows }}
         run: |
           chmod +x qa/ios/run-lane.sh
           OUT="$PWD/out"

@@ -22,4 +22,6 @@ executionOrder:
     - 15_auto_trips
     - 16_end_trip
     - 17_gps_trip
+    - 18_recently_deleted
+    - 19_notifications
     - 99_final_state

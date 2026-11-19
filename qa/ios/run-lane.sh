@@ -8,6 +8,31 @@ LANE=$1 UDID=$2 DEVICE_NAME=$3 RUNTIME=$4 APP=$5 OUT_ROOT=$6 DEADLINE=$7 PERSONA
 export LANE UDID DEVICE_NAME RUNTIME
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
 SUITE="$REPO/qa/maestro"
+# FLOWS="02,08,18" → run only those numbered steps (+ 01 onboarding, which every later step needs). Steps already
+# stable are not run again (Phuong 2026-11-19). Empty = the whole suite.
+if [ -n "${FLOWS:-}" ]; then
+  T="${TMPDIR:-/tmp}/qa-suite-$LANE"
+  rm -rf "$T"; cp -R "$SUITE" "$T"
+  python3 - "$T" "$FLOWS" <<'PY'
+import os, re, sys
+d, want = sys.argv[1], ['01'] + [x.strip() for x in sys.argv[2].split(',') if x.strip()]
+keep = []
+for f in sorted(os.listdir(d)):
+    m = re.match(r'^(\d\d)_.*\.yaml$', f)
+    if not m:
+        continue
+    if m.group(1) in want:
+        keep.append(f[:-5])
+    else:
+        os.remove(os.path.join(d, f))
+cfg = os.path.join(d, 'config.yaml')
+s = open(cfg, encoding='utf-8').read()
+head, _, _ = s.partition('  flowsOrder:')
+open(cfg, 'w', encoding='utf-8').write(head + '  flowsOrder:\n' + ''.join(f'    - {k}\n' for k in keep))
+print('targeted suite:', ' '.join(keep))
+PY
+  SUITE="$T"
+fi
 FIXTURES="${FIXTURES_DIR:-$REPO/qa/fixtures}"
 BUNDLE=com.phiotron.sundaysort
 PER_PERSONA_TIMEOUT=${PER_PERSONA_TIMEOUT:-1200}
