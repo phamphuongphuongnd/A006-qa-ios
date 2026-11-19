@@ -673,9 +673,10 @@
   chật, số tiền lấy hết chiều cao → dòng ghi chú tràn xuống vùng dưới. Sửa: cỡ số tiền chừa 30dp cho dòng ghi chú; quá chật thì tạm ẩn dòng đó.
   969 test xanh. ✅ A13 (d3459a5): bàn phím mở → dòng tên tạm ẩn, chip dưới số tiền không đè; bàn phím đóng → "FreshHarvest Market · From receipt" đủ.
   Ghi chú: chụp chậm là camera Samsung — sau bấm chụp 3–4,4 s xử lý ảnh (AutoBeauty, logcat) + màn xác nhận ✓; app đọc hoá đơn ~2 s.
-- [ ] **B-139** 🟡 (QA A37-11, phiên A — 1/3 lần, giả lập) Chuyến đứng 0.0 mi suốt 5 phút dù nhận ~30 fix: fix đầu là vị trí cũ ở rất xa (giả lập phát lại) → mọi
+- [x] **B-139** 🟡 (QA A37-11, phiên A — 1/3 lần, giả lập) Chuyến đứng 0.0 mi suốt 5 phút dù nhận ~30 fix: fix đầu là vị trí cũ ở rất xa (giả lập phát lại) → mọi
   fix sau bị coi là nhiễu (> 56 m/s so với mốc). Máy thật hiếm (fix cũ hơn giờ bắt đầu đã bị bỏ) nhưng một fix mạng sai xa cũng gây ra. Sửa: `walkTrack` —
-  3 fix liên tiếp khớp nhau mà đều "không thể" so với mốc → mốc mới là fix đầu của chuỗi (không cộng cú nhảy) + test. 971 test xanh. ⏳ giả lập.
+  3 fix liên tiếp khớp nhau mà đều "không thể" so với mốc → mốc mới là fix đầu của chuỗi (không cộng cú nhảy) + test. 971 test xanh. ✅ phiên A (giả lập): 62d6558 tái hiện 0.0 mi; d73ebaf: London rồi 12 fix NY → 1.2 mi
+  (= 11 × 178 m, không cộng cú nhảy); thêm 1 fix London giữa đường → bị bỏ, không km ảo.
 - [ ] **B-140** 🟠 (A13-16, phiên E — 0882755, diag 07-54) Drive check kết thúc (14:02 probe_none) thì GPS của chuyến đang chạy (bật 13:52 do sạc + di chuyển) TẮT
   theo — chuyến chạy không GPS tới khi mở app. Gốc: expo-location chỉ có MỘT foreground service cho mọi task vị trí; dừng task Drive check = dừng
   service của chuyến. Kèm: lần kiểm không bị dừng khi chuyến bắt đầu (callback đang chạy ghi lại trạng thái đã xoá). Sửa: dừng Drive check xong mà còn
