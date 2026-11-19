@@ -119,6 +119,11 @@ Gợi ý: activity "still" ≥ N phút (hoặc BT van ngắt + still) → kết 
 bước nhảy tốc độ không khớp activity.
 **A13-12 🟠 Start tay trong nhà vẫn cộng quãng (chuyến 2).** Activity "still" suốt 20:50–21:48; 76 điểm acc 10–207 m; vmax giả
 55 km/h (21:10) → app cộng 583 m (thô 1.56 km). Gợi ý: khi activity still/không di chuyển, không cộng quãng; lọc acc + tốc độ nhảy.
+**A13-13 🟠 Bluetooth van nối nhưng KHÔNG bật chuyến (18/11).** Phương tưởng chuyến 17:46 do Bluetooth bật; thực tế bt_connected "van"
+17:35:27 + 17:36:17, còn chuyến startedAt 17:46:32.586 = đúng driving enter eventAt (1794998792587) → start do motion. engine.ts:126–132
+lẽ ra đặt startAt = 17:35:27. Nghi: kick(foreground=true) từ broadcast nền bị Android 14 chặn FGS → notifyStartFailed (Phương không
+nhớ có thông báo), hoặc JS không được đánh thức / config native chưa đồng bộ sau cài đè 17:24. logcat đã mất. Gợi ý ghi EventLog
+kết quả kick/start. Đã báo điều phối.
 **Bluetooth van "chỉ bật chuyến 1 lần":** 18/11 van kết nối 17:35/17:36/17:49/17:50/17:57 (rớt-nối liên tục) — chuyến đã chạy từ
 17:46 nên không bật thêm (đúng). Sáng 19/11 **không có bt_connected nào** (van không nối với máy) → BT không thể bật chuyến; chuyến
 sáng do Phương Start tay 07:24, driving enter 07:34. 22:53–23:10 có "other device" (B-121 ẩn tên ✅).
