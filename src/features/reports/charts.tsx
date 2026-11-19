@@ -6,7 +6,7 @@ import { formatMoney } from '@/domain/money';
 import type { Currency, Minor } from '@/domain/types';
 import { t } from '@/i18n';
 import { chartHues, fonts, useTheme } from '@/theme';
-import { Dot, Txt } from '@/ui';
+import { Dot, Txt, useStackedRows } from '@/ui';
 
 import { linePoints, type MonthPoint } from './series';
 
@@ -23,6 +23,8 @@ export function CategoryBars({ bars, currency }: { bars: Bar[]; currency: Curren
   const { colors } = useTheme();
   const total = bars.reduce((n, b) => n + b.totalMinor, 0);
   const max = Math.max(1, ...bars.map((b) => b.totalMinor));
+  // B-110 v2: big text on a narrow phone — name, then amount, then % each get the full width.
+  const stacked = useStackedRows();
   return (
     <View style={{ gap: 8 }}>
       {bars.map((b) => {
@@ -38,18 +40,18 @@ export function CategoryBars({ bars, currency }: { bars: Bar[]; currency: Curren
             style={({ pressed }) => [{ gap: 4, paddingVertical: 4, opacity: pressed ? 0.7 : 1 }]}>
             {/* QA-100 A37-9: at 320dp + 200% the name was cut to "Eq..": it keeps a usable width (2 lines) and the
                 amount + % move under it when the row is too narrow. */}
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8, rowGap: 2 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexGrow: 1, flexShrink: 1, flexBasis: 130 }}>
+            <View style={stacked ? { gap: 2 } : { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8, rowGap: 2 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexGrow: 1, flexShrink: 1, flexBasis: stacked ? 'auto' : 130 }}>
                 {b.unsorted ? <Dot /> : null}
-                <Txt v="small" numberOfLines={2} style={{ flexShrink: 1, fontFamily: fonts.bold }}>
+                <Txt v="small" numberOfLines={stacked ? 3 : 2} style={{ flexShrink: 1, fontFamily: fonts.bold }}>
                   {b.name}
                 </Txt>
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+              <View style={stacked ? { flexDirection: 'row', flexWrap: 'wrap', columnGap: 8 } : { flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
                 <Txt v="small" style={{ fontFamily: fonts.bold, fontVariant: ['tabular-nums'] }}>
                   {amount}
                 </Txt>
-                <Txt v="small" c="textTertiary" style={{ minWidth: 44, textAlign: 'right', fontVariant: ['tabular-nums'] }}>
+                <Txt v="small" c="textTertiary" style={stacked ? { fontVariant: ['tabular-nums'] } : { minWidth: 44, textAlign: 'right', fontVariant: ['tabular-nums'] }}>
                   {pct.toFixed(1)}%
                 </Txt>
               </View>

@@ -486,7 +486,9 @@
   FAB+Save, Home) với danh sách đã cuộn ~4 trang → TODAY + khoản mới ở đầu; A13 (07f4aac) ✅.
 - [ ] **B-110** 🟡 (QA A37-8/A37-9, phiên A — 320dp + chữ 200%) Reports: "Profit" cắt "−$1,073,09…", "By tax form line" bẻ chữ từng âm tiết + cắt số,
   "Expenses by category" cắt tên còn "Eq..". Sửa: số tiền xuống dòng dưới nhãn khi không đủ chỗ (bỏ adjustsFontSizeToFit), tên danh mục 2 dòng,
-  số + % xuống dòng. ⏳ phiên A.
+  số + % xuống dòng. ❌ phiên A (19daeae, P004): flexWrap không ăn trên Android — vẫn bẻ âm tiết, "100.0%" / "Sched…" cắt, Profit gãy
+  giữa số. **v2:** `useStackedRows` (rộng / fontScale < 240) → nhãn và số xếp 2 dòng; `FitFigure` co số cho vừa thẻ (Thu / Chi / Profit / dòng thuế /
+  Mileage); danh mục: tên, rồi số + %; nhãn SA103/Schedule C xuống dưới tiêu đề. 949 test xanh. ⏳ phiên A chụp lại P004.
 - [x] **B-111** 🟡 (QA A13, phiên E) Backup & restore hiện "Backup folder, Google Drive — not reachable" nhưng không rõ lỗi thật hay nhãn sai; "Back up now"
   chỉ mở bảng chia sẻ nên không kiểm được. Bước 1: file chẩn đoán (giữ lâu Version) có mục `backup` (provider, nightly, failCount, lastError, kết quả
   liệt kê thư mục + câu lỗi thật) — không đổi cài đặt. **Kết quả (phiên E, 3f26b33):** provider Google Drive, probe `folder gone` → thư mục Drive đã chọn

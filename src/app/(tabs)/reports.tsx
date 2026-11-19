@@ -35,7 +35,26 @@ import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { fonts, touch, useTheme } from '@/theme';
-import { Avatar, Button, Card, Chip, ChipRow, Dialog, Divider, EmptyState, Progress, Screen, Segmented, Sheet, Tag, Toggle, Txt, useSnackbar } from '@/ui';
+import {
+  Avatar,
+  Button,
+  Card,
+  Chip,
+  ChipRow,
+  Dialog,
+  Divider,
+  EmptyState,
+  FitFigure,
+  Progress,
+  Screen,
+  Segmented,
+  Sheet,
+  Tag,
+  Toggle,
+  Txt,
+  useSnackbar,
+  useStackedRows,
+} from '@/ui';
 
 const MODE_LABEL: Record<PeriodMode, () => string> = {
   year: () => t('reports.year'),
@@ -211,6 +230,7 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
   const { settings, update } = useSettings();
   const { colors } = useTheme();
   const narrow = useWindowDimensions().width < 420;
+  const stacked = useStackedRows();
   const { report, months, currency, miles, mileageEstimateMinor, ratesText, entries, method, treatment, trips, businessUse } = useReport(
     period,
     settings,
@@ -312,12 +332,20 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
         <Row label={t('reports.expenses')} value={formatMoney(report.expenseMinor, currency)} color="expenseText" />
         <Divider />
         {/* QA-100 A37-8: at 320dp + 200% text "−$1,073,09…" was cut — the figure drops under the label instead. */}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', columnGap: 8 }}>
-          <Txt v="h3">{t('reports.profit')}</Txt>
-          <Txt v="amount" size={32} style={{ lineHeight: 38, flexShrink: 1, marginLeft: 'auto' }}>
-            {formatMoney(report.profitMinor, currency)}
-          </Txt>
-        </View>
+        {stacked ? (
+          // B-110: big text on a narrow phone — the figure goes under the label, sized to fit the card.
+          <View>
+            <Txt v="h3">{t('reports.profit')}</Txt>
+            <FitFigure value={formatMoney(report.profitMinor, currency)} size={32} />
+          </View>
+        ) : (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', columnGap: 8 }}>
+            <Txt v="h3">{t('reports.profit')}</Txt>
+            <Txt v="amount" size={32} style={{ lineHeight: 38, flexShrink: 1, marginLeft: 'auto' }}>
+              {formatMoney(report.profitMinor, currency)}
+            </Txt>
+          </View>
+        )}
         {report.personalExcludedMinor > 0 ? (
           <Txt v="caption" c="textTertiary" style={{ fontFamily: fonts.medium }}>
             {t('reports.personalExcluded', { amount: formatMoney(report.personalExcludedMinor, currency) })}
@@ -381,7 +409,12 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
           <Card style={{ paddingVertical: 6 }}>
             {lineTab === 'form' || region !== 'UK' ? (
               <>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 }}>
+                <View
+                  style={
+                    stacked
+                      ? { alignItems: 'flex-start', gap: 6, paddingVertical: 10 }
+                      : { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 }
+                  }>
                   <Txt v="h3" accessibilityRole="header">
                     {t('reports.byTaxLine')}
                   </Txt>
@@ -436,13 +469,17 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
         </Card>
       ) : (
         <Card style={{ gap: 8 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={stacked ? undefined : { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Txt v="h3" accessibilityRole="header">
               {t('reports.mileage')}
             </Txt>
-            <Txt v="amount" size={20}>
-              {dist(miles)}
-            </Txt>
+            {stacked ? (
+              <FitFigure value={dist(miles)} size={20} />
+            ) : (
+              <Txt v="amount" size={20}>
+                {dist(miles)}
+              </Txt>
+            )}
           </View>
           <Txt v="small">
             {region === 'UK'
@@ -494,6 +531,16 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
 
 function LineRow({ label, value, income, first }: { label: string; value: string; income: boolean; first: boolean }) {
   const { colors } = useTheme();
+  const stacked = useStackedRows();
+  if (stacked) {
+    // B-110 v2: wrapping still broke the label into syllables on Android — stack: label, then the figure (fits the card).
+    return (
+      <View style={{ gap: 2, paddingVertical: 8, borderTopWidth: first ? 0 : 1, borderTopColor: colors.line }}>
+        <Txt v="small">{label}</Txt>
+        <FitFigure value={value} size={15} c={income ? 'incomeText' : 'text'} />
+      </View>
+    );
+  }
   return (
     // QA-100 A37-8: "By tax form line" at 320dp + 200% broke the label into syllables and cut the figure. The label keeps
     // a sensible width and the figure wraps to its own line when both don't fit.
@@ -520,6 +567,17 @@ function LineRow({ label, value, income, first }: { label: string; value: string
 }
 
 function Row({ label, value, color }: { label: string; value: string; color: 'incomeText' | 'expenseText' }) {
+  const stacked = useStackedRows();
+  if (stacked) {
+    return (
+      <View>
+        <Txt c="textSecondary" style={{ fontFamily: fonts.bold }}>
+          {label}
+        </Txt>
+        <FitFigure value={value} size={20} c={color} />
+      </View>
+    );
+  }
   return (
     // QA-100 A37-5: "$2,053,740.86" at 200% ran off the card — the amount drops under its label when it doesn't fit.
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: 8 }}>
