@@ -24,6 +24,8 @@
 | 4h | 44441656898 (công khai) | 64e5203 (cùng app 4g) | 0/2 | 0 | Lượt ngắn kiểm kịch bản 06/16 đã sửa (P091 SE AX-L, P041 Pro Max tối): **cả 2 ⏭ `IOSDriverTimeoutException`** (driver XCTest không lên sau 480 s) — chưa kiểm được. Driver không lên ở 15/31 lần khởi động persona qua các lượt 4c–4h (4c 9, 4e 3, 4g 1, 4h 2) trên runner công khai |
 | 4i | 44450726271 (công khai) | b6aa4d1 (dev 0bf4283: B-123…B-126) | **3/3, 0 lỗi driver** (P091 14/17 ✅, P052 13/17, P041 12/17) | 0 | **1 simulator mỗi lúc** + tự khởi động lại khi driver không lên (không cần dùng tới) — mỗi persona 10–12 phút thay vì 25+. **B-114 v2 ✅** (P091 SE AX-L phân loại được ngay trên thẻ Sort), **B-117 ✅ ở AX-L** (P091 cuộn tới Save, lưu được; P041 Pro Max tối ✅), B-95 ✅ cả 3. ❌ còn lại đều kịch bản: 02 nút "Restore from backup" dưới thẻ "Back up every night" (đã thêm cuộn), 06 P052/P041 chạm tab Sort vẫn ở Home, 08 P052/P041 bàn phím số không đóng → chữ Purpose rơi vào ô End reading (app báo "Enter a number" đúng), 09 P041 nút Export nằm sát mép (đã cho thấy 50 %). 0 crash |
 | 4j | 44455496596 (công khai) | b9e8dd6 (dev 0bf4283 + bước 17) | 2/2 (P022 15/18 ✅, P092 14/18) | 0 | Bước 17 chuyến GPS (nháp phiên H): **P022 ✅ 2.5 mi**, **P092 ❌ 1.4 mi — mất đoạn chạy nền → QI-5**. 1 simulator, 0 lỗi driver, 0 crash. 02/08 ❌ kịch bản (02 nay tới được bước chọn file) |
+| 4k | 44462217035 (công khai) | da3f127 (dev 1770c49: B-96 v2 833c872, B-123…B-135) | B-96 (P022, iPhone SE) | 0 | **B-96 ✅** cả 2 biến thể: đúng 1 thông báo "Trip ended at HH:MM · 0.0 mi"; bấm Continue trip ⏭ (Maestro không mở được nút hành động trên màn khoá simulator) |
+| 4l | 44462331611, 44463898975 (công khai) | cee0c20, c284d4c | P022, P092 ×2 | 0 | `17_gps_trip` speed 10: ✅ 3/3 (2.5 mi) → QI-5 đóng. Kiểm mạng bản đồ từ runner: 200 → QI-6 do code (hẹn giờ 12 s) |
 | 4f | 44274384593 (công khai) | febb184 | 0 | 0 | ❌ GitHub không khởi chạy job (lỗi thanh toán tài khoản) — cả repo công khai |
 
 Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ lượt 4c chạy trên repo công khai `phamphuongphuongnd/A006-qa-ios` (Phương chọn; không tính phút) — **xoá repo này sau QA-100 khi Phương đồng ý**.
@@ -96,6 +98,7 @@ Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ 
 - **B-126** (ô số): bàn phím ô End reading nay có dấu "." (decimal-pad) — hiện đúng; số tiền Ghi nhanh ra "$45.00" khi gõ "45" (trước là $0.45) — đổi hành vi theo B-126.
 
 ### QI-5 ✅ không phải lỗi app (kịch bản) — Chuyến GPS P092 thiếu đoạn 2
+- **Đóng 19/11:** `speed: 10` — `17_gps_trip` ✅ 3/3: P092 run 44462331611 và 44463898975 (cả hai "Trip saved · 2.5 mi", đoạn nền ghi đủ), P022 run 44462331611 ✅.
 - **Kết luận (phiên H, theo `commands.json` của run 44455496596):** Maestro `travel speed: 20` trên simulator CI không giữ tốc độ — P092 đoạn 2 chạy 1,98 km trong 33 s ≈ **60 m/s**, vượt bộ lọc GPS nhảy `MAX_SPEED_MPS = 56` ở `src/domain/mileage.ts` (`walkTrack`) → app bỏ đúng các điểm đó. P022 ~30 m/s → đủ 2.5 mi. Đoạn chạy nền đã được P022 xác nhận ghi được. Sửa kịch bản: `speed: 10`; chạy lại P092 (run ghi bên dưới).
 - Mô tả gốc (giữ để đối chiếu):
 - Persona/thiết bị: P092 (iPhone 16 Pro Max, tối, `large`, US). Lượt 4j, bước `17_gps_trip`. Đối chứng P022 (iPhone SE, sáng, US) cùng lượt ✅.
@@ -105,11 +108,21 @@ Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ 
 - Ảnh: `qa-runs/ios/44455496596/personas/P092/shots/P092_17a_leg1_foreground.jpg`, `P092_17b_back_from_background.jpg`, `P092_17c_end_sheet.jpg`; đối chứng `…/P022/shots/P022_17a_leg1_foreground.jpg`, `P022_17c_end_sheet.jpg`.
 - Chưa kết luận: 1/2 lần, simulator; có thể do vị trí giả bị dồn khi máy runner bận, hoặc app không nhận cập nhật nền ở lần này. Cần chạy lặp (cùng P092) và thử iPhone thật. Nghi chỗ: tác vụ vị trí nền (`src/features/trips/backgroundTask.ts`, `allowsBackgroundLocationUpdates`/`pausesLocationUpdatesAutomatically` trong cấu hình expo-location).
 
-### QI-6 🟡 (nghi vấn) Màn chuyến đang chạy không hiện bản đồ thật trên iOS Simulator
+### QI-6 🟠 Bản đồ chuyến không bao giờ hiện nếu GPS lần đầu về chậm hơn 12 s
+- **Cập nhật 19/11 (run 44463898975):** mạng runner tới bản đồ **bình thường** — `tiles.openfreemap.org/styles/liberty` HTTP 200 / 0,7 s, `/styles/dark` 200 / 0,2 s, `/planet` 200 (`qa-runs/ios/44463898975/net-tiles.txt`) → không phải lỗi mạng.
+- **Nguyên nhân (đọc code):** `src/features/trips/map/TripMap.tsx:53-57` — hẹn giờ `LOAD_TIMEOUT_MS = 12_000` chạy **ngay khi component gắn vào**, cả khi chưa có điểm GPS nào; lúc đó dòng 74 (`!lines.bounds`) vẫn vẽ sketch và `MapView` **chưa hề được tạo**. Điểm GPS đầu tiên về sau 12 s → `state = 'failed'` → dòng 74 trả sketch **suốt chuyến**, bản đồ không bao giờ được thử tải. Ảnh 30 s (`…/P092/shots/P092_16a2_trip_running_30s.jpg`): vẫn "Finding GPS…", 0.0 mi. Ngoài đời GPS lạnh / trong hầm xe hay > 12 s → có thể gặp trên máy thật.
+- Hướng sửa: chỉ bắt đầu đếm khi `MapView` thật sự được vẽ (`lines.bounds` có), ví dụ `if (state !== 'loading' || !lines.bounds) return;` với deps `[state, !!lines.bounds]`; hoặc cho thử lại khi có điểm mới. Chưa kiểm trên máy thật.
+- Mô tả gốc:
 - Persona/thiết bị: P022 (iPhone SE), P092 (iPhone 16 Pro Max). Lượt 4j, bước 17 (chuyến > 1 phút).
 - Kỳ vọng: bản đồ MapLibre + OpenFreeMap (`src/features/trips/map/TripMap.tsx`, style `https://tiles.openfreemap.org/styles/liberty|dark`).
 - Thực tế: luôn là hình vẽ dự phòng `RouteSketch` (lưới ô + đường đi) — tức bản đồ không báo "đã tải" trong `LOAD_TIMEOUT_MS = 12_000`. Ảnh `qa-runs/ios/44455496596/personas/P022/shots/P022_17a_leg1_foreground.jpg`, `…/P092/shots/P092_17b_back_from_background.jpg`.
 - Chưa phân biệt được: mạng runner GitHub tới `tiles.openfreemap.org` chậm/chặn, hay MapLibre trên bản build iOS này lỗi; `app.log` hai persona này trống nên không thấy lỗi. Cần xem trên Appetize/iPhone thật, hoặc lượt sau thêm kiểm mạng từ simulator.
+
+### Kiểm B-96 v2 (lượt 4k, run 44462217035, P022 iPhone SE, US / America/Los_Angeles)
+- Thiết lập: Automatic trips → Merge stops **10 min** (không khoá Pro) → 1 điểm GPS cố định → Start trip → chờ "GPS good".
+- **Biến thể K (tắt app, `stopApp`) ✅**: phút ~11 có **đúng 1** thông báo "**Trip ended at 21:29 · 0.0 mi**" — "You hadn't moved for a while, so the trip was saved. Still on your way? Tap Continue trip." (21:29 = lúc bắt đầu đứng yên; bắn ≈ 10 min + 90 s). Ảnh `qa-runs/ios/44462217035/b96/shots/P022_b96d_K13_notification_center.jpg`. **Continue trip ⏭**: giữ lâu thông báo trên màn khoá simulator không mở ra nút hành động (`P022_b96e_K13_expanded.jpg` giống ảnh trước) → chưa kiểm được "bấm Continue khi app đã tắt → chuyến ghi tiếp".
+- **Biến thể H (về Home) ✅**: phút ~13 có **đúng 1** thông báo "Trip ended at 21:55 · 0.0 mi" (`P022_b96d_H13_notification_center.jpg`); mở app → màn chuyến "No trip running" (chuyến đã kết thúc) (`P022_b96f_H13_app_opened.jpg`). Chưa chụp được danh sách Miles (app mở vào màn chuyến, không có tab bar) → giờ kết thúc trong danh sách ⏭.
+- Máy ngủ thật: ⏭ (simulator không có).
 
 ### QI-4 🟠 Thẻ ở màn Sort bị cắt mất phần chọn danh mục khi chữ cỡ trợ năng
 - Persona/thiết bị: P041 (iPhone 16 Pro Max, `accessibility-large`, tối, UK), P016 (iPhone SE 3rd gen, `accessibility-large`, sáng, US). Lượt 4d.
