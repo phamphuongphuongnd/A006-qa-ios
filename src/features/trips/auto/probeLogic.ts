@@ -26,10 +26,24 @@ export interface ProbeFix {
   accuracy: number;
 }
 
-export type OnFoot = boolean;
+/** Phương 19/11 (B-88 v2): this many steps a minute or more = walking / running right now — never a drive. */
+export const WALKING_STEPS_PER_MIN = 40;
 
-/** Is this a drive? `origin` = first usable fix of the check; `onFoot` = the sensor's last word was walking / running / cycling. */
-export function probeSaysDriving(origin: ProbeFix, fix: ProbeFix, onFoot: OnFoot): boolean {
+export interface ProbeContext {
+  /** The motion sensor's last word was walking / running. */
+  onFoot: boolean;
+  /** The motion sensor said cycling at any point of this check — a bike never starts a Trip. */
+  cycling: boolean;
+  /** Steps a minute since the previous fix (phone's step counter); null when unknown. */
+  stepsPerMin: number | null;
+}
+
+/** Is this a drive? `origin` = first usable fix of the check. */
+export function probeSaysDriving(origin: ProbeFix, fix: ProbeFix, ctx: ProbeContext): boolean {
+  if (ctx.cycling) return false;
+  // Walking with the phone in a bag: the motion sensor may miss it, the step counter doesn't.
+  if (ctx.stepsPerMin !== null && ctx.stepsPerMin >= WALKING_STEPS_PER_MIN) return false;
+  const onFoot = ctx.onFoot;
   if (fix.accuracy > PROBE_MAX_ACCURACY_M || origin.accuracy > PROBE_MAX_ACCURACY_M) return false;
   const d = haversine(origin, fix);
   if (d < PROBE_MIN_DISTANCE_M) return false;

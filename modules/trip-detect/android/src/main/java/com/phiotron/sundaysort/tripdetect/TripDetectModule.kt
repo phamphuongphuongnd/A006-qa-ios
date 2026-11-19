@@ -9,8 +9,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.BatteryManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.ActivityRecognition
 import expo.modules.location.AppForegroundedSingleton
@@ -156,6 +162,38 @@ class TripDetectModule : Module() {
         ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
       if (bg) AppForegroundedSingleton.isForegrounded = true
       bg
+    }
+
+    /**
+     * B-88 v2 (Phương 19/11): the phone's own step counter (steps since boot) — a drive check never starts a trip while the
+     * driver is walking (phone in a bag, so the motion sensor misses it). null: no sensor / no permission / no answer.
+     */
+    AsyncFunction("stepCount") { promise: Promise ->
+      val sm = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+      val sensor = sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+      if (sensor == null || !hasActivityPermission()) {
+        promise.resolve(null)
+        return@AsyncFunction
+      }
+      var done = false
+      val listener = object : SensorEventListener {
+        override fun onSensorChanged(e: SensorEvent) {
+          if (done) return
+          done = true
+          sm.unregisterListener(this)
+          promise.resolve(e.values[0].toDouble())
+        }
+        override fun onAccuracyChanged(s: Sensor?, accuracy: Int) {}
+      }
+      // An on-change sensor reports its current value right after registering.
+      sm.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_NORMAL)
+      Handler(Looper.getMainLooper()).postDelayed({
+        if (!done) {
+          done = true
+          sm.unregisterListener(listener)
+          promise.resolve(null)
+        }
+      }, 3_000)
     }
 
     /** Diagnostics: what the JS task decided (e.g. an automatic start and why it failed), next to the signals. */

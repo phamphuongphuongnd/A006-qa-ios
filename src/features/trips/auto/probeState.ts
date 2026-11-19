@@ -17,6 +17,10 @@ export interface ProbeState {
   /** The check stops by itself after this. */
   until: number;
   origin: { lat: number; lng: number; ts: number; accuracy: number } | null;
+  /** B-88 v2: the step counter at the previous fix (steps a minute = walking). */
+  steps?: { at: number; count: number } | null;
+  /** B-88 v2: the motion sensor said cycling during this check. */
+  cycling?: boolean;
 }
 
 export const getProbe = () => getKV<ProbeState | null>(db, KEY_PROBE, null);

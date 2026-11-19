@@ -77,6 +77,15 @@ export function allowBackgroundLocationStart() {
   }
 }
 
+/** Steps since boot (Android step counter), null when unknown. */
+export async function stepCount(): Promise<number | null> {
+  try {
+    return (await TripDetect?.stepCount?.()) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** A diagnostics line next to the signals ("Share trip diagnostics"), e.g. how an automatic start went. */
 export function logDiagnostic(kind: string, extra: Record<string, string | number | boolean | null>) {
   try {

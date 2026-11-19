@@ -12,12 +12,12 @@ import { t } from '@/i18n';
 import { startGpsTrip } from '../controller';
 import { NOTIF_COLOR } from '../constants';
 import type { EngineState } from './engine';
-import { allowBackgroundLocationStart, configureNative, hasActivityPermission, logDiagnostic } from './native';
+import { allowBackgroundLocationStart, configureNative, hasActivityPermission, logDiagnostic, stepCount } from './native';
 import { PROBE_MAX_ACCURACY_M, PROBE_WINDOW_MS, probeSaysDriving, shouldStartProbe } from './probeLogic';
 import { getProbe, PROBE_TASK, probeAfter, setProbe, stopProbe } from './probeState';
 import { getKV } from './repo';
 
-const ON_FOOT = new Set(['walking', 'running', 'cycling']);
+const ON_FOOT = new Set(['walking', 'running']);
 
 TaskManager.defineTask<{ locations?: LocationObject[] }>(PROBE_TASK, async ({ data, error }) => {
   if (error) return;
@@ -38,21 +38,32 @@ async function onProbeFixes(locations: LocationObject[], now = Date.now()) {
   }
   const engine = getKV<EngineState | null>(db, 'engine', null);
   const onFoot = engine?.activity ? ON_FOOT.has(engine.activity) : false;
+  const cycling = !!p.cycling || engine?.activity === 'cycling';
+  // B-88 v2: steps a minute since the previous fix — walking / running right now.
+  const count = await stepCount();
+  const steps = count !== null ? { at: now, count } : null;
+  const prev = p.steps;
+  const stepsPerMin =
+    steps && prev && steps.at - prev.at >= 15_000 && steps.count >= prev.count
+      ? ((steps.count - prev.count) * 60_000) / (steps.at - prev.at)
+      : null;
+  setProbe({ ...p, steps, cycling });
+  const ctx = { onFoot, cycling, stepsPerMin };
   let origin = p.origin;
   for (const l of locations) {
     const fix = { lat: l.coords.latitude, lng: l.coords.longitude, ts: l.timestamp, accuracy: l.coords.accuracy ?? 999 };
     if (fix.ts < p.startedAt || fix.accuracy > PROBE_MAX_ACCURACY_M) continue;
     if (!origin) {
       origin = fix;
-      setProbe({ ...p, origin });
+      setProbe({ ...p, origin, steps, cycling });
       continue;
     }
-    if (probeSaysDriving(origin, fix, onFoot)) {
+    if (probeSaysDriving(origin, fix, ctx)) {
       await stopProbe(true, now);
       const row = await startGpsTrip({ startedBy: 'auto', at: p.startedAt, askNotifications: false });
       // The check's first and latest fixes are the drive's first miles.
       appendPoints(db, row.id, [origin, fix]);
-      logDiagnostic('probe_drive', { since: p.startedAt, onFoot });
+      logDiagnostic('probe_drive', { since: p.startedAt, onFoot, stepsPerMin: stepsPerMin === null ? null : Math.round(stepsPerMin) });
       return;
     }
   }
@@ -77,7 +88,7 @@ export async function syncProbe(input: { now: number; enabled: boolean; state: E
   });
   if (!start) return;
   const until = now + PROBE_WINDOW_MS;
-  setProbe({ startedAt: state.movedAt, until, origin: null });
+  setProbe({ startedAt: state.movedAt, until, origin: null, steps: null, cycling: state.activity === 'cycling' });
   configureNative({ probeAfter: until });
   try {
     allowBackgroundLocationStart();

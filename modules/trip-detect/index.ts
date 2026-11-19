@@ -56,6 +56,8 @@ interface TripDetectNative {
   getRecentEvents(sinceMs: number): TripSignal[];
   /** Android: let expo-location start its foreground service while no screen is open (needs background location). */
   allowBackgroundLocationStart?(): boolean;
+  /** Android: steps since boot from the phone's step counter; null when there is none (B-88 v2). */
+  stepCount?(): Promise<number | null>;
   /** Android: add a diagnostics line to the signal log. */
   log?(kind: string, extra: Record<string, string | number | boolean | null>): void;
   clearEvents(): void;

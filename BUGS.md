@@ -369,6 +369,10 @@
   **Phương chốt giữ (19/11, qua phiên D)**, giới hạn đã biết: (1) xe buýt / taxi cũng sinh chuyến tự động (trong giờ làm thì xếp Work); (2) đi bộ ≥ 500 m mà
   cảm biến không báo walking (máy trong túi xách) → chuyến nhầm; (3) đạp xe / chạy > 9 km/h ≥ 500 m → chuyến nhầm. Đếm bước chân + ngưỡng xe đạp ~25 km/h:
   đề xuất, Phương chưa duyệt.
+  **v2 (Phương 19/11: "không muốn hiện tượng này xảy ra"; xe buýt/taxi "kệ đi"):** bộ đếm bước chân của máy (native `stepCount`, TYPE_STEP_COUNTER, quyền
+  Physical activity sẵn có) — ≥ 40 bước/phút giữa 2 fix = đang đi bộ / chạy → không bật; cảm biến báo đạp xe lúc nào trong lần kiểm → không bật; không
+  có bộ đếm → luật cũ. Đi bộ ra xe rồi lái vẫn bật (hết bước khi ngồi vào xe). Còn lại: xe buýt / taxi (Phương chấp nhận). 969 test xanh. ⏳ A13 đi bộ
+  > 500 m (máy trong túi) không được bật chuyến.
 - [x] **B-89** 🟡 (QA MOD-10, phiên F — hồi quy một phần B-84) Nháp được mở lại nhưng **ảnh chụp trong lúc app đã bị giết** vẫn mất: `getPendingResultAsync`
   gọi 1 lần lúc màn mở, trước khi kết quả camera tới Activity mới. Sửa (`capture.tsx`): gọi lại sau 1 s, 3 s và mỗi khi app trở lại active, bỏ ảnh trùng.
   Kèm: cửa sổ thấp < 520dp (chia đôi màn 436dp) → ẩn nút nổi "+" (`ui/Layout.tsx`) vì nó đè "Sort now" ở Reports.
