@@ -100,3 +100,11 @@ Kiểm bằng `npx expo config --type introspect` (Info.plist mà prebuild/EAS s
 - ⏭ Hình hộp xin quyền thật: xem lại trên Appetize bản cuối (không bắt buộc — chuỗi đã đúng).
 - Lỗ hổng test iOS còn lại không cần iPhone: `16_end_trip` chỉ đặt 1 điểm GPS → chuyến 0.0 mi; chưa thử chuyến **có quãng đường** trên iOS
   (Maestro `travel` chạy tuyến giả trên simulator: ghi GPS nền, quãng đường, điểm đầu chỗ đỗ, thức khi rời vùng 150 m). CoreMotion không có trên simulator → dò lái tự động vẫn cần iPhone thật.
+
+## Chuyến có quãng đường trên iOS (17_gps_trip, run 44455496596, dev 0bf4283) · 2026-11-19
+- ✅ P022 (SE): đoạn 1 (app mở) 1.3 mi → đoạn 2 (app ở nền) cộng đủ → "Trip saved · 2.5 mi" → Save. **GPS ghi nền trên iOS chạy.**
+- P092 (Pro Max) chỉ 1.4 mi (QI-5) = **lỗi kịch bản, không phải app**: Maestro `travel` không giữ `speed: 20` trên simulator CI —
+  thời gian thật (commands.json): P022 đoạn 1 68 s / đoạn 2 72 s (~30 m/s); P092 đoạn 1 42 s (2,15 km → 51 m/s, được tính),
+  đoạn 2 33 s (1,98 km → **~60 m/s ≈ 134 mph**). `walkTrack` bỏ điểm nhanh hơn `MAX_SPEED_MPS` = 56 m/s (125 mph, lọc GPS nhảy)
+  → cả đoạn 2 bị bỏ, đường vẽ = đoạn 1 — đúng như ảnh. App làm đúng.
+- Sửa kịch bản: `speed: 10` (dư 5 lần dưới ngưỡng dù simulator chạy nhanh gấp đôi) rồi chạy lại P092 để đóng QI-5.
