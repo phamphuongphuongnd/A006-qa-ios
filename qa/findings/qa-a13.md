@@ -133,6 +133,18 @@ kết quả kick/start. Đã báo điều phối.
   Gốc thật: expo-location tự chặn startLocationUpdatesAsync khi không có màn hình (AppForegroundedSingleton.isForegrounded=false
   → ForegroundServiceStartNotAllowedException). Sửa B-124 (4dcaa0b): allowBackgroundLocationStart + nhật ký start_ok/start_failed.
   Phương xem các hướng A–E, chọn B rồi bỏ B sau khi biết B-124 sửa được không cần thông báo cố định.
+- **B-123 ✅** (bcf8827): chuyến giả 09:40:29 → 10:00:47 tự dừng (LocationTaskService stop + hủy trip-ongoing, 20 phút 18 giây);
+  không có trong Miles, trips vẫn 269, tripPoints không thêm → < 500 m bị bỏ.
+- **dc84207 (B-123..B-126) cài đè 10:05** (Back up now trước): 233/269/8/12, id không đổi ✅; quyền còn; sao lưu đêm bật.
+  **B-125 ✅**: dòng Van Bluetooth "Redmi Buds 4 Lite — Looks like headphones or a speaker, not a van…"; màn chọn: cả 4 thiết bị đã
+  ghép đều có cảnh báo, Phương xác nhận không cái nào là xe (xe chưa ghép với máy) → đúng. Không đổi lựa chọn.
+  **B-126 ✅**: ô số tiền inputType 0x2002, bàn phím số có "." và ",". `real-backup/SundaySort-REAL-2026-11-19-after-dc84207.sundaysort`.
+- **bcf8827 (B-123 + B-124) cài đè 19/11 09:34** (Back up now trước): 233/269/8/12, id không đổi ✅; quyền còn ✅.
+  **B-124 ✅**: app ở nền, Phương nối lại tai nghe (Van BT) 09:40:29 → signals `bt_connected van` + `start_ok {reason: bluetooth,
+  screen: background}` → chuyến running auto, thông báo "Trip running · Started automatically"; dumpsys location: fused
+  HIGH_ACCURACY 5 s cho sundaysort (vẫn có W "can not have location" nhưng có quyền vị trí nền nên vẫn nhận vị trí).
+  Files `diagnostics/SundaySort-trip-diagnostics-2026-11-19-02-43.json`, `logcat-1119-bcf8827-bt.txt`. Chuyến giả để nguyên →
+  kiểm B-123 tự tắt + bỏ (< 500 m) sau ~10:01.
 - **805835b (B-123) cài đè 19/11 09:22**: trước/sau cài 233/269/8/12, id entries/trips/tripPoints không đổi ✅; Merge stops 20 min,
   Automatic trips Working, quyền vị trí nền/activity/thông báo/BT còn ✅. Van Bluetooth đang là **Redmi Buds 4 Lite (tai nghe)** →
   lần 09:12 là tai nghe; đã nhắc Phương tự đổi sang BT xe.
