@@ -108,6 +108,16 @@ Income, Expenses (trừ nhóm chi phí xe khi dùng mileage rate; persona có ch
 | B-90 nút sun ở theme tối (A37-7) | 19daeae | ✅ "Sort first", "End trip", "Sort now" đọc rõ | P035/22-unsorted-warning.png, recheck-19daeae/B90-home-endtrip-dark.png |
 | B-78/B-110 Reports 320dp + 200% (A37-4/5/8/9) | 19daeae | ❌ còn: "By tax form line" bẻ chữ từng âm tiết ("Uns/orte/d ex/pen/ses"), huy hiệu "Sched…" cắt, "100.0%" và Mileage "0 mi" cắt, Profit xuống dòng giữa số "−$1,073,178 / .08". Income/Expenses và thẻ "entries aren't sorted" đã ổn | recheck-19daeae/B110-reports-1..8.png |
 
+- **B-110 v2 (a3a1f6b, 19/11)** — P004 (2.011 khoản) chụp Reports từ trên xuống: 320dp + chữ 200% ✅ (thẻ "1620 entries … aren't
+  sorted yet" xuống dòng, huy hiệu "99+" đủ, Income/Expenses/Profit một dòng không cắt, danh mục tên rồi số + %, "By tax form line"
+  nhãn rồi số không bẻ âm tiết, nhãn "Schedule C" dưới tiêu đề, Mileage "0 mi" đủ); phone thường chữ 1.3 ✅ giữ bố cục 1 hàng cũ.
+  Ảnh: `qa-runs/android37/recheck-a3a1f6b/320dp-font2-00..12.png`, `phone-font1.3-00..05.png`.
+
+### A37-10 🟡 Reports: "1620 entries in this period aren't sorted yet" thiếu dấu phẩy nghìn (như B-79 ở Home)
+- **APK:** a3a1f6b. **Persona:** P004. Thẻ cảnh báo đầu Reports, cả chữ 1.3 lẫn 2.0.
+- **Nguyên nhân nghi:** `src/app/(tabs)/reports.tsx:285` truyền `report.unsortedCount` thô vào `t('reports.unsortedWarn', { count })`
+  (`src/i18n/en.ts:452`) — chưa dùng `formatCount` như B-79.
+
 ## Kết quả persona (`qa-runs/android37/summary.json`)
 - 60 persona API 37: **56 đạt** (mọi bước ✅/⏭), **2 ❌ do runner** (P083, P084 weird_text: trình đọc XML bỏ qua
   `content-desc` bọc nháy đơn khi ghi chú có dấu `"` — app lưu ghi chú nguyên văn, đã kiểm lại ở P085 sau khi sửa runner: 10/10 ✅),
