@@ -35,6 +35,11 @@ export const homeV2 = {
   startNow: 'Start now',
   fix: 'Fix',
   nfcHint: 'Tap your NFC tag or start here.',
+  /** Free launch: hint under "Start trip" while automatic trips are off (hidden for good with ✕). */
+  autoSetupTitle: 'Record trips automatically',
+  autoSetupBody: 'Starts when you drive. Never misses a trip quietly.',
+  autoSetupAction: 'Set up',
+  autoSetupHide: 'Hide this tip',
   /** Entry labels + Entries filter chips (F-04). */
   labelAuto: 'Auto',
   labelRecurring: 'Recurring',

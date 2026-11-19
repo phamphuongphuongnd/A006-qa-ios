@@ -4,12 +4,18 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { PRO_PAUSED } from '@/domain/pro';
 import { t } from '@/i18n';
 import { GUTTER, useTheme } from '@/theme';
 import { IconButton } from '@/ui';
 
-/** Onboarding steps S-01a…f (v2 mockup: the current step is a navy pill, the rest grey dots). */
-export const ONBOARDING_STEPS = 6;
+/**
+ * Onboarding steps S-01a…f (v2 mockup: the current step is a navy pill, the rest grey dots). While Pro is paused the
+ * S-01e "Free & Pro" page is skipped: 5 steps, Reminder is step 5.
+ */
+export const ONBOARDING_STEPS = PRO_PAUSED ? 5 : 6;
+/** Step number of S-01f Reminder (last page). */
+export const REMINDER_STEP = ONBOARDING_STEPS;
 
 /** Step dots: the current step is a navy pill (`wide` = earlier steps too). */
 export function StepDots({ step, total = ONBOARDING_STEPS, wide }: { step: number; total?: number; wide?: boolean }) {
@@ -27,7 +33,7 @@ export function StepDots({ step, total = ONBOARDING_STEPS, wide }: { step: numbe
   );
 }
 
-/** Onboarding page: back button, content, progress dots + pinned bottom actions (`step` = 1…6, S-01a = 1). */
+/** Onboarding page: back button, content, progress dots + pinned bottom actions (`step` = 1…ONBOARDING_STEPS, S-01a = 1). */
 export function OnboardingPage({ step, children, bottom }: { step: number; children: ReactNode; bottom: ReactNode }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();

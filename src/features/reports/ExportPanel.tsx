@@ -7,6 +7,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 
 import { db } from '@/db/client';
 import { listEntries, unsortedCount } from '@/db/entriesRepo';
+import { PRO_PAUSED } from '@/domain/pro';
 import type { Region } from '@/domain/types';
 import { openPro } from '@/features/pro/openPro';
 import { withLockSuspended } from '@/features/settings/lockState';
@@ -44,7 +45,33 @@ const LABEL: Record<ExportKind, () => string> = {
   receiptsZip: () => t('mtd.export.receiptsZip'),
 };
 
+/** Free launch (PRO_PAUSED): one short line per file saying what it is for (mockup Export). */
+function openSubtitle(k: ExportKind, region: Region, photos: number): string {
+  switch (k) {
+    case 'entriesCsv':
+      return t('mtd.export.openSub.entriesCsv');
+    case 'mileageCsv':
+      return region === 'UK' ? t('mtd.export.openSub.mileageCsv') : t('mtd.export.openSub.mileageCsvUS');
+    case 'pdf':
+      return t('mtd.export.openSub.pdf');
+    case 'totalsCsv':
+      return region === 'UK' ? t('mtd.export.openSub.totalsUK') : t('mtd.export.openSub.totalsUS');
+    case 'mtdSummary':
+      return t('mtd.export.openSub.mtdSummary');
+    case 'mtdRecords':
+      return t('mtd.export.openSub.mtdRecords');
+    case 'mtdXlsx':
+      return t('mtd.export.openSub.mtdXlsx');
+    case 'freeagent':
+      return t('mtd.export.openSub.freeagent');
+    case 'receiptsZip':
+      if (photos === 0) return t('mtd.export.openSub.receipts');
+      return photos === 1 ? t('mtd.export.openSub.receiptsOne') : t('mtd.export.openSub.receiptsN', { count: photos });
+  }
+}
+
 function subtitle(k: ExportKind, region: Region, opts: { pro: boolean; photos: number }): string {
+  if (PRO_PAUSED) return openSubtitle(k, region, opts.photos);
   switch (k) {
     case 'entriesCsv':
       return opts.pro ? t('mtd.export.rawSub') : t('mtd.export.entriesCsvSub');
@@ -75,7 +102,7 @@ const savedVehicle = (v: { engineType: string; engineSize: string } | null): Fre
 
 /**
  * S-10 Export: period, files (raw CSVs free; PDF / tax-line totals / MTD / FreeAgent / photos Pro — locked rows open
- * S-19), "Include personal entries", unsorted handling (MTD: "Leave them out" / "Sort now"), FreeAgent name once,
+ * S-19; while PRO_PAUSED one open list: "Raw data" / "For your accountant & MTD"), "Include personal entries", unsorted handling (MTD: "Leave them out" / "Sort now"), FreeAgent name once,
  * progress, share. Inside a bottom sheet on Reports and as the /export screen from Settings.
  * `onClose(message)` closes the host; a message is shown as a snackbar once the sheet is gone.
  */
@@ -321,7 +348,18 @@ export function ExportPanel({
         </View>
       ) : null}
 
-      {pro ? (
+      {PRO_PAUSED ? (
+        <>
+          <Txt v="overline" c="textSecondary">
+            {t('mtd.export.groupRaw')}
+          </Txt>
+          <View style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.line }]}>{freeKinds.map(row)}</View>
+          <Txt v="overline" c="textSecondary">
+            {region === 'UK' ? t('mtd.export.groupAccountant') : t('mtd.export.groupAccountantUS')}
+          </Txt>
+          <View style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.line }]}>{proKinds.map(row)}</View>
+        </>
+      ) : pro ? (
         <View style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.line }]}>{offered.map(row)}</View>
       ) : (
         <>

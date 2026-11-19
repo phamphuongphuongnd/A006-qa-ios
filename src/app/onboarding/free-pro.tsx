@@ -1,6 +1,7 @@
+import { Redirect } from 'expo-router';
 import { ScrollView, View } from 'react-native';
 
-import { PRO_FALLBACK_PRICE } from '@/domain/pro';
+import { PRO_FALLBACK_PRICE, PRO_PAUSED } from '@/domain/pro';
 import { OnboardingPage } from '@/features/entries/OnboardingTop';
 import { t } from '@/i18n';
 import { router } from '@/services/router';
@@ -11,9 +12,14 @@ import { Check, Plus, Shield, type LucideIcon } from '@/ui/icons';
 
 /**
  * S-01e Free & Pro (X6): the free limits said plainly at install. Never starts the trial here; "See Pro" opens S-19
- * (built by S5) without leaving onboarding.
+ * (built by S5) without leaving onboarding. Skipped while Pro is paused (Categories goes straight to Reminder).
  */
 export default function FreeProStep() {
+  if (PRO_PAUSED) return <Redirect href="/onboarding/reminder" />;
+  return <FreeProContent />;
+}
+
+function FreeProContent() {
   const { colors } = useTheme();
   const { settings } = useSettings();
   const price = PRO_FALLBACK_PRICE[settings.region === 'US' ? 'US' : 'UK'];

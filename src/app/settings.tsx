@@ -29,6 +29,7 @@ import { backupDue, daysSince, timeLabel, WEEKDAYS } from '@/features/settings/r
 import { GroupLabel, NavHeader, NavRow, OptionSheet, Pill, type Option } from '@/features/settings/ui';
 import { listSavedTrips } from '@/features/savedTrips/repo';
 import { trashCount } from '@/features/trash/repo';
+import { PRO_PAUSED } from '@/domain/pro';
 import { t, tn } from '@/i18n';
 import { ProCard } from '@/features/settings/ProCard';
 import { usePro } from '@/state/pro';
@@ -151,7 +152,7 @@ export default function SettingsScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
       <NavHeader title={t('screens.settings')} />
       <ScrollView contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: insets.bottom + 32, gap: 8 }}>
-        <ProCard />
+        {PRO_PAUSED ? null : <ProCard />}
 
         <GroupLabel>{t('settings.regionTax')}</GroupLabel>
         <Group>

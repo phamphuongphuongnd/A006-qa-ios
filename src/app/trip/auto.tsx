@@ -10,6 +10,7 @@ import { autoTripsSupported, bondedDevices, isSamsung, nativeHealth, simulateSig
 import { getAutoFlags, processAutoSignals, syncAutoDetection } from '@/features/trips/auto/runner';
 import { autoPausedBy } from '@/features/trips/autoState';
 import { ModalHeader } from '@/features/trips/ModalHeader';
+import { PRO_PAUSED } from '@/domain/pro';
 import { t } from '@/i18n';
 import { router } from '@/services/router';
 import { usePro } from '@/state/pro';
@@ -51,7 +52,7 @@ function fixText(h: TripDetectHealth | null, samsung: boolean) {
   return samsung ? t('autoTrip.samsungMayPause') : t('autoTrip.phoneMayPause');
 }
 
-/** S-07d Automatic trips [Pro]. */
+/** S-07d Automatic trips ([Pro] — open to everyone while PRO_PAUSED). */
 export default function AutoTripsScreen() {
   const { settings, update } = useSettings();
   const { pro } = usePro();
@@ -106,7 +107,7 @@ export default function AutoTripsScreen() {
         iconLabel={t('common.back')}
         onIcon={() => (router.canGoBack() ? router.back() : router.replace('/miles'))}
         title={t('autoTrip.title')}
-        right={<Badge kind="pro" label={t('pro.badge')} />}
+        right={PRO_PAUSED ? undefined : <Badge kind="pro" label={t('pro.badge')} />}
       />
       <ScrollBody>
         <Card style={{ gap: 6 }}>

@@ -4,7 +4,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 
 import { AppIconMini } from '@/features/entries/art';
 import { useDateTimePicker } from '@/features/entries/DateTimePick';
-import { OnboardingPage } from '@/features/entries/OnboardingTop';
+import { OnboardingPage, REMINDER_STEP } from '@/features/entries/OnboardingTop';
 import { requestNotifications } from '@/features/settings/notifications';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
@@ -72,7 +72,7 @@ export default function ReminderStep() {
 
   return (
     <OnboardingPage
-      step={6}
+      step={REMINDER_STEP}
       bottom={
         <>
           <Button label={t('onboarding.reminderOn')} icon={Bell} full loading={busy} onPress={turnOn} />

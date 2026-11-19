@@ -54,7 +54,7 @@ export const en = {
   tabs: { home: 'Home', entries: 'Entries', sort: 'Sort', miles: 'Miles', reports: 'Reports' },
   onboarding: {
     welcomeTitle: 'Log it in 10 seconds. Sort it on Sunday.',
-    welcomeBody: 'A simple money and mileage log for self-employed drivers. No account. No bank link. No Sunday Sort servers: we never see your data.',
+    welcomeBody: 'A simple money and mileage log for self-employed drivers. Works offline — we never see your data.',
     getStarted: 'Get started',
     regionTitle: 'Where do you file your taxes?',
     regionUK: 'United Kingdom',

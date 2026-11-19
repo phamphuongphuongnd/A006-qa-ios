@@ -4,6 +4,7 @@ import { ScrollView, View } from 'react-native';
 
 import { listCategories } from '@/db/categoriesRepo';
 import { db } from '@/db/client';
+import { PRO_PAUSED } from '@/domain/pro';
 import type { EntryType } from '@/domain/types';
 import { OnboardingPage } from '@/features/entries/OnboardingTop';
 import { t } from '@/i18n';
@@ -12,7 +13,7 @@ import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, useTheme } from '@/theme';
 import { Button, Txt } from '@/ui';
 
-/** S-01d Your categories — read-only preview of the region's defaults. */
+/** S-01d Your categories — read-only preview of the region's defaults. Next: S-01f Reminder (S-01e only with Pro on). */
 export default function CategoriesStep() {
   const { colors } = useTheme();
   const { settings } = useSettings();
@@ -50,7 +51,7 @@ export default function CategoriesStep() {
   );
 
   return (
-    <OnboardingPage step={4} bottom={<Button label={t('onboarding.looksGood')} full onPress={() => router.push('/onboarding/free-pro')} />}>
+    <OnboardingPage step={4} bottom={<Button label={t('onboarding.looksGood')} full onPress={() => router.push(PRO_PAUSED ? '/onboarding/reminder' : '/onboarding/free-pro')} />}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 14, paddingBottom: 20, gap: 16 }}>
         <View style={{ gap: 8 }}>
           <Txt v="h1" accessibilityRole="header">

@@ -4,6 +4,7 @@ import { Platform, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { AppSettings } from '@/db/settingsRepo';
+import { PRO_PAUSED } from '@/domain/pro';
 import { notificationsAllowed, requestNotifications } from '@/features/settings/notifications';
 import { daysLabel, nudgeDays, timeLabel, WEEKDAYS, WEEKDAYS_SHORT } from '@/features/settings/reminder';
 import { GroupLabel, NavHeader, OptionSheet } from '@/features/settings/ui';
@@ -133,18 +134,23 @@ export default function NotificationsScreen() {
           />
         </Group>
 
-        <GroupLabel>{t('backupAuto.notify.account')}</GroupLabel>
+        {/* Pro paused: no renewal / trial notices exist, so the group is only the backup row. */}
+        <GroupLabel>{PRO_PAUSED ? t('backupAuto.notify.backup') : t('backupAuto.notify.account')}</GroupLabel>
         <Group>
-          <SettingRow
-            title={t('backupAuto.notify.proRenewal')}
-            subtitle={t('backupAuto.notify.proRenewalSub')}
-            right={sw(notify.proRenewal, (v) => setNotify('proRenewal', v), t('backupAuto.notify.proRenewal'))}
-          />
-          <SettingRow
-            title={t('backupAuto.notify.trialEnding')}
-            subtitle={t('backupAuto.notify.trialEndingSub')}
-            right={sw(notify.trialEnding, (v) => setNotify('trialEnding', v), t('backupAuto.notify.trialEnding'))}
-          />
+          {PRO_PAUSED ? null : (
+            <>
+              <SettingRow
+                title={t('backupAuto.notify.proRenewal')}
+                subtitle={t('backupAuto.notify.proRenewalSub')}
+                right={sw(notify.proRenewal, (v) => setNotify('proRenewal', v), t('backupAuto.notify.proRenewal'))}
+              />
+              <SettingRow
+                title={t('backupAuto.notify.trialEnding')}
+                subtitle={t('backupAuto.notify.trialEndingSub')}
+                right={sw(notify.trialEnding, (v) => setNotify('trialEnding', v), t('backupAuto.notify.trialEnding'))}
+              />
+            </>
+          )}
           <SettingRow
             title={t('backupAuto.notify.backupTap')}
             subtitle={t('backupAuto.notify.backupTapSub')}
