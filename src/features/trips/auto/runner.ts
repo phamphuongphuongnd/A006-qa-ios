@@ -11,7 +11,7 @@ import { t } from '@/i18n';
 import { refreshWidgets } from '@/features/widgets/refresh';
 
 import { autoPausedBy } from '../autoState';
-import { endActiveTrip, startGpsTrip } from '../controller';
+import { endActiveTrip, startGpsTrip, syncGpsMode } from '../controller';
 import { formatDistance } from '../format';
 import { classifyTrip } from './classify';
 import { INITIAL_ENGINE_STATE, MIN_AUTO_TRIP_M, step, type EngineSignal, type EngineState } from './engine';
@@ -137,6 +137,8 @@ async function runOnce(now: number) {
     }
   }
   setFlags({ lastRunAt: now });
+  // B-131: activity recognition says driving → a parked trip's GPS goes back to every 5 s right away.
+  await syncGpsMode(now).catch(() => {});
   await syncIosBackstops();
 }
 

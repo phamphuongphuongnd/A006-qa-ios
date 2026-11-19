@@ -20,13 +20,15 @@ import { hasActivityPermission, logDiagnostic } from './auto/native';
 import { getKV } from './auto/repo';
 import { processAutoSignals, syncAutoDetection } from './auto/runner';
 import { TRIP_TASK } from './constants';
-import { restoreRecording } from './controller';
+import { restoreRecording, syncGpsMode } from './controller';
 import { formatDistance } from './format';
 import { cancelLongTripReminder, clearTripNotification, showTripNotification } from './notify';
 
 let lastWidgetAt = 0;
 /** Engine pass from the GPS task (Phương 19/11): a Trip standing still ends on time even if no alarm fires. */
 let lastEngineAt = 0;
+/** B-131: GPS rate check (every batch while parked — batches are 30 s apart then — at most every 20 s while driving). */
+let lastGpsModeAt = 0;
 
 TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ data, error }) => {
   if (error) return;
@@ -82,6 +84,10 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
   if (now - lastEngineAt > 60_000) {
     lastEngineAt = now;
     processAutoSignals().catch(() => {});
+  }
+  if (now - lastGpsModeAt > 20_000) {
+    lastGpsModeAt = now;
+    syncGpsMode(now).catch(() => {});
   }
   if (now - lastWidgetAt > 60_000) {
     lastWidgetAt = now;

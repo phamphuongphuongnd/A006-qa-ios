@@ -27,12 +27,14 @@ import type { Scope, TripStartedBy } from '@/domain/types';
 import { t } from '@/i18n';
 import { refreshWidgets } from '@/features/widgets/refresh';
 
-import { allowBackgroundLocationStart } from './auto/native';
-import { rebuildStops, setTripScope } from './auto/repo';
+import type { EngineState } from './auto/engine';
+import { allowBackgroundLocationStart, hasActivityPermission, logDiagnostic } from './auto/native';
+import { getKV, rebuildStops, setKV, setTripScope } from './auto/repo';
 import { syncTripActive } from './auto/sync';
 import './backgroundTask';
 import { CONTINUE_WINDOW_MS, NOTIF_COLOR, TRIP_TASK } from './constants';
 import { formatDistance } from './format';
+import { gpsModeFor, PARKED_INTERVAL_MS, type GpsMode } from './gpsPower';
 import {
   cancelLongTripReminder,
   clearTripNotification,
@@ -68,13 +70,17 @@ export async function needsBackgroundStep(): Promise<boolean> {
   return !bg.granted;
 }
 
-async function beginRecording() {
+const KEY_GPS_MODE = 'gpsMode';
+
+async function beginRecording(mode: GpsMode = 'drive') {
   // A13-13: an automatic start from Van Bluetooth / activity recognition runs with no screen open.
   if (AppState.currentState !== 'active') allowBackgroundLocationStart();
+  const parked = mode === 'parked';
   await Location.startLocationUpdatesAsync(TRIP_TASK, {
-    accuracy: Location.Accuracy.BestForNavigation,
-    timeInterval: 5_000,
-    distanceInterval: 15,
+    // B-131: parked → one high-accuracy fix every 30 s (a move away is still seen) instead of every 5 s.
+    accuracy: parked ? Location.Accuracy.High : Location.Accuracy.BestForNavigation,
+    timeInterval: parked ? PARKED_INTERVAL_MS : 5_000,
+    distanceInterval: parked ? 0 : 15,
     activityType: Location.ActivityType.AutomotiveNavigation,
     pausesUpdatesAutomatically: false,
     showsBackgroundLocationIndicator: true,
@@ -85,6 +91,27 @@ async function beginRecording() {
       killServiceOnDestroy: false,
     },
   });
+  setKV(db, KEY_GPS_MODE, mode);
+}
+
+/**
+ * B-131 (Android): the running Trip's GPS rate follows whether the vehicle really moves — every 30 s once parked for
+ * 2 minutes, every 5 s again when the motion sensor says driving or a fix lands outside the Stop radius.
+ */
+export async function syncGpsMode(now = Date.now()) {
+  if (Platform.OS !== 'android') return;
+  const trip = getActiveTrip(db);
+  if (!trip || trip.status !== 'running') return;
+  const engine = getKV<EngineState | null>(db, 'engine', null);
+  const sensorDriving = engine?.activity === 'driving' && hasActivityPermission();
+  const mode = gpsModeFor({ now, lastMoveAt: lastMoveAt(db, trip), sensorDriving });
+  if (mode === getKV<GpsMode>(db, KEY_GPS_MODE, 'drive')) return;
+  try {
+    await beginRecording(mode);
+    logDiagnostic('gps_mode', { mode, screen: String(AppState.currentState) });
+  } catch (e) {
+    logDiagnostic('gps_mode_failed', { mode, error: String((e as Error)?.message ?? e).slice(0, 200) });
+  }
 }
 
 async function stopRecording() {
