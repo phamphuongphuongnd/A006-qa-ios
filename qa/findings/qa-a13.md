@@ -166,6 +166,11 @@ kết quả kick/start. Đã báo điều phối.
 - **62d6558 cài 14:23:33. B-99 ✅** (vân tay thật, App lock 1 phút): camera mở 2 phút tự đóng → về Ghi nhanh không khoá, nháp còn;
   chụp sau 1:45 → thêm ảnh, không khoá; thư viện 1:23 → thêm ảnh. Camera Samsung ~4 s từ chụp tới màn xem lại (chế độ làm đẹp) —
   không phải lỗi app. Đã Discard nháp, tắt App lock.
+- **B-121 ✅ riêng tư**: 3 file chẩn đoán (06-37/07-54/08-42) không có MAC, không tên thiết bị. 🟡 từ a3a1f6b mọi bt_* ghi
+  "other device" kể cả van (02-43 còn "van"; 10:01:31 "other device" nhưng start_ok bluetooth cùng giây) → nhãn diagnostics sai, engine
+  vẫn khớp. Đã báo điều phối.
+- **B-122 ✅** (edecc6d, Phương tự bấm bàn phím Samsung): 1 → £1.00, 7,7 → £7.70, 1250 → £1,250.00, 0,5 → £0.50 (lưu đúng); 12.34 + "5"
+  → £12.34 không Max (B-136 ✅); 12345678 → £123,456.00 có Max. Đã xoá 6 khoản thử.
 - **B-118 (19/11 ~15:55)**: Phương nhờ so app khác (Everlance nguyên văn, MileIQ, Hurdlr, MileageWise) → viết lại 3 câu (WhenInUse /
   Always + AlwaysAndWhenInUse / Motion: mở bằng "Choose Always Allow", có hậu quả While Using, "walks aren't counted", giữ "stays on
   your phone") → **Phương duyệt**, đã gửi nguyên văn cho điều phối.
