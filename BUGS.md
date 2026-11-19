@@ -617,4 +617,6 @@
   30 s) / về BestForNavigation 5 s; gọi từ task GPS (≤ 20 s/lần) và sau mỗi lượt engine; nhật ký `gps_mode`. 953 test xanh. ⏳ phiên E đo A13.
 - [ ] **B-132** 🟡 (QA A37-10, phiên A — a3a1f6b) Reports: "1620 entries in this period aren't sorted yet" thiếu dấu phẩy nghìn (như B-79 ở Home).
   Gốc: `reports.tsx` truyền `report.unsortedCount` thô vào `t('reports.unsortedWarn')`.
+  Sửa chung: `t()` nhóm nghìn cho tham số đếm (`count`, `total`, `done`) — mọi câu "N entries / trips" trong app; năm, phút không đổi + test.
+  955 test xanh. ⏳ máy.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
