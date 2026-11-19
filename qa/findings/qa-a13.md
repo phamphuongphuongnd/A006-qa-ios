@@ -133,6 +133,13 @@ kết quả kick/start. Đã báo điều phối.
   Gốc thật: expo-location tự chặn startLocationUpdatesAsync khi không có màn hình (AppForegroundedSingleton.isForegrounded=false
   → ForegroundServiceStartNotAllowedException). Sửa B-124 (4dcaa0b): allowBackgroundLocationStart + nhật ký start_ok/start_failed.
   Phương xem các hướng A–E, chọn B rồi bỏ B sau khi biết B-124 sửa được không cần thông báo cố định.
+- **0bf4283 cài đè 10:35:48** — ⚠️ lỗi QA: Phương đã Start chuyến 10:34:32, tôi cài đè khi chuyến đang chạy → GPS dừng 10:35:48,
+  thông báo trip-ongoing đăng lại 10:35:55 nhưng LocationTaskService chỉ chạy lại 10:38:44 (app lên foreground) → hụt ~3 phút.
+  🟡 sau cập nhật app, chuyến running không tự bật GPS tới khi mở app. Luật thêm: trước khi cài kiểm `dumpsys activity services`
+  không có LocationTaskService. **B-126 ✅** Sửa khoản (ô £) + Parking & tolls: bàn phím số 0x2002 có "." ",". Dữ liệu 233/271/8/12
+  (+2 chuyến Phương Start), không mất id. Bài Start ngồi nhà: 10:19:53 → tự tắt 10:30:34 (Merge 10 phút Phương đặt), 0.0 km,
+  endedAt = lúc đứng yên ✅; chưa bấm Continue trip.
+- Quyết định Phương (19/11): B-113 đóng; xoá 2 repo test sau khi phiên con test xong; iOS B-95/96 để Phương kiểm sau (giới hạn đã biết).
 - **B-123 ✅** (bcf8827): chuyến giả 09:40:29 → 10:00:47 tự dừng (LocationTaskService stop + hủy trip-ongoing, 20 phút 18 giây);
   không có trong Miles, trips vẫn 269, tripPoints không thêm → < 500 m bị bỏ.
 - **dc84207 (B-123..B-126) cài đè 10:05** (Back up now trước): 233/269/8/12, id không đổi ✅; quyền còn; sao lưu đêm bật.
