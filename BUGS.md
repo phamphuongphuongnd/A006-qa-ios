@@ -650,9 +650,10 @@
   11:27" — trước cả lúc bấm Continue. Gốc: fix đầu tiên sau Continue là vị trí cũ hệ thống giữ (giờ 11:27:50) → lưu làm đầu đoạn mới → mốc đỗ lùi.
   Sửa: `appendPoints` sau Continue / Resume bỏ fix có giờ trước mốc bấm + test (`lastMoveAt.test.ts`). 958 test xanh. ✅ A13 (57646f8): Continue 12:10:34 → tự kết thúc
   12:21:30 (10 phút 56 s sau, Merge 10), thông báo "Trip ended at 12:10".
-- [ ] **B-136** 🟡 (QA OLD-19, phiên B — f3795bf) Gõ số lẻ thứ 3 ("12.34" rồi "5") hiện "Max £999,999.99" — sai nghĩa (tiền lưu vẫn đúng); màn Split riêng gõ
+- [x] **B-136** 🟡 (QA OLD-19, phiên B — f3795bf) Gõ số lẻ thứ 3 ("12.34" rồi "5") hiện "Max £999,999.99" — sai nghĩa (tiền lưu vẫn đúng); màn Split riêng gõ
   số rồi X đóng luôn, không hỏi. Sửa: `moneyLimitHit` (chỉ khi chữ số bị bỏ ở phần nguyên của số tiền, không phải số lẻ / số nhân) + test; màn Split hỏi
-  "Discard this split?" khi đã đổi. ⏳ máy.
+  "Discard this split?" khi đã đổi. ✅ A13 (0882755): 12345678 → Max (bỏ chữ số), 999999.99 gõ đủ → không Max; Split đổi → X → hỏi, Discard
+  giữ khoản nguyên.
 - [ ] **B-137** 🟠 (QA QI-6, phiên C — iOS simulator, cũng đúng trên Android) Màn chuyến đang chạy không bao giờ hiện bản đồ (chỉ hình vẽ dự phòng) nếu
   điểm GPS đầu tiên về sau 12 s. Mạng tới tiles.openfreemap.org bình thường (HTTP 200, 0,2–0,7 s). Gốc: `TripMap.tsx` đếm 12 s từ lúc gắn, kể cả khi chưa có
   điểm → `failed` cả chuyến. Sửa: chỉ đếm khi bản đồ đã có khung (có điểm). 965 test xanh. ⏳ máy (GPS lạnh / iOS lượt sau).
