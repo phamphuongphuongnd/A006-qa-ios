@@ -99,6 +99,34 @@ thử liệt kê thư mục) → End trip chuyến tự động ngắn CHỈ khi
 Cập nhật: điều phối gỡ camera riêng (revert 147d3e2) → bản build kế tiếp dùng camera điện thoại cả Android/iOS; thêm B-112
 (chip ngày có năm khi khác năm nay). Kiểm thêm khi cài: Take photo mở camera Samsung (không phải màn camera của app).
 
+## 19/11 08:43 — chẩn đoán chuyến tối 18/11 (bản 19daeae, Phương lái + đã cho cầm máy)
+Lúc cắm: chuyến sáng 07:24 đang chạy (11.3 km); Phương tự bấm End trip 08:45 (xác nhận qua popup). Không xoá/sửa chuyến nào.
+File: `diagnostics/SundaySort-trip-diagnostics-2026-11-19-01-50.json` (Drive → thùng rác) · `real-backup/SundaySort-REAL-2026-11-19-0852-after-drive.sundaysort`
+(233 entries / **269 trips** / 8 photos; tripPoints 2124) · ảnh `manual/a13-1119-miles-top.png`, `a13-1119-trip-1746.png`, `a13-1119-trip-2050.png` (có bản đồ → chỉ trên PC).
+
+| Chuyến | id | Nguồn | Giờ | Quãng (app) | Điểm GPS |
+|---|---|---|---|---|---|
+| 1 | mwm01sj7gblqsfxj | **auto** (driving enter 17:46:39) | 17:46:32 → 20:50:40 (Phương End) | 11.2 km | 457, acc trung vị 4 m |
+| 2 | mwm6ism00swd4fl2 | user (Start tay trong nhà) | 20:50:55 → 21:48:11 | 0.58 km | 76, acc trung vị **21 m** (10–207) |
+| 3 | mwmt5yso3wyuzvh1 | user | 19/11 07:24:47 → 08:45:47 | 11.3 km | 447, acc 5.5 m |
+
+**A13-11 🟠 Chuyến tự động không tự tắt khi về nhà (chuyến 1).** Tín hiệu: van BT **ngắt 18:40:52**; driving **exit 18:45:45** → walking →
+**still enter 19:00:57** và giữ still tới sáng (không còn sự kiện activity nào). Nhưng chuyến chạy tới 20:50 vì sau 18:50 GPS trong nhà
+(acc trung vị 15–30 m) nhảy tạo "chạy" giả: 19:10–19:20 vmax 50 km/h, 19:50–20:00 ~10 km/h, 20:30 vmax 45 km/h → tripStops bị cắt
+khúc 18:59–19:14, 19:21–19:45, 19:47–19:50, 20:07–20:29, 20:37–20:45 (mỗi đoạn < mergeStopMinutes 20 nối lại) + `wake` 19:20/19:39/
+19:52/20:19/20:33 trùng các đợt nhảy. Thực tế lái xong ~18:45; app thêm ~1.4 km giả sau 18:50 (hav 12.4 km thô; app 11.2 km).
+Gợi ý: activity "still" ≥ N phút (hoặc BT van ngắt + still) → kết thúc chuyến tự động bất kể GPS; bỏ điểm acc > ~20–25 m và
+bước nhảy tốc độ không khớp activity.
+**A13-12 🟠 Start tay trong nhà vẫn cộng quãng (chuyến 2).** Activity "still" suốt 20:50–21:48; 76 điểm acc 10–207 m; vmax giả
+55 km/h (21:10) → app cộng 583 m (thô 1.56 km). Gợi ý: khi activity still/không di chuyển, không cộng quãng; lọc acc + tốc độ nhảy.
+**Bluetooth van "chỉ bật chuyến 1 lần":** 18/11 van kết nối 17:35/17:36/17:49/17:50/17:57 (rớt-nối liên tục) — chuyến đã chạy từ
+17:46 nên không bật thêm (đúng). Sáng 19/11 **không có bt_connected nào** (van không nối với máy) → BT không thể bật chuyến; chuyến
+sáng do Phương Start tay 07:24, driving enter 07:34. 22:53–23:10 có "other device" (B-121 ẩn tên ✅).
+
+**Việc chờ (điều phối, B-122 — Phương chốt "nhập thế nào viết bằng đó"):** khi có APK → cài đè giữ dữ liệu → Phương tự bấm Ghi
+nhanh: "1" → £1.00, "7,7" → £7.70, "12.50" → £12.50 (thêm: Sửa khoản, phí đỗ xe) → xoá khoản thử → kiểm 233/266/8/12, sao lưu đêm.
+B-113 chốt do chạm toạ độ (không sửa app). Backup folder ghi tài khoản/thư mục → đợt sau (🟡).
+
 ## BẢN CUỐI MỚI b843037 (cài đè 16:52, thay ef470b7) — máy trả Phương 16:59
 - 5 tab mở được; logcat không FATAL / lỗi ReactNativeJS ✅.
 - Sort ở chữ 2.0: nút thẻ xếp icon trên + nhãn dưới, đủ chữ Edit/Split/Merge/Skip ✅; cuộn xuống: nội dung không chui dưới thanh
