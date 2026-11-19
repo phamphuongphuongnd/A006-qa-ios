@@ -129,6 +129,13 @@ kết quả kick/start. Đã báo điều phối.
   "**Foreground service started from background can not have location/camera/microphone access**: service …TripDetectTaskService"
   → 09:12:55 thông báo `trip-auto-start-failed` "Driving? Tap to record this trip — Your phone didn't let the trip start on its own."
   Hướng sửa (điều phối chọn): BT nối chỉ "sẵn sàng" + lùi giờ start về lúc BT nối khi AR báo driving; hoặc CompanionDeviceManager.
+  **Đính chính (điều phối 19/11):** Android CHO PHÉP FGS (SYSTEM_ALLOW_LISTED); dòng W "can not have location" chỉ là cảnh báo.
+  Gốc thật: expo-location tự chặn startLocationUpdatesAsync khi không có màn hình (AppForegroundedSingleton.isForegrounded=false
+  → ForegroundServiceStartNotAllowedException). Sửa B-124 (4dcaa0b): allowBackgroundLocationStart + nhật ký start_ok/start_failed.
+  Phương xem các hướng A–E, chọn B rồi bỏ B sau khi biết B-124 sửa được không cần thông báo cố định.
+- **805835b (B-123) cài đè 19/11 09:22**: trước/sau cài 233/269/8/12, id entries/trips/tripPoints không đổi ✅; Merge stops 20 min,
+  Automatic trips Working, quyền vị trí nền/activity/thông báo/BT còn ✅. Van Bluetooth đang là **Redmi Buds 4 Lite (tai nghe)** →
+  lần 09:12 là tai nghe; đã nhắc Phương tự đổi sang BT xe.
 **Bluetooth van "chỉ bật chuyến 1 lần":** 18/11 van kết nối 17:35/17:36/17:49/17:50/17:57 (rớt-nối liên tục) — chuyến đã chạy từ
 17:46 nên không bật thêm (đúng). Sáng 19/11 **không có bt_connected nào** (van không nối với máy) → BT không thể bật chuyến; chuyến
 sáng do Phương Start tay 07:24, driving enter 07:34. 22:53–23:10 có "other device" (B-121 ẩn tên ✅).
