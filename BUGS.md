@@ -371,7 +371,7 @@
 - [ ] **B-90** 🟠 (QA A37-7, phiên A) Chế độ tối: mọi nút `variant="sun"` chữ vàng trên nền vàng (chỉ thấy viên thuốc trống) — "Sort first" (Export có khoản
   chưa sort), "End trip" (Home khi đang có chuyến), "Back up now"/"Choose again", "Subscribe now"/"Try free", "See Pro", Save chi tiết chuyến, "Always"…
   Gốc: `ui/Button.tsx` `sun: { fg: 'primary' }`, mà ở theme tối `primary` = `sun` = #F5B841. Sửa: chữ dùng token `onSun` có sẵn (sáng #18202F, tối
-  #12161C). ⏳ phiên A: chụp lại 2 màn trên ở chế độ tối.
+  #12161C). ✅ iOS lượt 4d + 4g (phiên C, tối). ⏳ phiên A: chụp lại 2 màn trên ở chế độ tối (Android).
 - [x] **B-91** 🟡 (QA REG-1, phiên D — B-81/B-87 chưa trọn) Chọn file "bom" có `backup.json` 200 MB: không báo gì, RAM giữ ~515 MB 2 phút; bom ảnh báo
   "damaged" đúng nhưng RAM vẫn lên ~520 MB. Gốc: `fail()` chỉ ghi lỗi, mục đang giải nén không dừng, mỗi lần nạp 1 MB nén có thể nở hàng trăm MB.
   Sửa (`streamRestore.ts`): kích thước khai báo trong header vượt giới hạn → từ chối trước khi giải nén; nạp 64 KB/lần; vượt → `terminate()`.
@@ -427,12 +427,12 @@
 > Phiên C (iOS lượt 3, run 44221266865, iOS 26.5, iPhone SE 3 + 16 Pro Max, 14/27 persona, **0 crash**): onboarding, 5 tab, nhập nhanh, chữ lạ, Save đúp → 1
 > khoản, đổi vùng, tắt app sau Save, xuất CSV + "Did you send…" đều đạt. Phút macOS dùng 154 (vượt trần 150 ~4 phút). Còn 13 persona + iPad + khôi phục dữ
 > liệu chờ Phương duyệt thêm phút.
-- [ ] **B-100** 🟡 (QA iOS QI-1, phiên C) iPhone SE + chữ lớn: màn chọn vùng — thẻ United States khuất dưới nút Continue, không có gợi ý cuộn (màn đã cuộn được).
+- [x] **B-100** 🟡 (QA iOS QI-1, phiên C) iPhone SE + chữ lớn: màn chọn vùng — thẻ United States khuất dưới nút Continue, không có gợi ý cuộn (màn đã cuộn được).
   Sửa: `ui/HintScroll.tsx` — nháy thanh cuộn khi nội dung dài hơn màn (màn chào + màn chọn vùng). (Màn chào cắt chữ = B-66.)
   iOS lượt 4b (phiên C, P091 SE AX-Large): tiêu đề đủ, nhưng thanh cuộn iOS chỉ nháy ~1 s → không thấy gợi ý. Sửa lần 2: thêm viên "More below ⌄" ở
   đáy, ở lại tới khi cuộn tới cuối, chạm = cuộn xuống ~1 màn (cả iOS + Android). Phiên B: vuốt bắt đầu trên viên không cuộn trang + viên che chữ
   "United States" → lần 3: nhãn không bấm (chạm xuyên qua) ở góc phải dưới. ✅ Android — phiên B (ef470b7): vuốt bắt đầu trên nhãn cuộn được trang.
-  iOS lượt 4e (lần 2): viên hiện rõ ✅ nhưng đè dòng thẻ US → lần 3 ở góc ⏳ lượt 4g.
+  iOS lượt 4e (lần 2): viên hiện rõ ✅ nhưng đè dòng thẻ US → lần 3 ở góc ✅ lượt 4g (phiên C; 🟡 nhãn còn chạm nhẹ mép thẻ, chạm xuyên qua được).
 - [x] **B-101** 🟡 (QA iOS QI-3, phiên C) Ô Note ở Ghi nhanh đảo ký tự khi gõ nhanh (P052: "QA-P052 Shell M62" → "QA-052 Shell M62P"; 1/14). Sửa: ô không còn
   điều khiển `value` (dựng lại khi app tự điền: chip, đọc hoá đơn); nháp ghi file trễ 400 ms thay vì mỗi phím.
   ✅ iOS lượt 4e (phiên C, dev f424978, P052 SE chữ XXXL): ô Note + danh sách đúng "QA-P052 Shell M62".
@@ -531,11 +531,12 @@
   năm thì bỏ thứ ("18 Nov 2025, 03:33"). Kèm OLD-14 phụ: camera không mở báo nhầm "Couldn't save the photo. Your entry was saved without it." → câu
   riêng "Couldn't open the camera. Try again, or hold Photo to choose from your library." ✅ phiên B (07f4aac, 360dp): chip 1 dòng "18 Nov 2025, 04:18";
   nút Expense|Income hơi chật nhưng không cắt.
-- [ ] **B-117** 🔴 (QA iOS — phiên H thử Appetize, iPhone 14 Pro iOS 17.2, bản 55db0eb; 3/3 lần) End trip → màn chỉ còn "0.0", EndTripSheet không hiện,
+- [x] **B-117** 🔴 (QA iOS — phiên H thử Appetize, iPhone 14 Pro iOS 17.2, bản 55db0eb; 3/3 lần) End trip → màn chỉ còn "0.0", EndTripSheet không hiện,
   nút thu nhỏ không bấm được → phải tắt app. Log: "Attempt to present RCTFabricModalHostViewController … while a presentation is in progress". Gốc:
   `trip/active.tsx` — gpsDialog / shortDialog / endSheet ở vị trí con khác nhau trong 2 nhánh (còn chuyến / hết chuyến) → đổi nhánh thì React gỡ rồi
   dựng lại Sheet (RN Modal) đang mở, iOS từ chối mở Modal khi cái cũ đang đóng. Android không bị. Sửa: key cố định cho 3 lớp phủ (giữ nguyên khi đổi
-  nhánh); "Keep" của B-107 mở Sheet sau khi Dialog đóng (iOS trễ 400 ms). ⏳ iOS (phiên C / Appetize).
+  nhánh); "Keep" của B-107 mở Sheet sau khi Dialog đóng (iOS trễ 400 ms). ✅ iOS lượt 4g (GH Actions 44274943533, phiên C/H): P052 SE
+  End trip → tấm "Trip saved" hiện ngay → Save → Home; P091 AX-Large tấm hiện, không treo (Save dưới mép → đã ghim footer ở 805835b, ⏳ iOS chụp lại).
 - [ ] **B-118** 🟠 (QA iOS — phiên H) Câu xin quyền vị trí iOS (app.json) hứa "only while a trip you started is running" / "Recording stops when you end the
   trip" — sai từ khi có chuyến tự động (theo dõi rời chỗ đỗ / vùng 150 m ở nền) → Apple 5.1.1. Sửa: câu mới nói rõ chuyến tự động; câu trong app
   (`trip.permBody`) cũng sửa. Cần build iOS mới mới có hiệu lực. ⏳ Phương xem chữ trước khi nộp.
