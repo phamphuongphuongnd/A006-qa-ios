@@ -420,10 +420,26 @@
 | TC-382 | F-04 | Entries đã cuộn sâu → ghi khoản (FAB ✓, Save, từ Home) | Khoản mới hiện ở đầu Entries | M (B, E) | ❌ B-109 → lần 3 ✅ cả 3 đường |
 | TC-383 | F-06 | Sort ở 360×640, chữ 1.0 / 1.3 / 2.0: Split → "Split & sort" | Tới được, không bị cắt, + không che Skip | M (B, E) | ❌ B-114 → lần 3 ✅; lần 4 (inset, nút xếp dọc) ⏳ |
 | TC-384 | F-02 | Android 8/7: nút Save khi bàn phím mở (chữ 0.85 / 1.3) | Save thấy trọn | M (B) | ❌ B-98 → lần 4 ✅ |
-| TC-385 | F-12 | iOS: Start trip → End trip | Sheet lưu chuyến hiện, không treo | M (H Appetize, C) | ❌ B-117 → sửa ⏳ iOS |
-| TC-386 | F-12 | Chuyến tự động < 500 m kết thúc bằng tay | Hỏi Discard / Keep (Phương chốt) | M (E) | ⏭ không có chuyến tự động ngắn thật |
+| TC-385 | F-12 | iOS: Start trip → End trip | Sheet lưu chuyến hiện, không treo | M (H Appetize, C) | ❌ B-117 → sửa ✅ iOS 4g/4i (SE, Pro Max, chữ AX-L) |
+| TC-386 | F-12 | Chuyến tự động < 500 m kết thúc bằng tay | Hỏi Discard / Keep (Phương chốt) | M (E) | ✅ A13: chuyến tự động < 500 m tự bỏ khi tự kết thúc (B-123); hỏi Discard/Keep khi kết thúc tay (B-107) |
 | TC-387 | F-16 | Thư mục sao lưu Drive không mở được | Báo rõ + chạm để chọn lại; sao lưu đêm chạy lại | M (E, Phương duyệt) | ✅ B-111 (thư mục A006, sao lưu 15:34) |
-| TC-388 | F-18 | Bấm Try Pro 7 ngày | "Trial · 7 days left", thanh tiến độ ≥ 0 | T + M (G) | ❌ B-104 "8 days" → sửa ✅ T; máy thật ⏳ (Firebase ngày mai) |
+| TC-388 | F-18 | Bấm Try Pro 7 ngày | "Trial · 7 days left", thanh tiến độ ≥ 0 | T + M (G) | ❌ B-104 "8 days" → sửa ✅ T + 5 máy thật Firebase |
 | TC-389 | Dữ liệu | Cài đè từng bản QA lên A13 dữ liệu thật | 233 khoản / 266 chuyến / 8 ảnh / 12 danh mục, id không đổi | M (E) | ✅ mọi lần (sao lưu kiểm 08:30, 14:28, 15:56, 16:24, 16:49) |
 | TC-390 | F-12 | Chuyến tự động Android khi lái xe thật | Có chuyến tự động | M (Phương lái) | ❌ B-88 — cần thêm 1 chuyến xe + chẩn đoán |
 | TC-391 | F-12 | Chuyến tự động iOS (CoreMotion + SLC) | Có chuyến tự động | iPhone thật | ⏭ không có iPhone thật (B-95/B-96) |
+| TC-392 | F-12 | Start tay ngồi trong nhà ≥ 20 phút | ~0 km; tự kết thúc sau Merge stops, giờ kết thúc = lúc đứng yên, thông báo có Continue trip | M (E, Phương) + T | ✅ B-123 A13 (10:19, 10:52, 11:16) |
+| TC-393 | F-12 | Bấm Continue trip trên thông báo | Chuyến chạy tiếp ≥ Merge stops tính từ lúc bấm, giờ kết thúc ≥ lúc bấm | M (E) + T `lastMoveAt.test.ts` | ❌ B-130 (tắt sau 3 s), B-135 (sớm 1 phút) → ✅ A13 |
+| TC-394 | F-12 | Nối Bluetooth xe khi app ở nền / đã đóng | Chuyến tự động bật ngay (start_ok bluetooth) | M (E) | ❌ B-124 (expo-location tự chặn) → ✅ A13 (tai nghe); ⏳ Bluetooth xe thật |
+| TC-395 | F-12 | Cài đè / cập nhật app giữa chuyến | GPS chạy lại không cần mở app (restore_ok) | M (E) | ❌ B-129 → ✅ A13 (hụt ~6 s) |
+| TC-396 | F-12 | Chuyến chạy, xe đỗ > 2 phút | GPS 30 s/lần; lái lại → 5 s | M (E) | ✅ B-131 A13 (parked); ⏳ nhánh lái lại |
+| TC-397 | F-12 | Lái chậm / tắc đường (cảm biến không báo driving) | Drive check bật chuyến | M (Phương lái) + T `probeLogic.test.ts` | ⏳ B-88 tối 19/11 |
+| TC-398 | F-12 | Đi bộ > 500 m (máy trong túi) / đạp xe | Không bật chuyến | M (Phương) + T | ⏳ B-88 v2 tối 19/11 |
+| TC-399 | F-12 | Drive check đang chạy thì có chuyến bắt đầu, rồi Drive check hết hạn | GPS của chuyến vẫn chạy | M (E) | ❌ B-140 → sửa, ⏳ A13 |
+| TC-400 | F-12 | Chọn tai nghe / loa làm Van Bluetooth | Cảnh báo vàng, vẫn chọn được | M (E) | ✅ B-125 A13 |
+| TC-401 | F-02 | Ô số tiền mọi màn trên Pixel 11 thật (Gboard) | Bàn phím số | M (G) | ❌ B-126 → ✅ 4 ô |
+| TC-402 | F-02 | Gõ "33,01", "33.011", "12345678" ở tách khoản / Sort Edit | 33.01 / 33.01 / dừng 123456 + "Max …"; "Max" không hiện ở số lẻ thứ 3 | M (B) + T | ❌ B-133, B-136 → ✅ |
+| TC-403 | F-09 | Reports ở 320dp + chữ 200% | Nhãn và số xếp 2 dòng, không cắt, không bẻ âm tiết | M (A) | ❌ B-110 → v2 ✅ |
+| TC-404 | F-12 | Bản đồ chuyến khi GPS bắt điểm đầu > 12 s | Bản đồ hiện khi có điểm | M (A, C) | ❌ B-137 → ✅ Android + iOS |
+| TC-405 | F-12 | Fix đầu chuyến ở rất xa (vị trí cũ) | Quãng đường vẫn tăng, không cộng cú nhảy | M (A) + T | ❌ B-139 → ✅ |
+| TC-406 | F-12 | iOS: chuyến tay đứng yên, app bị tắt | Đúng 1 "Trip ended at …" + Continue trip | M (C simulator) | ✅ B-96 v2; ⏭ máy ngủ thật / Continue trên màn khoá |
+| TC-407 | F-02 | Gõ số rồi chụp hoá đơn (bàn phím mở) | Chip "Receipt says" không che dòng tên cửa hàng | M (Phương, E) | ❌ B-138 → ✅ A13 |
