@@ -27,7 +27,7 @@ import { entryOrigin, fillEntryOcr, setReceiptOcrText } from '@/features/ocr/rep
 import { afterSave } from '@/features/ocr/rulesHook';
 import { LinkedLines } from '@/features/entries/LinkedLines';
 import { formatDay } from '@/features/trips/format';
-import { CalcBar, ExprLine, PhotoSourceSheet, PhotosUsedUpSheet, trialOffered } from '@/features/ocr/ui';
+import { AmountLimitHint, CalcBar, ExprLine, PhotoSourceSheet, PhotosUsedUpSheet, trialOffered } from '@/features/ocr/ui';
 import { useAmountExpr } from '@/features/ocr/useAmountExpr';
 import { openPro } from '@/features/pro/openPro';
 import { receiptUri, saveReceipt } from '@/files/receipts';
@@ -269,6 +269,7 @@ function Editor({ entry }: { entry: EntryRowT }) {
                 contextMenuHidden
                 style={styles.hidden}
               />
+              <AmountLimitHint amount={amount} currency={currency} />
               <View style={{ width: 220 }}>
                 <Segmented
                   value={draft.type}

@@ -2,7 +2,7 @@ import { DEFAULT_RATES } from '@/domain/mileage';
 import { buildReport } from '@/domain/report';
 
 import { defaultExportKinds, exportFileName, PDF_MAX_ROWS, receiptZipNames, reportHtml } from '../exportDocs';
-import { availableTaxYears, endOfDay, periodFor, saneReportRange, startOfDay } from '../period';
+import { availableTaxYears, endOfDay, periodFor, saneReportRange, saneReportYear, startOfDay } from '../period';
 import { linePoints, monthlySeries, periodMileageEstimate, ratesLabel } from '../series';
 
 const at = (y: number, m: number, d: number, h = 12) => new Date(y, m - 1, d, h).getTime();
@@ -209,6 +209,19 @@ describe('QA-100 SPE-1: absurd report ranges', () => {
     expect(saneReportRange(at(2026, 1, 1), at(2029, 1, 1), now)).toBe(false);
     expect(saneReportRange(at(2026, 5, 1), at(2026, 4, 1), now)).toBe(false);
     expect(saneReportRange(NaN, at(2026, 4, 1), now)).toBe(false);
+  });
+
+  it('saneReportYear: 2000 … next year, whole numbers only', () => {
+    const now = at(2026, 11, 19);
+    expect(saneReportYear(2025, now)).toBe(true);
+    expect(saneReportYear(2000, now)).toBe(true);
+    expect(saneReportYear(2027, now)).toBe(true);
+    expect(saneReportYear(2028, now)).toBe(false);
+    expect(saneReportYear(999999, now)).toBe(false);
+    expect(saneReportYear(-5, now)).toBe(false);
+    expect(saneReportYear(1999, now)).toBe(false);
+    expect(saneReportYear(2025.5, now)).toBe(false);
+    expect(saneReportYear(NaN, now)).toBe(false);
   });
 });
 

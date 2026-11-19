@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { formatMoney } from '@/domain/money';
 import type { Currency } from '@/domain/types';
 import { formatExpr } from '@/features/ocr/calc';
-import { CalcBar } from '@/features/ocr/ui';
+import { AmountLimitHint, CalcBar } from '@/features/ocr/ui';
 import type { AmountExpr } from '@/features/ocr/useAmountExpr';
 import { t } from '@/i18n';
 import { fonts, radius, useTheme } from '@/theme';
@@ -82,6 +82,8 @@ export function ParkingField({
         <Txt v="caption" c="error">
           {t('ocr.checkSum')}
         </Txt>
+      ) : amount.atLimit ? (
+        <AmountLimitHint amount={amount} currency={currency} />
       ) : (
         <Txt v="caption" c="textSecondary">
           {t('s6.parkingHint')}

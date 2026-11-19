@@ -87,6 +87,11 @@ export function saneReportRange(start: number, end: number, now = Date.now()): b
   return end <= limit.getTime() + 86_400_000;
 }
 
+/** QA-100 D (19/11): a link's tax-year start must be a real one — 2000 … next year — not "Tax year 999999" / "-5". */
+export function saneReportYear(year: number, now = Date.now()): boolean {
+  return Number.isInteger(year) && year >= new Date(REPORT_MIN_AT).getFullYear() && year <= new Date(now).getFullYear() + 1;
+}
+
 const ms = (y: number, m: number, d: number) => new Date(y, m, d).getTime();
 
 /** The four MTD quarters of a UK tax year: [start, end) each, standard or calendar. */

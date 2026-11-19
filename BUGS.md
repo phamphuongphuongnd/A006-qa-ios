@@ -590,4 +590,8 @@
   `autoCapitalize="none"`, `autoCorrect={false}`, `autoComplete="off"` (bỏ cờ chữ). ✅ phiên G (dc84207, Pixel 11 thật Android 17, matrix-3d94eks0jsst6): bàn phím số, "7,7" → $7.70,
   inputType 0x282002 (NUMBER|DECIMAL). Phương 19/11: áp cho mọi ô số — `NUMERIC_INPUT` (ui/Controls) tự thêm vào `Field` có
   bàn phím số + Sửa khoản, tách khoản, thẻ Sort (2 ô), phí đỗ xe. ✅ A13 (dc84207): Ghi nhanh inputType 0x2002, bàn phím số Samsung. ⏳ phiên G: Sửa khoản / phí đỗ xe trên Pixel 11 thật.
+- [ ] **B-127** 🟡 (QA phiên D + F, 19/11 — Phương: không chấp nhận lỗi giao diện nhỏ) (a) link `export?year=999999` / `year=-5` hiện "Tax year 999999" +
+  file rỗng; (b) mở link export khi màn Export đang mở thì giữ kỳ cũ; (c) gõ quá 999,999.99 thì chữ số bị bỏ, chỉ rung nhẹ (máy không rung / giả lập:
+  không biết gì). Sửa: `saneReportYear` (2000 … năm sau, số nguyên; sai → năm thuế hiện tại) + test; `ExportPanel` key theo tham số link (link mới =
+  kỳ mới); `useAmountExpr.atLimit` + `AmountLimitHint` "Max £999,999.99" ở Ghi nhanh, Sửa khoản, phí đỗ xe. 947 test xanh. ⏳ kiểm trên máy.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.

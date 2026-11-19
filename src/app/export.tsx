@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { taxYearOf } from '@/domain/taxYear';
 import { ExportPanel } from '@/features/reports/ExportPanel';
-import { PERIOD_MODES, periodFor, saneReportRange, type PeriodMode } from '@/features/reports/period';
+import { PERIOD_MODES, periodFor, saneReportRange, saneReportYear, type PeriodMode } from '@/features/reports/period';
 import { goBack, NavHeader } from '@/features/settings/ui';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
@@ -23,10 +23,11 @@ export default function ExportScreen() {
   const region = settings.region ?? 'UK';
   const p = useLocalSearchParams<{ mode?: string; year?: string; start?: string; end?: string }>();
   const mode: PeriodMode = PERIOD_MODES.includes(p.mode as PeriodMode) ? (p.mode as PeriodMode) : 'year';
-  const year = Number(p.year) || taxYearOf(Number(p.start) || new Date().getTime(), region).startYear;
   // QA-100 SPE-12: a link with an impossible range (end=1e17) printed "NaN undefined NaN" — same guard as Reports (B-67).
   const custom =
     mode === 'custom' && saneReportRange(Number(p.start), Number(p.end)) ? { start: Number(p.start), end: Number(p.end) } : undefined;
+  // …and year=999999 / -5 printed "Tax year 999999" with an empty file: such a link falls back to the current tax year.
+  const year = saneReportYear(Number(p.year)) ? Number(p.year) : taxYearOf(custom?.start ?? new Date().getTime(), region).startYear;
   const initial = periodFor(region, year, custom ? 'custom' : mode === 'custom' ? 'year' : mode, custom, { mtd: settings.mtdPeriod });
 
   return (
@@ -34,6 +35,8 @@ export default function ExportScreen() {
       <NavHeader title={t('export.title')} />
       <ScrollView contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: insets.bottom + 24 }}>
         <ExportPanel
+          // A new link while Export is open starts over with its own period (it kept the old one).
+          key={`${p.mode}|${p.year}|${p.start}|${p.end}`}
           initial={initial}
           region={region}
           showHeader={false}

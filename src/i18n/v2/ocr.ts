@@ -11,6 +11,7 @@ export const ocr = {
   savedAutoSorted: 'Saved · {name} (auto-sorted)',
   // Calculator (Q20)
   checkSum: 'Check the sum',
+  maxAmount: 'Max {amount}',
   equals: '= {amount}',
   opPlus: 'Plus',
   opMinus: 'Minus',

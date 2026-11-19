@@ -14,6 +14,8 @@ export function useAmountExpr(initial: Minor = 0, initialExpr?: string) {
     const expr = initialExpr !== undefined ? sanitizeExpr(initialExpr) : exprOf(initial);
     return { expr, lastGood: exprMinor(evaluate(expr)) };
   });
+  // QA-100 (19/11): a digit past the limit used to vanish with only a buzz (emulators / phones with haptics off: nothing).
+  const [atLimit, setAtLimit] = useState(false);
   const { expr } = state;
   const result = evaluate(expr);
   const minor = exprMinor(result);
@@ -27,7 +29,9 @@ export function useAmountExpr(initial: Minor = 0, initialExpr?: string) {
   const onChangeText = (raw: string) => {
     const next = sanitizeExpr(raw);
     // Over the 999,999.99 limit the extra digit is ignored — tell the hand, not the eyes.
-    if (digitIgnored(expr, raw, next)) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const ignored = digitIgnored(expr, raw, next);
+    if (ignored) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setAtLimit(ignored);
     commit(next);
   };
 
@@ -38,10 +42,18 @@ export function useAmountExpr(initial: Minor = 0, initialExpr?: string) {
     minor,
     shownMinor: result.kind === 'error' ? state.lastGood : minor,
     invalid: result.kind === 'error',
+    /** The last digit typed was dropped (999,999.99 limit): show "Max …" until the next change. */
+    atLimit,
     isExpression: result.kind !== 'empty' && result.expression,
     onChangeText,
-    op: (o: CalcOp) => commit(pushOp(expr, o)),
-    setMinor: (m: Minor) => commit(exprOf(m)),
+    op: (o: CalcOp) => {
+      setAtLimit(false);
+      commit(pushOp(expr, o));
+    },
+    setMinor: (m: Minor) => {
+      setAtLimit(false);
+      commit(exprOf(m));
+    },
     /** Puts back a saved expression (B-84 draft after the app was killed). */
     setExpr: (e: string) => commit(sanitizeExpr(e)),
     selection: { start: expr.length, end: expr.length },
