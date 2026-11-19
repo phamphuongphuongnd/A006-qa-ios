@@ -4,7 +4,15 @@
 > trên app, tìm lỗi → nguyên nhân gốc → sửa → chạy lại + regression, **không giả lập kết quả**. Ca nào không chạy thật = ⏭ kèm lý do.
 > Chi tiết từng phiên: `qa/findings/*.md` · bằng chứng (ảnh, logcat, dòng OCR thô): `qa-runs/` (không đưa lên git) · lỗi: `BUGS.md` mục QA-100.
 
-## Cập nhật 19/11
+## Cập nhật 19/11 (chiều)
+- **Bản QA mới nhất: `sundaysort-qa-edecc6d-all.apk`** (đang trên A13 từ 15:06) = B-123…B-140. Jest **971/971** · lint · tsc ✅.
+- Lỗi mới tìm + sửa trong ngày: B-122…B-141 (20 mục) — chuyến tự động (B-123/124/129/130/131/135/140, Drive check B-88), ô số tiền
+  (B-126/127/133/136), Reports chữ to (B-110 v2, B-132), Sort (B-128), Split/Add trip (B-134), bản đồ GPS chậm (B-137), fix đầu sai xa
+  (B-139), hoá đơn (B-138), iOS backstop (B-96 v2), câu quyền iOS Always (B-118). B-141 đóng (Phương tự xoá chuyến).
+- **BUGS: 134 tick / 7 mở** — giới hạn Phương chấp nhận B-51, B-88 (chờ lái thật), B-95/96 (iPhone thật); B-118 (Phương đọc câu
+  quyền iOS); B-131 nhánh lái lại + B-140 (chờ Phương thử thật tối 19/11).
+
+## Cập nhật 19/11 (sáng)
 - **Bản QA mới nhất:** `sundaysort-qa-0bf4283-all.apk` = `19daeae` + B-123 (chuyến tự tắt khi đỗ thật 20 phút, GPS trôi trong nhà không cộng km,
   Continue trip) + B-124 (Bluetooth bật chuyến khi app ở nền — gốc: expo-location tự chặn) + B-125 (cảnh báo chọn tai nghe làm xe) + B-126 (bàn phím
   số trên Pixel). Jest **946/946** · lint · tsc ✅. A13 đang chạy `dc84207` (= 0bf4283 trừ cờ bàn phím ở các ô số phụ).
