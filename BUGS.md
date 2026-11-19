@@ -468,11 +468,11 @@
   camera sau; Phương phải tự đổi 3–14 s. Samsung bỏ qua CAMERA_FACING/LENS_FACING nên app không ép được qua intent. Đã thử camera trong app
   (147d3e2) rồi **gỡ** theo Phương (18/11): "tôi muốn dùng camera của điện thoại không code hay làm thêm camera riêng" → **giới hạn đã biết, Phương
   chấp nhận**.
-- [ ] **B-107** 🟡 (QA A13, phiên E — dữ liệu thật) Cắm cáp vào máy tính + cầm máy → chuyến tự động "Start when charging" bắt đầu (đúng thiết kế: không phân
+- [x] **B-107** 🟡 (QA A13, phiên E — dữ liệu thật) Cắm cáp vào máy tính + cầm máy → chuyến tự động "Start when charging" bắt đầu (đúng thiết kế: không phân
   biệt sạc xe / sạc máy tính); Phương bấm End trip → **"Trip saved · 0.0 km"** (bộ tự động tự bỏ chuyến < 500 m, nhưng kết thúc tay thì lưu). Sửa:
   `trip/active.tsx` kết thúc tay chuyến startedBy=auto < 500 m → **hỏi "Only 0.0 km — keep this trip?" 2 nút Discard / Keep** (Phương chốt
   18/11 qua phiên E: không tự bỏ; bản 2ac9e15 tự bỏ là sai ý — đã đổi). Chuyến 0 km đang nằm trong dữ liệu thật
-  của Phương — phiên E hỏi Phương trước khi xoá.
+  của Phương — đã xoá 18/11 (Phương duyệt).
 - [x] **B-108** 🟠 (QA — phiên "A006 chụp nhập tự động" báo, Phương duyệt 18/11) Hoá đơn cũ hơn 400 ngày: OCR không điền ngày (độ tin cậy 0,3 +
   `receiptAt` chặn) → ô vẫn "Now". Tài xế dồn nhập trước hạn Self Assessment 31/1: hoá đơn tháng 4–5 năm thuế trước đã ~600–665 ngày → khoản ghi ngày
   hôm nay = **sai năm thuế**. Phương: bỏ giới hạn (năm "94" = 1994, "22/04/12" = 2012 là ngày thật). Sửa: bỏ luật 400 ngày ở `parseReceipt.readDate` và
@@ -598,4 +598,11 @@
   khuất (chỉ thấy Date / MOST USED / Work-Personal) — gõ tiền không thấy số. Ảnh `qa-runs/firebase/numeric-0bf4283/cubs-37/artifacts/17–19.png`.
   Gốc: `SortEntryCard.tsx` `scrollToEnd()` khi bàn phím mở (useEffect + onLayout) dành cho Split (B-38, giữ "Split & sort" trong tầm) nhưng cũng chạy ở Edit.
   Sửa: Split vẫn cuộn tới cuối; Edit cuộn tới đầu khung Edit (`editY` từ onLayout) → Done + Amount trong tầm. 947 test xanh. ⏳ Pixel 11 thật / giả lập.
+- [ ] **B-129** 🟠 (A13 phiên E, 0bf4283) Cài đè / cập nhật app khi đang có chuyến: GPS (LocationTaskService) dừng, thông báo vẫn "đang ghi", chỉ ghi lại khi mở
+  app (hụt ~3 phút ở A13; khi Play tự cập nhật ban đêm hay khởi động lại máy có thể hụt cả chuyến). Gốc: BootReceiver (BOOT_COMPLETED / MY_PACKAGE_REPLACED)
+  chỉ đăng ký lại cảm biến; task vị trí được khôi phục nhưng expo-location không bật foreground service khi app không mở. Sửa: chuyến đang chạy →
+  `kick("restart")` → task JS `restoreRecording()` đăng ký lại (bật lại service), nhật ký `restore_ok` / `restore_failed`. 949 test xanh. ⏳ A13 (cài đè giữa chuyến).
+- [ ] **B-130** 🟠 (A13-14 phiên E, 0bf4283) Bấm **Continue trip** khi xe còn đứng yên → chuyến tự kết thúc lại sau 3 giây. Gốc: fix đầu tiên sau Continue được
+  lưu (đầu đoạn mới) → `lastMoveAt` mất mốc "resume" và tính `parkedSince` trên **mọi** điểm → về lại giờ đỗ cũ ≥ 20 phút → kết thúc ngay. Resume sau
+  Personal stop cũng dính. Sửa: `lastMoveAt` chỉ xét đoạn cuối (từ điểm `segmentStart`), mốc = đầu đoạn + test tái hiện (`lastMoveAt.test.ts`). ⏳ A13.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.

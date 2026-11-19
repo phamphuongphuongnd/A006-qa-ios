@@ -153,6 +153,18 @@ export async function continueTrip(tripId: string, now = Date.now()): Promise<bo
   return true;
 }
 
+/**
+ * B-129 (A13): after an app update or a reboot the running trip's GPS stayed off until the app was opened, while its
+ * notice still said recording. The native receiver runs the task with reason 'restart': start recording again.
+ */
+export async function restoreRecording() {
+  const trip = getActiveTrip(db);
+  if (!trip || trip.status !== 'running') return;
+  // Registering again restarts the location updates and their foreground service (no-op while already recording).
+  await beginRecording();
+  await showTripNotification(trip, distanceText(trip), true);
+}
+
 export async function resumeActiveTrip() {
   const trip = getActiveTrip(db);
   if (!trip || trip.status !== 'paused') return;

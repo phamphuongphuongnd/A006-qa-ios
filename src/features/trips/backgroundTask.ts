@@ -16,10 +16,11 @@ import { refreshWidgets } from '@/features/widgets/refresh';
 import { addSignalListener, TRIP_DETECT_TASK } from '../../../modules/trip-detect';
 import { syncIosBackstops } from './auto/backstop';
 import type { EngineState } from './auto/engine';
-import { hasActivityPermission } from './auto/native';
+import { hasActivityPermission, logDiagnostic } from './auto/native';
 import { getKV } from './auto/repo';
 import { processAutoSignals, syncAutoDetection } from './auto/runner';
 import { TRIP_TASK } from './constants';
+import { restoreRecording } from './controller';
 import { formatDistance } from './format';
 import { cancelLongTripReminder, clearTripNotification, showTripNotification } from './notify';
 
@@ -92,8 +93,14 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
  * S1 automatic trips: the native receivers (activity transitions, van Bluetooth, wake alarms) run this headless task
  * — also with the app closed or locked — to start / end trips. See features/trips/auto/runner.ts.
  */
-AppRegistry.registerHeadlessTask(TRIP_DETECT_TASK, () => async () => {
+AppRegistry.registerHeadlessTask(TRIP_DETECT_TASK, () => async (data?: { reason?: string }) => {
   await ensureMigrated();
+  // B-129: app updated / phone restarted mid-trip → the trip records again (logged for "Share trip diagnostics").
+  if (data?.reason === 'restart') {
+    await restoreRecording()
+      .then(() => logDiagnostic('restore_ok', { screen: String(AppState.currentState) }))
+      .catch((e) => logDiagnostic('restore_failed', { error: String((e as Error)?.message ?? e).slice(0, 200) }));
+  }
   await syncAutoDetection();
   await processAutoSignals();
 });
