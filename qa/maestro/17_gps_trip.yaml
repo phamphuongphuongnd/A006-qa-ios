@@ -1,0 +1,76 @@
+# Drafted by session H (ios-auto-trips), approved by Phương 2026-11-19.
+# A trip with real distance on iOS: 16_end_trip sets one GPS point, so trips are always 0.0 mi there.
+# Checks: GPS keeps recording with the app in the background (TRIP_TASK / allowsBackgroundLocationUpdates),
+# distance adds up (~4 km ≈ 2.5 mi), the end sheet shows a non-zero distance, Save works.
+# CoreMotion does not exist on the simulator → automatic trip detection is NOT covered here (needs a real iPhone).
+appId: com.phiotron.sundaysort
+name: 17_gps_trip
+---
+- runFlow: common/home.yaml
+- setLocation:
+    latitude: 51.5007
+    longitude: -0.1246
+- scrollUntilVisible:
+    element:
+      text: "Start trip"
+    timeout: 15000
+- tapOn: "Start trip"
+- tapOn:
+    text: "Continue|Allow.*location.*"
+    optional: true
+- tapOn:
+    text: "Allow While Using App|Allow Once"
+    optional: true
+- tapOn:
+    text: "Allow precise location"
+    optional: true
+- tapOn:
+    text: "Allow While Using App|Allow Once"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "End trip"
+    timeout: 30000
+# Leg 1 in the foreground: Westminster → Embankment → Blackfriars (~2.1 km at 20 m/s ≈ 105 s).
+- travel:
+    points:
+      - 51.5007,-0.1246
+      - 51.5079,-0.1224
+      - 51.5115,-0.1040
+    speed: 20
+- takeScreenshot: ${PID}_17a_leg1_foreground
+# Leg 2 with the app in the background: Blackfriars → Tower Hill (~2 km).
+- pressKey: Home
+- travel:
+    points:
+      - 51.5115,-0.1040
+      - 51.5098,-0.0900
+      - 51.5081,-0.0759
+    speed: 20
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible: "End trip"
+    timeout: 15000
+- takeScreenshot: ${PID}_17b_back_from_background
+- tapOn: "End trip"
+- extendedWaitUntil:
+    visible: "Trip saved.*|Save"
+    timeout: 15000
+- takeScreenshot: ${PID}_17c_end_sheet
+# Expect ~2.5 mi; 0.0 mi = GPS did not record, ~1.3 mi = background leg lost.
+- assertNotVisible: '.*Trip saved · 0\.0 mi.*'
+- assertVisible: '.*Trip saved · [2-3]\.\d mi.*'
+- scrollUntilVisible:
+    element:
+      text: "Save"
+    timeout: 15000
+    optional: true
+- tapOn:
+    text: "Save"
+    index: 0
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: ${PID}_17d_after_save

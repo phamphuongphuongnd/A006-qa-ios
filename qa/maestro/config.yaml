@@ -21,4 +21,5 @@ executionOrder:
     - 14_wipe_all
     - 15_auto_trips
     - 16_end_trip
+    - 17_gps_trip
     - 99_final_state
