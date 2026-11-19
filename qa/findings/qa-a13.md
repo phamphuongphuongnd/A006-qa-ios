@@ -139,6 +139,11 @@ kết quả kick/start. Đã báo điều phối.
   không có LocationTaskService. **B-126 ✅** Sửa khoản (ô £) + Parking & tolls: bàn phím số 0x2002 có "." ",". Dữ liệu 233/271/8/12
   (+2 chuyến Phương Start), không mất id. Bài Start ngồi nhà: 10:19:53 → tự tắt 10:30:34 (Merge 10 phút Phương đặt), 0.0 km,
   endedAt = lúc đứng yên ✅; chưa bấm Continue trip.
+- 10:47:52 chuyến Start 10:34 tự tắt → thông báo "Trip ended at 10:34 · 0.0 km — You hadn't moved for a while, so the trip was
+  saved. Still on your way? Tap Continue trip." (1 nút) ✅.
+  **A13-14 🟠 Continue trip tắt lại sau 3 giây**: Phương bấm nút 10:48:45 → GPS start + trip-ongoing → 10:48:48 stop + lại "Trip
+  ended at 10:34". Nghi: reopenTrip (tripsRepo.ts:104-106) chỉ đánh dấu bằng lastPointAt=now; fix đầu sau Continue được lưu thì
+  lastMoveAt (240-245) mất resumedAt → parkedSince toàn bộ điểm = 10:34 → backgroundTask.ts:50 end ngay. Đã báo điều phối.
 - Quyết định Phương (19/11): B-113 đóng; xoá 2 repo test sau khi phiên con test xong; iOS B-95/96 để Phương kiểm sau (giới hạn đã biết).
 - **B-123 ✅** (bcf8827): chuyến giả 09:40:29 → 10:00:47 tự dừng (LocationTaskService stop + hủy trip-ongoing, 20 phút 18 giây);
   không có trong Miles, trips vẫn 269, tripPoints không thêm → < 500 m bị bỏ.
