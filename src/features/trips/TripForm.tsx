@@ -1,6 +1,6 @@
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Briefcase, Calendar, ChevronDown } from '@/ui/icons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { LONG_TRIP_MILES } from '@/domain/mileage';
@@ -39,6 +39,7 @@ export function TripForm({
   hint,
   top,
   bottomExtra,
+  onDirtyChange,
 }: {
   header: React.ReactNode;
   initial: TripFormValues;
@@ -57,9 +58,16 @@ export function TripForm({
   top?: React.ReactNode;
   /** Above the Save button in the bottom bar, e.g. <ParkingKeyBar> while Parking & tolls is typed (Q28). */
   bottomExtra?: React.ReactNode;
+  /** B-134c: the form differs from `initial` (closing then asks "Discard this trip?"). */
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const { colors, dark } = useTheme();
   const [v, setV] = useState<TripFormValues>(initial);
+  const [initialJson] = useState(() => JSON.stringify(initial));
+  const dirty = JSON.stringify(v) !== initialJson;
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
   const [touched, setTouched] = useState(false);
   const [longAsk, setLongAsk] = useState<TripFormResult | null>(null);
   const [iosDate, setIosDate] = useState(false);

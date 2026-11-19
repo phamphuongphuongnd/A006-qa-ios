@@ -1,4 +1,19 @@
-import { digitIgnored, evaluate, exprMinor, exprOf, formatExpr, legacyToPlain, pushOp, sanitizeExpr } from '../calc';
+import { digitIgnored, evaluate, exprMinor, exprOf, formatExpr, legacyToPlain, pushOp, sanitizeAmount, sanitizeExpr } from '../calc';
+
+describe('sanitizeAmount (B-133)', () => {
+  it('reads like Quick add', () => {
+    expect(sanitizeAmount('33,01')).toBe('33.01');
+    expect(sanitizeAmount('33.011')).toBe('33.01');
+    expect(sanitizeAmount('12345678')).toBe('123456');
+    expect(sanitizeAmount('£45.5')).toBe('45.5');
+    expect(sanitizeAmount('7,')).toBe('7.');
+    expect(sanitizeAmount('')).toBe('');
+    expect(sanitizeAmount('1.2.3')).toBe('1.23');
+  });
+  it('a dropped digit is noticed', () => {
+    expect(digitIgnored('123456', '1234567', sanitizeAmount('1234567'))).toBe(true);
+  });
+});
 
 // Phương 2026-11-18 (QA-100): amounts are read the way they are written — "1" = 1.00, "1250" = 1,250.00, "7,7" = 7.70.
 describe('amount calculator (Q20)', () => {

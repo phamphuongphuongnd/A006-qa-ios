@@ -314,7 +314,8 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
         <View style={{ borderRadius: 16, padding: 16, gap: 10, backgroundColor: colors.warnSoft }} accessibilityRole="alert">
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <Truck size={24} color={colors.warnText} strokeWidth={1.75} />
-            <View style={{ flex: 1, gap: 2 }}>
+            {/* B-134a: on opening Reports the floating "+" sat on this line ("u[ntil] you choose") — keep clear of it too. */}
+            <View style={{ flex: 1, gap: 2, marginRight: narrow ? touch.fab - 8 : 0 }}>
               <Txt v="h3">{t('mtd.reports.chooseTitle')}</Txt>
               <Txt c="textSecondary">{t('mtd.reports.chooseBody')}</Txt>
             </View>

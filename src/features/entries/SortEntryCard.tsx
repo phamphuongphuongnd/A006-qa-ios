@@ -13,6 +13,8 @@ import { receiptUri } from '@/files/receipts';
 import { t } from '@/i18n';
 import { useLive } from '@/state/useLive';
 import { fonts, radius, useTheme } from '@/theme';
+import { digitIgnored, sanitizeAmount } from '@/features/ocr/calc';
+import { MaxAmountNote } from '@/features/ocr/ui';
 import { Button, Card, Chip, Divider, NUMERIC_INPUT, Segmented, Tag, Txt, useKeyboardUp } from '@/ui';
 
 import { CategorySheet } from './CategorySheet';
@@ -68,10 +70,16 @@ export function SortEntryCard({
   const open = mode !== 'view';
   // Where the Edit panel starts inside the card (B-128).
   const editY = useRef(0);
+  // B-133: where the Split panel starts, and the row being typed in (null = none yet).
+  const splitY = useRef(0);
+  const focusY = useRef<number | null>(null);
   // The screen shrinks after the keyboard opens; scroll once the card has its new height. Split: to the end ("Left to
   // assign" / "Split & sort", B-38). Edit: to the panel's top — its end is Date / chips, which hid Amount + Done (B-128).
   const keepFormInView = useCallback(() => {
-    if (mode === 'split') scrollRef.current?.scrollToEnd({ animated: true });
+    if (mode === 'split') {
+      if (focusY.current !== null) scrollRef.current?.scrollTo({ y: Math.max(0, focusY.current - 12), animated: true });
+      else scrollRef.current?.scrollToEnd({ animated: true });
+    }
     else if (mode === 'edit') scrollRef.current?.scrollTo({ y: Math.max(0, editY.current - 8), animated: true });
   }, [mode]);
   useEffect(() => {
@@ -159,13 +167,25 @@ export function SortEntryCard({
             </View>
           ) : null}
           {mode === 'split' ? (
-            <SplitPanel
-              entry={entry}
-              onClose={() => setMode('view')}
-              onSplit={(parts) => {
-                if (onSplit(parts)) setMode('view');
-              }}
-            />
+            <View onLayout={(e) => (splitY.current = e.nativeEvent.layout.y)}>
+              <SplitPanel
+                entry={entry}
+                onClose={() => {
+                  focusY.current = null;
+                  setMode('view');
+                }}
+                onSplit={(parts) => {
+                  if (onSplit(parts)) {
+                    focusY.current = null;
+                    setMode('view');
+                  }
+                }}
+                onFocusPart={(y) => {
+                  focusY.current = splitY.current + y;
+                  if (keyboardUp) keepFormInView();
+                }}
+              />
+            </View>
           ) : null}
 
           {mode !== 'split' ? (
@@ -243,6 +263,7 @@ function EditPanel({ entry, onDone }: { entry: EntryListItem; onDone: () => void
   const [note, setNote] = useState(entry.note);
   const [at, setAt] = useState(entry.occurredAt);
   const [error, setError] = useState(false);
+  const [atLimit, setAtLimit] = useState(false);
   const picker = useDateTimePicker();
 
   const done = () => {
@@ -277,7 +298,10 @@ function EditPanel({ entry, onDone }: { entry: EntryListItem; onDone: () => void
           <TextInput
             value={amount}
             onChangeText={(v) => {
-              setAmount(v.replace(/[^\d.]/g, ''));
+              // B-133: reads like Quick add ("33,01" = 33.01, 999,999.99 at most).
+              const next = sanitizeAmount(v);
+              setAtLimit(digitIgnored(amount, v, next));
+              setAmount(next);
               setError(false);
             }}
             keyboardType="decimal-pad"
@@ -293,6 +317,7 @@ function EditPanel({ entry, onDone }: { entry: EntryListItem; onDone: () => void
           {t('sortV2.amountInvalid')}
         </Txt>
       ) : null}
+      <MaxAmountNote show={atLimit} currency={currency} />
       <View style={box}>
         <Txt v="caption" c="textSecondary">
           {t('sortV2.note')}
@@ -328,16 +353,21 @@ function SplitPanel({
   entry,
   onClose,
   onSplit,
+  onFocusPart,
 }: {
   entry: EntryListItem;
   onClose: () => void;
   onSplit: (parts: { amountMinor: number; categoryId: string | null; scope: Scope }[]) => void;
+  /** A part's amount got focus; `y` = its row's top inside the panel. */
+  onFocusPart: (y: number) => void;
 }) {
   const { colors } = useTheme();
   const currency = entry.currency as Currency;
   const total = entry.amountMinor;
   const [parts, setParts] = useState<Part[]>(() => defaultSplit(total, 2).map((m, i) => ({ key: i, text: toDecimalString(m), categoryId: null, scope: entry.scope })));
   const [picking, setPicking] = useState<number | null>(null);
+  const [atLimit, setAtLimit] = useState(false);
+  const rowY = useRef<Record<number, number>>({});
   const cats = useLive(() => listCategories(db, { includeHidden: true }), [], ['categories']);
   const check = checkSplit(total, parts.map((p) => partMinor(p.text)));
   const update = (key: number, patch: Partial<Part>) => setParts((ps) => ps.map((p) => (p.key === key ? { ...p, ...patch } : p)));
@@ -362,11 +392,21 @@ function SplitPanel({
       {parts.map((p, i) => {
         const cat = p.categoryId ? cats.find((c) => c.id === p.categoryId) : undefined;
         return (
-          <View key={p.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <View
+            key={p.key}
+            onLayout={(e) => (rowY.current[p.key] = e.nativeEvent.layout.y)}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <View style={[styles.partAmount, { backgroundColor: colors.surfaceAlt }]}>
               <TextInput
                 value={p.text}
-                onChangeText={(v) => update(p.key, { text: v.replace(/[^\d.]/g, '') })}
+                onChangeText={(v) => {
+                  // B-133: reads like Quick add ("33,01" = 33.01, 999,999.99 at most).
+                  const next = sanitizeAmount(v);
+                  setAtLimit(digitIgnored(p.text, v, next));
+                  update(p.key, { text: next });
+                }}
+                // B-133: keep the part being typed in view (the card used to scroll to its end and hide it).
+                onFocus={() => onFocusPart(rowY.current[p.key] ?? 0)}
                 keyboardType="decimal-pad"
                 {...NUMERIC_INPUT}
                 placeholder="0.00"
@@ -396,6 +436,7 @@ function SplitPanel({
           </View>
         );
       })}
+      <MaxAmountNote show={atLimit} currency={currency} />
       <View style={{ alignSelf: 'flex-start' }}>
         <Button label={t('sort.addPart')} icon={Plus} variant="text" size="sm" disabled={parts.length >= MAX_SPLIT_PARTS} onPress={addPart} />
       </View>

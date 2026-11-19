@@ -624,6 +624,10 @@
 - [ ] **B-133** 🟠 (QA OLD-18, phiên B — a3a1f6b API 26) Tách khoản (thẻ Sort → Split; cũng màn Split, Sort → Edit, luật min/max): ô số không đọc như Ghi nhanh
   (B-122) — "33,01" thành "3301" (£3,267.99 over), "33.011" tính 0, "12345678" nhận hết không báo Max (ô 360dp chỉ hiện "345678"); chạm ô Part 1 → thẻ
   cuộn xuống đáy, ô đang gõ khuất. Gốc: các ô tự lọc `v.replace(/[^\d.]/g, '')` (bỏ dấu phẩy, không giới hạn), thẻ Split luôn `scrollToEnd` (B-38).
+  Sửa: `sanitizeAmount` (calc.ts, như Ghi nhanh: "," = ".", 2 số lẻ, 999,999.99) + test cho thẻ Split, Sort Edit, màn Split, luật min/max; dòng
+  "Max …" (`MaxAmountNote`); thẻ Split cuộn tới ô đang gõ (vị trí hàng), chưa chạm ô nào thì như cũ. 957 test xanh. ⏳ phiên B.
 - [ ] **B-134** 🟡 (QA OLD-17a/b, phiên B) (a) Reports 360dp chưa cuộn: nút + đè chữ "until" ở dòng phụ thẻ vehicle; (b) phí đỗ xe: đang gõ thì thanh tính che
   dòng Max; đóng bàn phím thanh tính vẫn còn → "Parking & tolls £…" hiện 2 lần; (c) Add trip có phí đỗ xe → X đóng luôn, không hỏi "Discard?".
+  Sửa: (a) chữ thẻ vehicle chừa lề phải cho nút + khi màn < 420dp; (b) bàn phím đóng = hết sửa phí (ẩn thanh tính), thanh tính có "Max …";
+  (c) TripForm báo `onDirtyChange` → Add trip hỏi "Discard this trip?" khi đã gõ gì (kể cả phí). ⏳ phiên B.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.

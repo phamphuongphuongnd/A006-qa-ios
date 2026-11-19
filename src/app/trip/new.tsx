@@ -16,7 +16,7 @@ import { TripForm } from '@/features/trips/TripForm';
 import { refreshWidgets } from '@/features/widgets/refresh';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
-import { useSnackbar } from '@/ui';
+import { Dialog, useSnackbar } from '@/ui';
 import { currencyOf } from '@/domain/types';
 import { useAmountExpr } from '@/features/ocr/useAmountExpr';
 import { parkingNoteFor, setTripParking } from '@/features/trips/parking';
@@ -55,6 +55,9 @@ export default function NewTripScreen() {
   const [initialDate] = useState(() => gap?.from ?? num(p.date) ?? Date.now());
   const trim1 = (n: number) => String(Math.round(n * 10) / 10);
   const close = () => (router.canGoBack() ? router.back() : router.replace('/miles'));
+  // B-134c: X on a form with something typed (parking too) asks first, like Quick add / Edit entry.
+  const [dirty, setDirty] = useState(false);
+  const [askDiscard, setAskDiscard] = useState(false);
   // QA-100 MOD-7: a double tap on Save must not add the trip twice (the screen is closing anyway).
   const saved = useRef(false);
   const [parkingEditing, setParkingEditing] = useState(false);
@@ -68,8 +71,10 @@ export default function NewTripScreen() {
   const pick = (saved: SavedTripRow, roundTrip = saved.roundTrip) => setPicked((x) => ({ saved, roundTrip, key: (x?.key ?? 0) + 1 }));
 
   return (
-    <TripForm
+    <>
+      <TripForm
         key={picked?.key ?? 0}
+        onDirtyChange={setDirty}
         bottomExtra={parkingEditing ? <ParkingKeyBar amount={parking} currency={currency} /> : null}
         top={
           estimated ? undefined : (
@@ -82,7 +87,14 @@ export default function NewTripScreen() {
             />
           )
         }
-        header={<ModalHeader icon={X} iconLabel={t('trip.close')} onIcon={close} title={t('trip.addTitle')} />}
+        header={
+          <ModalHeader
+            icon={X}
+            iconLabel={t('trip.close')}
+            onIcon={() => (dirty || parking.minor > 0 ? setAskDiscard(true) : close())}
+            title={t('trip.addTitle')}
+          />
+        }
         unit={unit}
         submitLabel={t('trip.save')}
         route={route}
@@ -130,5 +142,23 @@ export default function NewTripScreen() {
           close();
         }}
       />
+      <Dialog
+        visible={askDiscard}
+        onClose={() => setAskDiscard(false)}
+        title={t('trip.discardNewTitle')}
+        body={t('trip.discardNewBody')}
+        actions={[
+          { label: t('common.keepEditing'), onPress: () => setAskDiscard(false) },
+          {
+            label: t('common.discard'),
+            variant: 'danger',
+            onPress: () => {
+              setAskDiscard(false);
+              close();
+            },
+          },
+        ]}
+      />
+    </>
   );
 }
