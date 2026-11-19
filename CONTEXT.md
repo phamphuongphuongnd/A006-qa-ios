@@ -103,8 +103,13 @@ _Avoid_: mileage mode, simplified expenses
 
 ### Plans
 
+**All free**:
+The first store release: every driver has every feature and nothing is sold; Pro is switched off, not removed.
+_Avoid_: free tier, lite
+
 **Pro**:
-The paid annual subscription that unlocks automation, tax-year exports, unlimited photos and suggestions.
+The paid annual subscription that unlocks automation, tax-year exports, unlimited photos and suggestions. Paused
+while the app is **All free**.
 _Avoid_: premium, plus, upgrade
 
 **Trial**:
