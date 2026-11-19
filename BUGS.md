@@ -567,7 +567,8 @@
   Bằng chứng (phiên E, A13-11/12): `qa-runs/a13/diagnostics/SundaySort-trip-diagnostics-2026-11-19-01-50.json` — trong nhà GPS báo tốc độ giả
   tới 55 km/h; cảm biến 'still' từ 19:00:57; Bluetooth van nối/ngắt nhiều lần 17:35–18:40 trong khi chuyến vẫn mở. Chạy lại điểm thật qua logic mới:
   chuyến BT mwm01sj7… 11184 m → 10647 m, đỗ từ 18:55:05 → tự tắt ~19:15 (cũ: không tắt tới 20:50); chuyến tay mwm6ism0… 584 m → 0 m, tắt ~21:10.
-  946 test xanh. ⏳ Phương thử thật trên A13 (ngồi nhà Start tay ≥ 25 phút; chuyến Bluetooth về nhà; Continue trip).
+  946 test xanh. ✅ A13 (bcf8827, phiên E): chuyến auto do Bluetooth 09:40:29, máy nằm yên → 10:00:47 tự dừng ghi (20 phút), < 500 m nên bỏ cả
+  điểm GPS, không còn chuyến running. ⏳ Phương thử thật: Start tay ngồi nhà ≥ 25 phút (giữ chuyến, ~0 km, thông báo Continue); lái xe về nhà; Continue trip.
 - [x] **B-124** 🟠 (A13-13, phiên E) Bluetooth xe nối khi app ở nền → **không bật chuyến**, chỉ hiện "Driving? Tap to record" (18/11 17:35, tái hiện
   19/11 09:12); chuyến 17:46 hôm đó là do cảm biến "driving", không phải Bluetooth. Logcat `qa-runs/a13/logcat-1119-bt-start-failed.txt`: Android 14
   **cho phép** service vị trí khởi động từ nền (`Background started FGS: Allowed … SYSTEM_ALLOW_LISTED`, app đã tắt tối ưu pin + vị trí "luôn luôn"),
@@ -577,14 +578,15 @@
   "Tap to record" như cũ). Nhật ký chẩn đoán thêm `start_ok` / `start_failed` (lý do + lỗi). ✅ A13 (bcf8827, 09:40, app ở nền): bt_connected → `start_ok {reason: bluetooth, screen: background}`
   cùng giây, chuyến running + thông báo, `dumpsys location` HIGH_ACCURACY 5 s (diagnostics 2026-11-19-02-43.json, logcat-1119-bcf8827-bt.txt).
   Thiết bị lúc thử là tai nghe (B-125); ⏳ lần nối Bluetooth xe thật.
-- [ ] **B-125** 🟡 (A13, phiên E) Van Bluetooth trên A13 đang là tai nghe Redmi Buds 4 Lite → với B-123 (nối lại khi chưa có chuyến = chuyến mới), đeo
+- [x] **B-125** 🟡 (A13, phiên E) Van Bluetooth trên A13 đang là tai nghe Redmi Buds 4 Lite → với B-123 (nối lại khi chưa có chuyến = chuyến mới), đeo
   tai nghe ở nhà sẽ bật chuyến giả. **Phương chốt 19/11:** cảnh báo, vẫn cho chọn. Sửa: native `getBondedDevices` trả `kind` theo Bluetooth class
   (car audio / hands-free = 'car'; tai nghe, loa, đồng hồ, điện thoại, máy tính = 'personal'); màn chọn + dòng Van Bluetooth hiện "Looks like
-  headphones or a speaker, not a van…". 946 test xanh. ⏳ A13 (Redmi Buds phải hiện cảnh báo, Bluetooth xe thì không).
+  headphones or a speaker, not a van…". 946 test xanh. ✅ A13 (dc84207, phiên E): dòng Van Bluetooth + màn chọn hiện cảnh báo cho cả
+  4 thiết bị đã ghép (đều tai nghe / không phải xe — Phương xác nhận; xe chưa ghép với A13). ⏳ thiết bị car audio thật không bị cảnh báo.
 - [x] **B-126** 🟡 (QA F-2, phiên G — Firebase máy thật Pixel 11, 2/2 lượt: 97ceb60 number-pad + 19daeae decimal-pad) Ô số tiền Ghi nhanh mở **Gboard
   QWERTY** thay vì bàn phím số; ảo A17 (cũng Gboard), S26, S9, Fold6, OPPO đều bàn phím số. Nghi TextInput ẩn (`caretHidden` / `contextMenuHidden`,
   `capture.tsx` ~480–507) hoặc cờ chữ hoa mặc định (`autoCapitalize`) lẫn vào inputType. Chưa tái hiện được tại chỗ (không có Pixel thật). Thử sửa: ô ẩn thêm `inputMode="decimal"`,
   `autoCapitalize="none"`, `autoCorrect={false}`, `autoComplete="off"` (bỏ cờ chữ). ✅ phiên G (dc84207, Pixel 11 thật Android 17, matrix-3d94eks0jsst6): bàn phím số, "7,7" → $7.70,
   inputType 0x282002 (NUMBER|DECIMAL). Phương 19/11: áp cho mọi ô số — `NUMERIC_INPUT` (ui/Controls) tự thêm vào `Field` có
-  bàn phím số + Sửa khoản, tách khoản, thẻ Sort (2 ô), phí đỗ xe. ⏳ phiên G: Sửa khoản / phí đỗ xe trên Pixel 11 thật.
+  bàn phím số + Sửa khoản, tách khoản, thẻ Sort (2 ô), phí đỗ xe. ✅ A13 (dc84207): Ghi nhanh inputType 0x2002, bàn phím số Samsung. ⏳ phiên G: Sửa khoản / phí đỗ xe trên Pixel 11 thật.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
