@@ -38,9 +38,34 @@ số liệu: `qa-runs/firebase/summary.json` (tạo bằng `qa/firebase/collect.
   WAIT_FOR_ELEMENT, TAKE_SCREENSHOT gây "Infrastructure error" ở Test Lab (5 lượt) → dùng dạng danh sách thao tác đơn giản,
   nên không chặn được nút Pro bằng ELEMENT_IGNORED.
 
+## Lượt 2 — regression APK `19daeae` (2026-11-19, bản QA-100 cuối, gồm B-104 + B-122)
+
+Script `robo-{uk,us}-full.json` thêm bước Settings → Sunday Sort Pro → "Try Pro free for 7 days" → Back (kiểm B-104;
+dùng thử nội bộ, không qua store). Bằng chứng: `qa-runs/firebase/r2-19daeae/<model>-<api>/`, số liệu trong
+`summary.json` khoá `r2-19daeae/…`.
+
+| Máy | Kết quả | B-104 | Khôi phục P096 | Khởi động | RAM đỉnh | Mạng |
+|---|---|---|---|---|---|---|
+| Galaxy S26 (A16) | ✅ 254 thao tác, 0 crash/ANR/JS | ✅ "Trial · 7 days left", ends 25 Nov (`18–21.png`) | ⏭ script vuốt quá hàng Backup (vuốt 1 lần đã thấy, lần 2 đẩy qua — `22–23.png`) | 420 ms | 375 MB | 0 B |
+| Galaxy Z Fold6 (A14, màn gập — thay Xiaomi) | ✅ 149 thao tác, 0 crash/ANR/JS, **đủ 33 bước** | ✅ (`19–20.png`) | ✅ **máy thật**: Downloads → P096 → xem trước "20,011 entries · 0 trips · 1 photo" → xác nhận → Home "8,081 entries to sort", Reports Income $109,343.35 / Profit −$1,090,496.99 (`24–35.png`) | 821 ms | 410 MB | 0 B |
+| Pixel 11 (A17, dark) | ✅ (lần 1 lỗi hạ tầng Test Lab, lần 2 chạy đủ) 171 thao tác, 0 crash/ANR/JS, **đủ 33 bước** | ✅ (`19–20.png`) | ✅ máy thật, số liệu giống Fold6 (`29–33.png`) | 338 ms | 453 MB | 0 B |
+| Galaxy S9 (A10) | ✅ 143 thao tác, 0 crash/ANR/JS | ✅ chạy tới bước dùng thử | ⏭ như S26 (vuốt quá) | 1,51 s | 511 MB | 0 B |
+| OPPO A38 (A14, ColorOS) | ✅ (lần 1 lỗi hạ tầng Test Lab, lần 2 chạy đủ) 119 thao tác, 0 crash/ANR/JS | ✅ (`20–22.png`) | ⏭ trình chọn file ColorOS gọi thư mục là "Download" (không "s") → script không khớp (`27.png`); tới được Backup & restore → Restore from backup → trình chọn | 2,26 s | 199 MB | — |
+| Máy ảo Android 8.0 | ✅ 195 thao tác, 0 crash; "Saved · $1,250.00 expense" | ⏭ nút "Try Pro free" nằm dưới màn 720×1280 (phải cuộn), script dừng | ⏭ | 665 ms | — | — |
+| Máy ảo Android 17 16K | ✅ đủ 33 bước, 0 crash | ✅ | ✅ | 1,09 s | — | — |
+
+- **B-104 ✅ đã sửa** trên S26, Fold6, Pixel 11, máy ảo A17: dùng thử mới bắt đầu hiện "Trial · 7 days left",
+  thanh tiến độ không âm; Settings "Trial · 7 days left"; Home chip "Trial · 7 days left".
+- **B-122 ✅**: gõ 1250 → "£1,250.00"/"$1,250.00", "Saved · £1,250.00 expense"; bàn phím số có dấu "." trên S26, S9,
+  máy ảo A8/A17.
+- Khôi phục 20.000 khoản: giống hệt nhau trên 2 máy thật + máy ảo (8,081 to sort, Income $109,343.35, Expenses
+  $1,199,840.34) → nhất quán giữa thiết bị. Chưa đối chiếu oracle persona P096 (việc của phiên chạy persona).
+- RAM đỉnh lượt 2 cao hơn lượt 1 (S9 511 MB so với 361 MB) vì Robo đi nhiều màn hơn / dữ liệu lớn sau khi khôi phục;
+  không có OOM / ANR. Ghi để theo dõi, không tính lỗi.
+
 ## Lỗi
 
-### 🟡 F-1 — "Trial · 8 days left" ngay sau khi bắt đầu dùng thử 7 ngày
+### 🟡 F-1 — "Trial · 8 days left" ngay sau khi bắt đầu dùng thử 7 ngày — ✅ đã sửa (B-104, xác nhận lượt 2 trên 19daeae)
 - Máy: Galaxy S26 (Android 16) ảnh `m1q-36/artifacts/36.png`; Pixel 11 (Android 17) `cubs-37/artifacts/21.png`, `22.png`;
   máy ảo Android 17 16K `MediumPhone_ps16k.arm-37/artifacts/44.png`, `45.png` — tái hiện 3/3 lần bấm.
 - Bước: Settings → Sunday Sort Pro → "Try Pro free for 7 days".
@@ -51,12 +76,19 @@ số liệu: `qa-runs/firebase/summary.json` (tạo bằng `qa/firebase/collect.
   `src/domain/pro.ts:59`; tiến độ `src/app/pro.tsx:191`. Gợi ý: kẹp `daysLeft ≤ TRIAL_DAYS` hoặc dùng
   `max(now, trialStartedAt)`; Home badge cũng dùng chung (`src/app/(tabs)/index.tsx:73`).
 
+### 🟡 F-2 — Pixel 11 thật: ô số tiền mở Gboard chữ (QWERTY) thay vì bàn phím số — tái hiện 2/2
+- Máy: Pixel 11 (Android 17, Gboard) — lượt 1 bản 97ceb60 (`number-pad`): `cubs-37/artifacts/12–14.png`; lượt 2 bản
+  19daeae (`decimal-pad`, B-122): `r2-19daeae/cubs-37/artifacts/13–14.png` — con trỏ ở ô số tiền ("$1,250.00|") mà
+  bàn phím vẫn QWERTY, số chỉ có ở hàng gợi ý.
+- Đối chứng cùng lượt: máy ảo Android 17 16K (Gboard) bàn phím số (`r2-19daeae/kb-compare.png`); S26/S9 (Samsung
+  Keyboard, logcat `inputType=0x2`), OPPO, Fold6, máy ảo A8/A14/A15 đều bàn phím số.
+- Kỳ vọng: bàn phím số như các máy khác. Thực tế: người dùng Pixel phải bấm "?123" mỗi lần nhập tiền (vẫn nhập được).
+- Nguyên nhân gốc nghi ngờ: `TextInput` ẩn với `caretHidden` + `contextMenuHidden` + `keyboardType` số
+  (`src/app/capture.tsx:480-495`) — trên Gboard của Pixel 11 (bản Gboard/Pixel khác máy ảo) bị bỏ qua kiểu bàn phím.
+  Chưa xác định được; chỉ thấy trên đúng 1 mẫu máy thật. Đề xuất thử thêm `inputMode="decimal"` và kiểm trên Pixel thật
+  nếu có; Test Lab không cho đọc phiên bản Gboard trong logcat.
+
 ### Quan sát chưa thành lỗi (không báo PASS/FAIL)
-- (F-2 cũ, hạ xuống quan sát) Pixel 11 thật / Android 17: ô số tiền mở Gboard **QWERTY** (`cubs-37/artifacts/12–14.png`,
-  con trỏ đang ở "$12.50|"). Nhưng máy ảo Android 17 16K cùng Gboard hiện **bàn phím số**
-  (`MediumPhone_ps16k.arm-37/zoom-kb.png`), S26/S9 (logcat `inputType=0x2`), OPPO, Android 8/14/15 cũng bàn phím số →
-  nghi do cấu hình Gboard riêng của máy Test Lab, chưa đủ chứng cứ là lỗi app (`src/app/capture.tsx:485`
-  `keyboardType="number-pad"`). Ngày mai chạy lại Pixel 11 để xem có lặp lại không.
 - Máy ảo Android 8.0: "Photo → Choose from library" mở trình chọn ảnh của Google Play services → "Something went wrong"
   (`SmallPhone.arm-26/artifacts/52.png`). Có thể do ảnh máy ảo thiếu module chọn ảnh; S26/Pixel 11 (trình chọn hệ thống)
   mở bình thường. Cần thử trên máy thật Android 8–10 (S9 trong lượt này không bấm tới nút đó).
@@ -66,9 +98,10 @@ số liệu: `qa-runs/firebase/summary.json` (tạo bằng `qa/firebase/collect.
 - OPPO A38 ảnh cuối là màn hình chính: do Test Lab gửi phím HOME khi hết phiên (logcat `KEYCODE_HOME deviceId=-1`),
   không phải app thoát.
 
-## Còn lại cho ngày mai (hạn mức Spark: 5 máy thật + 10 máy ảo / ngày)
-- Lượt regression trên APK mới nhất (theo `C:\Users\Admin\qa-tools\apk\LATEST.txt`), 5 máy thật: S26, Pixel 11, S9,
-  OPPO A38 + 1 máy khác (vd. Galaxy Z Fold6 màn gập hoặc Galaxy A16) thay Xiaomi (HyperOS chặn thao tác).
-- Khôi phục P096 trên máy thật bằng `robo-{uk,us}-full.json` mới (đã chạy được trên máy ảo Android 17).
-- Xem lại bàn phím số tiền trên Pixel 11 thật; Android 8 "Choose from library" trên máy thật nếu có (S9 = Android 10).
-- Hạn mức hôm nay: 5/5 máy thật đã dùng; máy ảo đã gửi 11 lượt (5 lượt bị huỷ vì lỗi hạ tầng do dạng script) — hết.
+## Trạng thái hạn mức / việc còn lại
+- 18/11: 5/5 máy thật, ~11 lượt máy ảo (5 bị huỷ do dạng script). 19/11: 5/5 máy thật, 2 máy ảo.
+- Nếu cần lượt nữa: script vẫn phụ thuộc chiều cao màn (số lần vuốt tới "Backup & restore") và tên thư mục trong trình
+  chọn file (DocumentsUI "Downloads", ColorOS "Download"). Cách chắc hơn: mở thẳng `sundaysort://backup` bằng
+  ADB_SHELL_COMMAND (`am start -a android.intent.action.VIEW -d sundaysort://backup`) — chưa thử trên Test Lab.
+- Chưa có máy thật Android 8–9 (thấp nhất trên Test Lab là Galaxy S9 / Android 10 trong danh sách đã chọn) để kiểm
+  "Choose from library" (quan sát trên máy ảo A8).

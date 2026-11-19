@@ -61,6 +61,11 @@ def full_actions(region):
         tap('Save'), wait(3000),
         {'eventType': 'ADB_SHELL_COMMAND', 'command': f'am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://{FILE}'},
         tap('Settings'), wait(2000),
+        # B-104 (QA F-1) check: a fresh 7-day trial must say "7 days left". The trial is local ("No card needed"),
+        # no store call. Robo takes the screenshot of the Pro screen itself.
+        tap('Sunday Sort Pro. Free · See Pro'), wait(2500),
+        tap('Try Pro free for 7 days'), wait(3000),
+        tap('Back'), wait(2000),
         # "Backup & restore" sits below the fold on phones (2026-11-18: script stopped here on 5 devices)
         {'eventType': 'ONE_POINT_GESTURE', 'coordinates': '(50%,80%)->(50%,25%)'}, wait(1200),
         {'eventType': 'ONE_POINT_GESTURE', 'coordinates': '(50%,80%)->(50%,25%)'}, wait(1200),
