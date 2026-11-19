@@ -193,7 +193,7 @@ class TripDetectModule : Module() {
       if (!granted || adapter == null) {
         emptyList<Map<String, String?>>()
       } else {
-        adapter.bondedDevices.map { mapOf("address" to it.address, "name" to it.name) }
+        adapter.bondedDevices.map { mapOf("address" to it.address, "name" to it.name, "kind" to deviceKind(it)) }
       }
     }
 
@@ -205,5 +205,27 @@ class TripDetectModule : Module() {
 
   companion object {
     private const val REQ_SAMPLES = 4102
+
+    /**
+     * Phương 19/11: warn when the "van" is really headphones / a speaker / a watch — a trip would start whenever it
+     * connects. 'car' = car audio / hands-free kit, 'personal' = clearly not a vehicle, 'unknown' = can't tell.
+     */
+    @SuppressLint("MissingPermission")
+    fun deviceKind(d: android.bluetooth.BluetoothDevice): String {
+      val cls = try { d.bluetoothClass } catch (_: SecurityException) { null } ?: return "unknown"
+      return when (cls.deviceClass) {
+        android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_CAR_AUDIO,
+        android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_HANDSFREE -> "car"
+        else -> when (cls.majorDeviceClass) {
+          android.bluetooth.BluetoothClass.Device.Major.AUDIO_VIDEO,
+          android.bluetooth.BluetoothClass.Device.Major.WEARABLE,
+          android.bluetooth.BluetoothClass.Device.Major.PHONE,
+          android.bluetooth.BluetoothClass.Device.Major.COMPUTER,
+          android.bluetooth.BluetoothClass.Device.Major.HEALTH,
+          android.bluetooth.BluetoothClass.Device.Major.TOY -> "personal"
+          else -> "unknown"
+        }
+      }
+    }
   }
 }

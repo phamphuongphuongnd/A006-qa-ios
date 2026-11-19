@@ -25,6 +25,8 @@ export type TripSignal =
 export interface BondedDevice {
   address: string;
   name: string | null;
+  /** Android: from the Bluetooth device class — 'personal' = headphones / speaker / watch / phone, not a vehicle. */
+  kind?: 'car' | 'personal' | 'unknown';
 }
 
 export interface TripDetectHealth {

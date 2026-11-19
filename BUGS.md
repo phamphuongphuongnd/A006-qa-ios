@@ -575,4 +575,8 @@
   màn hình mở (`AppForegroundedSingleton.isForegrounded` = false → `ForegroundServiceStartNotAllowedException`). Sửa: hàm native
   `allowBackgroundLocationStart` (chỉ khi có quyền vị trí nền) bật cờ đó trước khi bắt đầu ghi lúc app ở nền; Android vẫn quyết định cuối (từ chối →
   "Tap to record" như cũ). Nhật ký chẩn đoán thêm `start_ok` / `start_failed` (lý do + lỗi). ⏳ Phương thử trên A13: app ở nền, nối Bluetooth xe → chuyến tự bật.
+- [ ] **B-125** 🟡 (A13, phiên E) Van Bluetooth trên A13 đang là tai nghe Redmi Buds 4 Lite → với B-123 (nối lại khi chưa có chuyến = chuyến mới), đeo
+  tai nghe ở nhà sẽ bật chuyến giả. **Phương chốt 19/11:** cảnh báo, vẫn cho chọn. Sửa: native `getBondedDevices` trả `kind` theo Bluetooth class
+  (car audio / hands-free = 'car'; tai nghe, loa, đồng hồ, điện thoại, máy tính = 'personal'); màn chọn + dòng Van Bluetooth hiện "Looks like
+  headphones or a speaker, not a van…". 946 test xanh. ⏳ A13 (Redmi Buds phải hiện cảnh báo, Bluetooth xe thì không).
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.

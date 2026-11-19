@@ -67,6 +67,7 @@ export const autoTrip = {
   btNone: "No paired devices. Pair your van's Bluetooth in phone settings first.",
   btAllow: 'Allow nearby devices',
   btClear: "Don't use Bluetooth",
+  btNotVan: "Looks like headphones or a speaker, not a van — a trip would start whenever it connects.",
   // Work hours
   whTitle: 'Work hours',
   whOn: 'Use work hours',
