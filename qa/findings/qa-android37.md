@@ -118,6 +118,27 @@ Income, Expenses (trừ nhóm chi phí xe khi dùng mileage rate; persona có ch
 - **Nguyên nhân nghi:** `src/app/(tabs)/reports.tsx:285` truyền `report.unsortedCount` thô vào `t('reports.unsortedWarn', { count })`
   (`src/i18n/en.ts:452`) — chưa dùng `formatCount` như B-79.
 
+### Kiểm lại trên 62d6558 (19/11, emulator-5554, phone 1080×2400, P004 khôi phục, chế độ tối)
+Ảnh + text dump: `qa-runs/android37/recheck-62d6558/`.
+| Lỗi | Kết quả | Bằng chứng |
+|---|---|---|
+| B-132 dấu phẩy nghìn | ✅ Reports "1,620 entries in this period aren't sorted yet"; hộp thoại Export "1,620 entries aren't sorted"; Home "2,004 entries to sort"; năm vẫn "Tax year 2026" (không thành 2,026). Sort (tuần này 10 khoản "0 of 10") và Miles (P004 không có chuyến) không có số ≥ 1.000 để kiểm | b132-reports-0, b90-export-sortfirst, b132-home-0, b132-sort*, b132-miles |
+| B-90 nút sun, theme tối | ✅ chữ tối trên nền vàng, đọc rõ: "Sort first" (Export), "End trip" + "Add miles" (Home, chuyến đang chạy), "Try Pro free for 7 days" (Pro), "See Pro" (Auto-sort rules), "Choose backup folder", "Choose folder again" (thư mục sao lưu bị xoá + đồng hồ +4 ngày), "Save" (màn kết thúc chuyến) | b90-*.png, b90-home-endtrip.png, b137-end.png |
+| B-90 — chưa chụp được | ⏭ "Subscribe now" + "Always" (gợi ý rule) chỉ hiện khi đang Pro/dùng thử → phải bấm Try free (không được bấm). ⏭ "Back up now" màu vàng chỉ hiện khi lỗi sao lưu không phải do thư mục (vd. hết chỗ); cả 3 dùng chung `Button variant="sun"` với các nút đã ✅ | — |
+| B-137 bản đồ khi GPS chậm | ✅ Start trip lúc máy chưa có vị trí (sau reboot, `last location=null`) → "Finding GPS…" + hình vẽ dự phòng (b137-00s) → có fix → bản đồ OpenFreeMap hiện ở 10/30/60 s (b137-10s/30s/60s; lần 2: b137-repro-12s/30s/60s/80s); End trip → Save / Discard trip ổn. Lưu ý: emulator tự phát lại điểm geo cuối của phiên trước ~4 s sau khi app xin GPS, nên "Finding GPS…" chỉ kéo dài < 10 s chứ không đủ 18 s | b137-*.png |
+
+### A37-11 🟡 (nghi, chỉ thấy 1/3 lần, emulator) Chuyến GPS ghi 0.0 mi dù nhận đủ fix khi điểm đầu tiên ở rất xa
+- **APK:** 62d6558. **Cách tái hiện (lần 1):** reboot emulator (geo cuối của emulator là từ phiên chạy trước) → Start trip → 18 s sau
+  gửi `adb emu geo fix -74.006 40.7128+i·0.0016 10 8 58` mỗi 6 s (10 điểm, rồi thêm 12 điểm) → `dumpsys location` cho thấy fused
+  nhận đủ ~30 fix ở NY, task `sundaysort.trip-gps` chạy mỗi 5 s, nhưng màn chuyến đứng **0.0 mi**, chấm trên bản đồ không di chuyển
+  suốt 5 phút; lưu "Trip saved · 0.0 mi" (b137-60s, b137-more-fixes, b137-end).
+- **Đối chứng:** chuyến ngay sau (GPS đã ấm, điểm gửi liền) 1.9 mi ✅; lần dựng lại theo đúng kịch bản (reboot → 18 s) 1.8 mi ✅
+  (b137-repro-*). Khác biệt: lần 1 điểm geo phát lại là điểm cuối của phiên trước (có thể ở thành phố khác, vd. London từ persona UK).
+- **Nguyên nhân nghi:** `src/domain/mileage.ts:131-138` `walkTrack` lấy fix đầu làm mốc; mọi fix sau có `d/dt > MAX_SPEED_MPS`
+  (56 m/s) bị coi là glitch và **giữ nguyên mốc** → nếu fix đầu sai xa (hàng nghìn km) thì cả chuyến bị loại tới khi `dt` đủ lớn.
+  Fix sai vài km sẽ tự hồi sau ~d/56 giây nhưng cộng luôn quãng "nhảy" đó vào. Trên máy thật ít gặp (fix cũ hơn `startedAt` đã bị
+  lọc ở `backgroundTask.ts:60`), nên chỉ ghi 🟡 để dev xem có nên đổi mốc khi nhiều fix liên tiếp cùng "glitch".
+
 ## Kết quả persona (`qa-runs/android37/summary.json`)
 - 60 persona API 37: **56 đạt** (mọi bước ✅/⏭), **2 ❌ do runner** (P083, P084 weird_text: trình đọc XML bỏ qua
   `content-desc` bọc nháy đơn khi ghi chú có dấu `"` — app lưu ghi chú nguyên văn, đã kiểm lại ở P085 sau khi sửa runner: 10/10 ✅),
