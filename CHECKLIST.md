@@ -59,8 +59,8 @@
 - [x] Giả lập người dùng thật trên máy, xem giao diện từng màn — cài mới, vai UK + US, tối / 200% / 320dp, vân tay, widget, TalkBack nghe thật (Phương): 10 mục mới B-27…B-36 sửa + thử A13 (`6c87170`, `bd04cfe`, `40493d6`)
 - [ ] **Bản 2 — tự động + Pro: xem `PLAN-v2.md` (P0–P6)** — Phương chốt 2026-11-13: dừng Bước 6 ở đây, lên store sau bản 2
   - [ ] **QA-100 (bản 2, 2026-11-17/19)** — 100 người dùng mô phỏng, Android + iOS + máy thật (`qa/QA-100-REPORT.md`, TC-366…TC-407):
-        bản cuối `edecc6d` (đang trên A13); B-56…B-141: 136 đã tick. Còn mở 6: giới hạn Phương chấp nhận (B-51, B-88, B-95/96),
-        B-118 (Phương đọc câu quyền iOS), B-131 (chờ Phương lái xe thật tối 19/11). Xong khi các bài thử thật đạt.
+        bản cuối `edecc6d` (đang trên A13); B-56…B-141: 137 đã tick. Còn mở 5: giới hạn Phương chấp nhận (B-51, B-88, B-95/96),
+        B-131 (chờ Phương lái xe thật tối 19/11). Xong khi các bài thử thật đạt.
 - [ ] Store listing + privacy + Data safety / App Privacy + ảnh store — nháp `store/listing.md` (chờ Phương duyệt, Data safety 2 điểm ❓)
 - [ ] Phương tạo khoá ký → tag `v1.0.0` → AAB + iOS
 - [ ] checklists release-android + release-ios

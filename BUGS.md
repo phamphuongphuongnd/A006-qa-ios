@@ -563,11 +563,15 @@
   nhánh); "Keep" của B-107 mở Sheet sau khi Dialog đóng (iOS trễ 400 ms). ✅ iOS lượt 4g (GH Actions 44274943533, phiên C/H): P052 SE
   End trip → tấm "Trip saved" hiện ngay → Save → Home; P091 AX-Large tấm hiện, không treo (Save dưới mép → đã ghim footer ở 805835b). ✅ iOS lượt 4i (dev 0bf4283, phiên C): P091 SE AX-L lưu được, P041 Pro Max tối ✅;
   cùng lượt: B-114 v2 ✅ (P091 phân loại trên thẻ Sort), B-95 màn ✅, B-101 ✅, B-122 "45" → $45.00 ✅, 0 crash.
-- [ ] **B-118** 🟠 (QA iOS — phiên H) Câu xin quyền vị trí iOS (app.json) hứa "only while a trip you started is running" / "Recording stops when you end the
+- [x] **B-118** 🟠 (QA iOS — phiên H) Câu xin quyền vị trí iOS (app.json) hứa "only while a trip you started is running" / "Recording stops when you end the
   trip" — sai từ khi có chuyến tự động (theo dõi rời chỗ đỗ / vùng 150 m ở nền) → Apple 5.1.1. Sửa: câu mới nói rõ chuyến tự động; câu trong app
   (`trip.permBody`) cũng sửa. Cần build iOS mới mới có hiệu lực. ⏳ Phương xem chữ trước khi nộp.
   ✅ cấu hình (phiên H, expo config introspect dev 45e0b4e): Info.plist có 2 câu vị trí mới + Motion. 19/11 thêm `locationAlwaysPermission` (câu Always
   cũ còn mặc định "Allow $(PRODUCT_NAME)…"). 🟡 NSLocalNetworkUsageDescription "Expo Dev Launcher" có vì expo-dev-client trong dependencies.
+  **Phương duyệt 19/11 (qua phiên E, so Everlance / MileIQ / Hurdlr / MileageWise):** 3 câu mới — When In Use "…record the route of each trip and
+  work out your mileage…", Always / AlwaysAndWhenInUse "Choose Always Allow so Sunday Sort can record your drives automatically, even when the app
+  is closed… If you choose While Using, trips only record while the app is open…", Motion "…tell when you start and stop driving… walks aren't counted…".
+  `app.json` đã thay (introspect ✅). Có hiệu lực ở bản build iOS kế tiếp.
 - [x] **B-119** 🟡 (QA SPE-11, phiên D) `sundaysort://dev/gallery` mở được trong bản release (gallery.tsx thiếu chặn `__DEV__`). Sửa: chuyển về Home như dev/ocr,
   dev/probe. Link lạ khác ra màn "Unmatched Route" + nút Sitemap → thêm `src/app/+not-found.tsx` chuyển về Home. ✅ A13 (b843037):
   `sundaysort://abc`, `sundaysort://abc/xyz?q=1` → Home, logcat sạch (app đang chạy). ✅ phiên D (19daeae, emulator): `dev/gallery` → Home; link lạ / chuỗi RTL → Home; 34 deep link lạ 0 crash/ANR.
