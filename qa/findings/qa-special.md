@@ -295,3 +295,17 @@ Lưu ý môi trường: lượt đầu chạy file độc bị kẹt vì tôi đ
 - Manifest: CAMERA / BLUETOOTH / ACCESS_*_LOCATION làm Play **ngầm coi camera, bluetooth, location là bắt buộc** (`uses-implied-feature`) → máy không camera/Bluetooth
   (một số tablet, Chromebook) sẽ không thấy app trên Play. Nếu muốn, thêm `<uses-feature android:name="android.hardware.camera" android:required="false"/>` (và bluetooth).
 - `android:allowBackup="true"` không có `dataExtractionRules` → CSDL đi vào Google Auto Backup / chuyển máy (đã mã hoá theo tài khoản). Nên ghi trong chính sách riêng tư.
+
+## Kiểm lại trên APK cuối `19daeae` (2026-11-19 09:00–09:20, emulator-5556 `-gpu host -memory 3072 -cores 4`, cài đè, dữ liệu 20.015 khoản)
+| Lỗi / mục | Bước | Kết quả | |
+|---|---|---|---|
+| Manifest — uses-feature (ghi chú phiên D) | `aapt2 dump badging` so với `3f26b33` | camera, camera.autofocus, bluetooth, location, location.gps đều `required=false`; chỉ còn `faketouch` + `screen.portrait` bắt buộc → Play không ẩn app với máy thiếu camera/Bluetooth | ✅ |
+| Manifest — quyền | như trên + `xmltree` | Không RECORD_AUDIO. Mới so với 3f26b33: `WRITE_EXTERNAL_STORAGE maxSdkVersion=28` — cố ý (B-115, camera Android 7–9; chỉ áp Android ≤ 9, không xin lúc chạy trừ khi chụp ảnh). `READ_EXTERNAL_STORAGE` trong `badging` chỉ là aapt suy ra từ WRITE, không có trong manifest | ✅ |
+| B-119 (SPE-11) `dev/gallery` | `deeplink_run.py` | `sundaysort://dev/gallery` → Home (cùng `dev/probe`, `dev/ocr`) | ✅ |
+| B-119 (SPE-11) `+not-found` | như trên | `sundaysort://does/not/exist`, chuỗi RTL `%E2%80%AE`×50 → **Home**, không còn "Unmatched Route / Sitemap" | ✅ |
+| 34 deep link lạ (hồi quy) | như trên | 34/34 không crash, cùng pid, 0 lỗi JS; id giả → "no longer exists"; Reports link lạ → năm hiện tại | ✅ |
+| B-120 (SPE-12) `export?mode=custom&start=1&end=1e17` | mở từ Home → Export 2 files → Export anyway → QA Receiver | nhãn "Tax year 1970", file `SundaySort-export-1970.zip` (CSV 0 dòng + PDF 61 KB), 8,6 s — **không còn "NaN undefined NaN"** | ✅ |
+| `export?year=999999` / `year=-5` | như trên | không crash/treo; nhãn "Tax year 999999" / "Tax year -5", file `SundaySort-export-999999.zip` / `…--5.zip` rỗng. Chỉ thẩm mỹ, chỉ qua link tự chế | 🟡 nhỏ |
+| Link export khi màn Export đang mở | đang ở Export (year=999999) → mở link `export?mode=custom…` | màn giữ kỳ cũ (999999), không nhận tham số mới; mở từ Home thì đúng. Chỉ thẩm mỹ | 🟡 nhỏ |
+| B-121 (SPE-10) Bluetooth trong chẩn đoán | — | ⏭ giả lập không có Bluetooth, broadcast ACL là protected (shell không gửi được). A13 (phiên E) đã thấy chỉ ghi "van"; **chưa ai thấy trên máy một thiết bị khác ngoài xe** → nên thử trên A13 với tai nghe / đồng hồ | ⏭ |
+| crash buffer / ANR cả lượt | `logcat -b crash`, `ANR in` | 0 / 0 | ✅ |
