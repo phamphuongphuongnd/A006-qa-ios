@@ -28,6 +28,8 @@
 | 4l | 44462331611, 44463898975 (công khai) | cee0c20, c284d4c | P022, P092 ×2 | 0 | `17_gps_trip` speed 10: ✅ 3/3 (2.5 mi) → QI-5 đóng. Kiểm mạng bản đồ từ runner: 200 → QI-6 do code (hẹn giờ 12 s) |
 | 4m | 44471864915 (công khai) | f974a7c (dev c9bb293: B-137) | P092 + kịch bản B-137 | 0 | **B-137 ✅** (bản đồ MapLibre hiện ở 30 s và 60 s dù điểm GPS đầu tiên về ở +21 s). P092 bộ chính 12/18 ✅; 15/16/17/99 ❌ do hộp "Open in “Sunday Sort”?" của deep link hiện sau 20 s che các bước sau — đã sửa `common/home.yaml` |
 | 4n | 44478021185 (công khai) | f974a7c (dev c9bb293) | P016 14/18 ✅, P031 12/18 ✅ (iPhone SE, chữ lớn) | 0 | **B-66 ✅**. ❌ còn lại đều kịch bản: 02 bấm tên file chưa chọn được file (trình chọn file hiện đúng "P031.sundaysort"), 05 nút "Save changes" mờ (chưa sửa gì — đúng) không được tính là thấy, 06 "Sort.*" trúng "Sort now" ngoài màn → đã đổi sang chạm tab, 08/09 như cũ. 0 crash |
+| 4o | 44481342409 (công khai, #14) | 97e2c45 (dev c9bb293) | 5/7 (P001 15/16 ✅, P007 12/16, P011 14/16, P017 14/16, P037 14/16; P026, P032 ⏭ hết ngân sách 100 phút) | 0 | 1 simulator, 0 lỗi driver, **0 crash**. 03–07, 10, 11, 15, 16, 17 (2.x mi), 99 ✅ cả 5. ❌ đều kịch bản: 02 (4/5, chưa chọn được file), 08 (4/5, bàn phím số), 09 P007 (bấm nút Export nằm dưới mép tấm → không mở bảng chia sẻ), 09 P037 AX-L (cuộn hết thời gian trước khi tới nút Export). Thấy **QI-7 🟡** |
+| 4p | 44481352656 (công khai, #15) | 97e2c45 (dev c9bb293) | 5/7 (P056 14/16 ✅, P067 14/16, P061 14/17, P046 11/17, P047 11/17; P062, P071 ⏭ hết ngân sách) | 0 | 1 simulator, 0 lỗi driver, **0 crash**. P056 XXXL và P061 bước 13 (tắt app giữa lúc lưu) ✅. ❌ đều kịch bản: 02, 08 như 4o; 09 P061 như P007; P046/P047 15/16/17 ❌ vì bước 14 xoá hết dữ liệu (đúng: app về màn chào "Get started") mà 15–17 chạy sau và chờ "Settings" — kịch bản cần chạy lại onboarding sau bước 14 |
 | 4f | 44274384593 (công khai) | febb184 | 0 | 0 | ❌ GitHub không khởi chạy job (lỗi thanh toán tài khoản) — cả repo công khai |
 
 Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ lượt 4c chạy trên repo công khai `phamphuongphuongnd/A006-qa-ios` (Phương chọn; không tính phút) — **xoá repo này sau QA-100 khi Phương đồng ý**.
@@ -153,3 +155,10 @@ Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ 
 - Mạng (slow_3g / airplane / drops_midway…): simulator dùng chung mạng của runner, app không có server; Network Link Conditioner cần giao diện.
 - Múi giờ: đặt `launchctl setenv TZ` + `SIMCTL_CHILD_TZ` cho từng persona nhưng **chưa xác nhận** app nhận đúng (ghi `tz_applied: … (unverified)` trong result.json).
 - Hành vi app_lock (Face ID), revoke_permissions, low_storage, gps_trips, pro_trial (không bấm Pro/dùng thử theo luật), clock_tax_boundary, recurring_rules: chưa có kịch bản iOS ở vòng này.
+
+### QI-7 🟡 Chữ "MTDsorted" thiếu gạch nối (tấm Export)
+- Persona/thiết bị: P007 (iPhone SE, sáng, UK), P037 (iPhone SE, AX-L, UK) — lượt 4o. Bước 09_export_csv, tấm Export.
+- Thấy: dòng phụ của "MTD records (CSV)" là "One row per entry, MTDsorted columns". Mong đợi: "MTD-sorted columns".
+- Ảnh: `qa-runs/ios/44481342409/qa-ios-14/personas/P007/shots/step-019-assertCondition-CopySave_to_FilesAirDrop.jpg`.
+- Nguồn: `src/i18n/v2/mtd.ts:60` (`mtdRecordsSub`), còn nguyên trên dev hiện tại; cũng có trong chú thích `src/features/reports/mtdFiles.ts:139` và tên test `mtd.test.ts:157`.
+
