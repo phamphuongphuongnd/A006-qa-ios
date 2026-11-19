@@ -695,4 +695,6 @@
   xoá lúc 11:08–11:10 theo lời Phương) → bị xoá bằng Delete ở chi tiết chuyến, không phải app tự xoá. Thêm nhật ký `trip_deleted` (delete / discard /
   auto_short) vào chẩn đoán để lần sau biết chắc. 🟡 đề xuất: Recently deleted ghi giờ xoá (hiện chỉ ngày).
   **Phương xác nhận 19/11: "ừ hình như tôi xóa"** → đóng, không phải lỗi app.
+- [ ] **B-142** 🟡 (QA QI-7, phiên C — iOS lượt 4o, P007; đúng cả Android) Tấm Export, dòng phụ "MTD records (CSV)" ghi "One row per entry, MTDsorted columns"
+  (thiếu gạch nối → "MTD-sorted"). Nguồn `src/i18n/v2/mtd.ts:60` `mtdRecordsSub`. Chuyển phiên "A006 gỡ giới hạn pro" sửa (phiên QA không sửa src từ 19/11 chiều).
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.

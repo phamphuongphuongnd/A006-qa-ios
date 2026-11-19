@@ -12,6 +12,11 @@
 - **BUGS: 137 tick / 5 mở** — giới hạn Phương chấp nhận B-51, B-88 (chờ lái thật), B-95/96 (iPhone thật); B-118 ✅ Phương duyệt câu
   quyền iOS); B-131 nhánh lái lại (chờ Phương lái tối 19/11); B-140 ✅ A13.
 
+- **iOS lượt cuối (phiên C, run #14–#16, dev c9bb293, 16:41):** 15/19 persona có kết quả, **0 crash, 0 lỗi driver**; đạt mọi persona các bước
+  03–07, 10, 11, 15 chuyến tự động, 16 End trip, 17 chuyến GPS (2.x mi, cả đoạn chạy nền), 13 tắt app giữa lúc lưu, 14 xoá dữ liệu. ⏭ P026,
+  P032, P062, P071, P002-iPad, P041-iPad (hết ngân sách 100 phút — iPad chưa chạy được lượt nào). ❌ còn lại đều do kịch bản (chọn file khôi
+  phục, bàn phím số không đóng, nút Export dưới mép, chạy sau bước xoá dữ liệu). Lỗi app: B-142 🟡 chữ "MTDsorted".
+
 ## Cập nhật 19/11 (sáng)
 - **Bản QA mới nhất:** `sundaysort-qa-0bf4283-all.apk` = `19daeae` + B-123 (chuyến tự tắt khi đỗ thật 20 phút, GPS trôi trong nhà không cộng km,
   Continue trip) + B-124 (Bluetooth bật chuyến khi app ở nền — gốc: expo-location tự chặn) + B-125 (cảnh báo chọn tai nghe làm xe) + B-126 (bàn phím
