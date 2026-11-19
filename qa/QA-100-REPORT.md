@@ -1,10 +1,19 @@
-# QA-100 — Sunday Sort: báo cáo kiểm thử (2026-11-17 → 2026-11-18)
+# QA-100 — Sunday Sort: báo cáo kiểm thử (2026-11-17 → 2026-11-19)
 
 > Phương yêu cầu: đóng vai đội QA, mô phỏng 100 người dùng thật (hành vi / thiết bị / mạng khác nhau), Android + iOS, thao tác thật
 > trên app, tìm lỗi → nguyên nhân gốc → sửa → chạy lại + regression, **không giả lập kết quả**. Ca nào không chạy thật = ⏭ kèm lý do.
 > Chi tiết từng phiên: `qa/findings/*.md` · bằng chứng (ảnh, logcat, dòng OCR thô): `qa-runs/` (không đưa lên git) · lỗi: `BUGS.md` mục QA-100.
 
-## Bản cuối
+## Cập nhật 19/11
+- **Bản QA mới nhất:** `sundaysort-qa-0bf4283-all.apk` = `19daeae` + B-123 (chuyến tự tắt khi đỗ thật 20 phút, GPS trôi trong nhà không cộng km,
+  Continue trip) + B-124 (Bluetooth bật chuyến khi app ở nền — gốc: expo-location tự chặn) + B-125 (cảnh báo chọn tai nghe làm xe) + B-126 (bàn phím
+  số trên Pixel). Jest **946/946** · lint · tsc ✅. A13 đang chạy `dc84207` (= 0bf4283 trừ cờ bàn phím ở các ô số phụ).
+- **Đã kiểm thêm:** B-104 (5 máy thật Firebase), B-117 + B-100 (iOS lượt 4g), B-119 / B-120 (phiên D), B-122 (phiên B, F, G), B-124 / B-125 / B-123
+  chuyến tự động ở nhà (A13), B-126 Ghi nhanh (Pixel 11 thật + A13). B-113 đóng (Phương sửa tay năm 19 → 20).
+- **Phương chấp nhận là giới hạn đã biết (19/11):** B-51 hao pin (chỉ thấy ở bản dev), B-88 cảm biến "lái xe" chưa có ca ô tô thật, B-95/B-96 chuyến tự
+  động iPhone chưa thử máy thật. **Không chấp nhận** các lỗi giao diện nhỏ 🟡 → sửa trước khi lên store.
+
+## Bản cuối (18/11)
 - **Android:** `C:\Users\Admin\qa-tools\apk\sundaysort-qa-b843037-all.apk` — dev `b843037`, build 2026-11-18 16:46, đủ 4 ABI (có armeabi-v7a cho A13).
   = `ef470b7` (16:18, đã cài A13 16:21 và kiểm trên API 26) + Sort giữ inset khi cuộn, nút thẻ xếp dọc ở chữ lớn, `+not-found`, B-121.
   **Đang cài trên A13 (16:52):** `b843037`. Bản `2454233` (17:09) = cùng code app + manifest khai camera / Bluetooth / GPS
@@ -43,7 +52,13 @@ iOS: SE / 16 Pro Max / iPad · mạng: online / 3G / EDGE trễ / mất mạng /
 - **Phương quyết trong đợt:** B-106 giữ camera điện thoại (Samsung mở cam trước = giới hạn đã biết) · B-107 hỏi Discard/Keep · B-108 bỏ giới hạn
   400 ngày · thư mục sao lưu A006 + sao lưu đêm.
 
-## Không kiểm được thật (⏭, không báo PASS)
+## Chưa test — báo Phương sau (⏭, không báo PASS)
+- **Chờ Phương tự thử trên A13:** Start tay ngồi nhà ≥ 25 phút (B-123: ~0 km, tự kết thúc, thông báo Continue) · lái xe về nhà, chuyến kết thúc lúc đỗ ·
+  bấm Continue trip · ghép Bluetooth XE rồi đổi Van Bluetooth (A13 đang chọn tai nghe) → nối khi app ở nền phải bật chuyến, không có cảnh báo tai nghe ·
+  1 ca lái ô tô có file chẩn đoán (B-88) + đo pin (B-51) · App lock 1 phút + chụp hoá đơn > 1 phút với vân tay thật (B-99) · xoá chuyến 0 km cắm cáp (B-107).
+- **iOS:** P091 nút Save ghim đáy tấm End trip ở chữ AX-L, kịch bản cuộn thẻ Sort, logic tự kết thúc chuyến B-123 trên iOS (phiên C lượt 4i đang chạy) ·
+  câu xin quyền vị trí B-118 (cần Appetize/iPhone).
+- **Pixel 11 thật:** cờ bàn phím số ở Sửa khoản / thẻ Sort / Settings (phiên G, APK 0bf4283).
 - **iPhone thật:** chuyến tự động iOS (B-95/B-96 — 8 điểm trong `qa/findings/ios-auto-trips.md`), VoiceOver bằng tai, widget iOS trên máy.
 - **Mua thật / dùng thử thật trên store** (không bấm Subscribe), Play Billing chỉ thử ở trạng thái DB.
 - **Chạy xe thật nhiều lần** cho B-88 (chuyến tự động Android bị sót tối 17/11 — cần thêm file chẩn đoán sau chuyến xe).

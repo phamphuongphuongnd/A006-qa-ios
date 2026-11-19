@@ -162,7 +162,7 @@
   "Trip under 0.1 mi — not saved". — Phương duyệt 2026-11-16 — sửa: `tooShortToKeep` / `MIN_KEPT_TRIP_M` (`src/domain/mileage.ts`),
   `trip/toggle` bỏ chuyến < 0.1 mi bằng `discardTrip` + snackbar `autoTrip.nfcTooShort` + test `mileageRates.test.ts` "tooShortToKeep"
   — thử A13: toggle bật → tắt ngay → "Trip under 0.1 mi — not saved", Miles không có chuyến mới
-- [ ] **B-51** 🟠 Hao pin: trên A13 (app dev, tiến trình chạy từ 12:19) luồng chính chạy 100% CPU (38 phút CPU), GC ~23 MB mỗi
+- [ ] **B-51** (giới hạn đã biết — Phương chấp nhận 19/11, theo dõi sau) 🟠 Hao pin: trên A13 (app dev, tiến trình chạy từ 12:19) luồng chính chạy 100% CPU (38 phút CPU), GC ~23 MB mỗi
   2,3 giây; nút Export trên Reports không phản hồi. simpleperf: vòng lặp `IntentModule.waitForActivityAndGetInitialURL` →
   `onHostResume` → `addLifecycleEventListener` (RN 0.88.1 `Linking.getInitialURL()` khi `currentActivity` = null mà context đang
   RESUMED → mỗi lần resume lại chờ tiếp, không bao giờ dừng). Mở app mới, Back rồi mở lại bằng deep link, Reload dev đều
@@ -351,7 +351,7 @@
   thay thư mục ảnh (`restoreFromBackupFile`, `inspectBackupFile`). Test `streamRestore.test.ts`. ⏳ phiên D/B: khôi phục P096 + file độc trên máy.
   Sửa B-85: gốc điều hướng (`app/_layout.tsx`) là cột tối đa 640dp căn giữa trên màn rộng (tablet, Fold mở, xoay ngang); sheet/hộp thoại vẫn
   toàn màn. ⏳ phiên F: Fold mở + xoay ngang, chia đôi màn hình.
-- [ ] **B-88** 🟠 (QA A13-2, phiên E — chạy xe thật tối 17/11) Bản 538ede9, Automatic trips bật, đủ quyền, pin Unrestricted: cả ca **không sinh chuyến
+- [ ] **B-88** (giới hạn đã biết — Phương chấp nhận 19/11, theo dõi sau) 🟠 (QA A13-2, phiên E — chạy xe thật tối 17/11) Bản 538ede9, Automatic trips bật, đủ quyền, pin Unrestricted: cả ca **không sinh chuyến
   tự động nào** (Phương: "chạy chậm, dừng nhiều"). Sao lưu thật sau ca 18/11 08:30: chuyến mới nhất 16/11. Không còn lịch sử tín hiệu để soi (vòng
   `EventLog` 200 dòng native nhiều khả năng bị mẫu 'sample' đè). Nghi: `features/trips/auto/engine.ts` chỉ mở chuyến khi Activity Recognition báo
   'driving' (IN_VEHICLE, mẫu ≥ 75%) — không có dự phòng. Phương: **ô tô**. Phương chọn **nhật ký trước, sửa sau** (2026-11-18): Settings → giữ lâu dòng
@@ -391,11 +391,11 @@
 
 > **QA-100 kiểm lại trên máy (18/11):** đã tick các mục phiên con xác nhận đạt — B-59 (B), B-61 (E), B-63/64/70/73/79/82/84/85/86/89 (F), B-65/75 (B),
 > B-67/68/76/80/87/91/92 (D), B-77 (A); B-69 (B: 0 sập trên máy lỗi EGL, nhánh "sập 1 lần" là giới hạn Phương đã chấp nhận); B-81 (thay bằng B-91 ✅). Còn mở: chờ kiểm lại hoặc chờ dữ liệu (B-88).
-- [ ] **B-95** 🔴 (đọc code, phiên hỏi đáp của Phương 18/11) **Chuyến tự động trên iOS chưa chạy**: `modules/trip-detect/ios/TripDetectModule.swift`
+- [ ] **B-95** (giới hạn đã biết — Phương chấp nhận 19/11, theo dõi sau) 🔴 (đọc code, phiên hỏi đáp của Phương 18/11) **Chuyến tự động trên iOS chưa chạy**: `modules/trip-detect/ios/TripDetectModule.swift`
   chỉ là khung — `getRecentEvents` trả `[]`, `startTransitions` chỉ phát `onSignal` khi app đang mở, và JS không nghe `onSignal` → `readSignals` luôn rỗng →
   engine không bao giờ thấy 'driving'. Chưa có "significant location change" để đánh thức app nền (PLAN-v2 §Rủi ro). Màn Automatic trips trên iOS vẫn bật
   được ("iPhone starts trips from motion") → người dùng tưởng đang chạy. Chưa thử được trên iPhone thật (không có Apple Developer + iPhone, TC-340).
-- [ ] **B-96** 🟠 (đọc code, phiên hỏi đáp của Phương 18/11) iPhone thiếu báo nghi sót của chuyến **tay** (miễn phí, F-12/Q2): "Still on a trip?" (đứng yên
+- [ ] **B-96** (giới hạn đã biết — Phương chấp nhận 19/11, theo dõi sau) 🟠 (đọc code, phiên hỏi đáp của Phương 18/11) iPhone thiếu báo nghi sót của chuyến **tay** (miễn phí, F-12/Q2): "Still on a trip?" (đứng yên
   ≥ 45 phút) và "Trip isn't recording" (mất vị trí ≥ 10 phút khi đang lái) chạy nhờ báo thức đánh thức (`sync.ts` `scheduleWake`, `native.ts`
   `configureNative`/`cancelWake`/`health`) — module iOS không có các hàm này (`native.ts` nuốt lỗi) → trên iPhone chỉ hiện khi mở app. Nhắc 12 giờ vẫn chạy.
   Phương duyệt làm chung phiên B-95.
