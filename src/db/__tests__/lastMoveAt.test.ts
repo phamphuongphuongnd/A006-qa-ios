@@ -28,6 +28,19 @@ describe('lastMoveAt (CONTEXT: Trip end)', () => {
     expect(lastMoveAt(db, getTrip(db, t.id)!)).toBeGreaterThanOrEqual(T0 + 30 * MIN);
   });
 
+  it('B-135: a cached fix from before Continue trip is not stored, so the stop counts from the tap', () => {
+    const t = startTrip(db, 'work', T0);
+    appendPoints(db, t.id, [...[1, 2].map((m, i) => ({ ts: T0 + m * MIN, ...near(i), speed: 0 }))]);
+    endTrip(db, t.id, T0 + 2 * MIN);
+    reopenTrip(db, t.id, T0 + 30 * MIN);
+    // The OS hands over its last fix (29 min) first, then a fresh one.
+    appendPoints(db, t.id, [
+      { ts: T0 + 29 * MIN, lat: HOME.lat + 0.0004, lng: HOME.lng, accuracy: 8, speed: 3 },
+      { ts: T0 + 30 * MIN + 5_000, lat: HOME.lat + 0.0005, lng: HOME.lng, accuracy: 8, speed: 3 },
+    ]);
+    expect(lastMoveAt(db, getTrip(db, t.id)!)).toBeGreaterThanOrEqual(T0 + 30 * MIN);
+  });
+
   it('after Resume from a Personal stop, the stop counts from the resume', () => {
     const t = startTrip(db, 'work', T0);
     appendPoints(db, t.id, [...[1, 2].map((m, i) => ({ ts: T0 + m * MIN, ...near(i), speed: 0 }))]);

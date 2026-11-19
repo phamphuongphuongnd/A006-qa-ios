@@ -69,6 +69,9 @@ export function appendPoints(db: AppDb, tripId: string, points: PointInput[], op
     let ref: { lat: number; lng: number } | null = resumed ? null : (lastStored ?? null);
     const kept: PointInput[] = [];
     for (const p of points) {
+      // B-135: the first fix after Continue / Resume can be the OS's cached one from before the tap — it would date the
+      // new segment (and the stop) back before the tap: the trip ended a minute early, "ended at" before it continued.
+      if (resumed && p.ts < (trip.lastPointAt ?? 0)) continue;
       if (isStationaryFix(ref, p, opts)) continue;
       kept.push(p);
       ref = p;
