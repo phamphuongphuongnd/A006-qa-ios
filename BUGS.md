@@ -539,7 +539,8 @@
   `trip/active.tsx` — gpsDialog / shortDialog / endSheet ở vị trí con khác nhau trong 2 nhánh (còn chuyến / hết chuyến) → đổi nhánh thì React gỡ rồi
   dựng lại Sheet (RN Modal) đang mở, iOS từ chối mở Modal khi cái cũ đang đóng. Android không bị. Sửa: key cố định cho 3 lớp phủ (giữ nguyên khi đổi
   nhánh); "Keep" của B-107 mở Sheet sau khi Dialog đóng (iOS trễ 400 ms). ✅ iOS lượt 4g (GH Actions 44274943533, phiên C/H): P052 SE
-  End trip → tấm "Trip saved" hiện ngay → Save → Home; P091 AX-Large tấm hiện, không treo (Save dưới mép → đã ghim footer ở 805835b, ⏳ iOS chụp lại).
+  End trip → tấm "Trip saved" hiện ngay → Save → Home; P091 AX-Large tấm hiện, không treo (Save dưới mép → đã ghim footer ở 805835b). ✅ iOS lượt 4i (dev 0bf4283, phiên C): P091 SE AX-L lưu được, P041 Pro Max tối ✅;
+  cùng lượt: B-114 v2 ✅ (P091 phân loại trên thẻ Sort), B-95 màn ✅, B-101 ✅, B-122 "45" → $45.00 ✅, 0 crash.
 - [ ] **B-118** 🟠 (QA iOS — phiên H) Câu xin quyền vị trí iOS (app.json) hứa "only while a trip you started is running" / "Recording stops when you end the
   trip" — sai từ khi có chuyến tự động (theo dõi rời chỗ đỗ / vùng 150 m ở nền) → Apple 5.1.1. Sửa: câu mới nói rõ chuyến tự động; câu trong app
   (`trip.permBody`) cũng sửa. Cần build iOS mới mới có hiệu lực. ⏳ Phương xem chữ trước khi nộp.
