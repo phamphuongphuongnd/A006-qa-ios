@@ -124,6 +124,11 @@ bước nhảy tốc độ không khớp activity.
 lẽ ra đặt startAt = 17:35:27. Nghi: kick(foreground=true) từ broadcast nền bị Android 14 chặn FGS → notifyStartFailed (Phương không
 nhớ có thông báo), hoặc JS không được đánh thức / config native chưa đồng bộ sau cài đè 17:24. logcat đã mất. Gợi ý ghi EventLog
 kết quả kick/start. Đã báo điều phối.
+  **Tái hiện 19/11 09:12 (Phương bật BT xe, app ở nền) — nguyên nhân chắc:** `logcat-1119-bt-start-failed.txt`:
+  09:12:52.735 "Background started FGS: Allowed … TripDetectTaskService (uidState RCVR)" → 09:12:52.790 W ActivityManager
+  "**Foreground service started from background can not have location/camera/microphone access**: service …TripDetectTaskService"
+  → 09:12:55 thông báo `trip-auto-start-failed` "Driving? Tap to record this trip — Your phone didn't let the trip start on its own."
+  Hướng sửa (điều phối chọn): BT nối chỉ "sẵn sàng" + lùi giờ start về lúc BT nối khi AR báo driving; hoặc CompanionDeviceManager.
 **Bluetooth van "chỉ bật chuyến 1 lần":** 18/11 van kết nối 17:35/17:36/17:49/17:50/17:57 (rớt-nối liên tục) — chuyến đã chạy từ
 17:46 nên không bật thêm (đúng). Sáng 19/11 **không có bt_connected nào** (van không nối với máy) → BT không thể bật chuyến; chuyến
 sáng do Phương Start tay 07:24, driving enter 07:34. 22:53–23:10 có "other device" (B-121 ẩn tên ✅).
