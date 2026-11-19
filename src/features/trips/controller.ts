@@ -4,7 +4,7 @@
  */
 import { eq } from 'drizzle-orm';
 import * as Location from 'expo-location';
-import { Linking, Platform } from 'react-native';
+import { AppState, Linking, Platform } from 'react-native';
 
 import { db } from '@/db/client';
 import type { TripRow } from '@/db/schema';
@@ -27,6 +27,7 @@ import type { Scope, TripStartedBy } from '@/domain/types';
 import { t } from '@/i18n';
 import { refreshWidgets } from '@/features/widgets/refresh';
 
+import { allowBackgroundLocationStart } from './auto/native';
 import { rebuildStops, setTripScope } from './auto/repo';
 import { syncTripActive } from './auto/sync';
 import './backgroundTask';
@@ -68,6 +69,8 @@ export async function needsBackgroundStep(): Promise<boolean> {
 }
 
 async function beginRecording() {
+  // A13-13: an automatic start from Van Bluetooth / activity recognition runs with no screen open.
+  if (AppState.currentState !== 'active') allowBackgroundLocationStart();
   await Location.startLocationUpdatesAsync(TRIP_TASK, {
     accuracy: Location.Accuracy.BestForNavigation,
     timeInterval: 5_000,

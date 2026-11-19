@@ -13,6 +13,7 @@ import android.os.BatteryManager
 import android.os.Build
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.ActivityRecognition
+import expo.modules.location.AppForegroundedSingleton
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.modules.Module
@@ -143,6 +144,22 @@ class TripDetectModule : Module() {
     }
 
     Function("getRecentEvents") { sinceMs: Double -> EventLog.read(context, sinceMs.toLong()) }
+
+    /**
+     * A13-13 (Android 14, van Bluetooth with the app closed): expo-location refuses `startLocationUpdatesAsync` with a
+     * foreground service unless an activity is on screen — even when Android itself allows it (the receiver's start
+     * exemption + "Allow all the time"). With background location granted, tell it the app may start one now; Android
+     * still has the last word (a refusal throws → "Tap to record"). False without background location.
+     */
+    Function("allowBackgroundLocationStart") {
+      val bg = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
+      if (bg) AppForegroundedSingleton.isForegrounded = true
+      bg
+    }
+
+    /** Diagnostics: what the JS task decided (e.g. an automatic start and why it failed), next to the signals. */
+    Function("log") { kind: String, extra: Map<String, Any?> -> EventLog.add(context, kind, extra) }
 
     Function("clearEvents") { EventLog.clear(context) }
 

@@ -1,6 +1,6 @@
 // Runs the automatic-trip engine against the DB: called by the headless task "SundayTripDetect" (native receivers),
 // on app start / foreground, and after the S-07d switch changes. Never throws.
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 import { db } from '@/db/client';
 import { getProStatus } from '@/db/proRepo';
@@ -15,7 +15,7 @@ import { endActiveTrip, startGpsTrip } from '../controller';
 import { formatDistance } from '../format';
 import { classifyTrip } from './classify';
 import { INITIAL_ENGINE_STATE, MIN_AUTO_TRIP_M, step, type EngineSignal, type EngineState } from './engine';
-import { configureNative, hasActivityPermission, isCharging, isSamsung, nativeHealth, readSignals, scheduleWake, setTransitions } from './native';
+import { configureNative, hasActivityPermission, isCharging, isSamsung, logDiagnostic, nativeHealth, readSignals, scheduleWake, setTransitions } from './native';
 import { syncIosBackstops } from './backstop';
 import {
   isPresented,
@@ -113,7 +113,10 @@ async function runOnce(now: number) {
         try {
           const row = await startGpsTrip({ startedBy: 'auto', at: a.at, askNotifications: false });
           if (row.startedBy === 'auto' && row.startedAt === a.at) seedDeparture(row.id, a.at, signals);
-        } catch {
+          logDiagnostic('start_ok', { reason: a.reason, at: a.at, screen: String(AppState.currentState) });
+        } catch (e) {
+          // A13-13: say why in "Share trip diagnostics" — the next drive tells for sure.
+          logDiagnostic('start_failed', { reason: a.reason, at: a.at, screen: String(AppState.currentState), error: String((e as Error)?.message ?? e).slice(0, 200) });
           await notifyStartFailed();
         }
         break;

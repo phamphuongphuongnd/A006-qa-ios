@@ -19,4 +19,6 @@ dependencies {
   implementation 'com.facebook.react:react-android'
   // Same artifact expo-location already ships (ActivityRecognitionClient).
   implementation 'com.google.android.gms:play-services-location:21.0.1'
+  // A13-13: lift expo-location's "app must be on screen" guard for a background trip start (see TripDetectModule).
+  implementation project(':expo-location')
 }

@@ -64,6 +64,28 @@ export function watchDeparture(lat: number, lng: number) {
   }
 }
 
+/**
+ * A13-13: an automatic start (Van Bluetooth / activity recognition) runs with no screen open; expo-location refuses
+ * that unless told otherwise. Android only, needs "Allow all the time".
+ */
+export function allowBackgroundLocationStart() {
+  if (Platform.OS !== 'android') return;
+  try {
+    TripDetect?.allowBackgroundLocationStart?.();
+  } catch {
+    // older native build: the start fails as before and "Tap to record" shows
+  }
+}
+
+/** A diagnostics line next to the signals ("Share trip diagnostics"), e.g. how an automatic start went. */
+export function logDiagnostic(kind: string, extra: Record<string, string | number | boolean | null>) {
+  try {
+    TripDetect?.log?.(kind, extra);
+  } catch {
+    // best effort
+  }
+}
+
 export function cancelWake() {
   try {
     TripDetect?.cancelWake?.();

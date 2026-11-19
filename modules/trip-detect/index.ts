@@ -52,6 +52,10 @@ interface TripDetectNative {
   startSampling(intervalMs: number): Promise<void>;
   stopSampling(): Promise<void>;
   getRecentEvents(sinceMs: number): TripSignal[];
+  /** Android: let expo-location start its foreground service while no screen is open (needs background location). */
+  allowBackgroundLocationStart?(): boolean;
+  /** Android: add a diagnostics line to the signal log. */
+  log?(kind: string, extra: Record<string, string | number | boolean | null>): void;
   clearEvents(): void;
   isCharging(): boolean;
   watchPower(on: boolean): void;
