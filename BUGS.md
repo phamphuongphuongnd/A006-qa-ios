@@ -318,9 +318,9 @@
   long for this period. Pick a shorter period, or use the CSV." Test `reports.test.ts` "SPE-6". ⏳ phiên D thử lại 2 năm + 20k.
 - [x] **B-77** 🟡 (QA A37-3, phiên A) Home "Recent" ghi "Sun 10:23" cho khoản từ nhiều tuần trước. Sửa: `entryWhen` (`features/entries/format.ts`) —
   trong 6 ngày ghi thứ + giờ, cũ hơn ghi "25 Oct 10:23" (khác năm thêm năm); `EntryRow`. (+ MOD-5: tiêu đề ngày Entries thêm năm khi khác năm nay.)
-- [ ] **B-78** 🟡 (QA A37-4/A37-5, phiên A) Chữ 200% + 320dp ở Reports: thẻ "N entries … aren't sorted yet" bẻ chữ 1 từ/dòng, huy hiệu cắt "99+";
+- [x] **B-78** 🟡 (QA A37-4/A37-5, phiên A) Chữ 200% + 320dp ở Reports: thẻ "N entries … aren't sorted yet" bẻ chữ 1 từ/dòng, huy hiệu cắt "99+";
   Income/Expenses/Profit bị cắt bên phải. Sửa (`reports.tsx`): thẻ `flexWrap` (nút "Sort now" xuống dòng, chữ `minWidth 150`, huy hiệu co theo
-  chữ); hàng tổng `flexWrap` (số xuống dưới nhãn khi không vừa).
+  chữ); hàng tổng `flexWrap` (số xuống dưới nhãn khi không vừa). ✅ phiên A (a3a1f6b): thẻ xuống dòng, nút Sort now hàng riêng, "99+" đủ.
 - [x] **B-79** 🟡 (QA MOD-8, phiên F) Home "2037 entries to sort" thiếu dấu phẩy nghìn. Sửa: `formatCount`.
 - [x] **B-80** 🟡 (QA SPE-4, phiên D) Khôi phục file có cài đặt sai kiểu (`region: "ZZ"`, `mileageRates: "x"`, `notify: null`…) → Miles / Reports /
   Notifications / có lúc Settings sập mỗi lần mở (không vào được Backup để sửa). Sửa: `saneSetting` (`db/settingsRepo.ts`) — mỗi khoá kiểm
@@ -484,11 +484,12 @@
   (A13 đạt vì danh sách đang ở đầu). Sửa lần 2: so số khoản khi Entries hiện lại (useIsFocused) rồi mới cuộn. Phiên B (07f4aac): vẫn chỉ cuộn được
   một đoạn (dòng phía trên chưa đo) → lần 3: `scrollToIndex(0)` không hiệu ứng, lặp lại sau 400 ms. ✅ phiên B (ef470b7, API 26): cả 3 đường (FAB+✓,
   FAB+Save, Home) với danh sách đã cuộn ~4 trang → TODAY + khoản mới ở đầu; A13 (07f4aac) ✅.
-- [ ] **B-110** 🟡 (QA A37-8/A37-9, phiên A — 320dp + chữ 200%) Reports: "Profit" cắt "−$1,073,09…", "By tax form line" bẻ chữ từng âm tiết + cắt số,
+- [x] **B-110** 🟡 (QA A37-8/A37-9, phiên A — 320dp + chữ 200%) Reports: "Profit" cắt "−$1,073,09…", "By tax form line" bẻ chữ từng âm tiết + cắt số,
   "Expenses by category" cắt tên còn "Eq..". Sửa: số tiền xuống dòng dưới nhãn khi không đủ chỗ (bỏ adjustsFontSizeToFit), tên danh mục 2 dòng,
   số + % xuống dòng. ❌ phiên A (19daeae, P004): flexWrap không ăn trên Android — vẫn bẻ âm tiết, "100.0%" / "Sched…" cắt, Profit gãy
   giữa số. **v2:** `useStackedRows` (rộng / fontScale < 240) → nhãn và số xếp 2 dòng; `FitFigure` co số cho vừa thẻ (Thu / Chi / Profit / dòng thuế /
-  Mileage); danh mục: tên, rồi số + %; nhãn SA103/Schedule C xuống dưới tiêu đề. 949 test xanh. ⏳ phiên A chụp lại P004.
+  Mileage); danh mục: tên, rồi số + %; nhãn SA103/Schedule C xuống dưới tiêu đề. 949 test xanh. ✅ phiên A (a3a1f6b, P004 320dp + chữ 2.0, 13 ảnh `recheck-a3a1f6b/`): không cắt, không bẻ âm tiết,
+  Profit 1 dòng; phone chữ 1.3 giữ bố cục 1 hàng.
 - [x] **B-111** 🟡 (QA A13, phiên E) Backup & restore hiện "Backup folder, Google Drive — not reachable" nhưng không rõ lỗi thật hay nhãn sai; "Back up now"
   chỉ mở bảng chia sẻ nên không kiểm được. Bước 1: file chẩn đoán (giữ lâu Version) có mục `backup` (provider, nightly, failCount, lastError, kết quả
   liệt kê thư mục + câu lỗi thật) — không đổi cài đặt. **Kết quả (phiên E, 3f26b33):** provider Google Drive, probe `folder gone` → thư mục Drive đã chọn
@@ -614,4 +615,6 @@
   thật > 1–2 phút → hạ GPS (BALANCED hoặc 30–60 s), xe chạy lại ("driving" / điểm xa > 100 m) → về 5 s. Rủi ro: hụt vài chục mét đầu khi xe lăn bánh. **Phương duyệt 19/11.**
   Sửa (Android): `gpsPower.ts` `gpsModeFor` (không di chuyển thật ≥ 2 phút và cảm biến không báo lái → 'parked'), `syncGpsMode` đổi tham số GPS (High,
   30 s) / về BestForNavigation 5 s; gọi từ task GPS (≤ 20 s/lần) và sau mỗi lượt engine; nhật ký `gps_mode`. 953 test xanh. ⏳ phiên E đo A13.
+- [ ] **B-132** 🟡 (QA A37-10, phiên A — a3a1f6b) Reports: "1620 entries in this period aren't sorted yet" thiếu dấu phẩy nghìn (như B-79 ở Home).
+  Gốc: `reports.tsx` truyền `report.unsortedCount` thô vào `t('reports.unsortedWarn')`.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
