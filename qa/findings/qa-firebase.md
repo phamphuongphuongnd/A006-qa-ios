@@ -95,6 +95,29 @@ dùng thử nội bộ, không qua store). Bằng chứng: `qa-runs/firebase/r2-
   Chưa xác định được; chỉ thấy trên đúng 1 mẫu máy thật. Đề xuất thử thêm `inputMode="decimal"` và kiểm trên Pixel thật
   nếu có; Test Lab không cho đọc phiên bản Gboard trong logcat.
 
+### B-126 v2 — mọi ô số (commit c0e9e5b `NUMERIC_INPUT`), APK 0bf4283, Pixel 11 thật — ✅ bàn phím số ở cả 4 ô
+- 2026-11-19, `robo-uk-keyboard2.json`, matrix-lkivf2n8lfsaa SUCCESS, ảnh `numeric-0bf4283/cubs-37/artifacts/`.
+- `dumpsys input_method` (logcat Robo) từng ô đang focus — tất cả `inputType=0x282002` (NUMBER|DECIMAL), Gboard số:
+  | Ô | imeOptions | Ảnh |
+  |---|---|---|
+  | Ghi nhanh (capture) | 0x6 | `10.png` |
+  | Sửa khoản → ô số tiền (`entry/[id].tsx`) | 0x8000006 | `15.png` |
+  | Thẻ Sort → Edit → Amount (`SortEntryCard.tsx`) | 0x8000006 | `19.png` |
+  | Settings → Mileage rates → ô "First 10,000 mi in a tax year" (`Field`) | 0x4000006 | `22–23.png` |
+- ⏭ chưa kiểm: ô tỷ giá đổi vùng (settings.tsx:448), Split các phần, phí đỗ xe (ParkingField) — script không tới.
+
+### 🟠 F-3 — Thẻ Sort → Edit → chạm Amount: thẻ tự cuộn xuống cuối, ô Amount, Note và nút Done ra khỏi tầm nhìn
+- Máy: Pixel 11 thật (Android 17), APK 0bf4283 — `numeric-0bf4283/cubs-37/artifacts/17.png` (thẻ), `18.png` (Edit:
+  Amount / Note / Date + Done), `19.png` (sau khi chạm Amount: bàn phím số hiện, nhưng thẻ đã cuộn tới "Date · MOST
+  USED · Work/Personal" — Amount, Note, "Edit · Done" không thấy).
+- Bước: Sort → thẻ khoản → Edit → chạm ô Amount.
+- Kỳ vọng: ô đang gõ (Amount) và nút Done vẫn thấy phía trên bàn phím.
+- Thực tế: người dùng gõ số tiền mà không thấy số mình gõ; muốn bấm Done phải tự cuộn lên trong thẻ.
+- Nguyên nhân gốc (đọc code): khi `keyboardUp && open` thẻ luôn `scrollToEnd()` — `src/features/entries/SortEntryCard.tsx:70-73`
+  (useEffect) và `:113-114` (onLayout). Cách này dành cho Split (B-38: thấy "Left to assign" / "Split & sort") nhưng
+  `open` cũng đúng với `mode === 'edit'`. Gợi ý: chỉ `scrollToEnd` khi `mode === 'split'`; với 'edit' cuộn tới ô đang
+  focus (hoặc không cuộn) + test. Không do c0e9e5b gây ra (chỉ thêm cờ bàn phím); các lượt trước Robo chưa chạm ô này.
+
 ### Quan sát chưa thành lỗi (không báo PASS/FAIL)
 - Máy ảo Android 8.0: "Photo → Choose from library" mở trình chọn ảnh của Google Play services → "Something went wrong"
   (`SmallPhone.arm-26/artifacts/52.png`). Có thể do ảnh máy ảo thiếu module chọn ảnh; S26/Pixel 11 (trình chọn hệ thống)
