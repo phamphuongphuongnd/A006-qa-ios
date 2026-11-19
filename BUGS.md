@@ -498,7 +498,7 @@
 - [x] **B-112** 🟡 (QA A13, phiên E, bản 2ac9e15) Hoá đơn FreshHarvest 2019 (B-108 giờ điền ngày cũ) hiện chip ngày "Wed 20 Nov, 11:09" — không có năm,
   dễ tưởng là tuần này trong khi khoản vào năm thuế 2019. Sửa: `dateTimeLabel` ghi năm khi khác năm hiện tại ("Wed 20 Nov 2019, 11:09") — chip Ghi nhanh
   + dòng Date & time ở Sửa khoản. ✅ A13 (3f26b33): chip ngày hiện năm.
-- [ ] **B-113** 🟠 (QA A13-10, phiên E, bản 3f26b33 — dữ liệu thật) Có khoản "FreshHarvest Market −£21.74, **Fri 20 Nov 2020**, 11:09" (hoá đơn ghi 2019) mà
+- [x] **B-113** 🟠 (QA A13-10, phiên E, bản 3f26b33 — dữ liệu thật) Có khoản "FreshHarvest Market −£21.74, **Fri 20 Nov 2020**, 11:09" (hoá đơn ghi 2019) mà
   phiên E không bấm Save (nháp trước đó đã Discard lúc 14:41). Kiểm: Discard chỉ xoá nháp, không tạo khoản; 2 đường tạo khoản ở Ghi nhanh là Save và phím
   ✓ bàn phím số (B-98); cả 2 lần OCR FreshHarvest trong chẩn đoán ra 20/11/**2019**; khoản không có trong backup 14:28. Phiên E đã xoá khoản (mất
   createdAt). Phiên E trả lời: khoản tạo trong 14:28–15:19; script của E chạm theo **toạ độ cố định** trên Ghi nhanh ((95,165) "X", (185,1745)
@@ -506,7 +506,7 @@
   Save; một khoản Tesco £55.30 lúc 15:08 cũng tự lưu sau chuỗi chạm y hệt. **Kết luận tạm: nghi do script chạm mù, không phải người dùng** — chưa tái
   hiện được bằng thao tác người; để mở theo dõi (gặp lại: chụp màn + chẩn đoán trước khi xoá). Phiên E bỏ chạm theo toạ độ (luật xưởng: chờ chữ rồi bấm).
   Phương tự bấm (ef470b7, 16:30–16:51): nháp FreshHarvest khôi phục sau khi app bị tắt (£21.74, nơi bán, ảnh, "20 Nov 2019") → X → Discard → không
-  có khoản nào được lưu; FreshHarvest Save thường lưu đúng 2019. **Không tái hiện bằng tay** → đề xuất đóng là do script (chờ Phương duyệt).
+  có khoản nào được lưu; FreshHarvest Save thường lưu đúng 2019. **Không tái hiện bằng tay.** **Đóng 19/11:** Phương nhớ có thể chính mình sửa năm 19 → 20 — không phải lỗi app.
 - [x] **B-114** 🟠 (QA OLD-13, phiên B — 3f26b33, API 26, 360×640dp, chữ 2.0) Tab Sort: thẻ bị ép còn ~2px (header "Sort your wee/k" bẻ giữa chữ cạnh
   List view + chip tuần + thanh tiến độ chiếm hết chiều cao) → không thấy / không dùng được thẻ; List view vẫn sort được. Chữ 1.3–1.7 ổn. Gốc: chế độ
   cuộn (MOD-11) chỉ bật khi cửa sổ < 520dp, không tính cỡ chữ. Sửa: tính theo dp ÷ cỡ chữ, thẻ cao 360 × cỡ chữ (≤ 1.6), List view xuống dòng dưới
