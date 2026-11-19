@@ -184,6 +184,8 @@ export const en = {
     backupNever: "You haven't backed up yet. It's kept on this phone.",
     backupNow: 'Back up now',
     splitTitle: 'Split {amount}',
+    discardSplitTitle: 'Discard this split?',
+    discardSplitBody: 'The entry stays as it is.',
     splitReceiptAll: 'receipt goes on every part',
     part: 'Part {n}',
     removePart: 'Remove part',

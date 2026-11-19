@@ -1,4 +1,4 @@
-import { digitIgnored, evaluate, exprMinor, exprOf, formatExpr, legacyToPlain, pushOp, sanitizeAmount, sanitizeExpr } from '../calc';
+import { digitIgnored, evaluate, moneyLimitHit, exprMinor, exprOf, formatExpr, legacyToPlain, pushOp, sanitizeAmount, sanitizeExpr } from '../calc';
 
 describe('sanitizeAmount (B-133)', () => {
   it('reads like Quick add', () => {
@@ -12,6 +12,13 @@ describe('sanitizeAmount (B-133)', () => {
   });
   it('a dropped digit is noticed', () => {
     expect(digitIgnored('123456', '1234567', sanitizeAmount('1234567'))).toBe(true);
+  });
+  it('OLD-19: "Max" only for the 999,999.99 limit, not a third decimal or a big count', () => {
+    expect(moneyLimitHit('123456', '1234567', sanitizeAmount('1234567'))).toBe(true);
+    expect(moneyLimitHit('12.34', '12.345', sanitizeAmount('12.345'))).toBe(false);
+    expect(moneyLimitHit('123456.78', '123456.789', sanitizeAmount('123456.789'))).toBe(false);
+    expect(moneyLimitHit('5*1234', '5*12345', sanitizeExpr('5*12345'))).toBe(false);
+    expect(moneyLimitHit('5+123456', '5+1234567', sanitizeExpr('5+1234567'))).toBe(true);
   });
 });
 

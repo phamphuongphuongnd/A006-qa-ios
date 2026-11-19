@@ -629,16 +629,20 @@
   Gốc: `reports.tsx` truyền `report.unsortedCount` thô vào `t('reports.unsortedWarn')`.
   Sửa chung: `t()` nhóm nghìn cho tham số đếm (`count`, `total`, `done`) — mọi câu "N entries / trips" trong app; năm, phút không đổi + test.
   955 test xanh. ⏳ máy.
-- [ ] **B-133** 🟠 (QA OLD-18, phiên B — a3a1f6b API 26) Tách khoản (thẻ Sort → Split; cũng màn Split, Sort → Edit, luật min/max): ô số không đọc như Ghi nhanh
+- [x] **B-133** 🟠 (QA OLD-18, phiên B — a3a1f6b API 26) Tách khoản (thẻ Sort → Split; cũng màn Split, Sort → Edit, luật min/max): ô số không đọc như Ghi nhanh
   (B-122) — "33,01" thành "3301" (£3,267.99 over), "33.011" tính 0, "12345678" nhận hết không báo Max (ô 360dp chỉ hiện "345678"); chạm ô Part 1 → thẻ
   cuộn xuống đáy, ô đang gõ khuất. Gốc: các ô tự lọc `v.replace(/[^\d.]/g, '')` (bỏ dấu phẩy, không giới hạn), thẻ Split luôn `scrollToEnd` (B-38).
   Sửa: `sanitizeAmount` (calc.ts, như Ghi nhanh: "," = ".", 2 số lẻ, 999,999.99) + test cho thẻ Split, Sort Edit, màn Split, luật min/max; dòng
-  "Max …" (`MaxAmountNote`); thẻ Split cuộn tới ô đang gõ (vị trí hàng), chưa chạm ô nào thì như cũ. 957 test xanh. ⏳ phiên B.
-- [ ] **B-134** 🟡 (QA OLD-17a/b, phiên B) (a) Reports 360dp chưa cuộn: nút + đè chữ "until" ở dòng phụ thẻ vehicle; (b) phí đỗ xe: đang gõ thì thanh tính che
+  "Max …" (`MaxAmountNote`); thẻ Split cuộn tới ô đang gõ (vị trí hàng), chưa chạm ô nào thì như cũ. 957 test xanh. ✅ phiên B (f3795bf, API 26): thẻ Split + màn Split + Sort Edit đúng, cuộn
+  tới ô đang gõ. ⏭ luật min/max (cần Pro).
+- [x] **B-134** 🟡 (QA OLD-17a/b, phiên B) (a) Reports 360dp chưa cuộn: nút + đè chữ "until" ở dòng phụ thẻ vehicle; (b) phí đỗ xe: đang gõ thì thanh tính che
   dòng Max; đóng bàn phím thanh tính vẫn còn → "Parking & tolls £…" hiện 2 lần; (c) Add trip có phí đỗ xe → X đóng luôn, không hỏi "Discard?".
   Sửa: (a) chữ thẻ vehicle chừa lề phải cho nút + khi màn < 420dp; (b) bàn phím đóng = hết sửa phí (ẩn thanh tính), thanh tính có "Max …";
-  (c) TripForm báo `onDirtyChange` → Add trip hỏi "Discard this trip?" khi đã gõ gì (kể cả phí). ⏳ phiên B.
+  (c) TripForm báo `onDirtyChange` → Add trip hỏi "Discard this trip?" khi đã gõ gì (kể cả phí). ✅ phiên B (f3795bf): a, b, c đều đạt.
 - [ ] **B-135** 🟡 (A13 phiên E, a3a1f6b) Continue trip lúc 11:28:52 → chuyến tự kết thúc 11:37:50 (sớm ~1 phút so với Merge stops 10 phút) và hiện "Trip ended at
   11:27" — trước cả lúc bấm Continue. Gốc: fix đầu tiên sau Continue là vị trí cũ hệ thống giữ (giờ 11:27:50) → lưu làm đầu đoạn mới → mốc đỗ lùi.
   Sửa: `appendPoints` sau Continue / Resume bỏ fix có giờ trước mốc bấm + test (`lastMoveAt.test.ts`). 958 test xanh. ⏳ A13.
+- [ ] **B-136** 🟡 (QA OLD-19, phiên B — f3795bf) Gõ số lẻ thứ 3 ("12.34" rồi "5") hiện "Max £999,999.99" — sai nghĩa (tiền lưu vẫn đúng); màn Split riêng gõ
+  số rồi X đóng luôn, không hỏi. Sửa: `moneyLimitHit` (chỉ khi chữ số bị bỏ ở phần nguyên của số tiền, không phải số lẻ / số nhân) + test; màn Split hỏi
+  "Discard this split?" khi đã đổi. ⏳ máy.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.

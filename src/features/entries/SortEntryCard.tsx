@@ -13,7 +13,7 @@ import { receiptUri } from '@/files/receipts';
 import { t } from '@/i18n';
 import { useLive } from '@/state/useLive';
 import { fonts, radius, useTheme } from '@/theme';
-import { digitIgnored, sanitizeAmount } from '@/features/ocr/calc';
+import { moneyLimitHit, sanitizeAmount } from '@/features/ocr/calc';
 import { MaxAmountNote } from '@/features/ocr/ui';
 import { Button, Card, Chip, Divider, NUMERIC_INPUT, Segmented, Tag, Txt, useKeyboardUp } from '@/ui';
 
@@ -300,7 +300,7 @@ function EditPanel({ entry, onDone }: { entry: EntryListItem; onDone: () => void
             onChangeText={(v) => {
               // B-133: reads like Quick add ("33,01" = 33.01, 999,999.99 at most).
               const next = sanitizeAmount(v);
-              setAtLimit(digitIgnored(amount, v, next));
+              setAtLimit(moneyLimitHit(amount, v, next));
               setAmount(next);
               setError(false);
             }}
@@ -402,7 +402,7 @@ function SplitPanel({
                 onChangeText={(v) => {
                   // B-133: reads like Quick add ("33,01" = 33.01, 999,999.99 at most).
                   const next = sanitizeAmount(v);
-                  setAtLimit(digitIgnored(p.text, v, next));
+                  setAtLimit(moneyLimitHit(p.text, v, next));
                   update(p.key, { text: next });
                 }}
                 // B-133: keep the part being typed in view (the card used to scroll to its end and hide it).

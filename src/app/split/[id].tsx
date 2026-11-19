@@ -20,9 +20,9 @@ import { receiptUri } from '@/files/receipts';
 import { t } from '@/i18n';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, radius, useTheme } from '@/theme';
-import { digitIgnored, sanitizeAmount } from '@/features/ocr/calc';
+import { moneyLimitHit, sanitizeAmount } from '@/features/ocr/calc';
 import { MaxAmountNote } from '@/features/ocr/ui';
-import { Button, Card, EmptyState, IconButton, NUMERIC_INPUT, ReceiptThumb, Segmented, Txt } from '@/ui';
+import { Button, Card, Dialog, EmptyState, IconButton, NUMERIC_INPUT, ReceiptThumb, Segmented, Txt } from '@/ui';
 
 interface Part {
   key: number;
@@ -58,6 +58,9 @@ function SplitEditor({ entry }: { entry: EntryRow }) {
     defaultSplit(total, 2).map((m, i) => ({ key: i, text: toDecimalString(m), categoryId: null, scope: entry.scope, note: entry.note })),
   );
   const [picking, setPicking] = useState<number | null>(null);
+  // QA OLD-19 note: X after typing asks first, like Add trip / Quick add.
+  const [initialParts] = useState(() => JSON.stringify(parts));
+  const [askDiscard, setAskDiscard] = useState(false);
   const data = useLive(
     () => ({ receipts: listReceipts(db, entry.id), cats: listCategories(db, { includeHidden: true }) }),
     [entry.id],
@@ -93,7 +96,11 @@ function SplitEditor({ entry }: { entry: EntryRow }) {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: Platform.OS === 'ios' ? 8 : insets.top }}>
       <View style={[styles.top, { paddingHorizontal: GUTTER }]}>
-        <IconButton icon={X} label={t('common.close')} onPress={() => router.back()} />
+        <IconButton
+          icon={X}
+          label={t('common.close')}
+          onPress={() => (JSON.stringify(parts) !== initialParts ? setAskDiscard(true) : router.back())}
+        />
         <Txt v="h3" accessibilityRole="header">
           {t('sort.splitTitle', { amount: formatMoney(total, currency) })}
         </Txt>
@@ -135,7 +142,7 @@ function SplitEditor({ entry }: { entry: EntryRow }) {
                     onChangeText={(v) => {
                       // B-133: reads like Quick add ("33,01" = 33.01, 999,999.99 at most).
                       const next = sanitizeAmount(v);
-                      setLimitKey(digitIgnored(p.text, v, next) ? p.key : null);
+                      setLimitKey(moneyLimitHit(p.text, v, next) ? p.key : null);
                       update(p.key, { text: next });
                     }}
                     keyboardType="decimal-pad"
@@ -222,6 +229,23 @@ function SplitEditor({ entry }: { entry: EntryRow }) {
           if (picking !== null) update(picking, { categoryId: cid });
           setPicking(null);
         }}
+      />
+      <Dialog
+        visible={askDiscard}
+        onClose={() => setAskDiscard(false)}
+        title={t('sort.discardSplitTitle')}
+        body={t('sort.discardSplitBody')}
+        actions={[
+          { label: t('common.keepEditing'), onPress: () => setAskDiscard(false) },
+          {
+            label: t('common.discard'),
+            variant: 'danger',
+            onPress: () => {
+              setAskDiscard(false);
+              router.back();
+            },
+          },
+        ]}
       />
     </View>
   );
