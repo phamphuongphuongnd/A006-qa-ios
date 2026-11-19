@@ -682,4 +682,5 @@
 - [x] **B-141** (A13-15, phiên E) Chuyến 11:16 (Phương bấm Start) mất khỏi Miles 11:39–11:52: nằm trong Settings → Recently deleted (4 chuyến 0 km, 3 do phiên E
   xoá lúc 11:08–11:10 theo lời Phương) → bị xoá bằng Delete ở chi tiết chuyến, không phải app tự xoá. Thêm nhật ký `trip_deleted` (delete / discard /
   auto_short) vào chẩn đoán để lần sau biết chắc. 🟡 đề xuất: Recently deleted ghi giờ xoá (hiện chỉ ngày).
+  **Phương xác nhận 19/11: "ừ hình như tôi xóa"** → đóng, không phải lỗi app.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
