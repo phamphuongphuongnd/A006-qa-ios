@@ -87,3 +87,24 @@ Bản build simulator `55db0eb` (chưa có B-96). Gói Appetize miễn phí: m�
   (`Sheet` có sẵn `footer`). P016: bước 16 không chạy (hết giờ persona); P041 không có kết quả (driver).
 - **B-118 ⏭** chưa thấy: hộp xin quyền hệ thống không nằm trong ảnh/cây màn hình của lượt này → kiểm trên Appetize bản cuối
   hoặc iPhone thật.
+
+## B-118 — câu xin quyền trong cấu hình iOS cuối · 2026-11-19
+Kiểm bằng `npx expo config --type introspect` (Info.plist mà prebuild/EAS sinh ra từ dev 45e0b4e; iOS hiện nguyên văn câu này trong hộp xin quyền):
+- ✅ `NSLocationWhenInUseUsageDescription` = "Sunday Sort records the route of your trips to work out your mileage. Your routes stay on your phone."
+- ✅ `NSLocationAlwaysAndWhenInUseUsageDescription` = câu mới (Automatic trips + rời chỗ đỗ) — không còn "only while a trip you started is running".
+- ✅ `NSMotionUsageDescription` đúng; `UIBackgroundModes` = fetch, processing, location.
+- 🟡 Còn câu mặc định của thư viện (iOS 15+ không hiện, nhưng người duyệt App Store đọc được trong Info.plist):
+  `NSLocationAlwaysUsageDescription` = "Allow $(PRODUCT_NAME) to access your location" (chỉ iOS ≤ 10) → nên đặt `locationAlwaysPermission`
+  trong plugin expo-location bằng câu Always mới; `NSLocationTemporaryUsageDescriptionDictionary` (app không gọi xin vị trí chính xác tạm thời → không hiện);
+  `NSLocalNetworkUsageDescription` "Expo Dev Launcher…" do `expo-dev-client` nằm trong dependencies (không hiện ở bản release).
+- ⏭ Hình hộp xin quyền thật: xem lại trên Appetize bản cuối (không bắt buộc — chuỗi đã đúng).
+- Lỗ hổng test iOS còn lại không cần iPhone: `16_end_trip` chỉ đặt 1 điểm GPS → chuyến 0.0 mi; chưa thử chuyến **có quãng đường** trên iOS
+  (Maestro `travel` chạy tuyến giả trên simulator: ghi GPS nền, quãng đường, điểm đầu chỗ đỗ, thức khi rời vùng 150 m). CoreMotion không có trên simulator → dò lái tự động vẫn cần iPhone thật.
+
+## Chuyến có quãng đường trên iOS (17_gps_trip, run 44455496596, dev 0bf4283) · 2026-11-19
+- ✅ P022 (SE): đoạn 1 (app mở) 1.3 mi → đoạn 2 (app ở nền) cộng đủ → "Trip saved · 2.5 mi" → Save. **GPS ghi nền trên iOS chạy.**
+- P092 (Pro Max) chỉ 1.4 mi (QI-5) = **lỗi kịch bản, không phải app**: Maestro `travel` không giữ `speed: 20` trên simulator CI —
+  thời gian thật (commands.json): P022 đoạn 1 68 s / đoạn 2 72 s (~30 m/s); P092 đoạn 1 42 s (2,15 km → 51 m/s, được tính),
+  đoạn 2 33 s (1,98 km → **~60 m/s ≈ 134 mph**). `walkTrack` bỏ điểm nhanh hơn `MAX_SPEED_MPS` = 56 m/s (125 mph, lọc GPS nhảy)
+  → cả đoạn 2 bị bỏ, đường vẽ = đoạn 1 — đúng như ảnh. App làm đúng.
+- Sửa kịch bản: `speed: 10` (dư 5 lần dưới ngưỡng dù simulator chạy nhanh gấp đôi) rồi chạy lại P092 để đóng QI-5.

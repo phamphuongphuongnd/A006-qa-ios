@@ -19,6 +19,7 @@ import type { ParsedReceipt } from '@/features/ocr/parseReceipt';
 import { attachReadings, ocrAvailable, ocrDev, type PendingRead } from '@/features/ocr/reader';
 import { afterSave, undoAfterSave } from '@/features/ocr/rulesHook';
 import {
+  AmountLimitHint,
   CalcBar,
   ExprLine,
   FromReceiptTag,
@@ -473,6 +474,7 @@ export default function CaptureScreen() {
               {!noteOpen && !fromReceipt.amount ? <Caret color={caretColor} /> : null}
             </View>
             {fromReceipt.amount ? <FromReceiptTag /> : null}
+            <AmountLimitHint amount={amount} currency={currency} />
           </View>
           {note.trim() && !noteOpen ? (
             <View style={[styles.noteLine, fromReceipt.note && { backgroundColor: colors.sunSoft }]}>

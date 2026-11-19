@@ -162,7 +162,7 @@
   "Trip under 0.1 mi — not saved". — Phương duyệt 2026-11-16 — sửa: `tooShortToKeep` / `MIN_KEPT_TRIP_M` (`src/domain/mileage.ts`),
   `trip/toggle` bỏ chuyến < 0.1 mi bằng `discardTrip` + snackbar `autoTrip.nfcTooShort` + test `mileageRates.test.ts` "tooShortToKeep"
   — thử A13: toggle bật → tắt ngay → "Trip under 0.1 mi — not saved", Miles không có chuyến mới
-- [ ] **B-51** 🟠 Hao pin: trên A13 (app dev, tiến trình chạy từ 12:19) luồng chính chạy 100% CPU (38 phút CPU), GC ~23 MB mỗi
+- [ ] **B-51** (giới hạn đã biết — Phương chấp nhận 19/11, theo dõi sau) 🟠 Hao pin: trên A13 (app dev, tiến trình chạy từ 12:19) luồng chính chạy 100% CPU (38 phút CPU), GC ~23 MB mỗi
   2,3 giây; nút Export trên Reports không phản hồi. simpleperf: vòng lặp `IntentModule.waitForActivityAndGetInitialURL` →
   `onHostResume` → `addLifecycleEventListener` (RN 0.88.1 `Linking.getInitialURL()` khi `currentActivity` = null mà context đang
   RESUMED → mỗi lần resume lại chờ tiếp, không bao giờ dừng). Mở app mới, Back rồi mở lại bằng deep link, Reload dev đều
@@ -245,8 +245,8 @@
   khi tài xế mở app, các tác vụ nền chạy trên schema cũ → điểm GPS / chuyến tự động / sao lưu đêm / widget lỗi âm thầm. Sửa: `src/db/migrate.ts`
   `ensureMigrated()` (chạy 1 lần mỗi runtime, lỗi thì thử lại), `_layout` dùng chung, mọi điểm vào nền `await ensureMigrated()`
   (`backgroundTask.ts` ×3, `nightlyTask.ts`, `widgets/register.ts`). ⏳ thử: cài mới (logcat không còn "no such table") + cập nhật đè.
-- [ ] **B-60** 🟡 (QA OLD-3) 360dp: nút nổi "+" che nửa phải nút "Actual costs" trong thẻ "Choose how you claim your vehicle" (Reports) ở vị trí
-  mặc định; cuộn lên thì bấm được (đệm 100dp). Phương chọn **xếp dọc**: màn < 420dp → 2 nút thành 2 hàng, chừa lề phải 56dp cho nút + (`reports.tsx`). ⏳ thử 360dp.
+- [x] **B-60** 🟡 (QA OLD-3) 360dp: nút nổi "+" che nửa phải nút "Actual costs" trong thẻ "Choose how you claim your vehicle" (Reports) ở vị trí
+  mặc định; cuộn lên thì bấm được (đệm 100dp). Phương chọn **xếp dọc**: màn < 420dp → 2 nút thành 2 hàng, chừa lề phải 56dp cho nút + (`reports.tsx`). ✅ phiên B (a3a1f6b, API 26 360dp): 2 nút xếp dọc, + không che "Actual costs".
 - [x] **B-61** 🟡 (QA phiên A) Ô số tiền: bàn phím số Android có phím "." nhưng app bỏ dấu chấm (kiểu máy tính tiền) → gõ "7.5" ra £0.75,
   "120" ra £1.20. Phương chốt **nhận dấu chấm**: `features/ocr/calc.ts` — toán hạng tiền có dấu chấm = số thập phân (≤ 2 số sau dấu, "," = "."),
   không dấu vẫn kiểu máy tính tiền; toán hạng × ÷ bỏ dấu; test `calc.test.ts` "decimal point". Áp cho Ghi nhanh, Sửa khoản, Parking & tolls. ⏳ thử máy.
@@ -296,8 +296,8 @@
   giữ chốt; "Keep adding" mở chốt sau 300 ms (khi số đã xoá); lỗi giữa chừng thì mở lại. Cùng mẫu đã sửa luôn: thêm chuyến tay (`trip/new.tsx`),
   số đồng hồ (`trip/odometer.tsx` — chốt bằng state không chặn 2 chạm cùng khung hình → thêm ref), khoản lặp lại (`recurring.tsx`, 1 lần lưu mỗi
   lần mở sheet). Luật (`rules.tsx`) đã có kiểm trùng trong DB. ⏳ phiên F thử lại P056 + thử chạm đúp 3 màn kia.
-- [ ] **B-71** 🟡 (QA A13-1, phiên E) Đổi vùng US → UK có quy đổi: ô tỷ giá gợi ý "e.g. 0.79" nhưng nhập sai thì báo "Enter a rate like 1.27"
-  (chuỗi lỗi cố định). Sửa: `settings.tsx` dùng chung ví dụ theo vùng cho gợi ý và lỗi (`rateError` có `{example}`). ⏳ A13.
+- [x] **B-71** 🟡 (QA A13-1, phiên E) Đổi vùng US → UK có quy đổi: ô tỷ giá gợi ý "e.g. 0.79" nhưng nhập sai thì báo "Enter a rate like 1.27"
+  (chuỗi lỗi cố định). Sửa: `settings.tsx` dùng chung ví dụ theo vùng cho gợi ý và lỗi (`rateError` có `{example}`). ✅ phiên B (a3a1f6b): UK→US "e.g. 1.27" / lỗi "like 1.27", US→UK "0.79", tổng Reports không đổi.
 - [x] **B-72** 🟠 (QA OLD-9, hồi quy B-57/B-58 trên 538ede9, phiên B) Android 8 360dp: chế độ gọn đã chạy nhưng số tiền vẫn ~4px và hàng
   + − × ÷ vẫn bị bàn phím che nửa. Gốc: `adjustsFontSizeToFit` của Android tính cỡ chữ 1 lần lúc vùng số còn ~0 (bàn phím đang mở) và không
   phóng lại; bù `insets.bottom` (B-58) là đoán sai. Sửa (`capture.tsx`): cỡ chữ số tiền tính từ chiều cao đo được của vùng số + độ dài chuỗi
@@ -318,9 +318,9 @@
   long for this period. Pick a shorter period, or use the CSV." Test `reports.test.ts` "SPE-6". ⏳ phiên D thử lại 2 năm + 20k.
 - [x] **B-77** 🟡 (QA A37-3, phiên A) Home "Recent" ghi "Sun 10:23" cho khoản từ nhiều tuần trước. Sửa: `entryWhen` (`features/entries/format.ts`) —
   trong 6 ngày ghi thứ + giờ, cũ hơn ghi "25 Oct 10:23" (khác năm thêm năm); `EntryRow`. (+ MOD-5: tiêu đề ngày Entries thêm năm khi khác năm nay.)
-- [ ] **B-78** 🟡 (QA A37-4/A37-5, phiên A) Chữ 200% + 320dp ở Reports: thẻ "N entries … aren't sorted yet" bẻ chữ 1 từ/dòng, huy hiệu cắt "99+";
+- [x] **B-78** 🟡 (QA A37-4/A37-5, phiên A) Chữ 200% + 320dp ở Reports: thẻ "N entries … aren't sorted yet" bẻ chữ 1 từ/dòng, huy hiệu cắt "99+";
   Income/Expenses/Profit bị cắt bên phải. Sửa (`reports.tsx`): thẻ `flexWrap` (nút "Sort now" xuống dòng, chữ `minWidth 150`, huy hiệu co theo
-  chữ); hàng tổng `flexWrap` (số xuống dưới nhãn khi không vừa).
+  chữ); hàng tổng `flexWrap` (số xuống dưới nhãn khi không vừa). ✅ phiên A (a3a1f6b): thẻ xuống dòng, nút Sort now hàng riêng, "99+" đủ.
 - [x] **B-79** 🟡 (QA MOD-8, phiên F) Home "2037 entries to sort" thiếu dấu phẩy nghìn. Sửa: `formatCount`.
 - [x] **B-80** 🟡 (QA SPE-4, phiên D) Khôi phục file có cài đặt sai kiểu (`region: "ZZ"`, `mileageRates: "x"`, `notify: null`…) → Miles / Reports /
   Notifications / có lúc Settings sập mỗi lần mở (không vào được Backup để sửa). Sửa: `saneSetting` (`db/settingsRepo.ts`) — mỗi khoá kiểm
@@ -351,7 +351,7 @@
   thay thư mục ảnh (`restoreFromBackupFile`, `inspectBackupFile`). Test `streamRestore.test.ts`. ⏳ phiên D/B: khôi phục P096 + file độc trên máy.
   Sửa B-85: gốc điều hướng (`app/_layout.tsx`) là cột tối đa 640dp căn giữa trên màn rộng (tablet, Fold mở, xoay ngang); sheet/hộp thoại vẫn
   toàn màn. ⏳ phiên F: Fold mở + xoay ngang, chia đôi màn hình.
-- [ ] **B-88** 🟠 (QA A13-2, phiên E — chạy xe thật tối 17/11) Bản 538ede9, Automatic trips bật, đủ quyền, pin Unrestricted: cả ca **không sinh chuyến
+- [ ] **B-88** (giới hạn đã biết — Phương chấp nhận 19/11, theo dõi sau) 🟠 (QA A13-2, phiên E — chạy xe thật tối 17/11) Bản 538ede9, Automatic trips bật, đủ quyền, pin Unrestricted: cả ca **không sinh chuyến
   tự động nào** (Phương: "chạy chậm, dừng nhiều"). Sao lưu thật sau ca 18/11 08:30: chuyến mới nhất 16/11. Không còn lịch sử tín hiệu để soi (vòng
   `EventLog` 200 dòng native nhiều khả năng bị mẫu 'sample' đè). Nghi: `features/trips/auto/engine.ts` chỉ mở chuyến khi Activity Recognition báo
   'driving' (IN_VEHICLE, mẫu ≥ 75%) — không có dự phòng. Phương: **ô tô**. Phương chọn **nhật ký trước, sửa sau** (2026-11-18): Settings → giữ lâu dòng
@@ -371,7 +371,7 @@
 - [ ] **B-90** 🟠 (QA A37-7, phiên A) Chế độ tối: mọi nút `variant="sun"` chữ vàng trên nền vàng (chỉ thấy viên thuốc trống) — "Sort first" (Export có khoản
   chưa sort), "End trip" (Home khi đang có chuyến), "Back up now"/"Choose again", "Subscribe now"/"Try free", "See Pro", Save chi tiết chuyến, "Always"…
   Gốc: `ui/Button.tsx` `sun: { fg: 'primary' }`, mà ở theme tối `primary` = `sun` = #F5B841. Sửa: chữ dùng token `onSun` có sẵn (sáng #18202F, tối
-  #12161C). ⏳ phiên A: chụp lại 2 màn trên ở chế độ tối.
+  #12161C). ✅ iOS lượt 4d + 4g (phiên C, tối). ⏳ phiên A: chụp lại 2 màn trên ở chế độ tối (Android).
 - [x] **B-91** 🟡 (QA REG-1, phiên D — B-81/B-87 chưa trọn) Chọn file "bom" có `backup.json` 200 MB: không báo gì, RAM giữ ~515 MB 2 phút; bom ảnh báo
   "damaged" đúng nhưng RAM vẫn lên ~520 MB. Gốc: `fail()` chỉ ghi lỗi, mục đang giải nén không dừng, mỗi lần nạp 1 MB nén có thể nở hàng trăm MB.
   Sửa (`streamRestore.ts`): kích thước khai báo trong header vượt giới hạn → từ chối trước khi giải nén; nạp 64 KB/lần; vượt → `terminate()`.
@@ -391,14 +391,18 @@
 
 > **QA-100 kiểm lại trên máy (18/11):** đã tick các mục phiên con xác nhận đạt — B-59 (B), B-61 (E), B-63/64/70/73/79/82/84/85/86/89 (F), B-65/75 (B),
 > B-67/68/76/80/87/91/92 (D), B-77 (A); B-69 (B: 0 sập trên máy lỗi EGL, nhánh "sập 1 lần" là giới hạn Phương đã chấp nhận); B-81 (thay bằng B-91 ✅). Còn mở: chờ kiểm lại hoặc chờ dữ liệu (B-88).
-- [ ] **B-95** 🔴 (đọc code, phiên hỏi đáp của Phương 18/11) **Chuyến tự động trên iOS chưa chạy**: `modules/trip-detect/ios/TripDetectModule.swift`
+- [ ] **B-95** (giới hạn đã biết — Phương chấp nhận 19/11, theo dõi sau) 🔴 (đọc code, phiên hỏi đáp của Phương 18/11) **Chuyến tự động trên iOS chưa chạy**: `modules/trip-detect/ios/TripDetectModule.swift`
   chỉ là khung — `getRecentEvents` trả `[]`, `startTransitions` chỉ phát `onSignal` khi app đang mở, và JS không nghe `onSignal` → `readSignals` luôn rỗng →
   engine không bao giờ thấy 'driving'. Chưa có "significant location change" để đánh thức app nền (PLAN-v2 §Rủi ro). Màn Automatic trips trên iOS vẫn bật
   được ("iPhone starts trips from motion") → người dùng tưởng đang chạy. Chưa thử được trên iPhone thật (không có Apple Developer + iPhone, TC-340).
-- [ ] **B-96** 🟠 (đọc code, phiên hỏi đáp của Phương 18/11) iPhone thiếu báo nghi sót của chuyến **tay** (miễn phí, F-12/Q2): "Still on a trip?" (đứng yên
+- [ ] **B-96** (giới hạn đã biết — Phương chấp nhận 19/11, theo dõi sau) 🟠 (đọc code, phiên hỏi đáp của Phương 18/11) iPhone thiếu báo nghi sót của chuyến **tay** (miễn phí, F-12/Q2): "Still on a trip?" (đứng yên
   ≥ 45 phút) và "Trip isn't recording" (mất vị trí ≥ 10 phút khi đang lái) chạy nhờ báo thức đánh thức (`sync.ts` `scheduleWake`, `native.ts`
   `configureNative`/`cancelWake`/`health`) — module iOS không có các hàm này (`native.ts` nuốt lỗi) → trên iPhone chỉ hiện khi mở app. Nhắc 12 giờ vẫn chạy.
   Phương duyệt làm chung phiên B-95.
+  **v2 (Phương nhờ qua phiên D, 19/11 — theo luật B-123):** chuyến tay giờ tự kết thúc sau Merge stops không di chuyển thật, nhưng chỉ khi JS chạy. Thông báo
+  hẹn trước (iOS tự hiện cả khi app bị tắt) đổi từ "Still on a trip? / 45 phút" thành **"Trip ended at {giờ đỗ} · {km}" + Continue trip**, cùng định danh
+  với thông báo engine (`notifyTripEnded`) → không bao giờ 2 cái; hẹn lại theo `lastMoveAt` + Merge stops. Bấm Continue khi app không chạy (chuyến còn
+  'running' trong DB) → `resumeFrom` (dừng tính từ lúc bấm) + bật lại GPS. + test. 959 test xanh. ⏳ iOS simulator (phiên C) + iPhone thật.
 - [x] **B-97** 🟡 (QA OLD-11, phiên B — Android 7.0) "Choose backup folder": bộ chọn thư mục Android 7 chỉ hiện "Recent · No items" tới khi bật ⋮ → Show internal
   storage; nhãn thư mục gốc hiện "This phone / primary:". Bộ chọn của expo-file-system không truyền được `SHOW_ADVANCED`. Sửa: Android < 8 hiện dòng hướng
   dẫn "If the list is empty, tap ⋮ → Show internal storage." dưới nút; nhãn bỏ "primary:" → "This phone".
@@ -427,12 +431,12 @@
 > Phiên C (iOS lượt 3, run 44221266865, iOS 26.5, iPhone SE 3 + 16 Pro Max, 14/27 persona, **0 crash**): onboarding, 5 tab, nhập nhanh, chữ lạ, Save đúp → 1
 > khoản, đổi vùng, tắt app sau Save, xuất CSV + "Did you send…" đều đạt. Phút macOS dùng 154 (vượt trần 150 ~4 phút). Còn 13 persona + iPad + khôi phục dữ
 > liệu chờ Phương duyệt thêm phút.
-- [ ] **B-100** 🟡 (QA iOS QI-1, phiên C) iPhone SE + chữ lớn: màn chọn vùng — thẻ United States khuất dưới nút Continue, không có gợi ý cuộn (màn đã cuộn được).
+- [x] **B-100** 🟡 (QA iOS QI-1, phiên C) iPhone SE + chữ lớn: màn chọn vùng — thẻ United States khuất dưới nút Continue, không có gợi ý cuộn (màn đã cuộn được).
   Sửa: `ui/HintScroll.tsx` — nháy thanh cuộn khi nội dung dài hơn màn (màn chào + màn chọn vùng). (Màn chào cắt chữ = B-66.)
   iOS lượt 4b (phiên C, P091 SE AX-Large): tiêu đề đủ, nhưng thanh cuộn iOS chỉ nháy ~1 s → không thấy gợi ý. Sửa lần 2: thêm viên "More below ⌄" ở
   đáy, ở lại tới khi cuộn tới cuối, chạm = cuộn xuống ~1 màn (cả iOS + Android). Phiên B: vuốt bắt đầu trên viên không cuộn trang + viên che chữ
   "United States" → lần 3: nhãn không bấm (chạm xuyên qua) ở góc phải dưới. ✅ Android — phiên B (ef470b7): vuốt bắt đầu trên nhãn cuộn được trang.
-  iOS lượt 4e (lần 2): viên hiện rõ ✅ nhưng đè dòng thẻ US → lần 3 ở góc ⏳ lượt 4g.
+  iOS lượt 4e (lần 2): viên hiện rõ ✅ nhưng đè dòng thẻ US → lần 3 ở góc ✅ lượt 4g (phiên C; 🟡 nhãn còn chạm nhẹ mép thẻ, chạm xuyên qua được).
 - [x] **B-101** 🟡 (QA iOS QI-3, phiên C) Ô Note ở Ghi nhanh đảo ký tự khi gõ nhanh (P052: "QA-P052 Shell M62" → "QA-052 Shell M62P"; 1/14). Sửa: ô không còn
   điều khiển `value` (dựng lại khi app tự điền: chip, đọc hoá đơn); nháp ghi file trễ 400 ms thay vì mỗi phím.
   ✅ iOS lượt 4e (phiên C, dev f424978, P052 SE chữ XXXL): ô Note + danh sách đúng "QA-P052 Shell M62".
@@ -468,11 +472,11 @@
   camera sau; Phương phải tự đổi 3–14 s. Samsung bỏ qua CAMERA_FACING/LENS_FACING nên app không ép được qua intent. Đã thử camera trong app
   (147d3e2) rồi **gỡ** theo Phương (18/11): "tôi muốn dùng camera của điện thoại không code hay làm thêm camera riêng" → **giới hạn đã biết, Phương
   chấp nhận**.
-- [ ] **B-107** 🟡 (QA A13, phiên E — dữ liệu thật) Cắm cáp vào máy tính + cầm máy → chuyến tự động "Start when charging" bắt đầu (đúng thiết kế: không phân
+- [x] **B-107** 🟡 (QA A13, phiên E — dữ liệu thật) Cắm cáp vào máy tính + cầm máy → chuyến tự động "Start when charging" bắt đầu (đúng thiết kế: không phân
   biệt sạc xe / sạc máy tính); Phương bấm End trip → **"Trip saved · 0.0 km"** (bộ tự động tự bỏ chuyến < 500 m, nhưng kết thúc tay thì lưu). Sửa:
   `trip/active.tsx` kết thúc tay chuyến startedBy=auto < 500 m → **hỏi "Only 0.0 km — keep this trip?" 2 nút Discard / Keep** (Phương chốt
   18/11 qua phiên E: không tự bỏ; bản 2ac9e15 tự bỏ là sai ý — đã đổi). Chuyến 0 km đang nằm trong dữ liệu thật
-  của Phương — phiên E hỏi Phương trước khi xoá.
+  của Phương — đã xoá 18/11 (Phương duyệt).
 - [x] **B-108** 🟠 (QA — phiên "A006 chụp nhập tự động" báo, Phương duyệt 18/11) Hoá đơn cũ hơn 400 ngày: OCR không điền ngày (độ tin cậy 0,3 +
   `receiptAt` chặn) → ô vẫn "Now". Tài xế dồn nhập trước hạn Self Assessment 31/1: hoá đơn tháng 4–5 năm thuế trước đã ~600–665 ngày → khoản ghi ngày
   hôm nay = **sai năm thuế**. Phương: bỏ giới hạn (năm "94" = 1994, "22/04/12" = 2012 là ngày thật). Sửa: bỏ luật 400 ngày ở `parseReceipt.readDate` và
@@ -484,9 +488,12 @@
   (A13 đạt vì danh sách đang ở đầu). Sửa lần 2: so số khoản khi Entries hiện lại (useIsFocused) rồi mới cuộn. Phiên B (07f4aac): vẫn chỉ cuộn được
   một đoạn (dòng phía trên chưa đo) → lần 3: `scrollToIndex(0)` không hiệu ứng, lặp lại sau 400 ms. ✅ phiên B (ef470b7, API 26): cả 3 đường (FAB+✓,
   FAB+Save, Home) với danh sách đã cuộn ~4 trang → TODAY + khoản mới ở đầu; A13 (07f4aac) ✅.
-- [ ] **B-110** 🟡 (QA A37-8/A37-9, phiên A — 320dp + chữ 200%) Reports: "Profit" cắt "−$1,073,09…", "By tax form line" bẻ chữ từng âm tiết + cắt số,
+- [x] **B-110** 🟡 (QA A37-8/A37-9, phiên A — 320dp + chữ 200%) Reports: "Profit" cắt "−$1,073,09…", "By tax form line" bẻ chữ từng âm tiết + cắt số,
   "Expenses by category" cắt tên còn "Eq..". Sửa: số tiền xuống dòng dưới nhãn khi không đủ chỗ (bỏ adjustsFontSizeToFit), tên danh mục 2 dòng,
-  số + % xuống dòng. ⏳ phiên A.
+  số + % xuống dòng. ❌ phiên A (19daeae, P004): flexWrap không ăn trên Android — vẫn bẻ âm tiết, "100.0%" / "Sched…" cắt, Profit gãy
+  giữa số. **v2:** `useStackedRows` (rộng / fontScale < 240) → nhãn và số xếp 2 dòng; `FitFigure` co số cho vừa thẻ (Thu / Chi / Profit / dòng thuế /
+  Mileage); danh mục: tên, rồi số + %; nhãn SA103/Schedule C xuống dưới tiêu đề. 949 test xanh. ✅ phiên A (a3a1f6b, P004 320dp + chữ 2.0, 13 ảnh `recheck-a3a1f6b/`): không cắt, không bẻ âm tiết,
+  Profit 1 dòng; phone chữ 1.3 giữ bố cục 1 hàng.
 - [x] **B-111** 🟡 (QA A13, phiên E) Backup & restore hiện "Backup folder, Google Drive — not reachable" nhưng không rõ lỗi thật hay nhãn sai; "Back up now"
   chỉ mở bảng chia sẻ nên không kiểm được. Bước 1: file chẩn đoán (giữ lâu Version) có mục `backup` (provider, nightly, failCount, lastError, kết quả
   liệt kê thư mục + câu lỗi thật) — không đổi cài đặt. **Kết quả (phiên E, 3f26b33):** provider Google Drive, probe `folder gone` → thư mục Drive đã chọn
@@ -498,7 +505,7 @@
 - [x] **B-112** 🟡 (QA A13, phiên E, bản 2ac9e15) Hoá đơn FreshHarvest 2019 (B-108 giờ điền ngày cũ) hiện chip ngày "Wed 20 Nov, 11:09" — không có năm,
   dễ tưởng là tuần này trong khi khoản vào năm thuế 2019. Sửa: `dateTimeLabel` ghi năm khi khác năm hiện tại ("Wed 20 Nov 2019, 11:09") — chip Ghi nhanh
   + dòng Date & time ở Sửa khoản. ✅ A13 (3f26b33): chip ngày hiện năm.
-- [ ] **B-113** 🟠 (QA A13-10, phiên E, bản 3f26b33 — dữ liệu thật) Có khoản "FreshHarvest Market −£21.74, **Fri 20 Nov 2020**, 11:09" (hoá đơn ghi 2019) mà
+- [x] **B-113** 🟠 (QA A13-10, phiên E, bản 3f26b33 — dữ liệu thật) Có khoản "FreshHarvest Market −£21.74, **Fri 20 Nov 2020**, 11:09" (hoá đơn ghi 2019) mà
   phiên E không bấm Save (nháp trước đó đã Discard lúc 14:41). Kiểm: Discard chỉ xoá nháp, không tạo khoản; 2 đường tạo khoản ở Ghi nhanh là Save và phím
   ✓ bàn phím số (B-98); cả 2 lần OCR FreshHarvest trong chẩn đoán ra 20/11/**2019**; khoản không có trong backup 14:28. Phiên E đã xoá khoản (mất
   createdAt). Phiên E trả lời: khoản tạo trong 14:28–15:19; script của E chạm theo **toạ độ cố định** trên Ghi nhanh ((95,165) "X", (185,1745)
@@ -506,7 +513,7 @@
   Save; một khoản Tesco £55.30 lúc 15:08 cũng tự lưu sau chuỗi chạm y hệt. **Kết luận tạm: nghi do script chạm mù, không phải người dùng** — chưa tái
   hiện được bằng thao tác người; để mở theo dõi (gặp lại: chụp màn + chẩn đoán trước khi xoá). Phiên E bỏ chạm theo toạ độ (luật xưởng: chờ chữ rồi bấm).
   Phương tự bấm (ef470b7, 16:30–16:51): nháp FreshHarvest khôi phục sau khi app bị tắt (£21.74, nơi bán, ảnh, "20 Nov 2019") → X → Discard → không
-  có khoản nào được lưu; FreshHarvest Save thường lưu đúng 2019. **Không tái hiện bằng tay** → đề xuất đóng là do script (chờ Phương duyệt).
+  có khoản nào được lưu; FreshHarvest Save thường lưu đúng 2019. **Không tái hiện bằng tay.** **Đóng 19/11:** Phương nhớ có thể chính mình sửa năm 19 → 20 — không phải lỗi app.
 - [x] **B-114** 🟠 (QA OLD-13, phiên B — 3f26b33, API 26, 360×640dp, chữ 2.0) Tab Sort: thẻ bị ép còn ~2px (header "Sort your wee/k" bẻ giữa chữ cạnh
   List view + chip tuần + thanh tiến độ chiếm hết chiều cao) → không thấy / không dùng được thẻ; List view vẫn sort được. Chữ 1.3–1.7 ổn. Gốc: chế độ
   cuộn (MOD-11) chỉ bật khi cửa sổ < 520dp, không tính cỡ chữ. Sửa: tính theo dp ÷ cỡ chữ, thẻ cao 360 × cỡ chữ (≤ 1.6), List view xuống dòng dưới
@@ -531,14 +538,18 @@
   năm thì bỏ thứ ("18 Nov 2025, 03:33"). Kèm OLD-14 phụ: camera không mở báo nhầm "Couldn't save the photo. Your entry was saved without it." → câu
   riêng "Couldn't open the camera. Try again, or hold Photo to choose from your library." ✅ phiên B (07f4aac, 360dp): chip 1 dòng "18 Nov 2025, 04:18";
   nút Expense|Income hơi chật nhưng không cắt.
-- [ ] **B-117** 🔴 (QA iOS — phiên H thử Appetize, iPhone 14 Pro iOS 17.2, bản 55db0eb; 3/3 lần) End trip → màn chỉ còn "0.0", EndTripSheet không hiện,
+- [x] **B-117** 🔴 (QA iOS — phiên H thử Appetize, iPhone 14 Pro iOS 17.2, bản 55db0eb; 3/3 lần) End trip → màn chỉ còn "0.0", EndTripSheet không hiện,
   nút thu nhỏ không bấm được → phải tắt app. Log: "Attempt to present RCTFabricModalHostViewController … while a presentation is in progress". Gốc:
   `trip/active.tsx` — gpsDialog / shortDialog / endSheet ở vị trí con khác nhau trong 2 nhánh (còn chuyến / hết chuyến) → đổi nhánh thì React gỡ rồi
   dựng lại Sheet (RN Modal) đang mở, iOS từ chối mở Modal khi cái cũ đang đóng. Android không bị. Sửa: key cố định cho 3 lớp phủ (giữ nguyên khi đổi
-  nhánh); "Keep" của B-107 mở Sheet sau khi Dialog đóng (iOS trễ 400 ms). ⏳ iOS (phiên C / Appetize).
+  nhánh); "Keep" của B-107 mở Sheet sau khi Dialog đóng (iOS trễ 400 ms). ✅ iOS lượt 4g (GH Actions 44274943533, phiên C/H): P052 SE
+  End trip → tấm "Trip saved" hiện ngay → Save → Home; P091 AX-Large tấm hiện, không treo (Save dưới mép → đã ghim footer ở 805835b). ✅ iOS lượt 4i (dev 0bf4283, phiên C): P091 SE AX-L lưu được, P041 Pro Max tối ✅;
+  cùng lượt: B-114 v2 ✅ (P091 phân loại trên thẻ Sort), B-95 màn ✅, B-101 ✅, B-122 "45" → $45.00 ✅, 0 crash.
 - [ ] **B-118** 🟠 (QA iOS — phiên H) Câu xin quyền vị trí iOS (app.json) hứa "only while a trip you started is running" / "Recording stops when you end the
   trip" — sai từ khi có chuyến tự động (theo dõi rời chỗ đỗ / vùng 150 m ở nền) → Apple 5.1.1. Sửa: câu mới nói rõ chuyến tự động; câu trong app
   (`trip.permBody`) cũng sửa. Cần build iOS mới mới có hiệu lực. ⏳ Phương xem chữ trước khi nộp.
+  ✅ cấu hình (phiên H, expo config introspect dev 45e0b4e): Info.plist có 2 câu vị trí mới + Motion. 19/11 thêm `locationAlwaysPermission` (câu Always
+  cũ còn mặc định "Allow $(PRODUCT_NAME)…"). 🟡 NSLocalNetworkUsageDescription "Expo Dev Launcher" có vì expo-dev-client trong dependencies.
 - [x] **B-119** 🟡 (QA SPE-11, phiên D) `sundaysort://dev/gallery` mở được trong bản release (gallery.tsx thiếu chặn `__DEV__`). Sửa: chuyển về Home như dev/ocr,
   dev/probe. Link lạ khác ra màn "Unmatched Route" + nút Sitemap → thêm `src/app/+not-found.tsx` chuyển về Home. ✅ A13 (b843037):
   `sundaysort://abc`, `sundaysort://abc/xyz?q=1` → Home, logcat sạch (app đang chạy). ✅ phiên D (19daeae, emulator): `dev/gallery` → Home; link lạ / chuỗi RTL → Home; 34 deep link lạ 0 crash/ANR.
@@ -555,7 +566,7 @@
   941 test xanh. ✅ phiên B (19daeae, API 26 + Android 7): "1"/"7,7"/"1250"/"0.5" → 1.00/7.70/1,250.00/0.50, nháp cũ "1250" vẫn £12.50, sửa khoản
   "3" → 3.00. ✅ phiên F (Pixel 9 Pro XL API 37): như trên + "72.4"/"0.05"/"5+2.5", chip receipt, bàn phím có "." ",". 🟡 gõ "12345678" bị cắt
   còn 123,456.00 không báo (trần 999,999.99) — ghi nhận. ⏳ A13 (Phương bấm) + iOS.
-- [ ] **B-123** 🟠 (Phương thử A13 tối 18/11) (1) Start tay trong nhà 20:50→21:48: đứng yên mà quãng đường vẫn tăng; (2) chuyến Bluetooth 17:46→20:50 về
+- [x] **B-123** 🟠 (Phương thử A13 tối 18/11) (1) Start tay trong nhà 20:50→21:48: đứng yên mà quãng đường vẫn tăng; (2) chuyến Bluetooth 17:46→20:50 về
   nhà ngồi > 20 phút không tự tắt; (3) Bluetooth xe chỉ bật chuyến 1 lần. Gốc (code): trong nhà Android trả điểm GPS **không có tốc độ**, nhảy
   25–80 m → `isStationaryFix` giữ lại (chỉ lọc khi có tốc độ) → cộng quãng đường + `lastPointAt` cứ mới → luật "20 phút không có điểm" không bao giờ
   tới; chuyến không tắt nên các lần kết nối Bluetooth sau bị bỏ qua (đang có chuyến). **Phương chốt (grill 19/11, CONTEXT.md):** cảm biến báo đứng
@@ -568,7 +579,8 @@
   tới 55 km/h; cảm biến 'still' từ 19:00:57; Bluetooth van nối/ngắt nhiều lần 17:35–18:40 trong khi chuyến vẫn mở. Chạy lại điểm thật qua logic mới:
   chuyến BT mwm01sj7… 11184 m → 10647 m, đỗ từ 18:55:05 → tự tắt ~19:15 (cũ: không tắt tới 20:50); chuyến tay mwm6ism0… 584 m → 0 m, tắt ~21:10.
   946 test xanh. ✅ A13 (bcf8827, phiên E): chuyến auto do Bluetooth 09:40:29, máy nằm yên → 10:00:47 tự dừng ghi (20 phút), < 500 m nên bỏ cả
-  điểm GPS, không còn chuyến running. ⏳ Phương thử thật: Start tay ngồi nhà ≥ 25 phút (giữ chuyến, ~0 km, thông báo Continue); lái xe về nhà; Continue trip.
+  điểm GPS, không còn chuyến running. ✅ A13 Start tay ngồi nhà 10:19 / 10:52 / 11:16 → tự kết thúc, 0.0 km, giờ kết thúc = lúc đỗ, thông báo có
+  Continue (B-130/B-135). Chạy xe thật về nhà → danh sách "chưa test — báo Phương sau".
 - [x] **B-124** 🟠 (A13-13, phiên E) Bluetooth xe nối khi app ở nền → **không bật chuyến**, chỉ hiện "Driving? Tap to record" (18/11 17:35, tái hiện
   19/11 09:12); chuyến 17:46 hôm đó là do cảm biến "driving", không phải Bluetooth. Logcat `qa-runs/a13/logcat-1119-bt-start-failed.txt`: Android 14
   **cho phép** service vị trí khởi động từ nền (`Background started FGS: Allowed … SYSTEM_ALLOW_LISTED`, app đã tắt tối ưu pin + vị trí "luôn luôn"),
@@ -588,5 +600,45 @@
   `capture.tsx` ~480–507) hoặc cờ chữ hoa mặc định (`autoCapitalize`) lẫn vào inputType. Chưa tái hiện được tại chỗ (không có Pixel thật). Thử sửa: ô ẩn thêm `inputMode="decimal"`,
   `autoCapitalize="none"`, `autoCorrect={false}`, `autoComplete="off"` (bỏ cờ chữ). ✅ phiên G (dc84207, Pixel 11 thật Android 17, matrix-3d94eks0jsst6): bàn phím số, "7,7" → $7.70,
   inputType 0x282002 (NUMBER|DECIMAL). Phương 19/11: áp cho mọi ô số — `NUMERIC_INPUT` (ui/Controls) tự thêm vào `Field` có
-  bàn phím số + Sửa khoản, tách khoản, thẻ Sort (2 ô), phí đỗ xe. ✅ A13 (dc84207): Ghi nhanh inputType 0x2002, bàn phím số Samsung. ⏳ phiên G: Sửa khoản / phí đỗ xe trên Pixel 11 thật.
+  bàn phím số + Sửa khoản, tách khoản, thẻ Sort (2 ô), phí đỗ xe. ✅ A13 (dc84207): Ghi nhanh inputType 0x2002, bàn phím số Samsung. ✅ Pixel 11 thật (phiên G, 0bf4283): Ghi nhanh, Sửa khoản, Sort Edit, mileage rate; ✅ API 26 (phiên B): Sửa khoản, Split, phí đỗ xe, tỷ giá.
+- [x] **B-127** 🟡 (QA phiên D + F, 19/11 — Phương: không chấp nhận lỗi giao diện nhỏ) (a) link `export?year=999999` / `year=-5` hiện "Tax year 999999" +
+  file rỗng; (b) mở link export khi màn Export đang mở thì giữ kỳ cũ; (c) gõ quá 999,999.99 thì chữ số bị bỏ, chỉ rung nhẹ (máy không rung / giả lập:
+  không biết gì). Sửa: `saneReportYear` (2000 … năm sau, số nguyên; sai → năm thuế hiện tại) + test; `ExportPanel` key theo tham số link (link mới =
+  kỳ mới); `useAmountExpr.atLimit` + `AmountLimitHint` "Max £999,999.99" ở Ghi nhanh, Sửa khoản, phí đỗ xe. 947 test xanh. ✅ phiên B (a3a1f6b, API 26): Max ở cả 3 ô, year=999999/-5 → 2026/27, link mới
+  khi Export đang mở → đổi kỳ đúng.
+- [x] **B-128** 🟠 (QA F-3, phiên G — Pixel 11 thật, 0bf4283) Sort → thẻ → Edit → chạm Amount: bàn phím mở, thẻ tự cuộn xuống cuối → ô Amount, Note, nút Done
+  khuất (chỉ thấy Date / MOST USED / Work-Personal) — gõ tiền không thấy số. Ảnh `qa-runs/firebase/numeric-0bf4283/cubs-37/artifacts/17–19.png`.
+  Gốc: `SortEntryCard.tsx` `scrollToEnd()` khi bàn phím mở (useEffect + onLayout) dành cho Split (B-38, giữ "Split & sort" trong tầm) nhưng cũng chạy ở Edit.
+  Sửa: Split vẫn cuộn tới cuối; Edit cuộn tới đầu khung Edit (`editY` từ onLayout) → Done + Amount trong tầm. 947 test xanh. ✅ A13 (0f08c76): Amount + Done nằm trên bàn phím số.
+- [x] **B-129** 🟠 (A13 phiên E, 0bf4283) Cài đè / cập nhật app khi đang có chuyến: GPS (LocationTaskService) dừng, thông báo vẫn "đang ghi", chỉ ghi lại khi mở
+  app (hụt ~3 phút ở A13; khi Play tự cập nhật ban đêm hay khởi động lại máy có thể hụt cả chuyến). Gốc: BootReceiver (BOOT_COMPLETED / MY_PACKAGE_REPLACED)
+  chỉ đăng ký lại cảm biến; task vị trí được khôi phục nhưng expo-location không bật foreground service khi app không mở. Sửa: chuyến đang chạy →
+  `kick("restart")` → task JS `restoreRecording()` đăng ký lại (bật lại service), nhật ký `restore_ok` / `restore_failed`. 949 test xanh. ✅ A13 (cài đè a3a1f6b giữa chuyến, không mở app): boot 11:31:24 → restore_ok
+  11:31:27, LocationTaskService chạy lại — hụt ~6 s (diagnostics 2026-11-19-04-32.json).
+- [x] **B-130** 🟠 (A13-14 phiên E, 0bf4283) Bấm **Continue trip** khi xe còn đứng yên → chuyến tự kết thúc lại sau 3 giây. Gốc: fix đầu tiên sau Continue được
+  lưu (đầu đoạn mới) → `lastMoveAt` mất mốc "resume" và tính `parkedSince` trên **mọi** điểm → về lại giờ đỗ cũ ≥ 20 phút → kết thúc ngay. Resume sau
+  Personal stop cũng dính. Sửa: `lastMoveAt` chỉ xét đoạn cuối (từ điểm `segmentStart`), mốc = đầu đoạn + test tái hiện (`lastMoveAt.test.ts`). ✅ A13 (a3a1f6b): Continue 11:28:52 → chuyến chạy tiếp tới 11:37:50
+  (bản cũ tắt sau 3–23 s). Còn lệch 1 phút → B-135.
+- [ ] **B-131** 🟡 đề xuất (A13 phiên E, 0bf4283 — `qa-runs/a13/perf-trip-still-300s.json`) Chuyến chạy mà xe đứng yên 5 phút: CPU app 0,19 %, không wakelock;
+  phần hao pin chính là GPS HIGH_ACCURACY mỗi 5 s chạy suốt tới khi tự kết thúc (tối đa = Merge stops). Đề xuất: cảm biến báo đứng yên / không di chuyển
+  thật > 1–2 phút → hạ GPS (BALANCED hoặc 30–60 s), xe chạy lại ("driving" / điểm xa > 100 m) → về 5 s. Rủi ro: hụt vài chục mét đầu khi xe lăn bánh. **Phương duyệt 19/11.**
+  Sửa (Android): `gpsPower.ts` `gpsModeFor` (không di chuyển thật ≥ 2 phút và cảm biến không báo lái → 'parked'), `syncGpsMode` đổi tham số GPS (High,
+  30 s) / về BestForNavigation 5 s; gọi từ task GPS (≤ 20 s/lần) và sau mỗi lượt engine; nhật ký `gps_mode`. 953 test xanh. ✅ A13 (8619687): Start 11:40:44 nằm yên → 11:42:55 đăng ký lại HIGH_ACCURACY 30 s (giảm 6 lần số lần
+  lấy vị trí), CPU 0,28 %, không wakelock (`perf-trip-still-8619687.json`). ⏳ nhánh lái lại → 5 s (cần đi > 100 m / lái xe thật).
+- [ ] **B-132** 🟡 (QA A37-10, phiên A — a3a1f6b) Reports: "1620 entries in this period aren't sorted yet" thiếu dấu phẩy nghìn (như B-79 ở Home).
+  Gốc: `reports.tsx` truyền `report.unsortedCount` thô vào `t('reports.unsortedWarn')`.
+  Sửa chung: `t()` nhóm nghìn cho tham số đếm (`count`, `total`, `done`) — mọi câu "N entries / trips" trong app; năm, phút không đổi + test.
+  955 test xanh. ⏳ máy.
+- [ ] **B-133** 🟠 (QA OLD-18, phiên B — a3a1f6b API 26) Tách khoản (thẻ Sort → Split; cũng màn Split, Sort → Edit, luật min/max): ô số không đọc như Ghi nhanh
+  (B-122) — "33,01" thành "3301" (£3,267.99 over), "33.011" tính 0, "12345678" nhận hết không báo Max (ô 360dp chỉ hiện "345678"); chạm ô Part 1 → thẻ
+  cuộn xuống đáy, ô đang gõ khuất. Gốc: các ô tự lọc `v.replace(/[^\d.]/g, '')` (bỏ dấu phẩy, không giới hạn), thẻ Split luôn `scrollToEnd` (B-38).
+  Sửa: `sanitizeAmount` (calc.ts, như Ghi nhanh: "," = ".", 2 số lẻ, 999,999.99) + test cho thẻ Split, Sort Edit, màn Split, luật min/max; dòng
+  "Max …" (`MaxAmountNote`); thẻ Split cuộn tới ô đang gõ (vị trí hàng), chưa chạm ô nào thì như cũ. 957 test xanh. ⏳ phiên B.
+- [ ] **B-134** 🟡 (QA OLD-17a/b, phiên B) (a) Reports 360dp chưa cuộn: nút + đè chữ "until" ở dòng phụ thẻ vehicle; (b) phí đỗ xe: đang gõ thì thanh tính che
+  dòng Max; đóng bàn phím thanh tính vẫn còn → "Parking & tolls £…" hiện 2 lần; (c) Add trip có phí đỗ xe → X đóng luôn, không hỏi "Discard?".
+  Sửa: (a) chữ thẻ vehicle chừa lề phải cho nút + khi màn < 420dp; (b) bàn phím đóng = hết sửa phí (ẩn thanh tính), thanh tính có "Max …";
+  (c) TripForm báo `onDirtyChange` → Add trip hỏi "Discard this trip?" khi đã gõ gì (kể cả phí). ⏳ phiên B.
+- [ ] **B-135** 🟡 (A13 phiên E, a3a1f6b) Continue trip lúc 11:28:52 → chuyến tự kết thúc 11:37:50 (sớm ~1 phút so với Merge stops 10 phút) và hiện "Trip ended at
+  11:27" — trước cả lúc bấm Continue. Gốc: fix đầu tiên sau Continue là vị trí cũ hệ thống giữ (giờ 11:27:50) → lưu làm đầu đoạn mới → mốc đỗ lùi.
+  Sửa: `appendPoints` sau Continue / Resume bỏ fix có giờ trước mốc bấm + test (`lastMoveAt.test.ts`). 958 test xanh. ⏳ A13.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.

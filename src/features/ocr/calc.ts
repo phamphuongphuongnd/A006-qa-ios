@@ -82,6 +82,15 @@ export function sanitizeExpr(raw: string): string {
     .join('');
 }
 
+/**
+ * B-133: a plain amount field (no calculator — split parts, Sort edit, rule limits) reads like Quick add: "33,01" =
+ * 33.01, two decimals at most, 999,999.99 at most (extra digits dropped; `digitIgnored` tells).
+ */
+export function sanitizeAmount(raw: string): string {
+  const digits = raw.replace(/,/g, '.').replace(/[^\d.]/g, '');
+  return digits === '' ? '' : cleanOperand(digits, false);
+}
+
 /** Appends an operator from the bar (replaces a trailing one; ignored on an empty field). */
 export function pushOp(expr: string, op: CalcOp): string {
   return sanitizeExpr(expr + op);

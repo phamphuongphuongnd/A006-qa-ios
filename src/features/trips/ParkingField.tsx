@@ -1,14 +1,14 @@
-import { useRef, useState, type ComponentRef } from 'react';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { formatMoney } from '@/domain/money';
 import type { Currency } from '@/domain/types';
 import { formatExpr } from '@/features/ocr/calc';
-import { CalcBar } from '@/features/ocr/ui';
+import { AmountLimitHint, CalcBar } from '@/features/ocr/ui';
 import type { AmountExpr } from '@/features/ocr/useAmountExpr';
 import { t } from '@/i18n';
 import { fonts, radius, useTheme } from '@/theme';
-import { NUMERIC_INPUT, Txt } from '@/ui';
+import { NUMERIC_INPUT, Txt, useKeyboardUp } from '@/ui';
 import { ParkingCircle } from '@/ui/icons';
 import { refocus } from '@/features/ocr/refocus';
 
@@ -34,6 +34,19 @@ export function ParkingField({
   const { colors } = useTheme();
   const ref = useRef<ComponentRef<typeof TextInput>>(null);
   const [editing, setEditing] = useState(false);
+  const keyboardUp = useKeyboardUp();
+  // B-134b: Android's Back closes the keyboard without blurring the hidden field — the "+ − × ÷" strip stayed and the
+  // amount showed twice. Keyboard gone = done editing.
+  const wasUp = useRef(false);
+  useEffect(() => {
+    if (keyboardUp) wasUp.current = true;
+    else if (wasUp.current && editing) {
+      wasUp.current = false;
+      ref.current?.blur();
+      setEditing(false);
+      onEditingChange?.(false);
+    }
+  }, [keyboardUp, editing, onEditingChange]);
   const has = amount.shownMinor > 0;
   const shown = has ? formatMoney(amount.shownMinor, currency) : formatMoney(0, currency);
 
@@ -82,6 +95,8 @@ export function ParkingField({
         <Txt v="caption" c="error">
           {t('ocr.checkSum')}
         </Txt>
+      ) : amount.atLimit ? (
+        <AmountLimitHint amount={amount} currency={currency} />
       ) : (
         <Txt v="caption" c="textSecondary">
           {t('s6.parkingHint')}
@@ -120,6 +135,8 @@ export function ParkingKeyBar({ amount, currency }: { amount: AmountExpr; curren
           {amount.isExpression ? `${formatExpr(amount.expr)} = ${shown}` : shown}
         </Txt>
       </View>
+      {/* B-134b: the field (and its "Max …") is under the keyboard while typing — say it here too. */}
+      <AmountLimitHint amount={amount} currency={currency} />
       <CalcBar onOp={amount.op} />
     </View>
   );

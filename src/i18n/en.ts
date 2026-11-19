@@ -324,6 +324,8 @@ export const en = {
   },
   trip: {
     addTitle: 'Add trip',
+    discardNewTitle: 'Discard this trip?',
+    discardNewBody: "What you've typed won't be saved.",
     editTitle: 'Edit trip',
     odometer: 'Odometer',
     distance: 'Distance',

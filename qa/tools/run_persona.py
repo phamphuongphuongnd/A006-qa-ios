@@ -88,6 +88,12 @@ class Phone(Dev):
 
     _size = None
 
+    def swipe_up(self, frac=0.5):
+        # start at 60% height: lower starts land on fixed bottom bars (Home's Expense/Income bar at big fonts)
+        w, h = self.size()
+        y0 = int(h * 0.6)
+        self.shell(f'input swipe {w // 2} {y0} {w // 2} {max(int(h * 0.12), int(y0 - h * frac))} 500')
+
     def nodes(self):
         # adbui.nodes with a hard timeout per dump: under host load uiautomator can hang or crash
         # ("Timeout while connecting UiAutomation"); retry instead of failing the step.
@@ -100,10 +106,16 @@ class Phone(Dev):
             if 'dumped' in out:
                 xml = self.sh('exec-out', 'cat', '/sdcard/qa-ui.xml', timeout=30)
                 res = []
-                for m in NODE.finditer(xml):
-                    t, d, c, x1, y1, x2, y2 = m.groups()
-                    res.append({'text': unescape(t), 'desc': unescape(d), 'click': c == 'true',
-                                'b': (int(x1), int(y1), int(x2), int(y2))})
+                # attribute values containing '"' are written with single quotes (content-desc='=HYPERLINK("…")')
+                for tag in re.finditer(r'<node\s([^>]*?)/?>', xml):
+                    # findall groups: (name, '"' or '', double-quoted value, single-quoted value)
+                    at = {k: (v1 if q == '"' else v2) for k, q, v1, v2 in
+                          re.findall(r"""([\w-]+)=(?:(")([^"]*)"|'([^']*)')""", tag.group(1))}
+                    m = re.match(r'\[(\d+),(\d+)\]\[(\d+),(\d+)\]', at.get('bounds', ''))
+                    if not m:
+                        continue
+                    res.append({'text': unescape(at.get('text', '')), 'desc': unescape(at.get('content-desc', '')),
+                                'click': at.get('clickable') == 'true', 'b': tuple(int(g) for g in m.groups())})
                 return res
             time.sleep(0.5)
         return []
@@ -241,6 +253,17 @@ class Phone(Dev):
                     best = n
         return best['text'] if best else None
 
+    def money_after(self, label, nodes=None, within=3):
+        """First money text among the next few nodes after `label` in tree order (layout-independent)."""
+        nodes = nodes if nodes is not None else self.nodes()
+        for i, n in enumerate(nodes):
+            if n['text'] == label:
+                for m in nodes[i + 1:i + 1 + within]:
+                    v = parse_money(m['text'])
+                    if v is not None:
+                        return v
+        return None
+
     def value_below(self, label, nodes=None):
         """Text of the node right under `label` in the same column (Home week card)."""
         nodes = nodes if nodes is not None else self.nodes()
@@ -357,6 +380,8 @@ def oracle(backup, region, phone, zone, now_ms):
         'trips': len(t.get('trips', [])),
         'photos': backup.get('counts', {}).get('photos'),
         'unsorted': sum(1 for e in E if e['categoryId'] is None),
+        'newestAt': max((e['occurredAt'] for e in E), default=None),
+        'weekUnsorted': sum(1 for e in E if e['categoryId'] is None and w0 <= e['occurredAt'] < w1),
         'weekIn': sum(e['amountMinor'] for e in wk if e['type'] == 'income'),
         'weekOut': sum(e['amountMinor'] for e in wk if e['type'] == 'expense'),
         'taxYearLabel': label,
@@ -383,6 +408,7 @@ class Run:
                 os.remove(os.path.join(self.dir, f))
         self.steps = []
         self.ui_notes = []
+        self.env_notes = []
         self.n = 0
         self.metrics = {}
         self.orig = {}
@@ -462,6 +488,24 @@ class Run:
             raise Fail(f'{what}: screen {got!r} ≠ expected {want!r}')
 
     # ── navigation ──
+    def system_anr(self, ns=None):
+        """Emulator-level "System UI / Process system isn't responding" dialog (busy host): tap Wait, note it."""
+        p = self.p
+        ns = ns if ns is not None else p.nodes()
+        t = next((n['text'] for n in ns if "isn't responding" in (n['text'] or '') and 'Sunday' not in (n['text'] or '')), None)
+        if t:
+            w = p.find_click('Wait', True, ns)
+            if w:
+                p.tap_node(w)
+                time.sleep(2)
+            self.env_notes.append(t)
+            try:
+                self.note('environment: ' + t + ' → Wait')
+            except Exception:
+                pass
+            return True
+        return False
+
     def ensure_app(self):
         if not self.p.is_ours():
             self.p.shell(f'am start -n {ACTIVITY}')
@@ -478,6 +522,21 @@ class Run:
             self.ensure_app()
             p.hide_kb()
             ns = p.nodes()
+            if self.system_anr(ns):
+                continue
+            if not ns and p.is_ours():
+                # Quick capture can't be dumped (blinking caret). Since B-84 an unsaved entry reopens it on launch
+                # ("Your unsaved entry is back."): leave it with Back; the Discard dialog is handled next round.
+                self.note('tab(): screen not dumpable (Quick capture?) → Back')
+                p.key(4)
+                time.sleep(1.2)
+                continue
+            dis = p.find_click('Discard', True, ns)
+            if dis and p.find('Discard', False, ns) and any('Discard' in (n['text'] or '') and n['text'] != 'Discard' for n in ns):
+                self.note('tab(): discard dialog: ' + ' | '.join(p.texts()[:4]))
+                p.tap_node(dis)
+                time.sleep(1.2)
+                continue
             bar = [n for n in ns if n['click'] and n['b'][1] > h * 0.85]
             tabn = next((n for n in bar if (n['desc'] or n['text']) == name or (n['desc'] or '').startswith(name + ',')), None)
             if tabn and any((n['desc'] or n['text']) == 'Reports' for n in bar):
@@ -581,6 +640,17 @@ class Run:
             if p.sdk >= 30:
                 p.shell('cmd time_zone_detector set_auto_detection_enabled true')
         p.shell('rm -f /sdcard/Download/qa-fill.bin')
+        if self.persona['behaviour'] == 'clock_tax_boundary':
+            # jumping the clock weeks ahead and back leaves System UI unresponsive on the API 37 image → fresh boot
+            p.sh('reboot', timeout=60)
+            time.sleep(10)
+            p.sh('wait-for-device', timeout=300)
+            for _ in range(100):
+                if p.shell('getprop sys.boot_completed').strip() == '1':
+                    break
+                time.sleep(3)
+            time.sleep(20)
+            self.note('rebooted the emulator after the clock journey')
         self.note('reset: ' + ' | '.join([
             p.shell('wm size').strip().replace('\n', ' '), p.shell('wm density').strip().replace('\n', ' '),
             'font ' + p.shell('settings get system font_scale').strip(), p.shell('cmd uimode night').strip(),
@@ -618,6 +688,9 @@ class Run:
         m = re.search(r'TotalTime: (\d+)', out)
         self.metrics['coldStartMs'] = int(m.group(1)) if m else None
         self.note(f'TotalTime={self.metrics["coldStartMs"]} ms')
+        for _ in range(3):
+            if not self.system_anr():
+                break
         p.wait('Get started', 30)
         self.snap('welcome')
 
@@ -709,7 +782,7 @@ class Run:
         p = self.p
         self.home()
         time.sleep(0.8)
-        got = {'tax': None, 'sorted_line': None, 'in': None, 'out': None}
+        got = {'tax': None, 'sorted_line': None, 'in': None, 'out': None, 'empty': False}
         for k in range(5):
             ns = p.nodes()
             if not ns:
@@ -726,6 +799,7 @@ class Run:
                 if got[lab.lower()] is None and p.find(lab, True, ns):
                     got[lab.lower()] = parse_money(p.value_below(lab, ns))
             empty = p.find('Your first entry', False, ns)
+            got['empty'] = got['empty'] or bool(empty)
             if got['out'] is not None and (got['sorted_line'] or empty):
                 break
             p.swipe_up(0.3)
@@ -735,6 +809,23 @@ class Run:
     def verify_numbers(self):
         p, ex = self.p, self.expect
         h = self.home_read('home')
+        b77 = None
+        if ex.get('newestAt'):
+            off = ex.get('tzOffsetS', 0)
+            nd = dt.datetime.fromtimestamp(ex['newestAt'] / 1000, dt.timezone(dt.timedelta(seconds=off)))
+            age_days = (dt.datetime.fromtimestamp(time.time(), dt.timezone(dt.timedelta(seconds=off))).date() - nd.date()).days
+            if age_days >= 6:
+                self.home()
+                try:
+                    p.wait_scroll('Recent', exact=True, timeout=10, swipes=3)
+                    ns = p.nodes()
+                    subs = [n['text'] for n in ns if re.search(r'\d{1,2}:\d\d · ', n['text'] or '')]
+                    want77 = f"{nd.day} {nd.strftime('%b')}"
+                    self.note(f'B-77 Recent subtitles (newest entry {age_days} days old, expect "{want77}"): {subs[:3]}')
+                    if subs and not subs[0].startswith(want77):
+                        b77 = f'B-77: Home Recent shows "{subs[0]}" for an entry from {want77}'
+                except TimeoutError:
+                    self.note('B-77: Recent list not reached')
         sorted_line = h['sorted_line']
         if ex.get('entries', 0) == 0:
             want = None  # empty Home shows "Your first entry takes 10 seconds." instead
@@ -744,7 +835,10 @@ class Run:
             want = '1 entry to sort'
         else:
             want = f"{ex['unsorted']:,} entries to sort"
-        errs = []
+        errs = [b77] if b77 else []
+        if sorted_line and want and sorted_line != want and sorted_line.replace(',', '') == want.replace(',', ''):
+            errs.append(f'B-79: Home count without thousands separator "{sorted_line}"')
+            sorted_line = want
         try:
             self.check('home to-sort', sorted_line, want)
         except Fail as e:
@@ -761,16 +855,27 @@ class Run:
         # Reports (Year)
         self.tab('Reports')
         got = p.wait_any(['No data for this period', 'Income', 'Year'], 20)
+        vals = {'income': None, 'expenses': None, 'personal': None}
         if got != 'No data for this period':
-            got = 'Income' if p.wait_scroll('Income', exact=True) else got
-            ns = p.nodes()
-            if not p.find('Expenses', True, ns) or (ex['personalExcluded'] and not any('Personal entries are excluded' in (n['text'] or '') for n in ns)):
-                p.swipe_up(0.25)
+            p.wait_scroll('Income', exact=True)
+            # read each value from the dump where its row is visible (small scrolls between dumps)
+            for k in range(8):
+                ns = p.nodes()
+                if k == 0:
+                    self.snap('reports')
+                # B-78: at big font the amount wraps under its label
+                if vals['income'] is None and p.find('Income', True, ns):
+                    vals['income'] = p.money_after('Income', ns)
+                if vals['expenses'] is None and p.find('Expenses', True, ns):
+                    vals['expenses'] = p.money_after('Expenses', ns)
+                if vals['personal'] is None:
+                    vals['personal'] = parse_money(next((n['text'] for n in ns if 'Personal entries are excluded' in (n['text'] or '')), None))
+                if vals['income'] is not None and vals['expenses'] is not None and (vals['personal'] is not None or not ex['personalExcluded']):
+                    break
+                p.swipe_up(0.12)
                 time.sleep(0.6)
-                ns = ns + p.nodes()
         else:
-            ns = p.nodes()
-        self.snap('reports')
+            self.snap('reports')
         if got == 'No data for this period':
             self.note('Reports: No data for this period')
             if ex['yearIncome'] or ex['yearExpenseNoMileage'] or ex.get('personalExcluded'):
@@ -779,10 +884,10 @@ class Run:
                 raise Fail('; '.join(errs))
             return
         try:
-            self.check('reports income', parse_money(p.value_right_of('Income', ns)), ex['yearIncome'])
+            self.check('reports income', vals['income'], ex['yearIncome'])
         except Fail as e:
             errs.append(str(e))
-        exp = parse_money(p.value_right_of('Expenses', ns))
+        exp = vals['expenses']
         if ex['hasTrips']:
             want = ex['yearExpenseNoMileage'] + ex.get('mileageClaim', 0)
             self.note(f"reports expenses screen={exp} expected≈{want} (non-mileage {ex['yearExpenseNoMileage']} + mileage {ex.get('mileageClaim')}, ±0.2% rounding)")
@@ -793,10 +898,9 @@ class Run:
                 self.check('reports expenses', exp, ex['yearExpenseNoMileage'])
             except Fail as e:
                 errs.append(str(e))
-        pe = next((n['text'] for n in ns if 'Personal entries are excluded' in (n['text'] or '')), None)
         if ex['personalExcluded']:
             try:
-                self.check('reports personal excluded', parse_money(pe), ex['personalExcluded'])
+                self.check('reports personal excluded', vals['personal'], ex['personalExcluded'])
             except Fail as e:
                 errs.append(str(e))
         if errs:
@@ -846,7 +950,7 @@ class Run:
             raise Fail('left the app on tabs ' + ','.join(bad))
 
     # ── capture helpers ──
-    def capture(self, kind, amount, save_taps=1, kill_after=False):
+    def capture(self, kind, amount, save_taps=1, kill_after=False, raw=False):
         """Quick capture from Home: amount typed on the number pad, Save found by colour (no dump on this screen)."""
         p = self.p
         self.home()
@@ -858,8 +962,10 @@ class Run:
                 break
             time.sleep(0.4)
         time.sleep(0.6)
-        # Cash-register keypad (calc.ts): digits only, last two are pence/cents — "7.5" must be typed as 750.
-        p.type(str(round(float(amount) * 100)))
+        # Since B-122 (19daeae) amounts read as written ("1250" = 1250.00, "7.5" = 7.50); before it the keypad was
+        # cash-register style ("12.34" typed 1234). QA_CASH_REGISTER=1 for builds older than 19daeae.
+        cash = os.environ.get('QA_CASH_REGISTER') == '1'
+        p.type(str(round(float(amount) * 100)) if (cash and not raw) else amount)
         time.sleep(0.6)
         xy = None
         for _ in range(5):
@@ -895,7 +1001,7 @@ class Run:
         h = self.home_read()
         line = h['sorted_line'] or ''
         m = re.match(r'([\d,]+) entr', line)
-        uns = int(m.group(1).replace(',', '')) if m else (0 if ('All sorted' in line or not line) else None)
+        uns = int(m.group(1).replace(',', '')) if m else (0 if ('All sorted' in line or h['empty']) else None)
         return uns, h['out'], h['in']
 
     # ── behaviours ──
@@ -916,12 +1022,12 @@ class Run:
         u0, o0, i0 = self.home_counts()
         self.capture('expense', '12.34')
         self.mid_drop(drop)
-        self.capture('expense', '7.5')
+        self.capture('expense', '7.5', raw=True)  # B-61/B-122: "." accepted → 7.50
         self.capture('income', '120')
         u1, o1, i1 = self.home_counts()
         self.snap('after-capture')
         self.check('to sort +3', u1, (u0 or 0) + 3)
-        self.check('week out +19.84', o1, (o0 or 0) + 1984)
+        self.check('week out +19.84 (12.34 + 7.5 typed as written — B-122)', o1, (o0 or 0) + 1984)
         self.check('week in +120', i1, (i0 or 0) + 12000)
 
     def j_weekly_sorter(self, drop):
@@ -931,18 +1037,26 @@ class Run:
         p = self.p
         self.tab('Sort')
         sorted_n = 0
-        for _ in range(6):
+        names = {c['name'] for c in (self.backup or {}).get('tables', {}).get('categories', [])}
+        wu = (self.expect or {}).get('weekUnsorted', 0)
+        for _ in range(8 + 2 * wu):
             ns = p.nodes()
             if p.find('Week sorted', False, ns) or p.find('Nothing to sort', False, ns):
                 break
             chip = None
             mu = p.find('MOST USED', True, ns)
-            if mu:
-                cands = [n for n in ns if n['click'] and n['b'][1] > mu['b'][3] and n['text'] not in ('More…',) and (n['desc'] or n['text']) not in ('More…', 'Work', 'Personal')]
-                cands.sort(key=lambda n: (n['b'][1], n['b'][0]))
-                chip = cands[0] if cands else None
+            cands = [n for n in ns if n['click'] and (n['desc'] or n['text']) in names]
+            if not cands and mu:
+                cands = [n for n in ns if n['click'] and n['b'][1] > mu['b'][3] and (n['desc'] or n['text']) not in ('More…', 'Work', 'Personal')]
+            cands = [n for n in cands if n['b'][3] > n['b'][1] and n['b'][3] < p.size()[1] * 0.9]
+            cands.sort(key=lambda n: (n['b'][1], n['b'][0]))
+            chip = cands[0] if cands else None
             if not chip:
-                raise TimeoutError('no category chip on sort card')
+                # big font: the card scrolls inside itself — scroll it like a user
+                p.swipe_up(0.25)
+                time.sleep(0.8)
+                self.ui_notes.append('sort card: category chips below the fold, scrolled inside the card')
+                continue
             self.note('sort → ' + (chip['desc'] or chip['text']))
             p.tap_node(chip)
             sorted_n += 1
@@ -956,7 +1070,7 @@ class Run:
         if p.find_click('Done', True):
             p.press('Done', scroll=False)
         u, _, _ = self.home_counts()
-        self.check('unsorted after sorting', u, self.expect['unsorted'] if self.expect else 0)
+        self.check('unsorted after sorting the week', u, (self.expect['unsorted'] - wu) if self.expect else 0)
 
     def j_never_sorts(self, drop):
         p = self.p
@@ -968,8 +1082,9 @@ class Run:
         prog = next((n['text'] for n in ns if ' sorted' in (n['text'] or '') and ' of ' in (n['text'] or '')), None)
         self.note(f'Sort progress: {prog}')
         self.snap('sort-week')
-        if prog and not prog.startswith('0 of 3'):
-            raise Fail(f'expected "0 of 3 sorted" for this week, got {prog}')
+        n = (self.expect or {}).get('weekUnsorted', 0) + 3
+        if not prog or not prog.startswith(f'0 of {n} '):
+            raise Fail(f'expected "0 of {n} sorted" for this week (backup has {n - 3} unsorted this week + 3 new), got {prog}')
         p.press('List view', scroll=False)
         time.sleep(1.5)
         self.snap('sort-list')
@@ -1012,13 +1127,13 @@ class Run:
         p = self.p
         self.tab('Miles')
         p.press('Start trip', scroll=False)
-        lb = p.wait_any(['Allow location', 'RECORDING'], 10)
-        if lb == 'Allow location':
+        lb = p.wait_any(['Allow location', 'Track business miles', 'RECORDING'], 10)
+        if lb != 'RECORDING':  # permission screen; at big fonts "Allow location" is below the fold (press scrolls)
             p.press('Allow location')
             p.press('While using the app', exact=False)
             lb2 = p.wait_any(['Step 2 of 2', 'RECORDING', 'notifications'], 10)
             if lb2 == 'Step 2 of 2':
-                p.press('Not now')
+                p.press('Not now')  # scrolls if needed
             lb3 = p.wait_any(['notifications?', 'RECORDING'], 10)
             if lb3 == 'notifications?':
                 p.press('Allow')
@@ -1058,9 +1173,11 @@ class Run:
         p.type('48338')
         p.hide_kb()
         self.mid_drop(drop)
-        dist = p.value_right_of('Distance')
+        ns = p.nodes()
+        # the "Distance" mode tab has the same text as the result label: read the computed "128.0 mi" itself
+        dist = next((n['text'] for n in ns if re.fullmatch(r'=? ?[\d,]+(\.\d)? (mi|km)', n['text'] or '')), None)
         self.snap('odometer')
-        self.check('distance from odometer', (dist or '').replace(',', ''), '128.0 mi' if self.region == 'US' or True else '')
+        self.check('distance from odometer 48210→48338', re.sub(r'^= ?', '', (dist or '').replace(',', '')), '128 mi')
         p.press('Save trip')
         p.wait('Trip saved', 10)
         self.snap('saved')
@@ -1074,7 +1191,13 @@ class Run:
         self.snap('export')
         p.press('Export 1 file', exact=False)
         t0 = time.time()
-        lb = p.wait_any(['Sharing 1 file', "Couldn't", 'went wrong'], 60)
+        lb = p.wait_any(['Sharing 1 file', "Couldn't", 'went wrong', "aren't sorted", "isn't sorted"], 60)
+        if 'sorted' in lb:
+            # unsorted warning: snap it (dark theme: "Sort first" label invisible — A37-7), then Export anyway
+            self.snap('unsorted-warning')
+            self.note('export warning: ' + ' | '.join(p.texts()[:6]))
+            p.press('Export anyway', scroll=False)
+            lb = p.wait_any(['Sharing 1 file', "Couldn't", 'went wrong'], 60)
         self.metrics['exportCsvMs'] = int((time.time() - t0) * 1000)
         fn = next((n['text'] for n in p.nodes() if (n['text'] or '').endswith('.csv')), None)
         self.snap('share-sheet')
@@ -1083,6 +1206,30 @@ class Run:
         time.sleep(1.5)
         if lb != 'Sharing 1 file':
             raise Fail('export failed: ' + lb)
+        # B-62: after the share sheet the app asks "Did you send or save the files?"; only "Yes" marks Exported
+        ns = p.nodes()
+        ask = next((n['text'] for n in ns if 'send or save' in (n['text'] or '')), None)
+        self.snap('after-share')
+        self.note('after share sheet: ' + ' | '.join(p.texts()[:8]))
+        if not ask:
+            raise Fail('B-62: no "Did you send or save the files?" question after cancelling the share sheet')
+        no = next((n for n in ns if n['click'] and re.match(r'(No|Not yet|Cancel)', (n['text'] or n['desc'] or ''))), None)
+        if not no:
+            raise TimeoutError('no "No" answer in the export question')
+        self.note('answer: ' + (no['text'] or no['desc']))
+        p.tap_node(no)
+        time.sleep(1.5)
+        self.tab('Entries')
+        ns = p.nodes()
+        row = next((n for n in ns if n['click'] and re.search(r', [+−-][£$]', n['desc'] or '')), None)
+        if row:
+            p.tap_node(row)
+            p.wait_any(['Save changes', 'Date & time'], 10)
+            exp = p.find('Exported on', False)
+            self.snap('entry-after-no')
+            self.note('entry detail Exported label: ' + (exp['text'] if exp else 'none'))
+            if exp:
+                raise Fail('B-62: entry shows "Exported on" after answering No')
         if not fn or not re.match(r'SundaySort-entries-\d{4}(-\d\d)?\.csv', fn):
             raise Fail(f'unexpected export file name {fn}')
         # PDF is Pro: should show the Pro gate, not crash
@@ -1168,6 +1315,18 @@ class Run:
         self.snap('region-dialog')
         self.note('dialog: ' + ' | '.join(p.texts()[:12]))
         ns = p.nodes()
+        rate_field = next((n for n in ns if (n['text'] or '').startswith('e.g. ')), None)
+        if rate_field:
+            # entries in the old currency get converted: the dialog needs "1 <old> = ? <new>"
+            rate = '0.79' if new == 'United Kingdom' else '1.27'
+            p.tap_node(rate_field)
+            time.sleep(0.8)
+            p.type(rate)
+            time.sleep(0.5)
+            p.hide_kb()
+            self.note(f'exchange rate typed: {rate}')
+            self.snap('region-rate')
+            ns = p.nodes()
         btn = next((n for n in ns if n['click'] and (n['text'] or n['desc']) in ('Switch', 'Change', 'Switch region', 'Change region', 'Continue', 'Keep amounts', 'Convert')), None)
         if not btn:
             cands = [n for n in ns if n['click'] and (n['text'] or n['desc']) not in ('Cancel', 'Close')]
@@ -1359,13 +1518,15 @@ class Run:
         self.home()
         self.tab('Entries')
         ns = p.nodes()
-        hit = next((n for n in ns if 'HYPERLINK' in (n['text'] or '')), None)
+        # the row's full note is in its content-desc ("<note>, −£4.44, Unsorted"); the visible text may be truncated
+        hit = next((n for n in ns if 'HYPERLINK' in (n['text'] or '') or 'HYPERLINK' in (n['desc'] or '')), None)
         self.snap('entries-weird')
         if not hit:
             raise Fail('weird note not shown in Entries list')
-        self.note('list shows: ' + hit['text'])
-        if hit['text'].strip() != weird.strip():
-            raise Fail(f'note changed: {hit["text"]!r} ≠ {weird!r}')
+        shown = hit['text'] if 'HYPERLINK' in (hit['text'] or '') else re.split(r', [+−-][£$]', hit['desc'])[0]
+        self.note('list shows: ' + shown)
+        if shown.strip() != weird.strip():
+            raise Fail(f'note changed: {shown!r} ≠ {weird!r}')
         # search with quote/percent characters must not crash or match everything
         p.press('Search notes or amounts', exact=False, scroll=False)
         time.sleep(0.5)
@@ -1375,9 +1536,11 @@ class Run:
         ns = p.nodes()
         rows = [n for n in ns if n['click'] and re.search(r', [+−-][£$]', n['desc'] or '')]
         self.snap('search-percent')
-        self.note(f'search "100%" rows: {len(rows)}')
-        if len(rows) != 1:
-            raise Fail(f'search "100%" shows {len(rows)} rows, expected 1')
+        # expected: our new entry + backup notes that contain "100%" (the % must be literal, not a LIKE wildcard)
+        want = 1 + sum(1 for e in (self.backup or {}).get('tables', {}).get('entries', []) if '100%' in (e.get('note') or ''))
+        self.note(f'search "100%" rows: {len(rows)} (expected {want})')
+        if len(rows) != want:
+            raise Fail(f'search "100%" shows {len(rows)} rows, expected {want}')
 
     def j_app_lock(self, drop):
         raise Skip('App lock needs a screen lock + fingerprint on the emulator (security setting) — waiting for coordinator')
@@ -1501,6 +1664,7 @@ class Run:
                 'persona': per,
                 'profile': self.profile,
                 'serial': self.p.serial,
+                'apk': getattr(self.p, 'apk', ''),
                 'sdk': self.p.sdk,
                 'appRegion': self.region,
                 'startedAt': dt.datetime.fromtimestamp(t0).isoformat(timespec='seconds'),
@@ -1510,6 +1674,7 @@ class Run:
                 'steps': self.steps,
                 'summary': dict(Counter(s['status'] for s in self.steps)),
                 'uiNotes': sorted(set(self.ui_notes)),
+                'envNotes': sorted(set(self.env_notes)),
             }
             with open(os.path.join(self.dir, 'result.json'), 'w', encoding='utf-8') as f:
                 json.dump(res, f, ensure_ascii=False, indent=1)
@@ -1525,6 +1690,9 @@ def main():
     ap.add_argument('--profile-override', help='use this profile instead of the persona android field')
     ap.add_argument('--out', default='android37', help='folder under qa-runs/')
     ap.add_argument('--skip-done', action='store_true', help='skip personas that already have result.json')
+    ap.add_argument('--apk', default='', help='APK label recorded in result.json (e.g. 538ede9)')
+    ap.add_argument('--max', type=int, default=0, help='stop after N personas (restart the emulator between batches)')
+    ap.add_argument('--redo-failed', action='store_true', help='skip personas whose result.json has no ❌')
     a = ap.parse_args()
     personas = json.load(open(PERSONAS, encoding='utf-8'))
     pick = []
@@ -1536,6 +1704,7 @@ def main():
     out_root = os.path.join(ROOT, 'qa-runs', a.out)
     os.makedirs(out_root, exist_ok=True)
     phone = Phone(a.serial)
+    phone.apk = a.apk
     # Device defaults read once and kept in a file, so a crashed run can't make a QA value look like the original.
     dpath = os.path.join(out_root, f'_defaults-{a.serial}.json')
     if os.path.exists(dpath):
@@ -1553,10 +1722,23 @@ def main():
         }
         json.dump(phone.defaults, open(dpath, 'w', encoding='utf-8'))
     print('device defaults', phone.defaults, flush=True)
+    done = 0
     for per in pick:
-        if a.skip_done and os.path.exists(os.path.join(out_root, per['id'], 'result.json')):
+        rp = os.path.join(out_root, per['id'], 'result.json')
+        if a.skip_done and os.path.exists(rp):
             continue
+        if a.redo_failed and os.path.exists(rp):
+            try:
+                old = json.load(open(rp, encoding='utf-8'))
+                # passed, or already ran on this APK (its ❌ needs a human look before another run)
+                if (a.apk and old.get('apk') == a.apk) or (not a.apk and '❌' not in old.get('summary', {})):
+                    continue
+            except ValueError:
+                pass
         Run(phone, per, out_root, a.profile_override or per['android']).go()
+        done += 1
+        if a.max and done >= a.max:
+            break
 
 
 if __name__ == '__main__':

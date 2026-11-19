@@ -103,10 +103,36 @@ def keyboard_actions(region):
     return a
 
 
+def keyboard2_actions(region):
+    """B-126 v2 (NUMERIC_INPUT on every numeric field): Edit entry amount, Sort card Edit amount, Settings → Mileage
+    rates first rate field. Each field: tap, dump the IME state, back out. UK only (labels below are UK)."""
+    def tap(label):
+        return {'eventType': 'VIEW_CLICKED', 'elementDescriptors': [{'contentDescription': label}]}
+
+    dump = {'eventType': 'ADB_SHELL_COMMAND',
+            'command': "dumpsys input_method | grep -E 'mInputShown|inputType|imeOptions'"}
+    back = {'eventType': 'PRESSED_BACK'}
+    a = keyboard_actions(region)[:-4]  # onboarding, New expense, dump, type 7,7, dump, Save (+ wait)
+    a += [
+        wait(1500),
+        tap('No note, −£7.70, Unsorted'), wait(2500),           # Home → Recent row → entry screen
+        tap('Edit amount, £7.70'), wait(2500), dump, wait(1500),   # field 1: edit entry amount
+        back, wait(1200), back, wait(2000),
+        tap('Sort, 1 to sort'), wait(2500), tap('Edit'), wait(2000),  # tab label carries the badge
+        tap('Amount'), wait(2500), dump, wait(1500),               # field 2: Sort card Edit → Amount
+        back, wait(1200), tap('Home'), wait(2000),
+        tap('Settings'), wait(2000), tap('Mileage rates, 55p / 25p'), wait(2500),
+        {'eventType': 'VIEW_CLICKED', 'elementDescriptors': [{'className': 'android.widget.EditText'}]},
+        wait(2500), dump, wait(1500),                              # field 3: Field (first mileage rate)
+        back, wait(1200),
+    ]
+    return a
+
+
 if __name__ == '__main__':
     here = os.path.dirname(os.path.abspath(__file__))
     for region in ('UK', 'US'):
-        for kind, fn in (('simple', simple_actions), ('full', full_actions), ('keyboard', keyboard_actions)):
+        for kind, fn in (('simple', simple_actions), ('full', full_actions), ('keyboard', keyboard_actions)) + ((('keyboard2', keyboard2_actions),) if region == 'UK' else ()):
             with open(os.path.join(here, f'robo-{region.lower()}-{kind}.json'), 'w', encoding='utf-8', newline='\n') as f:
                 json.dump(fn(region), f, indent=1, ensure_ascii=False)
                 f.write('\n')

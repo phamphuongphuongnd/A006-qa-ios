@@ -133,6 +133,36 @@ kết quả kick/start. Đã báo điều phối.
   Gốc thật: expo-location tự chặn startLocationUpdatesAsync khi không có màn hình (AppForegroundedSingleton.isForegrounded=false
   → ForegroundServiceStartNotAllowedException). Sửa B-124 (4dcaa0b): allowBackgroundLocationStart + nhật ký start_ok/start_failed.
   Phương xem các hướng A–E, chọn B rồi bỏ B sau khi biết B-124 sửa được không cần thông báo cố định.
+- **0bf4283 cài đè 10:35:48** — ⚠️ lỗi QA: Phương đã Start chuyến 10:34:32, tôi cài đè khi chuyến đang chạy → GPS dừng 10:35:48,
+  thông báo trip-ongoing đăng lại 10:35:55 nhưng LocationTaskService chỉ chạy lại 10:38:44 (app lên foreground) → hụt ~3 phút.
+  🟡 sau cập nhật app, chuyến running không tự bật GPS tới khi mở app. Luật thêm: trước khi cài kiểm `dumpsys activity services`
+  không có LocationTaskService. **B-126 ✅** Sửa khoản (ô £) + Parking & tolls: bàn phím số 0x2002 có "." ",". Dữ liệu 233/271/8/12
+  (+2 chuyến Phương Start), không mất id. Bài Start ngồi nhà: 10:19:53 → tự tắt 10:30:34 (Merge 10 phút Phương đặt), 0.0 km,
+  endedAt = lúc đứng yên ✅; chưa bấm Continue trip.
+- 10:47:52 chuyến Start 10:34 tự tắt → thông báo "Trip ended at 10:34 · 0.0 km — You hadn't moved for a while, so the trip was
+  saved. Still on your way? Tap Continue trip." (1 nút) ✅.
+  **A13-14 🟠 Continue trip tắt lại sau 3 giây**: Phương bấm nút 10:48:45 → GPS start + trip-ongoing → 10:48:48 stop + lại "Trip
+  ended at 10:34". Nghi: reopenTrip (tripsRepo.ts:104-106) chỉ đánh dấu bằng lastPointAt=now; fix đầu sau Continue được lưu thì
+  lastMoveAt (240-245) mất resumedAt → parkedSince toàn bộ điểm = 10:34 → backgroundTask.ts:50 end ngay. Đã báo điều phối.
+- **11:07–11:32 (0f08c76 → a3a1f6b)**: Back up now; Phương nhờ xoá 3 chuyến thử 0 km (10:19/10:34/10:52) → đã xoá. 0f08c76 cài
+  11:10:56 khi không có chuyến (isForeground=0). **B-127 ✅** 12345678 → £123,456.00 + "Max £999,999.99" (🟡 chữ đen, không vàng).
+  **B-128 ✅** Sort → Edit → Amount: ô Amount + Done ở trên bàn phím số. **B-130 ✅** Start 11:16:37 → tự kết thúc 11:27:21 →
+  Continue 11:28:52 → vẫn chạy 11:31:03+. **B-129 ✅** (Phương đồng ý) cài đè a3a1f6b 11:31:21 giữa chuyến, không mở app:
+  TripDetectTaskService 11:31:25 → LocationTaskService 11:31:27 (PROC_STATE_FGS) → GPS hụt ~6 s; chẩn đoán `restore_ok
+  {screen: background}` (`diagnostics/SundaySort-trip-diagnostics-2026-11-19-04-32.json`).
+- B-130 tiếp: chuyến Continue 11:28:52 tự kết thúc 11:37:50, thông báo "Trip ended at 11:27" → 🟡 sớm ~1 phút + endedAt trước
+  giờ Continue; điều phối: fix cũ (11:27:50) hệ thống giữ được lưu làm đầu đoạn → sửa B-135.
+- **8619687 cài 11:39:46** (không có chuyến). **B-131 ✅**: Start 11:40:44 → 11:42:55 dumpsys location đổi Request @+5s → @+30s
+  HIGH_ACCURACY (2 phút 11 s), giữ 30 s tới 11:47:59; CPU 0.28%/366 s, 0 wakelock (`perf-trip-still-8619687.json`). Chưa thử nhánh
+  drive (> 100 m) + gps_mode trong chẩn đoán.
+- **A13-14 tái hiện lần 2 (lượt sạch, không cài/đổi cài đặt)**: Start 10:52:01 → tự kết thúc 11:02:46 (Merge 10) "Trip ended at
+  10:52 · 0.0 km" ✅ → Continue 11:03:25 → tắt lại 11:03:48.9 (23 s) ❌. Điều phối sửa B-130.
+  Phương chốt: chuyến đang chờ Continue mà nối BT / sạc + đi / Start → tạo chuyến mới như hiện tại (không tự nối).
+- Đo thụ động 5 phút khi đang có chuyến (Start 10:52), máy đứng yên, cắm cáp (pin luôn 100% → không đo được %):
+  CPU app **0.19%** (570 ms/302 s; luồng chính 250 ms, JS 70 ms), 0 wakelock của app; GPS fused HIGH_ACCURACY mỗi 5 s suốt
+  thời gian đứng yên → phần hao pin chính là GPS. 🟡 gợi ý: khi activity "still" hạ xuống BALANCED/khoảng thưa hơn tới khi
+  di chuyển lại. `perf-trip-still-300s.json`. Đo pin thật cần một ca lái không cắm sạc.
+- Quyết định Phương (19/11): B-113 đóng; xoá 2 repo test sau khi phiên con test xong; iOS B-95/96 để Phương kiểm sau (giới hạn đã biết).
 - **B-123 ✅** (bcf8827): chuyến giả 09:40:29 → 10:00:47 tự dừng (LocationTaskService stop + hủy trip-ongoing, 20 phút 18 giây);
   không có trong Miles, trips vẫn 269, tripPoints không thêm → < 500 m bị bỏ.
 - **dc84207 (B-123..B-126) cài đè 10:05** (Back up now trước): 233/269/8/12, id không đổi ✅; quyền còn; sao lưu đêm bật.

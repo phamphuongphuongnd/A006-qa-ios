@@ -69,6 +69,9 @@ export function appendPoints(db: AppDb, tripId: string, points: PointInput[], op
     let ref: { lat: number; lng: number } | null = resumed ? null : (lastStored ?? null);
     const kept: PointInput[] = [];
     for (const p of points) {
+      // B-135: the first fix after Continue / Resume can be the OS's cached one from before the tap — it would date the
+      // new segment (and the stop) back before the tap: the trip ended a minute early, "ended at" before it continued.
+      if (resumed && p.ts < (trip.lastPointAt ?? 0)) continue;
       if (isStationaryFix(ref, p, opts)) continue;
       kept.push(p);
       ref = p;
@@ -103,6 +106,11 @@ export function resumeTrip(db: AppDb, tripId: string, now = Date.now()) {
  */
 export function reopenTrip(db: AppDb, tripId: string, now = Date.now()) {
   db.update(trips).set({ status: 'running', endedAt: null, lastPointAt: now }).where(and(eq(trips.id, tripId), eq(trips.status, 'done'))).run();
+}
+
+/** B-96 v2: a running Trip keeps going from `now` — the next fix starts a new segment and the stop counts from here. */
+export function resumeFrom(db: AppDb, tripId: string, now = Date.now()) {
+  db.update(trips).set({ lastPointAt: now }).where(and(eq(trips.id, tripId), eq(trips.status, 'running'))).run();
 }
 
 export function endTrip(db: AppDb, tripId: string, now = Date.now()): TripRow | undefined {
@@ -241,7 +249,18 @@ export function lastMoveAt(db: AppDb, trip: { id: string; startedAt: number; las
   const points = tripPointsOf(db, trip.id);
   const lastStored = points.length ? points[points.length - 1].ts : 0;
   const resumedAt = trip.lastPointAt !== null && trip.lastPointAt > lastStored ? trip.lastPointAt : 0;
-  return Math.max(parkedSince(points, trip.startedAt), resumedAt);
+  // A13-14: once a fix after Resume / Continue trip is stored (first fix of the new segment), only that segment counts —
+  // a fix at the same parking spot must not bring back the stop from before (it ended the trip again 3 s later).
+  let from = 0;
+  for (let i = points.length - 1; i > 0; i--) {
+    if (points[i].segmentStart) {
+      from = i;
+      break;
+    }
+  }
+  const segment = from > 0 ? points.slice(from) : points;
+  const segmentFrom = from > 0 ? points[from].ts : trip.startedAt;
+  return Math.max(parkedSince(segment, segmentFrom), resumedAt);
 }
 
 export const tripPointsOf = (db: AppDb, id: string) =>

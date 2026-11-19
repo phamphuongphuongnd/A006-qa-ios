@@ -20,6 +20,8 @@ import { receiptUri } from '@/files/receipts';
 import { t } from '@/i18n';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, radius, useTheme } from '@/theme';
+import { digitIgnored, sanitizeAmount } from '@/features/ocr/calc';
+import { MaxAmountNote } from '@/features/ocr/ui';
 import { Button, Card, EmptyState, IconButton, NUMERIC_INPUT, ReceiptThumb, Segmented, Txt } from '@/ui';
 
 interface Part {
@@ -65,6 +67,8 @@ function SplitEditor({ entry }: { entry: EntryRow }) {
   const minors = parts.map((p) => partMinor(p.text));
   const check = checkSplit(total, minors);
   const update = (key: number, patch: Partial<Part>) => setParts((ps) => ps.map((p) => (p.key === key ? { ...p, ...patch } : p)));
+  // B-133: the part whose last digit went past 999,999.99.
+  const [limitKey, setLimitKey] = useState<number | null>(null);
 
   const addPart = () =>
     setParts((ps) => {
@@ -128,7 +132,12 @@ function SplitEditor({ entry }: { entry: EntryRow }) {
                   </Txt>
                   <TextInput
                     value={p.text}
-                    onChangeText={(v) => update(p.key, { text: v.replace(/[^\d.]/g, '') })}
+                    onChangeText={(v) => {
+                      // B-133: reads like Quick add ("33,01" = 33.01, 999,999.99 at most).
+                      const next = sanitizeAmount(v);
+                      setLimitKey(digitIgnored(p.text, v, next) ? p.key : null);
+                      update(p.key, { text: next });
+                    }}
                     keyboardType="decimal-pad"
                     {...NUMERIC_INPUT}
                     placeholder="0.00"
@@ -138,6 +147,7 @@ function SplitEditor({ entry }: { entry: EntryRow }) {
                     style={{ flex: 1, minHeight: 52, fontSize: 22, fontFamily: fonts.extrabold, color: colors.text, fontVariant: ['tabular-nums'] }}
                   />
                 </View>
+                <MaxAmountNote show={limitKey === p.key} currency={currency} />
                 <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                   <Pressable
                     accessibilityRole="button"

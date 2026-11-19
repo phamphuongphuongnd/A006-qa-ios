@@ -74,6 +74,19 @@ export const notifySilent = () => post(NOTIF_SILENT, t('autoTrip.notif.silentTit
 export const scheduleStill = (at: number) =>
   post(NOTIF_STILL, t('autoTrip.notif.stillTitle'), t('autoTrip.notif.stillBody'), { category: CATEGORY_LONG, url: '/trip/active', at });
 
+/**
+ * B-96 v2 (iOS, Phương 19/11): a Trip the driver started ends after the merge threshold without moving (B-123) — but
+ * only when JS runs. If iOS stopped the app, this booked notice says so instead, with the same identifier, text and
+ * "Continue trip" as the one the engine posts (`notifyTripEnded`), so the driver never sees two.
+ */
+export const scheduleTripEnded = (at: number, endedAt: number, distance: string, tripId: string) =>
+  post(NOTIF_AUTO_SAVED, t('autoTrip.notif.endedTitle', { time: formatClock(endedAt), distance }), t('autoTrip.notif.endedDriverBody'), {
+    url: `/trip/${tripId}`,
+    category: CATEGORY_ENDED,
+    data: { tripId },
+    at,
+  });
+
 export const scheduleSilent = (at: number) =>
   post(NOTIF_SILENT, t('autoTrip.notif.silentTitle'), t('autoTrip.notif.silentBody'), { url: '/trip/active', at });
 

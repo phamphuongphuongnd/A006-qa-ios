@@ -183,6 +183,52 @@ Log `[B98v4]`: API 26 `top=363 y=216 h=200.5 covered=54 cramped=false` → `y=32
 Android 7 `top=305 … covered=68` → `y=263 h=66 cramped=true`. (`covered=24` còn lại ở trạng thái gọn là phần đệm dưới của khối; ảnh cho thấy Save
 nằm trọn trên bàn phím, cách mép 27 px.) Ảnh: `api26/v4_strip.png`, `api24/v4_strip.png`.
 
+### APK f3795bf (B-133 số tiền Split, B-134 nút + / thanh phí đỗ xe / hỏi bỏ chuyến), API 26 360×640dp chữ 1.0, 2026-11-19 11:45–11:58 · `qa-runs/android-old/verify-f3795bf/`
+(Lần khởi động đầu chụp màn ra toàn trắng ở mọi màn → tắt máy, khởi động lạnh `-no-snapshot-load` thì bình thường.)
+| Kiểm | Kết quả |
+|---|---|
+| B-133 thẻ Sort → Split (£66.02) gõ "33,01" | ✅ ô thành "33.01", "Left to assign £0.00" (`23-split-33,01.png`) |
+| … gõ "33.011" | ✅ ô còn "33.01" (nhưng hiện "Max £999,999.99" → OLD-19) (`25`, `47`) |
+| … gõ "12345678" | ✅ dừng "123456" (đủ 6 số trên 360dp) + "Max £999,999.99"; "£123,422.99 over" (`27`) |
+| … chạm ô Part 1 / Part 2 | ✅ thẻ cuộn tới đúng ô đang gõ, ô nằm đầu thẻ ngay trên bàn phím, không xuống đáy (`21-split-p1-focus`, `30-split-p2-focus`) |
+| Màn Split riêng (Entries → M6 toll → ⋯ → Split £170.93) | ✅ "85,47" → 85.47 / £0.00; "85.471" → 85.47; "12345678" → "123456" + "Max £999,999.99" ngay dưới ô, "£123,370.53 over" (`37`–`42`) |
+| Sort → Edit ô Amount gõ "7,5" | ✅ ô "£7.5" → Done → thẻ £7.50 (`32`, `34`); đã trả lại 66.02 |
+| Rules → giới hạn số tiền "10,5" | ⏭ Auto-sort rules là Pro ("Auto-sort is part of Pro · See Pro"), máy free, luật QA không bấm Pro/dùng thử, APK không debuggable nên không bật Pro qua dữ liệu được. Đọc mã: ô From/To dùng `sanitizeAmount` (đổi "," → ".") + `decimal-pad` — **chưa thử trên máy** |
+| B-134a Reports mới mở | ✅ chữ thẻ "Choose how you claim your vehicle" thu hẹp tới x=544, đọc đủ "…until you choose.", nút + (x 560–688) không đè chữ (`01-reports.png`) |
+| B-134b Add trip → Parking & tolls gõ 12345678 | ✅ thanh trên bàn phím "Parking & tolls £123,456.00" + "Max £999,999.99" (`12`); Back → thanh tính biến mất, "Parking & tolls" chỉ 1 lần, ô £123,456.00 + Max dưới ô (`13`) |
+| B-134c Add trip → X | ✅ có phí → "Discard this trip? / What you've typed won't be saved." (Keep editing giữ nguyên £123,456.00; Discard → về Miles, "No trips yet"); chỉ gõ số đồng hồ 48210 → cũng hỏi; chưa gõ gì → X đóng luôn (`14`, `19`, `10`) |
+| Log | ✅ không FATAL, không lỗi ReactNativeJS |
+
+**🟡 OLD-19 Gõ số lẻ thứ 3 → hiện "Max £999,999.99" (sai nghĩa)** — ở mọi ô số tiền, không riêng Split: Ghi nhanh gõ từng phím "12.34" rồi "5" →
+£12.34 + "Max £999,999.99" (`52-qc-12.34+5.png`; trước phím "5" không có: `51`); thẻ Sort Split "33.01" + "1" → như vậy (`46`, `47`).
+Số tiền đúng (bỏ số lẻ thứ 3), chỉ câu báo sai: người dùng tưởng vượt mức tối đa. Mã: `digitIgnored()` (`src/features/ocr/calc.ts:166`) coi
+mọi chữ số bị bỏ là chạm giới hạn — cả khi bị bỏ vì đã đủ 2 số lẻ. (Gõ cả chuỗi một lần bằng adb thì không hiện, nên lượt trước không thấy.)
+Gợi ý: chỉ bật Max khi phần nguyên đã đủ 6 số; số lẻ thứ 3 thì im lặng (hoặc câu riêng "2 decimal places").
+
+Ghi chú nhỏ (ngoài phạm vi): màn Split riêng gõ 123456 rồi bấm X → đóng luôn, không hỏi "Discard?" (khoản không đổi: M6 toll vẫn −£170.93).
+
+### APK a3a1f6b (lỗi giao diện nhỏ B-60, B-71, B-126, B-127), API 26 360×640dp chữ 1.0, 2026-11-19 11:12–11:22 · `qa-runs/android-old/verify-a3a1f6b/`
+| Kiểm | Kết quả |
+|---|---|
+| B-60 thẻ "Choose how you claim your vehicle" | ✅ 2 nút xếp dọc ("Mileage rate", "Actual costs", x 64–544); nút + (x 560–688) không che "Actual costs"; cuối trang có chỗ trống dưới nút +. Ảnh `01-reports.png`, `02-reports-scroll.png`, `03-reports-bottom.png`. **🟡 OLD-17a:** lúc mới mở Reports (chưa cuộn), nút + đè lên dòng phụ "Totals use the mileage rate u[ntil] you choose." (`01-reports.png`) |
+| B-71 đổi vùng có quy đổi | ✅ UK→US: gợi ý "e.g. 1.27", nhập 0 → "Enter a rate like 1.27". US→UK: gợi ý "e.g. 0.79", nhập 0 / abc / -1 / 1.2.3 / 0,79,1 → "Enter a rate like 0.79" (viền đỏ). Đổi qua lại (1.25 rồi 0.8) → Reports vẫn £1,217.63 / £1,400.68. Ảnh `07`, `08-uk2us-err0`, `10`, `12-us2uk-err-123` |
+| B-127 Ghi nhanh gõ 12345678 | ✅ dừng ở £123,456.00, dòng vàng "Max £999,999.99" ngay dưới số (`16-qc-after-keep.png`) |
+| B-127 Sửa khoản gõ 12345678 | ✅ £123,456.00 + "Max £999,999.99" (`20-edit-12345678.png`) |
+| B-127 Phí đỗ xe (Add trip → Parking & tolls) gõ 12345678 | ✅ dừng ở £123,456.00, có "Max £999,999.99" (`32-parking-closed.png`). **🟡 OLD-17b:** khi đang gõ, thanh tính "Parking & tolls £… + − × ÷" che ô và dòng Max — chỉ thấy Max sau khi đóng bàn phím (`31`); đóng bàn phím xong thanh tính vẫn nằm đó nên "Parking & tolls £123,456.00" hiện 2 lần (`32`) |
+| B-127 link `export?year=999999` (và `year=-5`) | ✅ Period "Tax year 2026/27" (`33`, `36`) |
+| B-127 mở link export khác khi màn Export đang mở | ✅ `year=2024` → Tax year 2024/25; `mode=q2&year=2025` → "Q2 · 6 Jul – 5 Oct 2025"; rồi `year=999999` → 2026/27. (Gõ `&` phải để trong nháy đơn trong `adb shell "…"`, không thì máy cắt mất `year`.) |
+| B-126 bàn phím số | ✅ Sửa khoản (`19`), Split (`23`), Parking & tolls (`30`), tỷ giá đổi vùng (`07`, `12`): đều bàn phím số có "," và "." |
+| Log | ✅ không FATAL, không lỗi ReactNativeJS |
+
+**🟠 OLD-18 Split: ô số tiền không đọc số như Ghi nhanh (B-122) — tổng "Left to assign" sai, không báo lỗi** (`25`, `26-split-*.png`). Thẻ £66.02 → Split (33.01 + 33.01):
+- Gõ "33,01" (dấu phẩy thập phân, Ghi nhanh nhận = 33.01) → ô bỏ dấu phẩy thành **"3301"** → "£3,267.99 over".
+- Gõ "33.011" → ô giữ "33.011" nhưng tính như **0** → "£33.01 left" (Ghi nhanh cắt còn 33.01).
+- Gõ "12345678" → nhận hết, không có dòng Max → "£12,345,644.99 over"; ô 360dp chỉ hiện "345678" (mất số đầu); nhãn "Left to assign" xuống 2 dòng.
+- Thêm (🟡): bấm vào ô Part 1 → thẻ cuộn xuống đáy ("Add part / Left to assign / Split & sort"), ô đang gõ ra khỏi tầm nhìn tới khi gõ ký tự đầu (`23-split-kbd.png`).
+Không lưu sai được (khi "over"/"left" thì không có nút Split & sort), nhưng người dùng gõ kiểu châu Âu "33,01" sẽ thấy số sai mà không hiểu vì sao.
+
+Ghi chú nhỏ: Add trip có phí đỗ xe £123,456 → bấm X đóng luôn, không hỏi "Discard?" như Ghi nhanh / Sửa khoản (không lưu chuyến nào — "No trips yet").
+
 ### APK 19daeae (B-122 số tiền nhập như viết), 2026-11-19 09:00–09:19 · `qa-runs/android-old/verify-19daeae/` — ✅
 | Kiểm | API 26 (360×640dp) | Android 7 |
 |---|---|---|

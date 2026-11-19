@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { formatMoney } from '@/domain/money';
+import { formatMoney, MAX_MINOR } from '@/domain/money';
 import type { ProStatus } from '@/domain/pro';
 import type { Currency } from '@/domain/types';
 import { dayMonth } from '@/features/entries/format';
@@ -21,6 +21,21 @@ const OP_LABEL: Record<CalcOp, { glyph: string; a11y: Parameters<typeof t>[0] }>
   '*': { glyph: '×', a11y: 'ocr.opTimes' },
   '/': { glyph: '÷', a11y: 'ocr.opDivide' },
 };
+
+/** "Max £999,999.99" while the last digit typed was dropped by the limit (QA-100 19/11: it vanished silently). */
+export function AmountLimitHint({ amount, currency }: { amount: AmountExpr; currency: Currency }) {
+  return <MaxAmountNote show={amount.atLimit} currency={currency} />;
+}
+
+/** Same "Max £999,999.99" for a plain amount field (B-133). */
+export function MaxAmountNote({ show, currency }: { show: boolean; currency: Currency }) {
+  if (!show) return null;
+  return (
+    <Txt v="caption" c="sunText" accessibilityLiveRegion="polite" style={{ fontFamily: fonts.semibold, textAlign: 'center' }}>
+      {t('ocr.maxAmount', { amount: formatMoney(MAX_MINOR, currency) })}
+    </Txt>
+  );
+}
 
 /** "+ − × ÷" row that sits right above the system number pad (AmountKeypad, Q20). */
 export function CalcBar({ onOp }: { onOp: (op: CalcOp) => void }) {

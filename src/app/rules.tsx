@@ -19,6 +19,7 @@ import { usePro } from '@/state/pro';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { fonts, useTheme } from '@/theme';
+import { sanitizeAmount } from '@/features/ocr/calc';
 import { Badge, Button, Card, Field, Group, Screen, Segmented, Sheet, Toggle, Txt, useSnackbar } from '@/ui';
 
 const ERR: Record<RuleError | 'duplicate', TKey> = {
@@ -239,7 +240,7 @@ function RuleSheet({
             label={t('sortV2.from')}
             value={min}
             onChangeText={(v) => {
-              setMin(v.replace(/[^\d.]/g, ''));
+              setMin(sanitizeAmount(v));
               setError(null);
             }}
             keyboardType="decimal-pad"
@@ -251,7 +252,7 @@ function RuleSheet({
             label={t('sortV2.to')}
             value={max}
             onChangeText={(v) => {
-              setMax(v.replace(/[^\d.]/g, ''));
+              setMax(sanitizeAmount(v));
               setError(null);
             }}
             keyboardType="decimal-pad"

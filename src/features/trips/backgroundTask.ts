@@ -16,16 +16,19 @@ import { refreshWidgets } from '@/features/widgets/refresh';
 import { addSignalListener, TRIP_DETECT_TASK } from '../../../modules/trip-detect';
 import { syncIosBackstops } from './auto/backstop';
 import type { EngineState } from './auto/engine';
-import { hasActivityPermission } from './auto/native';
+import { hasActivityPermission, logDiagnostic } from './auto/native';
 import { getKV } from './auto/repo';
 import { processAutoSignals, syncAutoDetection } from './auto/runner';
 import { TRIP_TASK } from './constants';
+import { restoreRecording, syncGpsMode } from './controller';
 import { formatDistance } from './format';
 import { cancelLongTripReminder, clearTripNotification, showTripNotification } from './notify';
 
 let lastWidgetAt = 0;
 /** Engine pass from the GPS task (Phương 19/11): a Trip standing still ends on time even if no alarm fires. */
 let lastEngineAt = 0;
+/** B-131: GPS rate check (every batch while parked — batches are 30 s apart then — at most every 20 s while driving). */
+let lastGpsModeAt = 0;
 
 TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ data, error }) => {
   if (error) return;
@@ -82,6 +85,10 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
     lastEngineAt = now;
     processAutoSignals().catch(() => {});
   }
+  if (now - lastGpsModeAt > 20_000) {
+    lastGpsModeAt = now;
+    syncGpsMode(now).catch(() => {});
+  }
   if (now - lastWidgetAt > 60_000) {
     lastWidgetAt = now;
     refreshWidgets().catch(() => {});
@@ -92,8 +99,14 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
  * S1 automatic trips: the native receivers (activity transitions, van Bluetooth, wake alarms) run this headless task
  * — also with the app closed or locked — to start / end trips. See features/trips/auto/runner.ts.
  */
-AppRegistry.registerHeadlessTask(TRIP_DETECT_TASK, () => async () => {
+AppRegistry.registerHeadlessTask(TRIP_DETECT_TASK, () => async (data?: { reason?: string }) => {
   await ensureMigrated();
+  // B-129: app updated / phone restarted mid-trip → the trip records again (logged for "Share trip diagnostics").
+  if (data?.reason === 'restart') {
+    await restoreRecording()
+      .then(() => logDiagnostic('restore_ok', { screen: String(AppState.currentState) }))
+      .catch((e) => logDiagnostic('restore_failed', { error: String((e as Error)?.message ?? e).slice(0, 200) }));
+  }
   await syncAutoDetection();
   await processAutoSignals();
 });
