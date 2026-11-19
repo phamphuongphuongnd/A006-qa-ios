@@ -458,9 +458,9 @@
   lại giải nén ảnh gốc lần nữa. Sửa: Android dùng `quality: 1` (picker chỉ chép file) + `ReceiptOcr.shrink` native (giải nén lấy mẫu, xoay theo EXIF,
   cạnh dài ≤ 2400 px, JPEG 85) → đọc và lưu bản nhỏ, xoá bản to trong cache. iOS không đổi. Chẩn đoán ghi thời gian từng bước (`timing`: pickedAt,
   shrinkMs, ocrStartedAt, ocrMs). ⏳ phiên E đo lại trên A13. ✅ A13 (08cdb7b/3f26b33, phiên E): bấm OK → ô số tiền điền ≈ 4,3 s (trước 15–18 s); thu nhỏ 2,1–2,5 s + OCR 1,0–1,7 s.
-- [ ] **B-104** 🟡 (QA F-1, phiên G — Firebase Test Lab máy thật Galaxy S26, Pixel 11 + máy ảo A17, 3/3) Bấm "Try Pro free for 7 days" → "Trial · 8 days
+- [x] **B-104** 🟡 (QA F-1, phiên G — Firebase Test Lab máy thật Galaxy S26, Pixel 11 + máy ảo A17, 3/3) Bấm "Try Pro free for 7 days" → "Trial · 8 days
   left", thanh tiến độ âm. Gốc: `usePro()` dùng `now` của `useNow(60_000)` (cũ tới 1 phút) < `trialStartedAt` → `ceil` ra 8 (`domain/pro.ts`). Sửa: đếm từ
-  `max(now, trialStartedAt)`, kẹp `daysLeft` 1..7 + test. ⏳ phiên G kiểm lại lượt máy thật sau.
+  `max(now, trialStartedAt)`, kẹp `daysLeft` 1..7 + test. ✅ phiên G lượt 2 (19daeae, máy thật Galaxy S26, Z Fold6, Pixel 11 + ảo A17): "Trial · 7 days left", tiến độ không âm.
 - [x] **B-105** 🟠 (QA A13-6, phiên E — A13 bản 08cdb7b) Tesco Shrewsbury chụp thẳng: OCR thấy nhãn TOTAL/CASH/CHANGE DUE nhưng sót cả cột số → app
   **tự điền £7.00** (giá 1 món, đúng là £55.30). Gốc: `readAmount` nhánh "không có nhãn" vẫn chạy khi đã thấy nhãn TOTAL; còn đúng 1 số → 0,65 ≥ 0,6.
   Sửa: đã thấy nhãn tổng mà không đọc được số → 0,4 (gợi ý, không điền). 3 lần đọc mới thành fixture (`a13-receipts.json`). ✅ A13 (3f26b33): Shrewsbury £55.30, Bury để trống.
@@ -579,4 +579,7 @@
   tai nghe ở nhà sẽ bật chuyến giả. **Phương chốt 19/11:** cảnh báo, vẫn cho chọn. Sửa: native `getBondedDevices` trả `kind` theo Bluetooth class
   (car audio / hands-free = 'car'; tai nghe, loa, đồng hồ, điện thoại, máy tính = 'personal'); màn chọn + dòng Van Bluetooth hiện "Looks like
   headphones or a speaker, not a van…". 946 test xanh. ⏳ A13 (Redmi Buds phải hiện cảnh báo, Bluetooth xe thì không).
+- [ ] **B-126** 🟡 (QA F-2, phiên G — Firebase máy thật Pixel 11, 2/2 lượt: 97ceb60 number-pad + 19daeae decimal-pad) Ô số tiền Ghi nhanh mở **Gboard
+  QWERTY** thay vì bàn phím số; ảo A17 (cũng Gboard), S26, S9, Fold6, OPPO đều bàn phím số. Nghi TextInput ẩn (`caretHidden` / `contextMenuHidden`,
+  `capture.tsx` ~480–507) hoặc cờ chữ hoa mặc định (`autoCapitalize`) lẫn vào inputType. Chưa tái hiện được tại chỗ (không có Pixel thật).
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
