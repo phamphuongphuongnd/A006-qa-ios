@@ -33,13 +33,13 @@ name: 17_gps_trip
 - extendedWaitUntil:
     visible: "End trip"
     timeout: 30000
-# Leg 1 in the foreground: Westminster → Embankment → Blackfriars (~2.1 km at 20 m/s ≈ 105 s).
+# Leg 1 in the foreground: Westminster → Embankment → Blackfriars (~2.1 km at 10 m/s ≈ 210 s; CI ran 20 m/s at up to 60 m/s, over the 56 m/s glitch filter in src/domain/mileage.ts).
 - travel:
     points:
       - 51.5007,-0.1246
       - 51.5079,-0.1224
       - 51.5115,-0.1040
-    speed: 20
+    speed: 10
 - takeScreenshot: ${PID}_17a_leg1_foreground
 # Leg 2 with the app in the background: Blackfriars → Tower Hill (~2 km).
 - pressKey: Home
@@ -48,7 +48,7 @@ name: 17_gps_trip
       - 51.5115,-0.1040
       - 51.5098,-0.0900
       - 51.5081,-0.0759
-    speed: 20
+    speed: 10
 - launchApp:
     stopApp: false
 - extendedWaitUntil:

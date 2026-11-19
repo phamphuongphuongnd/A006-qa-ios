@@ -95,7 +95,9 @@ Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ 
 - **B-95 ✅** cả 3 persona. **B-101 ✅** (04 ✅ cả 3, ghi chú QA-P0xx đúng).
 - **B-126** (ô số): bàn phím ô End reading nay có dấu "." (decimal-pad) — hiện đúng; số tiền Ghi nhanh ra "$45.00" khi gõ "45" (trước là $0.45) — đổi hành vi theo B-126.
 
-### QI-5 🟠 (nghi vấn, 1/2) Chuyến GPS mất đoạn chạy khi app ở nền — iPhone 16 Pro Max
+### QI-5 ✅ không phải lỗi app (kịch bản) — Chuyến GPS P092 thiếu đoạn 2
+- **Kết luận (phiên H, theo `commands.json` của run 44455496596):** Maestro `travel speed: 20` trên simulator CI không giữ tốc độ — P092 đoạn 2 chạy 1,98 km trong 33 s ≈ **60 m/s**, vượt bộ lọc GPS nhảy `MAX_SPEED_MPS = 56` ở `src/domain/mileage.ts` (`walkTrack`) → app bỏ đúng các điểm đó. P022 ~30 m/s → đủ 2.5 mi. Đoạn chạy nền đã được P022 xác nhận ghi được. Sửa kịch bản: `speed: 10`; chạy lại P092 (run ghi bên dưới).
+- Mô tả gốc (giữ để đối chiếu):
 - Persona/thiết bị: P092 (iPhone 16 Pro Max, tối, `large`, US). Lượt 4j, bước `17_gps_trip`. Đối chứng P022 (iPhone SE, sáng, US) cùng lượt ✅.
 - Bước: Start trip → Maestro `travel` ~2,1 km khi app mở → nút Home → `travel` thêm ~2 km khi app ở nền → mở lại app → End trip.
 - Kỳ vọng: ~2.5 mi (P022: đoạn 1 = 1.3 mi, lưu ra **2.5 mi** ✅).
