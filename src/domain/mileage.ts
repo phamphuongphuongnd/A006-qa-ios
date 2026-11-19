@@ -155,9 +155,45 @@ export const STATIONARY_MAX_RADIUS_M = 150;
  * fix is still within 150 m of the last stored point. Such fixes are not stored, so a trip left running indoors or
  * at a long red light adds no miles. Unknown speed (null / negative) keeps the fix.
  */
-export function isStationaryFix(prev: { lat: number; lng: number } | null, fix: { lat: number; lng: number; speed?: number | null }): boolean {
-  if (!prev || fix.speed == null || fix.speed < 0) return false;
+export function isStationaryFix(
+  prev: { lat: number; lng: number } | null,
+  fix: { lat: number; lng: number; accuracy?: number; speed?: number | null },
+  opts: { sensorStill?: boolean } = {},
+): boolean {
+  if (!prev) return false;
+  // Phương 19/11 (A13: a trip started at home kept adding miles, an automatic one never ended): the motion sensor says
+  // the phone is still → no fix counts, whatever GPS wanders to.
+  if (opts.sensorStill) return true;
+  if (fix.speed == null || fix.speed < 0) {
+    // Indoors / network fixes come without a speed and wander 25–80 m: only a sure fix that moved well away counts.
+    return (fix.accuracy ?? Infinity) > NO_SPEED_MAX_ACCURACY_M || haversine(prev, fix) < NO_SPEED_MIN_MOVE_M;
+  }
   return fix.speed < STATIONARY_SPEED_MPS && haversine(prev, fix) < STATIONARY_MAX_RADIUS_M;
+}
+
+/** A fix without an OS speed counts only when it is at least this sure… */
+export const NO_SPEED_MAX_ACCURACY_M = 30;
+/** …and at least this far from the last kept fix. */
+export const NO_SPEED_MIN_MOVE_M = 100;
+
+/** Around where the vehicle parked, GPS wander is part of the Stop, never driving (CONTEXT: Stop). */
+export const STOP_RADIUS_M = 100;
+
+/**
+ * When the vehicle last really moved: the start of the final cluster of fixes that all lie within STOP_RADIUS_M of the
+ * newest good fix (poor fixes are ignored). A Trip ends on its own once this is older than the merge threshold
+ * (CONTEXT: Trip end). With no fix yet, `fallback`.
+ */
+export function parkedSince(points: { lat: number; lng: number; ts: number; accuracy: number }[], fallback: number): number {
+  const good = points.filter((p) => p.accuracy <= MAX_ACCURACY_M);
+  if (!good.length) return fallback;
+  const last = good[good.length - 1];
+  let since = last.ts;
+  for (let i = good.length - 2; i >= 0; i--) {
+    if (haversine(good[i], last) > STOP_RADIUS_M) break;
+    since = good[i].ts;
+  }
+  return Math.max(since, fallback);
 }
 
 /** A trip running longer than this triggers "Still driving?". */

@@ -552,4 +552,14 @@
   viết "72.40"/"72"; tối đa 999,999.99), bàn phím `decimal-pad` ở Ghi nhanh / Sửa khoản / phí đỗ xe (iPhone mới có dấu chấm), nháp cũ đổi
   sang dạng mới (`exprV`, `legacyToPlain`) để không thành ×100. Các ô số khác (tách khoản, khoản lặp lại, luật…) vốn đã nhập kiểu này.
   941 test xanh. ⏳ A13 (Phương bấm) + iOS.
+- [ ] **B-123** 🟠 (Phương thử A13 tối 18/11) (1) Start tay trong nhà 20:50→21:48: đứng yên mà quãng đường vẫn tăng; (2) chuyến Bluetooth 17:46→20:50 về
+  nhà ngồi > 20 phút không tự tắt; (3) Bluetooth xe chỉ bật chuyến 1 lần. Gốc (code): trong nhà Android trả điểm GPS **không có tốc độ**, nhảy
+  25–80 m → `isStationaryFix` giữ lại (chỉ lọc khi có tốc độ) → cộng quãng đường + `lastPointAt` cứ mới → luật "20 phút không có điểm" không bao giờ
+  tới; chuyến không tắt nên các lần kết nối Bluetooth sau bị bỏ qua (đang có chuyến). **Phương chốt (grill 19/11, CONTEXT.md):** cảm biến báo đứng
+  yên → bỏ mọi điểm; không có quyền cảm biến → điểm không tốc độ phải ≥ 100 m + sai số ≤ 30 m; mọi chuyến (tự động + bấm tay) tự tắt sau Merge
+  stops (20 phút) **không di chuyển thật** (cụm điểm trong 100 m = đỗ), giờ kết thúc = lúc đỗ, thông báo "Trip ended at …" + nút **Continue trip**
+  (≤ 2 giờ); Bluetooth ngắt không có luật riêng; kết nối lại khi chưa có chuyến → chuyến mới; cắm sạc vẫn cần xe chạy; chuyến cũ không tự tính lại.
+  Sửa: `mileage.ts` (`isStationaryFix` + `parkedSince`), `tripsRepo.lastMoveAt` / `reopenTrip`, engine kết thúc theo `lastMoveAt` cho mọi chuyến
+  (bỏ "Still on a trip?" 45 phút), runner `endDriverTrip` + thông báo Continue, task GPS chạy engine mỗi phút, backstop iOS theo Merge stops.
+  946 test xanh. ⏳ Phương thử thật trên A13 (ngồi nhà Start tay ≥ 25 phút; chuyến Bluetooth về nhà; Continue trip).
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.

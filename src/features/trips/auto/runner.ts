@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 import { db } from '@/db/client';
 import { getProStatus } from '@/db/proRepo';
 import { getSettings } from '@/db/settingsRepo';
-import { deleteTrip, getActiveTrip, getTrip } from '@/db/tripsRepo';
+import { deleteTrip, getActiveTrip, getTrip, lastMoveAt } from '@/db/tripsRepo';
 import { hasPro } from '@/domain/pro';
 import { t } from '@/i18n';
 import { refreshWidgets } from '@/features/widgets/refresh';
@@ -27,6 +27,7 @@ import {
   notifySilent,
   notifyStartFailed,
   notifyStill,
+  notifyTripEnded,
 } from './notifyAuto';
 import { finishAutoTrip, getKV, lastParkedPoint, seedStartPoint, setKV, tripEnds } from './repo';
 import { routeScopeFor } from './routes';
@@ -88,7 +89,14 @@ async function runOnce(now: number) {
   const active = getActiveTrip(db);
   const engineTrip =
     active && (active.status === 'running' || active.status === 'paused')
-      ? { id: active.id, status: active.status, startedBy: active.startedBy, startedAt: active.startedAt, lastPointAt: active.lastPointAt }
+      ? {
+          id: active.id,
+          status: active.status,
+          startedBy: active.startedBy,
+          startedAt: active.startedAt,
+          lastPointAt: active.lastPointAt,
+          lastMoveAt: lastMoveAt(db, active),
+        }
       : null;
   const signals = toEngineSignals(since + 1);
   const { state, actions } = step({ ...state0, seenUntil: since }, signals, {
@@ -110,7 +118,8 @@ async function runOnce(now: number) {
         }
         break;
       case 'end':
-        await endAutoTrip(a.at, state);
+        if (a.startedBy === 'auto') await endAutoTrip(a.at, state);
+        else await endDriverTrip(a.at);
         break;
       case 'notifyStill':
         // iOS: the booked backstop (backstop.ts) may already be on screen — don't alert twice.
@@ -144,6 +153,18 @@ function seedDeparture(tripId: string, startAt: number, signals: EngineSignal[])
   if (parked && parked.endedAt <= startAt) seedStartPoint(db, tripId, parked);
 }
 
+/**
+ * Phương 19/11: a Trip the driver started also ends on its own after the merge threshold without moving — saved as it
+ * is (never dropped: the driver started it), ending when the vehicle stopped, with "Continue trip" on the notice.
+ */
+async function endDriverTrip(at: number) {
+  const done = await endActiveTrip(at);
+  if (!done) return;
+  refreshWidgets().catch(() => {});
+  const s = getSettings(db);
+  await notifyTripEnded(formatDistance(done.distanceM, s.distanceUnit), at, done.id);
+}
+
 async function endAutoTrip(at: number, state: EngineState) {
   const done = await endActiveTrip(at);
   if (!done) return;
@@ -172,7 +193,7 @@ async function endAutoTrip(at: number, state: EngineState) {
   refreshWidgets().catch(() => {});
   if (s.notify.tripAuto) {
     const scopeText = c.scope === 'unsorted' ? t('autoTrip.notif.sortSunday') : c.scope === 'work' ? t('common.work') : t('common.personal');
-    await notifyAutoSaved(formatDistance(getTrip(db, done.id)?.distanceM ?? done.distanceM, s.distanceUnit), scopeText, done.id);
+    await notifyAutoSaved(formatDistance(getTrip(db, done.id)?.distanceM ?? done.distanceM, s.distanceUnit), scopeText, done.id, at);
   }
 }
 

@@ -3,8 +3,8 @@ import { router } from '@/services/router';
 import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 
-import { ACTION_END, ACTION_KEEP, ACTION_PAUSE, ACTION_RESUME, NOTIF_LONG_TRIP } from '@/features/trips/constants';
-import { detectInterruptedTrip, stopOrphanRecording } from '@/features/trips/controller';
+import { ACTION_CONTINUE, ACTION_END, ACTION_KEEP, ACTION_PAUSE, ACTION_RESUME, NOTIF_LONG_TRIP } from '@/features/trips/constants';
+import { continueTrip, detectInterruptedTrip, stopOrphanRecording } from '@/features/trips/controller';
 import { setupTripNotifications } from '@/features/trips/notify';
 import { refreshWidgets } from '@/features/widgets/refresh';
 import { useTablesVersion } from '@/state/useLive';
@@ -61,6 +61,15 @@ function useTripNotificationResponses() {
         case ACTION_KEEP:
           Notifications.dismissNotificationAsync(NOTIF_LONG_TRIP).catch(() => {});
           break;
+        case ACTION_CONTINUE: {
+          // Phương 19/11: the same Trip records again (ended on its own while the driver was only waiting).
+          const tripId = (data as { tripId?: string }).tripId;
+          if (!tripId) break;
+          continueTrip(tripId)
+            .then((ok) => router.push(ok ? '/trip/active' : `/trip/${tripId}`))
+            .catch(() => router.push(`/trip/${tripId}`));
+          break;
+        }
         default:
           router.push('/trip/active');
       }

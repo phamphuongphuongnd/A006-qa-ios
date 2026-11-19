@@ -7,10 +7,12 @@ import { TRIP_REMINDER_MS } from '@/domain/mileage';
 import { t } from '@/i18n';
 
 import {
+  ACTION_CONTINUE,
   ACTION_END,
   ACTION_KEEP,
   ACTION_PAUSE,
   ACTION_RESUME,
+  CATEGORY_ENDED,
   CATEGORY_LONG,
   CATEGORY_PAUSED,
   CATEGORY_RUNNING,
@@ -64,6 +66,9 @@ export function setupTripNotifications(): Promise<void> {
       await Notifications.setNotificationCategoryAsync(CATEGORY_PAUSED, [
         { identifier: ACTION_RESUME, buttonTitle: t('trip.actionResume'), options: open },
         { identifier: ACTION_END, buttonTitle: t('trip.actionEnd'), options: open },
+      ]);
+      await Notifications.setNotificationCategoryAsync(CATEGORY_ENDED, [
+        { identifier: ACTION_CONTINUE, buttonTitle: t('autoTrip.notif.continue'), options: open },
       ]);
       await Notifications.setNotificationCategoryAsync(CATEGORY_LONG, [
         { identifier: ACTION_END, buttonTitle: t('trip.actionEnd'), options: open },

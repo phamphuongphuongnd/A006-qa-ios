@@ -3,7 +3,6 @@ import {
   type Activity,
   DRIVING_STALE_MS,
   INITIAL_ENGINE_STATE,
-  STILL_NOTIFY_MS,
   step,
   type EngineConfig,
   type EngineSignal,
@@ -92,7 +91,7 @@ describe('auto trip engine — shift trip and end', () => {
   it('ends after ≥ merge minutes not driving, end time = last move', () => {
     const s1 = step(driving, [act('walking', 'enter', T0 + 30 * MIN)], cfg, autoTrip({ lastPointAt: T0 + 30 * MIN }), T0 + 31 * MIN, false);
     const s2 = step(s1.state, [{ kind: 'wake', at: T0 + 51 * MIN }], cfg, autoTrip({ lastPointAt: T0 + 30 * MIN }), T0 + 51 * MIN, false);
-    expect(s2.actions).toEqual([{ type: 'end', tripId: 't1', at: T0 + 30 * MIN }]);
+    expect(s2.actions).toEqual([{ type: 'end', tripId: 't1', at: T0 + 30 * MIN, startedBy: 'auto' }]);
   });
 
   it('merge threshold follows the setting (10 / 45)', () => {
@@ -119,13 +118,31 @@ describe('auto trip engine — shift trip and end', () => {
     expect(step(driving, [], cfg, autoTrip({ status: 'paused' }), T0 + 5 * 60 * MIN, false).actions).toEqual([]);
   });
 
-  it('manual trip: "Still on a trip?" after 45 min not moving, once', () => {
+  it('a Trip the driver started also ends after the merge threshold without moving (Phương 19/11)', () => {
     const tr = autoTrip({ startedBy: 'user', lastPointAt: T0 });
     const st = { ...driving, activity: 'still' as const, activityAt: T0 + MIN };
-    expect(step(st, [], cfg, tr, T0 + 30 * MIN, false).actions).toEqual([{ type: 'wake', at: T0 + STILL_NOTIFY_MS + 30_000 }]);
-    const r = step(st, [], cfg, tr, T0 + 46 * MIN, false);
-    expect(r.actions).toEqual([{ type: 'notifyStill', tripId: 't1', since: T0 }]);
-    expect(step(r.state, [], cfg, tr, T0 + 50 * MIN, false).actions).toEqual([]);
+    expect(step(st, [], cfg, tr, T0 + 10 * MIN, false).actions).toEqual([{ type: 'wake', at: T0 + cfg.mergeStopMinutes * MIN + 30_000 }]);
+    expect(step(st, [], cfg, tr, T0 + 21 * MIN, false).actions).toEqual([{ type: 'end', tripId: 't1', at: T0, startedBy: 'user' }]);
+  });
+
+  it('GPS wander at home is not moving: the end counts from when it parked (lastMoveAt), not the last fix', () => {
+    // Fixes keep arriving (lastPointAt T0+40) but the vehicle parked at T0+5 (lastMoveAt).
+    const tr = autoTrip({ startedBy: 'auto', lastPointAt: T0 + 40 * MIN, lastMoveAt: T0 + 5 * MIN });
+    const st = { ...driving, activity: 'still' as const, activityAt: T0 + 6 * MIN };
+    expect(step(st, [], cfg, tr, T0 + 41 * MIN, false).actions).toEqual([{ type: 'end', tripId: 't1', at: T0 + 5 * MIN, startedBy: 'auto' }]);
+  });
+
+  it('Van Bluetooth reconnecting starts a new automatic Trip whenever none is running (Phương 19/11)', () => {
+    const van = { ...cfg, vanAddress: 'AA:BB' };
+    const bt = (at: number) => ({ kind: 'bt_connected' as const, address: 'aa:bb', at });
+    const first = step(INITIAL_ENGINE_STATE, [bt(T0)], van, null, T0, false);
+    expect(first.actions[0]).toMatchObject({ type: 'start', reason: 'bluetooth' });
+    // The first trip ended (on its own, or the driver ended it): the next connection starts another one.
+    const again = step({ ...first.state }, [bt(T0 + 90 * MIN)], van, null, T0 + 90 * MIN, false);
+    expect(again.actions[0]).toMatchObject({ type: 'start', reason: 'bluetooth', at: T0 + 90 * MIN });
+    // While a trip is running a reconnection doesn't start a second one.
+    const running = step({ ...again.state }, [bt(T0 + 95 * MIN)], van, autoTrip({ lastPointAt: T0 + 95 * MIN }), T0 + 95 * MIN, false);
+    expect(running.actions.some((a) => a.type === 'start')).toBe(false);
   });
 });
 

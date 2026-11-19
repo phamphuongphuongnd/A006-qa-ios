@@ -1,4 +1,4 @@
-import { countedPath, DEFAULT_RATES, isStationaryFix, mileageEstimate, odometerMiles, trackDistance, type GpsPoint } from '../mileage';
+import { countedPath, DEFAULT_RATES, isStationaryFix, mileageEstimate, parkedSince, odometerMiles, trackDistance, type GpsPoint } from '../mileage';
 import { checkSplit, defaultSplit, planMerge, type MergeSource } from '../splitMerge';
 
 describe('split', () => {
@@ -102,8 +102,9 @@ describe('trackDistance', () => {
     const far = { lat: 53.8 + 200 / M_PER_DEG_LAT, lng: -1.55 };
     expect(isStationaryFix(at, { ...near, speed: 0.3 })).toBe(true);
     expect(isStationaryFix(at, { ...near, speed: 5 })).toBe(false); // moving
-    expect(isStationaryFix(at, { ...near, speed: null })).toBe(false); // unknown speed
-    expect(isStationaryFix(at, { ...near, speed: -1 })).toBe(false);
+    // Phương 19/11: unknown speed (indoors) near the last fix is wander too; only a sure fix ≥ 100 m away counts.
+    expect(isStationaryFix(at, { ...near, speed: null })).toBe(true);
+    expect(isStationaryFix(at, { ...near, speed: -1 })).toBe(true);
     expect(isStationaryFix(at, { ...far, speed: 0 })).toBe(false); // phone that always reports 0
     expect(isStationaryFix(null, { ...near, speed: 0 })).toBe(false); // first fix of the trip
   });
@@ -118,5 +119,29 @@ describe('trackDistance', () => {
     const d = trackDistance(pts);
     expect(d).toBeGreaterThan(truth * 0.95);
     expect(d).toBeLessThan(truth * 1.05);
+  });
+});
+
+describe('Stop vs driving (Phương 19/11, A13 test at home)', () => {
+  const home = { lat: 51.5, lng: -0.12 };
+  const off = (m: number) => ({ lat: home.lat + m / 111_320, lng: home.lng }); // ~m metres north
+  const fix = (ts: number, m: number, accuracy = 20) => ({ ts, ...off(m), accuracy });
+
+  it('the motion sensor saying still drops every fix', () => {
+    expect(isStationaryFix(home, { ...off(300), accuracy: 5, speed: 20 }, { sensorStill: true })).toBe(true);
+    expect(isStationaryFix(null, { ...off(300), accuracy: 5, speed: 20 }, { sensorStill: true })).toBe(false); // first fix
+  });
+
+  it('no speed: counts only when sure (≤ 30 m) and ≥ 100 m away', () => {
+    expect(isStationaryFix(home, { ...off(60), accuracy: 20, speed: null })).toBe(true); // wander
+    expect(isStationaryFix(home, { ...off(150), accuracy: 45, speed: null })).toBe(true); // too unsure
+    expect(isStationaryFix(home, { ...off(150), accuracy: 15, speed: null })).toBe(false); // moved
+  });
+
+  it('parkedSince: the final cluster within 100 m, poor fixes ignored', () => {
+    const pts = [fix(0, 0), fix(60_000, 900), fix(120_000, 1800), fix(180_000, 1830), fix(240_000, 1790), fix(300_000, 1860), fix(310_000, 3000, 200)];
+    expect(parkedSince(pts, 0)).toBe(120_000); // parked at ~1.8 km, wander after it doesn't count, the 200 m-accuracy jump ignored
+    expect(parkedSince([], 42)).toBe(42);
+    expect(parkedSince([fix(0, 0), fix(60_000, 500)], 0)).toBe(60_000); // still moving: the last fix
   });
 });

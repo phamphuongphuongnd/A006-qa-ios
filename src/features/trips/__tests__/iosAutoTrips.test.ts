@@ -114,7 +114,7 @@ describe('iOS automatic trip through the engine', () => {
 
     log.push({ kind: 'wake', at: T0 + 61 * MIN, reason: 'timer' });
     r = pass(log, r.state, trip, T0 + 61 * MIN);
-    expect(r.actions).toEqual([{ type: 'end', tripId: 't', at: T0 + 40 * MIN }]);
+    expect(r.actions).toEqual([{ type: 'end', tripId: 't', at: T0 + 40 * MIN, startedBy: 'auto' }]);
   });
 
   it('red-light stops inside a drive do not end it while CoreMotion still says driving', () => {
