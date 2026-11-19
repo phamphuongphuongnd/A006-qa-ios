@@ -284,7 +284,12 @@ export default function CaptureScreen() {
   // keyboard, and never grew it back (4px on Android 8). Size it from the measured height and the text's length instead.
   const { width: windowWidth } = useWindowDimensions();
   const shownText = formatMoney(amount.shownMinor, currency);
-  const byHeight = middleHeight > 0 ? (middleHeight - 16) * 0.78 : 64;
+  // A13 19/11: the note line read from a receipt ("Fuelmax Station · From receipt") sat under the "Receipt says" chip —
+  // the amount took the whole middle with the keyboard up. Leave the note its line, and hide it while there's no room.
+  const noteShown = !!note.trim() && !noteOpen;
+  const NOTE_LINE = 30;
+  const noteFits = !noteShown || middleHeight === 0 || middleHeight >= 24 * 1.12 + 16 + NOTE_LINE;
+  const byHeight = middleHeight > 0 ? (middleHeight - 16 - (noteShown && noteFits ? NOTE_LINE : 0)) * 0.78 : 64;
   const byWidth = (windowWidth - 80) / (Math.max(5, shownText.length + (amount.isExpression ? 2 : 0)) * 0.62);
   const amountSize = Math.round(Math.max(24, Math.min(64, byHeight, byWidth)));
 
@@ -476,7 +481,7 @@ export default function CaptureScreen() {
             {fromReceipt.amount ? <FromReceiptTag /> : null}
             <AmountLimitHint amount={amount} currency={currency} />
           </View>
-          {note.trim() && !noteOpen ? (
+          {noteShown && noteFits ? (
             <View style={[styles.noteLine, fromReceipt.note && { backgroundColor: colors.sunSoft }]}>
               <FileText size={18} color={colors.textSecondary} />
               <Txt v="small" c="textSecondary" numberOfLines={1} style={{ flexShrink: 1 }}>
