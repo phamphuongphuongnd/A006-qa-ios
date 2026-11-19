@@ -183,6 +183,30 @@ Log `[B98v4]`: API 26 `top=363 y=216 h=200.5 covered=54 cramped=false` → `y=32
 Android 7 `top=305 … covered=68` → `y=263 h=66 cramped=true`. (`covered=24` còn lại ở trạng thái gọn là phần đệm dưới của khối; ảnh cho thấy Save
 nằm trọn trên bàn phím, cách mép 27 px.) Ảnh: `api26/v4_strip.png`, `api24/v4_strip.png`.
 
+### APK f3795bf (B-133 số tiền Split, B-134 nút + / thanh phí đỗ xe / hỏi bỏ chuyến), API 26 360×640dp chữ 1.0, 2026-11-19 11:45–11:58 · `qa-runs/android-old/verify-f3795bf/`
+(Lần khởi động đầu chụp màn ra toàn trắng ở mọi màn → tắt máy, khởi động lạnh `-no-snapshot-load` thì bình thường.)
+| Kiểm | Kết quả |
+|---|---|
+| B-133 thẻ Sort → Split (£66.02) gõ "33,01" | ✅ ô thành "33.01", "Left to assign £0.00" (`23-split-33,01.png`) |
+| … gõ "33.011" | ✅ ô còn "33.01" (nhưng hiện "Max £999,999.99" → OLD-19) (`25`, `47`) |
+| … gõ "12345678" | ✅ dừng "123456" (đủ 6 số trên 360dp) + "Max £999,999.99"; "£123,422.99 over" (`27`) |
+| … chạm ô Part 1 / Part 2 | ✅ thẻ cuộn tới đúng ô đang gõ, ô nằm đầu thẻ ngay trên bàn phím, không xuống đáy (`21-split-p1-focus`, `30-split-p2-focus`) |
+| Màn Split riêng (Entries → M6 toll → ⋯ → Split £170.93) | ✅ "85,47" → 85.47 / £0.00; "85.471" → 85.47; "12345678" → "123456" + "Max £999,999.99" ngay dưới ô, "£123,370.53 over" (`37`–`42`) |
+| Sort → Edit ô Amount gõ "7,5" | ✅ ô "£7.5" → Done → thẻ £7.50 (`32`, `34`); đã trả lại 66.02 |
+| Rules → giới hạn số tiền "10,5" | ⏭ Auto-sort rules là Pro ("Auto-sort is part of Pro · See Pro"), máy free, luật QA không bấm Pro/dùng thử, APK không debuggable nên không bật Pro qua dữ liệu được. Đọc mã: ô From/To dùng `sanitizeAmount` (đổi "," → ".") + `decimal-pad` — **chưa thử trên máy** |
+| B-134a Reports mới mở | ✅ chữ thẻ "Choose how you claim your vehicle" thu hẹp tới x=544, đọc đủ "…until you choose.", nút + (x 560–688) không đè chữ (`01-reports.png`) |
+| B-134b Add trip → Parking & tolls gõ 12345678 | ✅ thanh trên bàn phím "Parking & tolls £123,456.00" + "Max £999,999.99" (`12`); Back → thanh tính biến mất, "Parking & tolls" chỉ 1 lần, ô £123,456.00 + Max dưới ô (`13`) |
+| B-134c Add trip → X | ✅ có phí → "Discard this trip? / What you've typed won't be saved." (Keep editing giữ nguyên £123,456.00; Discard → về Miles, "No trips yet"); chỉ gõ số đồng hồ 48210 → cũng hỏi; chưa gõ gì → X đóng luôn (`14`, `19`, `10`) |
+| Log | ✅ không FATAL, không lỗi ReactNativeJS |
+
+**🟡 OLD-19 Gõ số lẻ thứ 3 → hiện "Max £999,999.99" (sai nghĩa)** — ở mọi ô số tiền, không riêng Split: Ghi nhanh gõ từng phím "12.34" rồi "5" →
+£12.34 + "Max £999,999.99" (`52-qc-12.34+5.png`; trước phím "5" không có: `51`); thẻ Sort Split "33.01" + "1" → như vậy (`46`, `47`).
+Số tiền đúng (bỏ số lẻ thứ 3), chỉ câu báo sai: người dùng tưởng vượt mức tối đa. Mã: `digitIgnored()` (`src/features/ocr/calc.ts:166`) coi
+mọi chữ số bị bỏ là chạm giới hạn — cả khi bị bỏ vì đã đủ 2 số lẻ. (Gõ cả chuỗi một lần bằng adb thì không hiện, nên lượt trước không thấy.)
+Gợi ý: chỉ bật Max khi phần nguyên đã đủ 6 số; số lẻ thứ 3 thì im lặng (hoặc câu riêng "2 decimal places").
+
+Ghi chú nhỏ (ngoài phạm vi): màn Split riêng gõ 123456 rồi bấm X → đóng luôn, không hỏi "Discard?" (khoản không đổi: M6 toll vẫn −£170.93).
+
 ### APK a3a1f6b (lỗi giao diện nhỏ B-60, B-71, B-126, B-127), API 26 360×640dp chữ 1.0, 2026-11-19 11:12–11:22 · `qa-runs/android-old/verify-a3a1f6b/`
 | Kiểm | Kết quả |
 |---|---|
