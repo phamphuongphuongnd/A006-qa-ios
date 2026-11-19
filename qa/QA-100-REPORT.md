@@ -58,7 +58,11 @@ iOS: SE / 16 Pro Max / iPad · mạng: online / 3G / EDGE trễ / mất mạng /
   1 ca lái ô tô có file chẩn đoán (B-88) + đo pin (B-51) · App lock 1 phút + chụp hoá đơn > 1 phút với vân tay thật (B-99) · xoá chuyến 0 km cắm cáp (B-107).
 - **iOS:** P091 nút Save ghim đáy tấm End trip ở chữ AX-L, kịch bản cuộn thẻ Sort, logic tự kết thúc chuyến B-123 trên iOS (phiên C lượt 4i đang chạy) ·
   câu xin quyền vị trí B-118 (cần Appetize/iPhone).
-- **Pixel 11 thật:** cờ bàn phím số ở Sửa khoản / thẻ Sort / Settings (phiên G, APK 0bf4283).
+- **Chờ Phương trên A13 (APK edecc6d đã cài 15:06):** B-140 — đi bộ để Drive check chạy, rồi Start (hoặc sạc + di chuyển) trong lúc kiểm, không mở app
+  ≥ 12 phút → GPS chuyến vẫn chạy (Phương chọn "để sau") · B-88 v2 — bỏ máy vào túi đi bộ > 500 m → không bật chuyến; lái xe tắc đường → bật ·
+  B-131 — xe chạy lại thì GPS về 5 s.
+- **Đã kiểm xong 19/11 chiều:** B-99 (vân tay thật), B-123/B-129/B-130/B-135/B-131 (A13), B-133/B-134/B-136/B-60/B-71/B-127 (API 26), B-90/B-110/B-132/
+  B-137/B-139 (API 37), B-126 (Pixel 11 thật), B-96 v2/B-137/B-66 (iOS simulator).
 - **iPhone thật:** chuyến tự động iOS (B-95/B-96 — 8 điểm trong `qa/findings/ios-auto-trips.md`), VoiceOver bằng tai, widget iOS trên máy.
 - **Mua thật / dùng thử thật trên store** (không bấm Subscribe), Play Billing chỉ thử ở trạng thái DB.
 - **Chạy xe thật nhiều lần** cho B-88 (chuyến tự động Android bị sót tối 17/11 — cần thêm file chẩn đoán sau chuyến xe).
