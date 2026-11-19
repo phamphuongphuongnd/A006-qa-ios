@@ -9,7 +9,7 @@
 - Lỗi mới tìm + sửa trong ngày: B-122…B-141 (20 mục) — chuyến tự động (B-123/124/129/130/131/135/140, Drive check B-88), ô số tiền
   (B-126/127/133/136), Reports chữ to (B-110 v2, B-132), Sort (B-128), Split/Add trip (B-134), bản đồ GPS chậm (B-137), fix đầu sai xa
   (B-139), hoá đơn (B-138), iOS backstop (B-96 v2), câu quyền iOS Always (B-118). B-141 đóng (Phương tự xoá chuyến).
-- **BUGS: 134 tick / 7 mở** — giới hạn Phương chấp nhận B-51, B-88 (chờ lái thật), B-95/96 (iPhone thật); B-118 (Phương đọc câu
+- **BUGS: 135 tick / 7 mở** — giới hạn Phương chấp nhận B-51, B-88 (chờ lái thật), B-95/96 (iPhone thật); B-118 (Phương đọc câu
   quyền iOS); B-131 nhánh lái lại + B-140 (chờ Phương thử thật tối 19/11).
 
 ## Cập nhật 19/11 (sáng)
