@@ -4,7 +4,8 @@ appId: com.phiotron.sundaysort
 name: b137_check
 ---
 - takeScreenshot: ${PID}_b137b_${TAG}
-- assertVisible: ".*Map of the trip.*"
+# The map's accessibility label is not exposed to XCTest; the attribution line of the map is.
+- assertVisible: ".*OpenStreetMap.*|.*OpenFreeMap.*|.*Map of the trip.*"
 - runFlow:
     when:
       true: ${FINAL == '1'}
