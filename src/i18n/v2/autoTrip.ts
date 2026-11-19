@@ -18,7 +18,7 @@ export const autoTrip = {
     continue: 'Continue trip',
     continueGone: "This trip can't be continued any more — start a new one.",
     stillTitle: 'Still on a trip?',
-    stillBody: "You haven't moved for 45 minutes.",
+    stillBody: "You haven't moved for a while.",
     silentTitle: "Trip isn't recording",
     silentBody: 'Your phone stopped sending location. Open Sunday Sort to fix it.',
     proEndedTitle: 'Automatic trips are off',

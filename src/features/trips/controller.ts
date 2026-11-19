@@ -18,6 +18,7 @@ import {
   markInterrupted,
   pauseTrip,
   reopenTrip,
+  resumeFrom,
   resumeTrip,
   startTrip,
   updateTrip,
@@ -164,6 +165,16 @@ export async function pauseActiveTrip() {
  */
 export async function continueTrip(tripId: string, now = Date.now()): Promise<boolean> {
   const trip = getTrip(db, tripId);
+  // B-96 v2 (iOS): the booked "Trip ended at …" fired while the app wasn't running, so the Trip is still 'running' here.
+  // Continue = it keeps recording from now: mark a resume (the stop counts from now) and make sure GPS runs.
+  if (trip && trip.status === 'running' && getActiveTrip(db)?.id === trip.id) {
+    resumeFrom(db, trip.id, now);
+    await beginRecording();
+    const row = getTrip(db, trip.id);
+    if (row) await showTripNotification(row, distanceText(row), true);
+    syncTripActive();
+    return true;
+  }
   if (!trip || trip.status !== 'done' || trip.endedAt === null || now - trip.endedAt > CONTINUE_WINDOW_MS) return false;
   if (getActiveTrip(db)) return false;
   reopenTrip(db, trip.id, now);

@@ -9,10 +9,11 @@ import { Platform } from 'react-native';
 import { db } from '@/db/client';
 import { getSettings } from '@/db/settingsRepo';
 import { getActiveTrip, lastMoveAt } from '@/db/tripsRepo';
+import { formatDistance } from '@/features/trips/format';
 
 import { needsRebook, planBackstops } from './backstopPlan';
 import { INITIAL_ENGINE_STATE, type EngineState, type EngineTrip } from './engine';
-import { cancelScheduled, NOTIF_SILENT, NOTIF_STILL, scheduleSilent, scheduleStill } from './notifyAuto';
+import { cancelScheduled, NOTIF_AUTO_SAVED, NOTIF_SILENT, NOTIF_STILL, scheduleSilent, scheduleTripEnded } from './notifyAuto';
 import { getKV } from './repo';
 
 let booked: { still?: number | null; silent?: number | null } = {};
@@ -40,8 +41,10 @@ export async function syncIosBackstops(now = Date.now()): Promise<void> {
       : { still: null, silent: null };
     if (needsRebook(booked.still, plan.still)) {
       booked.still = plan.still;
-      if (plan.still === null) await cancelScheduled(NOTIF_STILL);
-      else await scheduleStill(plan.still);
+      // Builds before 19/11 booked "Still on a trip?" under its own identifier.
+      await cancelScheduled(NOTIF_STILL);
+      if (plan.still === null || !trip || !active) await cancelScheduled(NOTIF_AUTO_SAVED);
+      else await scheduleTripEnded(plan.still, trip.lastMoveAt ?? trip.startedAt, formatDistance(active.distanceM, s.distanceUnit), trip.id);
     }
     if (needsRebook(booked.silent, plan.silent)) {
       booked.silent = plan.silent;

@@ -1,5 +1,5 @@
 import { makeTestDb } from '../testing/testDb';
-import { appendPoints, endTrip, lastMoveAt, reopenTrip, resumeTrip, pauseTrip, getTrip, startTrip } from '../tripsRepo';
+import { appendPoints, endTrip, lastMoveAt, reopenTrip, resumeFrom, resumeTrip, pauseTrip, getTrip, startTrip } from '../tripsRepo';
 import type { AppDb } from '../types';
 
 const MIN = 60_000;
@@ -39,6 +39,15 @@ describe('lastMoveAt (CONTEXT: Trip end)', () => {
       { ts: T0 + 30 * MIN + 5_000, lat: HOME.lat + 0.0005, lng: HOME.lng, accuracy: 8, speed: 3 },
     ]);
     expect(lastMoveAt(db, getTrip(db, t.id)!)).toBeGreaterThanOrEqual(T0 + 30 * MIN);
+  });
+
+  it('B-96 v2: Continue on a trip iOS never ended (app not running) counts the stop from the tap', () => {
+    const t = startTrip(db, 'work', T0);
+    appendPoints(db, t.id, [...[1, 2].map((m, i) => ({ ts: T0 + m * MIN, ...near(i), speed: 0 }))]);
+    resumeFrom(db, t.id, T0 + 40 * MIN);
+    expect(lastMoveAt(db, getTrip(db, t.id)!)).toBe(T0 + 40 * MIN);
+    appendPoints(db, t.id, [{ ts: T0 + 40 * MIN + 5_000, lat: HOME.lat + 0.0004, lng: HOME.lng, accuracy: 8, speed: 3 }]);
+    expect(lastMoveAt(db, getTrip(db, t.id)!)).toBeGreaterThanOrEqual(T0 + 40 * MIN);
   });
 
   it('after Resume from a Personal stop, the stop counts from the resume', () => {

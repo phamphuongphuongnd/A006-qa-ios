@@ -108,6 +108,11 @@ export function reopenTrip(db: AppDb, tripId: string, now = Date.now()) {
   db.update(trips).set({ status: 'running', endedAt: null, lastPointAt: now }).where(and(eq(trips.id, tripId), eq(trips.status, 'done'))).run();
 }
 
+/** B-96 v2: a running Trip keeps going from `now` — the next fix starts a new segment and the stop counts from here. */
+export function resumeFrom(db: AppDb, tripId: string, now = Date.now()) {
+  db.update(trips).set({ lastPointAt: now }).where(and(eq(trips.id, tripId), eq(trips.status, 'running'))).run();
+}
+
 export function endTrip(db: AppDb, tripId: string, now = Date.now()): TripRow | undefined {
   db.update(trips).set({ status: 'done', endedAt: now }).where(eq(trips.id, tripId)).run();
   return getTrip(db, tripId);

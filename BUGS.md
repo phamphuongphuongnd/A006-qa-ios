@@ -399,6 +399,10 @@
   ≥ 45 phút) và "Trip isn't recording" (mất vị trí ≥ 10 phút khi đang lái) chạy nhờ báo thức đánh thức (`sync.ts` `scheduleWake`, `native.ts`
   `configureNative`/`cancelWake`/`health`) — module iOS không có các hàm này (`native.ts` nuốt lỗi) → trên iPhone chỉ hiện khi mở app. Nhắc 12 giờ vẫn chạy.
   Phương duyệt làm chung phiên B-95.
+  **v2 (Phương nhờ qua phiên D, 19/11 — theo luật B-123):** chuyến tay giờ tự kết thúc sau Merge stops không di chuyển thật, nhưng chỉ khi JS chạy. Thông báo
+  hẹn trước (iOS tự hiện cả khi app bị tắt) đổi từ "Still on a trip? / 45 phút" thành **"Trip ended at {giờ đỗ} · {km}" + Continue trip**, cùng định danh
+  với thông báo engine (`notifyTripEnded`) → không bao giờ 2 cái; hẹn lại theo `lastMoveAt` + Merge stops. Bấm Continue khi app không chạy (chuyến còn
+  'running' trong DB) → `resumeFrom` (dừng tính từ lúc bấm) + bật lại GPS. + test. 959 test xanh. ⏳ iOS simulator (phiên C) + iPhone thật.
 - [x] **B-97** 🟡 (QA OLD-11, phiên B — Android 7.0) "Choose backup folder": bộ chọn thư mục Android 7 chỉ hiện "Recent · No items" tới khi bật ⋮ → Show internal
   storage; nhãn thư mục gốc hiện "This phone / primary:". Bộ chọn của expo-file-system không truyền được `SHOW_ADVANCED`. Sửa: Android < 8 hiện dòng hướng
   dẫn "If the list is empty, tap ⋮ → Show internal storage." dưới nút; nhãn bỏ "primary:" → "This phone".
