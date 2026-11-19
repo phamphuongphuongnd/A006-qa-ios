@@ -168,7 +168,10 @@ kết quả kick/start. Đã báo điều phối.
   không phải lỗi app. Đã Discard nháp, tắt App lock.
 - **B-121 ✅ riêng tư**: 3 file chẩn đoán (06-37/07-54/08-42) không có MAC, không tên thiết bị. 🟡 từ a3a1f6b mọi bt_* ghi
   "other device" kể cả van (02-43 còn "van"; 10:01:31 "other device" nhưng start_ok bluetooth cùng giây) → nhãn diagnostics sai, engine
-  vẫn khớp. Đã báo điều phối.
+  vẫn khớp. Đã báo điều phối. **Gốc = lỗi script QA**: Van Bluetooth hiện là "AirPods" (10:07 còn Redmi Buds; Phương không đổi) ←
+  10:08 script mở màn chọn Van, BACK chưa đóng sheet, home() bấm node 'Close' = backdrop toàn màn → chạm giữa màn trúng "AirPods".
+  Diagnostics so với Van hiện tại nên nhãn cũ đổi. Phương: để nguyên, tối nay tự chọn BT xe. **Luật QA**: không bấm node 'Close'
+  có bounds toàn màn (backdrop).
 - **B-122 ✅** (edecc6d, Phương tự bấm bàn phím Samsung): 1 → £1.00, 7,7 → £7.70, 1250 → £1,250.00, 0,5 → £0.50 (lưu đúng); 12.34 + "5"
   → £12.34 không Max (B-136 ✅); 12345678 → £123,456.00 có Max. Đã xoá 6 khoản thử.
 - **B-118 (19/11 ~15:55)**: Phương nhờ so app khác (Everlance nguyên văn, MileIQ, Hurdlr, MileageWise) → viết lại 3 câu (WhenInUse /
