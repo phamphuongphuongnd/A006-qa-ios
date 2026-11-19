@@ -14,10 +14,12 @@ name: 09_export_csv
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: ${PID}_09a_export_panel
+# The button sits at the sheet's bottom edge: accept it half visible (P041, run 44450726271).
 - scrollUntilVisible:
     element:
       text: '.*Export \d+ files?.*'
     timeout: 10000
+    visibilityPercentage: 50
 - tapOn: '.*Export \d+ files?.*'
 - waitForAnimationToEnd:
     timeout: 3000

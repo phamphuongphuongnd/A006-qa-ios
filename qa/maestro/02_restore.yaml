@@ -14,11 +14,13 @@ name: 02_restore
             text: "Backup & restore.*"
           timeout: 20000
       - tapOn: "Backup & restore.*"
-      - extendedWaitUntil:
-          visible: "Restore from backup"
-          timeout: 15000
+      # Large text: "Restore from backup" sits below the "Back up every night" card (run 44450726271).
+      - scrollUntilVisible:
+          element:
+            text: "Restore from backup.*"
+          timeout: 20000
       - takeScreenshot: ${PID}_02a_backup
-      - tapOn: "Restore from backup"
+      - tapOn: "Restore from backup.*"
       - waitForAnimationToEnd:
           timeout: 5000
       - takeScreenshot: ${PID}_02b_picker

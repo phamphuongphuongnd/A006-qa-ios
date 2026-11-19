@@ -22,6 +22,7 @@
 | 4e | 44264516648 (công khai) | 67fd42b (dev f424978) | 1/4 (P052: 11/16 bước ✅) | 0 | P091, P016, P041 ⏭ `IOSDriverTimeoutException` (driver XCTest không lên sau 480 s). P052: **B-101 ✅**, **B-100 v2 ✅** (viên "More below ⌄" thấy rõ). ❌ 02 (khôi phục), 06 (chạm tab Sort vẫn ở Home), 08/09 (kịch bản cũ, đã sửa ở 730b76a), 15 (kịch bản cũ). 0 crash |
 | 4g | 44274943533 (công khai) | e5f0714 (dev 4e4b030: B-117, B-118, B-114 v2, B-100 v3) | 3/4 (P052 13/17 ✅, P091 10/17 ✅, P016 6 bước ✅ rồi DeviceUnreachable từ bước 08; P041 ⏭ driver không lên) | 0 | **B-117 ✅, B-95 ✅, B-100 v3 ✅, B-114 v2 ✅ (thẻ cuộn được)**. ❌ còn lại: 02 khôi phục, 06/16 ở chữ lớn (kịch bản chưa cuộn — đã sửa), 09 bảng chia sẻ, 12 P091. 0 crash |
 | 4h | 44441656898 (công khai) | 64e5203 (cùng app 4g) | 0/2 | 0 | Lượt ngắn kiểm kịch bản 06/16 đã sửa (P091 SE AX-L, P041 Pro Max tối): **cả 2 ⏭ `IOSDriverTimeoutException`** (driver XCTest không lên sau 480 s) — chưa kiểm được. Driver không lên ở 15/31 lần khởi động persona qua các lượt 4c–4h (4c 9, 4e 3, 4g 1, 4h 2) trên runner công khai |
+| 4i | 44450726271 (công khai) | b6aa4d1 (dev 0bf4283: B-123…B-126) | **3/3, 0 lỗi driver** (P091 14/17 ✅, P052 13/17, P041 12/17) | 0 | **1 simulator mỗi lúc** + tự khởi động lại khi driver không lên (không cần dùng tới) — mỗi persona 10–12 phút thay vì 25+. **B-114 v2 ✅** (P091 SE AX-L phân loại được ngay trên thẻ Sort), **B-117 ✅ ở AX-L** (P091 cuộn tới Save, lưu được; P041 Pro Max tối ✅), B-95 ✅ cả 3. ❌ còn lại đều kịch bản: 02 nút "Restore from backup" dưới thẻ "Back up every night" (đã thêm cuộn), 06 P052/P041 chạm tab Sort vẫn ở Home, 08 P052/P041 bàn phím số không đóng → chữ Purpose rơi vào ô End reading (app báo "Enter a number" đúng), 09 P041 nút Export nằm sát mép (đã cho thấy 50 %). 0 crash |
 | 4f | 44274384593 (công khai) | febb184 | 0 | 0 | ❌ GitHub không khởi chạy job (lỗi thanh toán tài khoản) — cả repo công khai |
 
 Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ lượt 4c chạy trên repo công khai `phamphuongphuongnd/A006-qa-ios` (Phương chọn; không tính phút) — **xoá repo này sau QA-100 khi Phương đồng ý**.
@@ -86,6 +87,12 @@ Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ 
 - **B-114 v2 ✅ (một phần)** P016, P091 (SE, `accessibility-large`): thẻ Sort nay cao đủ, hiện "Expense · $0.81 · QA-P016 Shell…" và có thanh cuộn bên phải (lượt 4d chỉ còn "Expense" + nút bị cắt). Kịch bản chưa cuộn tới các nút danh mục nên **chưa xác nhận bấm được Fuel/More…** (đã thêm cuộn ở 06). Ảnh `…/P016/shots/P016_06a_sort.jpg`.
 - B-90: lượt này P041 (tối) ⏭ — giữ kết quả lượt 4c/4d ✅.
 - B-118 (câu quyền vị trí): màn quyền đã đi qua ở bước 16 (P052) nhưng không chụp riêng câu chữ → ⏭.
+
+### Kiểm bản sửa (lượt 4i, dev 0bf4283)
+- **B-114 v2 ✅** P091 (iPhone SE, `accessibility-large`, UK): bước 06 cuộn trong thẻ Sort tới nút danh mục và phân loại được (06 ✅). P052/P041 06 ❌ do chạm tab Sort không chuyển màn (ảnh `qa-runs/ios/44450726271/personas/P052/shots/step-017-tapOnElement-FuelDelivery_income.jpg` vẫn là Home) — chưa rõ do kịch bản hay do bấm tab; lượt 4g cùng cảnh này ở P052 — theo dõi.
+- **B-117 ✅ cả ở chữ lớn**: P091 (SE, AX-L) cuộn tới Save trong bảng kết thúc chuyến và lưu được; P041 (Pro Max, tối, AX-L) và P052 ✅.
+- **B-95 ✅** cả 3 persona. **B-101 ✅** (04 ✅ cả 3, ghi chú QA-P0xx đúng).
+- **B-126** (ô số): bàn phím ô End reading nay có dấu "." (decimal-pad) — hiện đúng; số tiền Ghi nhanh ra "$45.00" khi gõ "45" (trước là $0.45) — đổi hành vi theo B-126.
 
 ### QI-4 🟠 Thẻ ở màn Sort bị cắt mất phần chọn danh mục khi chữ cỡ trợ năng
 - Persona/thiết bị: P041 (iPhone 16 Pro Max, `accessibility-large`, tối, UK), P016 (iPhone SE 3rd gen, `accessibility-large`, sáng, US). Lượt 4d.
