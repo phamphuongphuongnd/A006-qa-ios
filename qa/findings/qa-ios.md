@@ -103,6 +103,12 @@ Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ 
 - Ảnh: `qa-runs/ios/44455496596/personas/P092/shots/P092_17a_leg1_foreground.jpg`, `P092_17b_back_from_background.jpg`, `P092_17c_end_sheet.jpg`; đối chứng `…/P022/shots/P022_17a_leg1_foreground.jpg`, `P022_17c_end_sheet.jpg`.
 - Chưa kết luận: 1/2 lần, simulator; có thể do vị trí giả bị dồn khi máy runner bận, hoặc app không nhận cập nhật nền ở lần này. Cần chạy lặp (cùng P092) và thử iPhone thật. Nghi chỗ: tác vụ vị trí nền (`src/features/trips/backgroundTask.ts`, `allowsBackgroundLocationUpdates`/`pausesLocationUpdatesAutomatically` trong cấu hình expo-location).
 
+### QI-6 🟡 (nghi vấn) Màn chuyến đang chạy không hiện bản đồ thật trên iOS Simulator
+- Persona/thiết bị: P022 (iPhone SE), P092 (iPhone 16 Pro Max). Lượt 4j, bước 17 (chuyến > 1 phút).
+- Kỳ vọng: bản đồ MapLibre + OpenFreeMap (`src/features/trips/map/TripMap.tsx`, style `https://tiles.openfreemap.org/styles/liberty|dark`).
+- Thực tế: luôn là hình vẽ dự phòng `RouteSketch` (lưới ô + đường đi) — tức bản đồ không báo "đã tải" trong `LOAD_TIMEOUT_MS = 12_000`. Ảnh `qa-runs/ios/44455496596/personas/P022/shots/P022_17a_leg1_foreground.jpg`, `…/P092/shots/P092_17b_back_from_background.jpg`.
+- Chưa phân biệt được: mạng runner GitHub tới `tiles.openfreemap.org` chậm/chặn, hay MapLibre trên bản build iOS này lỗi; `app.log` hai persona này trống nên không thấy lỗi. Cần xem trên Appetize/iPhone thật, hoặc lượt sau thêm kiểm mạng từ simulator.
+
 ### QI-4 🟠 Thẻ ở màn Sort bị cắt mất phần chọn danh mục khi chữ cỡ trợ năng
 - Persona/thiết bị: P041 (iPhone 16 Pro Max, `accessibility-large`, tối, UK), P016 (iPhone SE 3rd gen, `accessibility-large`, sáng, US). Lượt 4d.
 - Bước: có 1 khoản chưa phân loại → tab Sort.
