@@ -1,4 +1,4 @@
-import type { ProFeature } from '@/domain/pro';
+import { PRO_PAUSED, type ProFeature } from '@/domain/pro';
 import { router } from '@/services/router';
 
 /**
@@ -6,5 +6,6 @@ import { router } from '@/services/router';
  * reads `feature` for the sheet subtitle (pro.context.<feature>). Never blocks what the driver was doing.
  */
 export function openPro(feature?: ProFeature): void {
+  if (PRO_PAUSED) return; // Nothing to sell while Pro is paused; every feature is already open.
   router.push(feature ? `/pro?feature=${feature}` : '/pro');
 }

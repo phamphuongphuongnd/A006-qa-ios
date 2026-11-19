@@ -14,7 +14,7 @@ import { Platform } from 'react-native';
 
 import { db } from '@/db/client';
 import { applyStoreEntitlement, getProState } from '@/db/proRepo';
-import { PRO_PRODUCT_ID } from '@/domain/pro';
+import { PRO_PAUSED, PRO_PRODUCT_ID } from '@/domain/pro';
 
 import { syncProNotices } from './notices';
 import { nextAnnualRenewal, purchaseProblem, type PurchaseProblem } from './purchase';
@@ -166,6 +166,7 @@ const REFRESH_EVERY_MS = 12 * 60 * 60 * 1000;
  * so a free user's launch never opens a billing connection.
  */
 export async function refreshProFromStore(opts: { force?: boolean; now?: number } = {}): Promise<void> {
+  if (PRO_PAUSED) return; // First release sells nothing: never open a billing connection.
   const row = getProState(db);
   if (!opts.force && row?.entitlement !== 'active' && row?.entitlement !== 'expired') return;
   const now = opts.now ?? Date.now();

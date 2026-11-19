@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 import { getProState } from '@/db/proRepo';
 import { getSettings } from '@/db/settingsRepo';
 import type { AppDb } from '@/db/types';
+import { PRO_PAUSED } from '@/domain/pro';
 import { t } from '@/i18n';
 
 import { priceText, proNotificationPlan, type ProNotificationId } from './purchase';
@@ -43,6 +44,7 @@ const allowed = async () => {
 /** Replaces the scheduled Pro notifications with what the current Pro state and switches call for. */
 export async function syncProNotices(db: AppDb, now = Date.now()): Promise<void> {
   await Promise.all(IDS.map((id) => Notifications.cancelScheduledNotificationAsync(id).catch(() => undefined)));
+  if (PRO_PAUSED) return; // Nothing is sold in the first release: no renewal / trial notices.
   const settings = getSettings(db);
   const plan = proNotificationPlan(getProState(db), now, {
     proRenewal: settings.notify.proRenewal,

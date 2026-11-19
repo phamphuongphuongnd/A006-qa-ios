@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, View } from 'react-native';
@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { db } from '@/db/client';
 import { startTrial } from '@/db/proRepo';
-import { TRIAL_DAYS, type ProFeature } from '@/domain/pro';
+import { PRO_PAUSED, TRIAL_DAYS, type ProFeature } from '@/domain/pro';
 import { useProRenewalSignal } from '@/features/pro/homeAlerts';
 import { openManageSubscription } from '@/features/pro/manage';
 import { rememberProPrice, syncProNotices } from '@/features/pro/notices';
@@ -34,6 +34,12 @@ const fullDate = (at: number) => `${shortDate(at)} ${new Date(at).getFullYear()}
  * sets the subtitle ("Tax-year files are a Pro feature"). Never blocks: back returns to what the driver was doing.
  */
 export default function ProScreen() {
+  // First release sells nothing (PRO_PAUSED): an old notification / deep link to /pro lands on Home.
+  if (PRO_PAUSED) return <Redirect href="/" />;
+  return <ProScreenContent />;
+}
+
+function ProScreenContent() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const snack = useSnackbar();
@@ -207,7 +213,7 @@ export default function ProScreen() {
       </>
     );
   } else {
-    const trialAvailable = status.trialAvailable;
+    const trialAvailable = status.kind !== 'all_free' && status.trialAvailable;
     body = (
       <>
         {status.kind === 'expired' ? (

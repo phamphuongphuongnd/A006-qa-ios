@@ -28,7 +28,16 @@ export const PRO_FALLBACK_PRICE: Record<'UK' | 'US', string> = { UK: '£24.99', 
 /** What a "PRO" lock / S-19 sheet is about (sheet subtitle). */
 export type ProFeature = 'auto_trips' | 'rules' | 'recurring' | 'ocr' | 'suggestions' | 'tax_files' | 'photos' | 'route_miles';
 
+/**
+ * First store release: every feature is open to everyone, nothing is sold (Phương, 2026-11-19 — product.md "★ Bản đầu").
+ * The Pro / trial / purchase code stays for a later release: set to `false` to bring Pro back. While true,
+ * `effectiveProStatus` answers `{ kind: 'all_free' }`, the store is never contacted and no Pro notice is scheduled.
+ */
+export const PRO_PAUSED = true;
+
 export type ProStatus =
+  /** Pro paused (PRO_PAUSED): every feature on, no Pro / trial UI anywhere. */
+  | { kind: 'all_free' }
   | { kind: 'free'; trialAvailable: boolean }
   | { kind: 'trial'; endsAt: number; daysLeft: number }
   | { kind: 'pro'; renewsAt: number | null; autoRenewing: boolean }
@@ -71,7 +80,12 @@ export function proStatus(row: Row | null | undefined, now: number): ProStatus {
   return { kind: 'free', trialAvailable };
 }
 
-export const hasPro = (s: ProStatus) => s.kind === 'trial' || s.kind === 'pro';
+export const hasPro = (s: ProStatus) => s.kind === 'all_free' || s.kind === 'trial' || s.kind === 'pro';
+
+/** The status every screen and background job uses: `all_free` while Pro is paused, else the stored Pro rules. */
+export function effectiveProStatus(row: Row | null | undefined, now: number, paused: boolean = PRO_PAUSED): ProStatus {
+  return paused ? { kind: 'all_free' } : proStatus(row, now);
+}
 
 /** New trial window, started by the driver ("Try Pro free for 7 days"). null if a trial was already used. */
 export function trialWindow(row: Row | null | undefined, now: number): { trialStartedAt: number; trialEndsAt: number } | null {

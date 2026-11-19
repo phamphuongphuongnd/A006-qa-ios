@@ -1,6 +1,6 @@
 import { and, countDistinct, eq, gte, lt } from 'drizzle-orm';
 
-import { monthOf, proStatus, trialWindow, type ProStatus } from '@/domain/pro';
+import { effectiveProStatus, monthOf, trialWindow, type ProStatus } from '@/domain/pro';
 
 import { proState, receipts, settings, type ProStateRow } from './schema';
 import type { AppDb } from './types';
@@ -35,7 +35,7 @@ export function setDevFakePro(db: AppDb, mode: DevFakePro | null) {
   else db.insert(settings).values({ key: DEV_FAKE_PRO_KEY, value: mode }).onConflictDoUpdate({ target: settings.key, set: { value: mode } }).run();
 }
 
-export const getProStatus = (db: AppDb, now = Date.now()): ProStatus => proStatus(getProState(db), now);
+export const getProStatus = (db: AppDb, now = Date.now()): ProStatus => effectiveProStatus(getProState(db), now);
 
 function upsert(db: AppDb, patch: Partial<Omit<ProStateRow, 'id'>>) {
   db.insert(proState)

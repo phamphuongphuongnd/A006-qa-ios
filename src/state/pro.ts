@@ -1,6 +1,6 @@
 import { db } from '@/db/client';
 import { getProState, photosUsedThisMonth } from '@/db/proRepo';
-import { hasPro, monthOf, photoAllowance, proStatus, type ProStatus } from '@/domain/pro';
+import { effectiveProStatus, hasPro, monthOf, photoAllowance, type ProStatus } from '@/domain/pro';
 import { useNow } from '@/features/entries/useNow';
 
 import { useLive } from './useLive';
@@ -13,7 +13,7 @@ export function usePro(): { status: ProStatus; pro: boolean } {
   'use no memo';
   const now = useNow(60_000);
   const row = useLive(() => getProState(db), [], ['pro_state', 'settings']);
-  const status = proStatus(row, now);
+  const status = effectiveProStatus(row, now);
   return { status, pro: hasPro(status) };
 }
 

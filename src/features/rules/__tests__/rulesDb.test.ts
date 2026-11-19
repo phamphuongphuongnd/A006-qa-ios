@@ -1,3 +1,10 @@
+/* eslint-disable import/first -- jest.mock is hoisted above the imports anyway */
+// These tests check the Pro rules for when Pro comes back: run them with Pro switched on (PRO_PAUSED = false).
+jest.mock('@/domain/pro', () => {
+  const actual = jest.requireActual('@/domain/pro');
+  return { ...actual, PRO_PAUSED: false, effectiveProStatus: (row: never, now: number) => actual.proStatus(row, now) };
+});
+
 import { listCategories, seedCategories } from '@/db/categoriesRepo';
 import { categorise, createEntry, getEntry } from '@/db/entriesRepo';
 import { startTrial } from '@/db/proRepo';
