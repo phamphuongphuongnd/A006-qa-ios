@@ -54,6 +54,9 @@ File `qa-runs/a13/diagnostics/SundaySort-trip-diagnostics-2026-11-18-02-44.json`
 **Luật mới (điều phối, 18/11):** trên A13 KHÔNG `pm clear` nữa (dữ liệu thật + nhật ký chuyến) → không chạy persona cần
 xoá dữ liệu. Khi Phương cắm lại sau lần chạy xe / thử Bluetooth: lấy file chẩn đoán (Settings → giữ lâu "Version")
 TRƯỚC mọi việc khác, tóm tắt cho điều phối. Các mục còn lại chỉ làm khi Phương cho phép.
+**Luật mới 3 (điều phối, 19/11 ~16:30):** phiên mới "A006 gỡ giới hạn pro" sửa dev (tắt Pro, mở mọi tính năng). QA chỉ ghi qa/** và
+BUGS.md; bỏ qua lỗi Pro/trial/mua/20 ảnh; lỗi cần sửa code → ghi BUGS.md rồi nhắn phiên đó (không nhắn phiên chính nếu đã đóng).
+Không cài APK mới lên A13 trước khi xong bài lái xe tối 19/11. Commit qa/**, không push.
 **Luật mới 2 (điều phối, 18/11 16:00, B-113):** trên A13 KHÔNG chạm theo toạ độ cố định nữa (nghi gây khoản tự lưu £55.30 15:08
 và khoản FreshHarvest 2020). Luôn uiautomator dump → tìm đúng chữ/nút → kiểm topResumedActivity → mới bấm. Màn Ghi nhanh dump
 hỏng (con trỏ nhấp nháy) → ở màn đó để Phương tự bấm, hoặc ẩn bàn phím/đợi rồi dump lại; không bấm mù.
