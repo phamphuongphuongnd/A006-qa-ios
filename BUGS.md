@@ -644,9 +644,10 @@
   dòng Max; đóng bàn phím thanh tính vẫn còn → "Parking & tolls £…" hiện 2 lần; (c) Add trip có phí đỗ xe → X đóng luôn, không hỏi "Discard?".
   Sửa: (a) chữ thẻ vehicle chừa lề phải cho nút + khi màn < 420dp; (b) bàn phím đóng = hết sửa phí (ẩn thanh tính), thanh tính có "Max …";
   (c) TripForm báo `onDirtyChange` → Add trip hỏi "Discard this trip?" khi đã gõ gì (kể cả phí). ✅ phiên B (f3795bf): a, b, c đều đạt.
-- [ ] **B-135** 🟡 (A13 phiên E, a3a1f6b) Continue trip lúc 11:28:52 → chuyến tự kết thúc 11:37:50 (sớm ~1 phút so với Merge stops 10 phút) và hiện "Trip ended at
+- [x] **B-135** 🟡 (A13 phiên E, a3a1f6b) Continue trip lúc 11:28:52 → chuyến tự kết thúc 11:37:50 (sớm ~1 phút so với Merge stops 10 phút) và hiện "Trip ended at
   11:27" — trước cả lúc bấm Continue. Gốc: fix đầu tiên sau Continue là vị trí cũ hệ thống giữ (giờ 11:27:50) → lưu làm đầu đoạn mới → mốc đỗ lùi.
-  Sửa: `appendPoints` sau Continue / Resume bỏ fix có giờ trước mốc bấm + test (`lastMoveAt.test.ts`). 958 test xanh. ⏳ A13.
+  Sửa: `appendPoints` sau Continue / Resume bỏ fix có giờ trước mốc bấm + test (`lastMoveAt.test.ts`). 958 test xanh. ✅ A13 (57646f8): Continue 12:10:34 → tự kết thúc
+  12:21:30 (10 phút 56 s sau, Merge 10), thông báo "Trip ended at 12:10".
 - [ ] **B-136** 🟡 (QA OLD-19, phiên B — f3795bf) Gõ số lẻ thứ 3 ("12.34" rồi "5") hiện "Max £999,999.99" — sai nghĩa (tiền lưu vẫn đúng); màn Split riêng gõ
   số rồi X đóng luôn, không hỏi. Sửa: `moneyLimitHit` (chỉ khi chữ số bị bỏ ở phần nguyên của số tiền, không phải số lẻ / số nhân) + test; màn Split hỏi
   "Discard this split?" khi đã đổi. ⏳ máy.
