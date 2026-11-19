@@ -39,7 +39,7 @@ export const isCharging = (): boolean => {
   }
 };
 
-export function configureNative(cfg: { enabled?: boolean; tripActive?: boolean; startOnCharge?: boolean; vanAddress?: string | null }) {
+export function configureNative(cfg: { enabled?: boolean; tripActive?: boolean; startOnCharge?: boolean; vanAddress?: string | null; probeAfter?: number }) {
   try {
     TripDetect?.configure?.(cfg);
   } catch {

@@ -63,7 +63,7 @@ interface TripDetectNative {
   watchPower(on: boolean): void;
   getBondedDevices(): BondedDevice[];
   /** S1: state the receivers read while JS is dead (Android; a no-op on iOS). */
-  configure?(cfg: { enabled?: boolean; tripActive?: boolean; startOnCharge?: boolean; vanAddress?: string | null }): void;
+  configure?(cfg: { enabled?: boolean; tripActive?: boolean; startOnCharge?: boolean; vanAddress?: string | null; probeAfter?: number }): void;
   /** S1: one pending wake-up (end-of-trip check) that runs the JS task (Android alarm; iOS timer while the app runs). */
   scheduleWake?(atMs: number): void;
   cancelWake?(): void;

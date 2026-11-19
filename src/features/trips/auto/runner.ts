@@ -30,6 +30,7 @@ import {
   notifyTripEnded,
 } from './notifyAuto';
 import { finishAutoTrip, getKV, lastParkedPoint, seedStartPoint, setKV, tripEnds } from './repo';
+import { syncProbe } from './probe';
 import { routeScopeFor } from './routes';
 import { syncTripActive } from './sync';
 
@@ -137,6 +138,8 @@ async function runOnce(now: number) {
     }
   }
   setFlags({ lastRunAt: now });
+  // B-88: just left 'still' and nothing started → a short GPS drive check (slow traffic the sensor never calls driving).
+  await syncProbe({ now, enabled, state }).catch(() => {});
   // B-131: activity recognition says driving → a parked trip's GPS goes back to every 5 s right away.
   await syncGpsMode(now).catch(() => {});
   await syncIosBackstops();

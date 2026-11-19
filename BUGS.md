@@ -361,6 +361,11 @@
   trips "Working". ⏳ lần chạy xe tới (ô tô) → giữ lâu Version → gửi file chẩn đoán → phân tích → sửa engine.
   18/11 (8cb9c8f, A13): nút chẩn đoán chạy đúng (`qa-runs/a13/diagnostics/…02-44.json`: registered, đủ quyền, không tối ưu pin); **mở chuyến bằng
   Bluetooth ✅** (nối thiết bị đã chọn → chuyến Auto đúng giây đó). Chưa có dữ liệu Activity Recognition khi lái.
+  **19/11 — Phương bổ sung: hôm 17/11 tắc đường, xe đi chậm như đi bộ** → cảm biến có thể báo still / walking, không bao giờ "driving" → không chuyến.
+  **Phương chọn: dự phòng bằng GPS (Drive check, CONTEXT.md).** Sửa (Android): rời 'still' (native kick khi qua cool-down) mà không có chuyến → kiểm
+  GPS Balanced mỗi 30 s tối đa 12 phút (thông báo "Checking for a drive…"); cách điểm đầu ≥ 500 m và nhanh hơn 2,5 m/s — hoặc ≥ 500 m khi cảm biến không
+  báo đi bộ — → chuyến tự động, giờ bắt đầu = lúc rời 'still', 2 điểm của lần kiểm thành đầu chuyến; không thấy → nghỉ 20 phút. Nhật ký probe_start /
+  probe_drive / probe_none. `probeLogic.ts` + test, `probe.ts`, `probeState.ts`. 965 test xanh. ⏳ xe thật (tắc đường) + đi bộ (không được bật chuyến).
 - [x] **B-89** 🟡 (QA MOD-10, phiên F — hồi quy một phần B-84) Nháp được mở lại nhưng **ảnh chụp trong lúc app đã bị giết** vẫn mất: `getPendingResultAsync`
   gọi 1 lần lúc màn mở, trước khi kết quả camera tới Activity mới. Sửa (`capture.tsx`): gọi lại sau 1 s, 3 s và mỗi khi app trở lại active, bỏ ảnh trùng.
   Kèm: cửa sổ thấp < 520dp (chia đôi màn 436dp) → ẩn nút nổi "+" (`ui/Layout.tsx`) vì nó đè "Sort now" ở Reports.
@@ -402,7 +407,9 @@
   **v2 (Phương nhờ qua phiên D, 19/11 — theo luật B-123):** chuyến tay giờ tự kết thúc sau Merge stops không di chuyển thật, nhưng chỉ khi JS chạy. Thông báo
   hẹn trước (iOS tự hiện cả khi app bị tắt) đổi từ "Still on a trip? / 45 phút" thành **"Trip ended at {giờ đỗ} · {km}" + Continue trip**, cùng định danh
   với thông báo engine (`notifyTripEnded`) → không bao giờ 2 cái; hẹn lại theo `lastMoveAt` + Merge stops. Bấm Continue khi app không chạy (chuyến còn
-  'running' trong DB) → `resumeFrom` (dừng tính từ lúc bấm) + bật lại GPS. + test. 959 test xanh. ⏳ iOS simulator (phiên C) + iPhone thật.
+  'running' trong DB) → `resumeFrom` (dừng tính từ lúc bấm) + bật lại GPS. + test. 959 test xanh. ✅ iOS simulator (phiên C, run
+  44462217035, P022 SE, Merge 10): tắt app → đúng 1 "Trip ended at 21:29 · 0.0 mi" ~phút 11; về Home → đúng 1 thông báo, mở app "No trip running".
+  ⏭ bấm Continue trên màn khoá (Maestro không giữ lâu được), máy ngủ thật → iPhone thật.
 - [x] **B-97** 🟡 (QA OLD-11, phiên B — Android 7.0) "Choose backup folder": bộ chọn thư mục Android 7 chỉ hiện "Recent · No items" tới khi bật ⋮ → Show internal
   storage; nhãn thư mục gốc hiện "This phone / primary:". Bộ chọn của expo-file-system không truyền được `SHOW_ADVANCED`. Sửa: Android < 8 hiện dòng hướng
   dẫn "If the list is empty, tap ⋮ → Show internal storage." dưới nút; nhãn bỏ "primary:" → "This phone".
@@ -629,16 +636,24 @@
   Gốc: `reports.tsx` truyền `report.unsortedCount` thô vào `t('reports.unsortedWarn')`.
   Sửa chung: `t()` nhóm nghìn cho tham số đếm (`count`, `total`, `done`) — mọi câu "N entries / trips" trong app; năm, phút không đổi + test.
   955 test xanh. ⏳ máy.
-- [ ] **B-133** 🟠 (QA OLD-18, phiên B — a3a1f6b API 26) Tách khoản (thẻ Sort → Split; cũng màn Split, Sort → Edit, luật min/max): ô số không đọc như Ghi nhanh
+- [x] **B-133** 🟠 (QA OLD-18, phiên B — a3a1f6b API 26) Tách khoản (thẻ Sort → Split; cũng màn Split, Sort → Edit, luật min/max): ô số không đọc như Ghi nhanh
   (B-122) — "33,01" thành "3301" (£3,267.99 over), "33.011" tính 0, "12345678" nhận hết không báo Max (ô 360dp chỉ hiện "345678"); chạm ô Part 1 → thẻ
   cuộn xuống đáy, ô đang gõ khuất. Gốc: các ô tự lọc `v.replace(/[^\d.]/g, '')` (bỏ dấu phẩy, không giới hạn), thẻ Split luôn `scrollToEnd` (B-38).
   Sửa: `sanitizeAmount` (calc.ts, như Ghi nhanh: "," = ".", 2 số lẻ, 999,999.99) + test cho thẻ Split, Sort Edit, màn Split, luật min/max; dòng
-  "Max …" (`MaxAmountNote`); thẻ Split cuộn tới ô đang gõ (vị trí hàng), chưa chạm ô nào thì như cũ. 957 test xanh. ⏳ phiên B.
-- [ ] **B-134** 🟡 (QA OLD-17a/b, phiên B) (a) Reports 360dp chưa cuộn: nút + đè chữ "until" ở dòng phụ thẻ vehicle; (b) phí đỗ xe: đang gõ thì thanh tính che
+  "Max …" (`MaxAmountNote`); thẻ Split cuộn tới ô đang gõ (vị trí hàng), chưa chạm ô nào thì như cũ. 957 test xanh. ✅ phiên B (f3795bf, API 26): thẻ Split + màn Split + Sort Edit đúng, cuộn
+  tới ô đang gõ. ⏭ luật min/max (cần Pro).
+- [x] **B-134** 🟡 (QA OLD-17a/b, phiên B) (a) Reports 360dp chưa cuộn: nút + đè chữ "until" ở dòng phụ thẻ vehicle; (b) phí đỗ xe: đang gõ thì thanh tính che
   dòng Max; đóng bàn phím thanh tính vẫn còn → "Parking & tolls £…" hiện 2 lần; (c) Add trip có phí đỗ xe → X đóng luôn, không hỏi "Discard?".
   Sửa: (a) chữ thẻ vehicle chừa lề phải cho nút + khi màn < 420dp; (b) bàn phím đóng = hết sửa phí (ẩn thanh tính), thanh tính có "Max …";
-  (c) TripForm báo `onDirtyChange` → Add trip hỏi "Discard this trip?" khi đã gõ gì (kể cả phí). ⏳ phiên B.
-- [ ] **B-135** 🟡 (A13 phiên E, a3a1f6b) Continue trip lúc 11:28:52 → chuyến tự kết thúc 11:37:50 (sớm ~1 phút so với Merge stops 10 phút) và hiện "Trip ended at
+  (c) TripForm báo `onDirtyChange` → Add trip hỏi "Discard this trip?" khi đã gõ gì (kể cả phí). ✅ phiên B (f3795bf): a, b, c đều đạt.
+- [x] **B-135** 🟡 (A13 phiên E, a3a1f6b) Continue trip lúc 11:28:52 → chuyến tự kết thúc 11:37:50 (sớm ~1 phút so với Merge stops 10 phút) và hiện "Trip ended at
   11:27" — trước cả lúc bấm Continue. Gốc: fix đầu tiên sau Continue là vị trí cũ hệ thống giữ (giờ 11:27:50) → lưu làm đầu đoạn mới → mốc đỗ lùi.
-  Sửa: `appendPoints` sau Continue / Resume bỏ fix có giờ trước mốc bấm + test (`lastMoveAt.test.ts`). 958 test xanh. ⏳ A13.
+  Sửa: `appendPoints` sau Continue / Resume bỏ fix có giờ trước mốc bấm + test (`lastMoveAt.test.ts`). 958 test xanh. ✅ A13 (57646f8): Continue 12:10:34 → tự kết thúc
+  12:21:30 (10 phút 56 s sau, Merge 10), thông báo "Trip ended at 12:10".
+- [ ] **B-136** 🟡 (QA OLD-19, phiên B — f3795bf) Gõ số lẻ thứ 3 ("12.34" rồi "5") hiện "Max £999,999.99" — sai nghĩa (tiền lưu vẫn đúng); màn Split riêng gõ
+  số rồi X đóng luôn, không hỏi. Sửa: `moneyLimitHit` (chỉ khi chữ số bị bỏ ở phần nguyên của số tiền, không phải số lẻ / số nhân) + test; màn Split hỏi
+  "Discard this split?" khi đã đổi. ⏳ máy.
+- [ ] **B-137** 🟠 (QA QI-6, phiên C — iOS simulator, cũng đúng trên Android) Màn chuyến đang chạy không bao giờ hiện bản đồ (chỉ hình vẽ dự phòng) nếu
+  điểm GPS đầu tiên về sau 12 s. Mạng tới tiles.openfreemap.org bình thường (HTTP 200, 0,2–0,7 s). Gốc: `TripMap.tsx` đếm 12 s từ lúc gắn, kể cả khi chưa có
+  điểm → `failed` cả chuyến. Sửa: chỉ đếm khi bản đồ đã có khung (có điểm). 965 test xanh. ⏳ máy (GPS lạnh / iOS lượt sau).
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.

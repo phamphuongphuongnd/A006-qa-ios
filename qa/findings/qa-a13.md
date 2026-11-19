@@ -155,6 +155,8 @@ kết quả kick/start. Đã báo điều phối.
 - **8619687 cài 11:39:46** (không có chuyến). **B-131 ✅**: Start 11:40:44 → 11:42:55 dumpsys location đổi Request @+5s → @+30s
   HIGH_ACCURACY (2 phút 11 s), giữ 30 s tới 11:47:59; CPU 0.28%/366 s, 0 wakelock (`perf-trip-still-8619687.json`). Chưa thử nhánh
   drive (> 100 m) + gps_mode trong chẩn đoán.
+- **57646f8 cài 11:53:13** (không có chuyến, Back up now trước). **B-135 ✅**: Start 11:54:41 → tự kết thúc 12:05:30 → Phương
+  chờ ~5 phút → Continue 12:10:34 → tự kết thúc 12:21:30 (10 phút 56 s sau Continue), "Trip ended at 12:10" ≥ giờ bấm.
 - **A13-14 tái hiện lần 2 (lượt sạch, không cài/đổi cài đặt)**: Start 10:52:01 → tự kết thúc 11:02:46 (Merge 10) "Trip ended at
   10:52 · 0.0 km" ✅ → Continue 11:03:25 → tắt lại 11:03:48.9 (23 s) ❌. Điều phối sửa B-130.
   Phương chốt: chuyến đang chờ Continue mà nối BT / sạc + đi / Start → tạo chuyến mới như hiện tại (không tự nối).

@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import type { Minor } from '@/domain/types';
 
-import { digitIgnored, evaluate, exprMinor, exprOf, pushOp, sanitizeExpr, type CalcOp } from './calc';
+import { digitIgnored, evaluate, moneyLimitHit, exprMinor, exprOf, pushOp, sanitizeExpr, type CalcOp } from './calc';
 
 /**
  * State of an amount field with the calculator (Q20). The hidden TextInput's text IS the expression: digits come
@@ -31,7 +31,7 @@ export function useAmountExpr(initial: Minor = 0, initialExpr?: string) {
     // Over the 999,999.99 limit the extra digit is ignored — tell the hand, not the eyes.
     const ignored = digitIgnored(expr, raw, next);
     if (ignored) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setAtLimit(ignored);
+    setAtLimit(ignored && moneyLimitHit(expr, raw, next));
     commit(next);
   };
 

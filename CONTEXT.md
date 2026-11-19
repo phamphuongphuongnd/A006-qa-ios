@@ -74,6 +74,11 @@ _Avoid_: resume (that is coming back from Personal stop)
 The vehicle's own Bluetooth device the driver picks; connecting to it starts an automatic Trip.
 _Avoid_: car kit, paired device
 
+**Drive check**:
+A few minutes of low-power GPS after the phone starts moving with no Trip running; getting far away faster than a walk
+(or far away while the phone isn't walking) starts an automatic Trip from when it started moving. Catches drives in slow
+traffic that the motion sensor never calls driving.
+
 **Start on charge**:
 Starting an automatic Trip when the phone is charging and the vehicle starts moving; charging alone never starts one.
 

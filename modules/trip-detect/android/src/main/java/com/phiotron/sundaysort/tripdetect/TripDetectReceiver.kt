@@ -49,6 +49,8 @@ class TripDetectReceiver : BroadcastReceiver() {
         val enter = e.transitionType == ActivityTransition.ACTIVITY_TRANSITION_ENTER
         if (enter && e.activityType == DetectedActivity.IN_VEHICLE) startCandidate = true
         if (!enter && e.activityType == DetectedActivity.STILL && AutoConfig.startOnCharge(context) && isCharging(context)) startCandidate = true
+        // B-88: leaving 'still' may be a drive the sensor never calls driving (slow traffic): JS runs a short GPS check.
+        if (!enter && e.activityType == DetectedActivity.STILL && System.currentTimeMillis() >= AutoConfig.probeAfter(context)) startCandidate = true
         EventLog.add(
           context,
           "activity",

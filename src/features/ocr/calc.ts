@@ -164,3 +164,14 @@ export function legacyToPlain(expr: string): string {
 
 /** A digit was typed (`raw` grew) but the limit kept the expression as it was: buzz instead of silently ignoring. */
 export const digitIgnored = (prev: string, raw: string, next: string): boolean => /\d$/.test(raw) && raw.length > prev.length && next === prev;
+
+/**
+ * QA OLD-19: the digit was dropped because the amount is at 999,999.99 — not because it was a third decimal or a
+ * count past × 9999. Only then "Max £999,999.99" is true.
+ */
+export function moneyLimitHit(prev: string, raw: string, next: string): boolean {
+  if (!digitIgnored(prev, raw, next)) return false;
+  const tks = tokens(next);
+  const last = tks[tks.length - 1];
+  return !isCount(last.op) && !last.digits.includes('.');
+}

@@ -8,6 +8,8 @@ export const autoTrip = {
   nfc: 'NFC',
   gps: 'GPS',
   manual: 'Manual',
+  probeTitle: 'Checking for a drive…',
+  probeBody: 'A few minutes of GPS after you start moving, so a drive in slow traffic still records.',
   notif: {
     savedTitle: 'Trip saved · {distance} · {scope}',
     savedBody: 'Recorded automatically. Tap to check it.',
