@@ -144,6 +144,17 @@ kết quả kick/start. Đã báo điều phối.
   **A13-14 🟠 Continue trip tắt lại sau 3 giây**: Phương bấm nút 10:48:45 → GPS start + trip-ongoing → 10:48:48 stop + lại "Trip
   ended at 10:34". Nghi: reopenTrip (tripsRepo.ts:104-106) chỉ đánh dấu bằng lastPointAt=now; fix đầu sau Continue được lưu thì
   lastMoveAt (240-245) mất resumedAt → parkedSince toàn bộ điểm = 10:34 → backgroundTask.ts:50 end ngay. Đã báo điều phối.
+- **11:07–11:32 (0f08c76 → a3a1f6b)**: Back up now; Phương nhờ xoá 3 chuyến thử 0 km (10:19/10:34/10:52) → đã xoá. 0f08c76 cài
+  11:10:56 khi không có chuyến (isForeground=0). **B-127 ✅** 12345678 → £123,456.00 + "Max £999,999.99" (🟡 chữ đen, không vàng).
+  **B-128 ✅** Sort → Edit → Amount: ô Amount + Done ở trên bàn phím số. **B-130 ✅** Start 11:16:37 → tự kết thúc 11:27:21 →
+  Continue 11:28:52 → vẫn chạy 11:31:03+. **B-129 ✅** (Phương đồng ý) cài đè a3a1f6b 11:31:21 giữa chuyến, không mở app:
+  TripDetectTaskService 11:31:25 → LocationTaskService 11:31:27 (PROC_STATE_FGS) → GPS hụt ~6 s; chẩn đoán `restore_ok
+  {screen: background}` (`diagnostics/SundaySort-trip-diagnostics-2026-11-19-04-32.json`).
+- B-130 tiếp: chuyến Continue 11:28:52 tự kết thúc 11:37:50, thông báo "Trip ended at 11:27" → 🟡 sớm ~1 phút + endedAt trước
+  giờ Continue; điều phối: fix cũ (11:27:50) hệ thống giữ được lưu làm đầu đoạn → sửa B-135.
+- **8619687 cài 11:39:46** (không có chuyến). **B-131 ✅**: Start 11:40:44 → 11:42:55 dumpsys location đổi Request @+5s → @+30s
+  HIGH_ACCURACY (2 phút 11 s), giữ 30 s tới 11:47:59; CPU 0.28%/366 s, 0 wakelock (`perf-trip-still-8619687.json`). Chưa thử nhánh
+  drive (> 100 m) + gps_mode trong chẩn đoán.
 - **A13-14 tái hiện lần 2 (lượt sạch, không cài/đổi cài đặt)**: Start 10:52:01 → tự kết thúc 11:02:46 (Merge 10) "Trip ended at
   10:52 · 0.0 km" ✅ → Continue 11:03:25 → tắt lại 11:03:48.9 (23 s) ❌. Điều phối sửa B-130.
   Phương chốt: chuyến đang chờ Continue mà nối BT / sạc + đi / Start → tạo chuyến mới như hiện tại (không tự nối).
