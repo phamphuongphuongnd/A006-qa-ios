@@ -268,9 +268,10 @@
   khi app vào nền. Sửa: `modules/system-bars` thêm `setHideInRecents` — Android 13+ `setRecentsScreenshotEnabled(false)` (vẫn chụp màn hình
   được), Android < 13 `FLAG_SECURE` cho cửa sổ app + cửa sổ Modal (chặn cả chụp màn hình khi App lock bật — giới hạn của Android cũ);
   iOS: phủ màn nền khi app rời `active` (`services/recentsPrivacy.ts`, `LockGate`). ⏳ cần build native mới; thử API 26 + API 37 + A13 + iOS.
-- [ ] **B-66** 🟡 (QA iOS lượt 1, phiên C) iPhone SE + Dynamic Type lớn (P016, P031): màn chào "Log it in 10 seconds" — hình minh hoạ 220pt +
+- [x] **B-66** 🟡 (QA iOS lượt 1, phiên C) iPhone SE + Dynamic Type lớn (P016, P031): màn chào "Log it in 10 seconds" — hình minh hoạ 220pt +
   đệm 48 đẩy tiêu đề/đoạn mô tả xuống dưới mép vùng nút, không thấy gợi ý cuộn (cuộn được). Sửa (`onboarding/index.tsx`, `art.tsx`): màn
-  thấp hoặc chữ lớn (chiều cao / fontScale < 700) → hình còn 55%, đệm 16; tiêu đề `maxFontSizeMultiplier 1.6`. ⏳ iOS lượt 2.
+  thấp hoặc chữ lớn (chiều cao / fontScale < 700) → hình còn 55%, đệm 16; tiêu đề `maxFontSizeMultiplier 1.6`. ✅ iOS (phiên C, run 44478021185, SE): P016 AX-L tiêu đề đủ, mô tả có "More below", không bị nút che,
+  hình ~55%; P031 XXXL thấy hết.
   Ghi nhận (không sửa): log iOS "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện đọc đăng ký
   push từ keychain, app chỉ dùng thông báo local; theo dõi ở lượt 2 xem thông báo nhắc có hiện không.
 - [x] **B-67** 🟠 (QA SPE-1, phiên D) Deep link `sundaysort://reports?from=-99999999999999999&to=0` treo app vĩnh viễn (luồng JS 100%, RAM tới OOM,
@@ -664,10 +665,11 @@
   số rồi X đóng luôn, không hỏi. Sửa: `moneyLimitHit` (chỉ khi chữ số bị bỏ ở phần nguyên của số tiền, không phải số lẻ / số nhân) + test; màn Split hỏi
   "Discard this split?" khi đã đổi. ✅ A13 (0882755): 12345678 → Max (bỏ chữ số), 999999.99 gõ đủ → không Max; Split đổi → X → hỏi, Discard
   giữ khoản nguyên.
-- [ ] **B-137** 🟠 (QA QI-6, phiên C — iOS simulator, cũng đúng trên Android) Màn chuyến đang chạy không bao giờ hiện bản đồ (chỉ hình vẽ dự phòng) nếu
+- [x] **B-137** 🟠 (QA QI-6, phiên C — iOS simulator, cũng đúng trên Android) Màn chuyến đang chạy không bao giờ hiện bản đồ (chỉ hình vẽ dự phòng) nếu
   điểm GPS đầu tiên về sau 12 s. Mạng tới tiles.openfreemap.org bình thường (HTTP 200, 0,2–0,7 s). Gốc: `TripMap.tsx` đếm 12 s từ lúc gắn, kể cả khi chưa có
   điểm → `failed` cả chuyến. Sửa: chỉ đếm khi bản đồ đã có khung (có điểm). 965 test xanh. ✅ Android (phiên A, 62d6558): khởi động lại máy (không có vị trí
-  cũ) → Start → "Finding GPS…" → có fix → bản đồ ở 10/30/60 s. ⏳ iOS (phiên C).
+  cũ) → Start → "Finding GPS…" → có fix → bản đồ ở 10/30/60 s. ✅ iOS (phiên C, run 44471864915, c9bb293, P092): vị trí đặt ở +21 s →
+  bản đồ MapLibre thật ở 30 s và 60 s (Westminster, © OpenStreetMap · OpenFreeMap).
 - [x] **B-138** 🟡 (Phương thử A13 19/11 14:32, 62d6558) Ghi nhanh: gõ £12.05 rồi chụp hoá đơn $42 → chip "Receipt says £42.00 · Use" đúng (OCR đúng số), nhưng
   dòng ghi chú đọc từ hoá đơn (tên cửa hàng · From receipt) nằm DƯỚI chip, không đọc được (ảnh scratchpad a13/now.png). Gốc: bàn phím mở, vùng giữa
   chật, số tiền lấy hết chiều cao → dòng ghi chú tràn xuống vùng dưới. Sửa: cỡ số tiền chừa 30dp cho dòng ghi chú; quá chật thì tạm ẩn dòng đó.
