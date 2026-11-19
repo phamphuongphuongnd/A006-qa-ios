@@ -166,6 +166,12 @@ kết quả kick/start. Đã báo điều phối.
 - **62d6558 cài 14:23:33. B-99 ✅** (vân tay thật, App lock 1 phút): camera mở 2 phút tự đóng → về Ghi nhanh không khoá, nháp còn;
   chụp sau 1:45 → thêm ảnh, không khoá; thư viện 1:23 → thêm ảnh. Camera Samsung ~4 s từ chụp tới màn xem lại (chế độ làm đẹp) —
   không phải lỗi app. Đã Discard nháp, tắt App lock.
+- **Tối 19/11 (Phương lái thật, edecc6d, KHÔNG cài APK mới)**: 1) B-140 ở nhà (watcher `watch-1119-evening.log`); 2) B-88 v2 đi bộ;
+  3) B-88/B-131/kết thúc khi đỗ; 4) Bluetooth xe; 5) (tuỳ chọn) vuốt tắt app khỏi Recents khi đang chuyến → GPS còn không. Khi về:
+  Back up now + chẩn đoán + `logcat -b all -d` NGAY (trước khi buffer xoay) → chấm từng bài theo mốc giờ Phương ghi.
+  **Bài 1 B-140 ✅ (15:23–15:37)**: probe_start 15:23:39 → start_ok charging 15:26:50 (cắm cáp khi đang đi) → GPS chuyến còn chạy
+  sau mốc probe hết hạn 15:35:39 (watcher fg=1, @+30s lúc 15:36–15:37), không có probe_none sau khi chuyến bắt đầu → 15:37:20
+  trip_deleted {auto_short, 0 m} (nhật ký mới ✅). `diagnostics/SundaySort-trip-diagnostics-2026-11-19-08-42.json`.
 - **edecc6d cài 15:06:49** (B-139 + B-140 + nhật ký trip_deleted; Back up now trước; không có chuyến). Bài B-140 (đi bộ →
   probe_start → Start → không mở app → GPS chuyến còn sau mốc probe hết hạn) ⏳ Phương để sau.
 - **d3459a5 cài 14:59:53. B-138 ✅**: £12.05 + chụp FreshHarvest → bàn phím mở: dòng tên cửa hàng tạm ẩn, chip "Receipt says
