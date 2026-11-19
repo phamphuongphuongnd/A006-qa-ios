@@ -144,6 +144,13 @@ kết quả kick/start. Đã báo điều phối.
   **A13-14 🟠 Continue trip tắt lại sau 3 giây**: Phương bấm nút 10:48:45 → GPS start + trip-ongoing → 10:48:48 stop + lại "Trip
   ended at 10:34". Nghi: reopenTrip (tripsRepo.ts:104-106) chỉ đánh dấu bằng lastPointAt=now; fix đầu sau Continue được lưu thì
   lastMoveAt (240-245) mất resumedAt → parkedSince toàn bộ điểm = 10:34 → backgroundTask.ts:50 end ngay. Đã báo điều phối.
+- **A13-14 tái hiện lần 2 (lượt sạch, không cài/đổi cài đặt)**: Start 10:52:01 → tự kết thúc 11:02:46 (Merge 10) "Trip ended at
+  10:52 · 0.0 km" ✅ → Continue 11:03:25 → tắt lại 11:03:48.9 (23 s) ❌. Điều phối sửa B-130.
+  Phương chốt: chuyến đang chờ Continue mà nối BT / sạc + đi / Start → tạo chuyến mới như hiện tại (không tự nối).
+- Đo thụ động 5 phút khi đang có chuyến (Start 10:52), máy đứng yên, cắm cáp (pin luôn 100% → không đo được %):
+  CPU app **0.19%** (570 ms/302 s; luồng chính 250 ms, JS 70 ms), 0 wakelock của app; GPS fused HIGH_ACCURACY mỗi 5 s suốt
+  thời gian đứng yên → phần hao pin chính là GPS. 🟡 gợi ý: khi activity "still" hạ xuống BALANCED/khoảng thưa hơn tới khi
+  di chuyển lại. `perf-trip-still-300s.json`. Đo pin thật cần một ca lái không cắm sạc.
 - Quyết định Phương (19/11): B-113 đóng; xoá 2 repo test sau khi phiên con test xong; iOS B-95/96 để Phương kiểm sau (giới hạn đã biết).
 - **B-123 ✅** (bcf8827): chuyến giả 09:40:29 → 10:00:47 tự dừng (LocationTaskService stop + hủy trip-ongoing, 20 phút 18 giây);
   không có trong Miles, trips vẫn 269, tripPoints không thêm → < 500 m bị bỏ.
