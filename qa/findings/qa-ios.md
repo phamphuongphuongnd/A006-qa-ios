@@ -23,6 +23,7 @@
 | 4g | 44274943533 (công khai) | e5f0714 (dev 4e4b030: B-117, B-118, B-114 v2, B-100 v3) | 3/4 (P052 13/17 ✅, P091 10/17 ✅, P016 6 bước ✅ rồi DeviceUnreachable từ bước 08; P041 ⏭ driver không lên) | 0 | **B-117 ✅, B-95 ✅, B-100 v3 ✅, B-114 v2 ✅ (thẻ cuộn được)**. ❌ còn lại: 02 khôi phục, 06/16 ở chữ lớn (kịch bản chưa cuộn — đã sửa), 09 bảng chia sẻ, 12 P091. 0 crash |
 | 4h | 44441656898 (công khai) | 64e5203 (cùng app 4g) | 0/2 | 0 | Lượt ngắn kiểm kịch bản 06/16 đã sửa (P091 SE AX-L, P041 Pro Max tối): **cả 2 ⏭ `IOSDriverTimeoutException`** (driver XCTest không lên sau 480 s) — chưa kiểm được. Driver không lên ở 15/31 lần khởi động persona qua các lượt 4c–4h (4c 9, 4e 3, 4g 1, 4h 2) trên runner công khai |
 | 4i | 44450726271 (công khai) | b6aa4d1 (dev 0bf4283: B-123…B-126) | **3/3, 0 lỗi driver** (P091 14/17 ✅, P052 13/17, P041 12/17) | 0 | **1 simulator mỗi lúc** + tự khởi động lại khi driver không lên (không cần dùng tới) — mỗi persona 10–12 phút thay vì 25+. **B-114 v2 ✅** (P091 SE AX-L phân loại được ngay trên thẻ Sort), **B-117 ✅ ở AX-L** (P091 cuộn tới Save, lưu được; P041 Pro Max tối ✅), B-95 ✅ cả 3. ❌ còn lại đều kịch bản: 02 nút "Restore from backup" dưới thẻ "Back up every night" (đã thêm cuộn), 06 P052/P041 chạm tab Sort vẫn ở Home, 08 P052/P041 bàn phím số không đóng → chữ Purpose rơi vào ô End reading (app báo "Enter a number" đúng), 09 P041 nút Export nằm sát mép (đã cho thấy 50 %). 0 crash |
+| 4j | 44455496596 (công khai) | b9e8dd6 (dev 0bf4283 + bước 17) | 2/2 (P022 15/18 ✅, P092 14/18) | 0 | Bước 17 chuyến GPS (nháp phiên H): **P022 ✅ 2.5 mi**, **P092 ❌ 1.4 mi — mất đoạn chạy nền → QI-5**. 1 simulator, 0 lỗi driver, 0 crash. 02/08 ❌ kịch bản (02 nay tới được bước chọn file) |
 | 4f | 44274384593 (công khai) | febb184 | 0 | 0 | ❌ GitHub không khởi chạy job (lỗi thanh toán tài khoản) — cả repo công khai |
 
 Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ lượt 4c chạy trên repo công khai `phamphuongphuongnd/A006-qa-ios` (Phương chọn; không tính phút) — **xoá repo này sau QA-100 khi Phương đồng ý**.
@@ -93,6 +94,14 @@ Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ 
 - **B-117 ✅ cả ở chữ lớn**: P091 (SE, AX-L) cuộn tới Save trong bảng kết thúc chuyến và lưu được; P041 (Pro Max, tối, AX-L) và P052 ✅.
 - **B-95 ✅** cả 3 persona. **B-101 ✅** (04 ✅ cả 3, ghi chú QA-P0xx đúng).
 - **B-126** (ô số): bàn phím ô End reading nay có dấu "." (decimal-pad) — hiện đúng; số tiền Ghi nhanh ra "$45.00" khi gõ "45" (trước là $0.45) — đổi hành vi theo B-126.
+
+### QI-5 🟠 (nghi vấn, 1/2) Chuyến GPS mất đoạn chạy khi app ở nền — iPhone 16 Pro Max
+- Persona/thiết bị: P092 (iPhone 16 Pro Max, tối, `large`, US). Lượt 4j, bước `17_gps_trip`. Đối chứng P022 (iPhone SE, sáng, US) cùng lượt ✅.
+- Bước: Start trip → Maestro `travel` ~2,1 km khi app mở → nút Home → `travel` thêm ~2 km khi app ở nền → mở lại app → End trip.
+- Kỳ vọng: ~2.5 mi (P022: đoạn 1 = 1.3 mi, lưu ra **2.5 mi** ✅).
+- Thực tế P092: mở lại app thấy **1.4 mi**, hình đường đi chỉ có đoạn 1 (lên rồi sang phải, giống hệt ảnh đoạn 1 của P022); lưu ra "Trip saved · 1.4 mi" → **đoạn ~2 km lúc app ở nền không được ghi**. (Ảnh 17a của P092 chụp ngay sau đoạn 1 còn hiện 0.5 mi — màn chậm cập nhật trên máy lớn.)
+- Ảnh: `qa-runs/ios/44455496596/personas/P092/shots/P092_17a_leg1_foreground.jpg`, `P092_17b_back_from_background.jpg`, `P092_17c_end_sheet.jpg`; đối chứng `…/P022/shots/P022_17a_leg1_foreground.jpg`, `P022_17c_end_sheet.jpg`.
+- Chưa kết luận: 1/2 lần, simulator; có thể do vị trí giả bị dồn khi máy runner bận, hoặc app không nhận cập nhật nền ở lần này. Cần chạy lặp (cùng P092) và thử iPhone thật. Nghi chỗ: tác vụ vị trí nền (`src/features/trips/backgroundTask.ts`, `allowsBackgroundLocationUpdates`/`pausesLocationUpdatesAutomatically` trong cấu hình expo-location).
 
 ### QI-4 🟠 Thẻ ở màn Sort bị cắt mất phần chọn danh mục khi chữ cỡ trợ năng
 - Persona/thiết bị: P041 (iPhone 16 Pro Max, `accessibility-large`, tối, UK), P016 (iPhone SE 3rd gen, `accessibility-large`, sáng, US). Lượt 4d.
