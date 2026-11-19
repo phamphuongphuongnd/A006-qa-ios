@@ -138,6 +138,14 @@ Income, Expenses (trừ nhóm chi phí xe khi dùng mileage rate; persona có ch
   (56 m/s) bị coi là glitch và **giữ nguyên mốc** → nếu fix đầu sai xa (hàng nghìn km) thì cả chuyến bị loại tới khi `dt` đủ lớn.
   Fix sai vài km sẽ tự hồi sau ~d/56 giây nhưng cộng luôn quãng "nhảy" đó vào. Trên máy thật ít gặp (fix cũ hơn `startedAt` đã bị
   lọc ở `backgroundTask.ts:60`), nên chỉ ghi 🟡 để dev xem có nên đổi mốc khi nhiều fix liên tiếp cùng "glitch".
+- **→ B-139, kiểm lại trên d73ebaf (19/11) ✅.** Kịch bản: `geo fix` London (−0.1278, 51.5074) ×3 → Start trip (8 s: "GPS good" =
+  điểm London đã vào chuyến) → 12 fix NY di chuyển 178 m / 6 s. Ảnh + log: `qa-runs/android37/recheck-b139/`.
+  | Bản | Kết quả |
+  |---|---|
+  | 62d6558 (đối chứng) | ❌ tái hiện: 0.0 mi suốt 12 fix, "Trip saved · 0.0 mi" (old-62d6558.log) |
+  | d73ebaf | ✅ quãng đường tăng từ fix thứ 2 (0.1 → 1.2 mi), lưu 1.2 mi = đúng 11 × 178 m, không cộng cú nhảy London→NY (new-d73ebaf-2.log) |
+  | d73ebaf + 1 fix London giữa đường | ✅ fix nhảy bị bỏ (0.7 → 0.7), chạy tiếp 0.8…1.2, lưu 1.2 mi, không km ảo (new-d73ebaf-jump.log) |
+  Lần chạy đầu ngay sau khi cài d73ebaf, điểm London không được phát lại ("Finding GPS…" ở 8 s), nên không tính lần đó là kiểm.
 
 ## Kết quả persona (`qa-runs/android37/summary.json`)
 - 60 persona API 37: **56 đạt** (mọi bước ✅/⏭), **2 ❌ do runner** (P083, P084 weird_text: trình đọc XML bỏ qua
