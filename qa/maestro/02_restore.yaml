@@ -38,15 +38,51 @@ name: 02_restore
                 optional: true
             - waitForAnimationToEnd:
                 timeout: 3000
+      # P076 (run 44481363012): the picker opened somewhere else and the file never showed → navigate once more.
+      - runFlow:
+          when:
+            notVisible: ".*${FIXTURE}.*"
+          commands:
+            - tapOn:
+                text: "Browse"
+                optional: true
+            - tapOn:
+                text: "On My iPhone"
+                optional: true
+            - waitForAnimationToEnd:
+                timeout: 3000
       - takeScreenshot: ${PID}_02c_picker_files
+      # iOS 26 picker: a plain tap on the file name/icon left the picker open in every round (4n–4q). Try, in turn:
+      # tap the name, tap the icon, double-tap the icon, long-press → "Open". Stop as soon as the picker is gone.
       - tapOn: ".*${FIXTURE}.*"
-      # The file name label did not always select the file (run 44478021185): tap its icon (first grid cell) as well.
+      - waitForAnimationToEnd:
+          timeout: 3000
       - runFlow:
           when:
             visible: "On My iPhone"
           commands:
+            # file icon on iPhone SE (on Pro Max this point is empty space: harmless)
             - tapOn:
-                point: "26%,37%"
+                point: "18%,33%"
+            - waitForAnimationToEnd:
+                timeout: 3000
+      - runFlow:
+          when:
+            visible: "On My iPhone"
+          commands:
+            - doubleTapOn: ".*${FIXTURE}.*"
+            - waitForAnimationToEnd:
+                timeout: 3000
+      - runFlow:
+          when:
+            visible: "On My iPhone"
+          commands:
+            - longPressOn: ".*${FIXTURE}.*"
+            - takeScreenshot: ${PID}_02c2_long_press
+            - tapOn:
+                text: "Open|Select|Choose"
+                optional: true
+      - takeScreenshot: ${PID}_02c3_after_pick
       - extendedWaitUntil:
           visible: "Replace this phone's data"
           timeout: 120000

@@ -35,3 +35,7 @@ name: 14_wipe_all
           visible: "Get started"
           timeout: 30000
       - takeScreenshot: ${PID}_14d_relaunch_after_wipe
+      # Steps 15-17 come after this one and need a set-up app (runs 44481352656: P046/P047 15-17 waited for
+      # "Settings" on the welcome screen) → set the app up again, as a new user would.
+      - runFlow: 01_onboarding.yaml
+      - takeScreenshot: ${PID}_14e_set_up_again

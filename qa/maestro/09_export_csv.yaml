@@ -18,8 +18,17 @@ name: 09_export_csv
 - scrollUntilVisible:
     element:
       text: '.*Export \d+ files?.*'
-    timeout: 10000
+    timeout: 40000
     visibilityPercentage: 50
+# Runs 44481342409/52656 (P007, P061 iPhone SE, UK): the button was at y 630-686 pt but the sheet clips at ~634 pt,
+# so the tap at its centre landed outside the sheet. Swipe the sheet content up once more so the button is clear.
+- swipe:
+    start: "50%,60%"
+    end: "50%,35%"
+    duration: 600
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: ${PID}_09a2_export_button
 - tapOn: '.*Export \d+ files?.*'
 - waitForAnimationToEnd:
     timeout: 3000

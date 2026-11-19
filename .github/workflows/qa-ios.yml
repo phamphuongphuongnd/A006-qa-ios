@@ -65,7 +65,7 @@ jobs:
     name: iOS Simulator personas
     needs: fixtures
     runs-on: ${{ inputs.runner || 'macos-26' }}
-    timeout-minutes: 140
+    timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
 
