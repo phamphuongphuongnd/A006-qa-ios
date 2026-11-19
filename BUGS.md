@@ -601,17 +601,19 @@
   không biết gì). Sửa: `saneReportYear` (2000 … năm sau, số nguyên; sai → năm thuế hiện tại) + test; `ExportPanel` key theo tham số link (link mới =
   kỳ mới); `useAmountExpr.atLimit` + `AmountLimitHint` "Max £999,999.99" ở Ghi nhanh, Sửa khoản, phí đỗ xe. 947 test xanh. ✅ phiên B (a3a1f6b, API 26): Max ở cả 3 ô, year=999999/-5 → 2026/27, link mới
   khi Export đang mở → đổi kỳ đúng.
-- [ ] **B-128** 🟠 (QA F-3, phiên G — Pixel 11 thật, 0bf4283) Sort → thẻ → Edit → chạm Amount: bàn phím mở, thẻ tự cuộn xuống cuối → ô Amount, Note, nút Done
+- [x] **B-128** 🟠 (QA F-3, phiên G — Pixel 11 thật, 0bf4283) Sort → thẻ → Edit → chạm Amount: bàn phím mở, thẻ tự cuộn xuống cuối → ô Amount, Note, nút Done
   khuất (chỉ thấy Date / MOST USED / Work-Personal) — gõ tiền không thấy số. Ảnh `qa-runs/firebase/numeric-0bf4283/cubs-37/artifacts/17–19.png`.
   Gốc: `SortEntryCard.tsx` `scrollToEnd()` khi bàn phím mở (useEffect + onLayout) dành cho Split (B-38, giữ "Split & sort" trong tầm) nhưng cũng chạy ở Edit.
-  Sửa: Split vẫn cuộn tới cuối; Edit cuộn tới đầu khung Edit (`editY` từ onLayout) → Done + Amount trong tầm. 947 test xanh. ⏳ Pixel 11 thật / giả lập.
-- [ ] **B-129** 🟠 (A13 phiên E, 0bf4283) Cài đè / cập nhật app khi đang có chuyến: GPS (LocationTaskService) dừng, thông báo vẫn "đang ghi", chỉ ghi lại khi mở
+  Sửa: Split vẫn cuộn tới cuối; Edit cuộn tới đầu khung Edit (`editY` từ onLayout) → Done + Amount trong tầm. 947 test xanh. ✅ A13 (0f08c76): Amount + Done nằm trên bàn phím số.
+- [x] **B-129** 🟠 (A13 phiên E, 0bf4283) Cài đè / cập nhật app khi đang có chuyến: GPS (LocationTaskService) dừng, thông báo vẫn "đang ghi", chỉ ghi lại khi mở
   app (hụt ~3 phút ở A13; khi Play tự cập nhật ban đêm hay khởi động lại máy có thể hụt cả chuyến). Gốc: BootReceiver (BOOT_COMPLETED / MY_PACKAGE_REPLACED)
   chỉ đăng ký lại cảm biến; task vị trí được khôi phục nhưng expo-location không bật foreground service khi app không mở. Sửa: chuyến đang chạy →
-  `kick("restart")` → task JS `restoreRecording()` đăng ký lại (bật lại service), nhật ký `restore_ok` / `restore_failed`. 949 test xanh. ⏳ A13 (cài đè giữa chuyến).
-- [ ] **B-130** 🟠 (A13-14 phiên E, 0bf4283) Bấm **Continue trip** khi xe còn đứng yên → chuyến tự kết thúc lại sau 3 giây. Gốc: fix đầu tiên sau Continue được
+  `kick("restart")` → task JS `restoreRecording()` đăng ký lại (bật lại service), nhật ký `restore_ok` / `restore_failed`. 949 test xanh. ✅ A13 (cài đè a3a1f6b giữa chuyến, không mở app): boot 11:31:24 → restore_ok
+  11:31:27, LocationTaskService chạy lại — hụt ~6 s (diagnostics 2026-11-19-04-32.json).
+- [x] **B-130** 🟠 (A13-14 phiên E, 0bf4283) Bấm **Continue trip** khi xe còn đứng yên → chuyến tự kết thúc lại sau 3 giây. Gốc: fix đầu tiên sau Continue được
   lưu (đầu đoạn mới) → `lastMoveAt` mất mốc "resume" và tính `parkedSince` trên **mọi** điểm → về lại giờ đỗ cũ ≥ 20 phút → kết thúc ngay. Resume sau
-  Personal stop cũng dính. Sửa: `lastMoveAt` chỉ xét đoạn cuối (từ điểm `segmentStart`), mốc = đầu đoạn + test tái hiện (`lastMoveAt.test.ts`). ⏳ A13.
+  Personal stop cũng dính. Sửa: `lastMoveAt` chỉ xét đoạn cuối (từ điểm `segmentStart`), mốc = đầu đoạn + test tái hiện (`lastMoveAt.test.ts`). ✅ A13 (a3a1f6b): Continue 11:28:52 → chuyến chạy tiếp tới 11:37:50
+  (bản cũ tắt sau 3–23 s). Còn lệch 1 phút → B-135.
 - [ ] **B-131** 🟡 đề xuất (A13 phiên E, 0bf4283 — `qa-runs/a13/perf-trip-still-300s.json`) Chuyến chạy mà xe đứng yên 5 phút: CPU app 0,19 %, không wakelock;
   phần hao pin chính là GPS HIGH_ACCURACY mỗi 5 s chạy suốt tới khi tự kết thúc (tối đa = Merge stops). Đề xuất: cảm biến báo đứng yên / không di chuyển
   thật > 1–2 phút → hạ GPS (BALANCED hoặc 30–60 s), xe chạy lại ("driving" / điểm xa > 100 m) → về 5 s. Rủi ro: hụt vài chục mét đầu khi xe lăn bánh. **Phương duyệt 19/11.**
@@ -630,4 +632,6 @@
   dòng Max; đóng bàn phím thanh tính vẫn còn → "Parking & tolls £…" hiện 2 lần; (c) Add trip có phí đỗ xe → X đóng luôn, không hỏi "Discard?".
   Sửa: (a) chữ thẻ vehicle chừa lề phải cho nút + khi màn < 420dp; (b) bàn phím đóng = hết sửa phí (ẩn thanh tính), thanh tính có "Max …";
   (c) TripForm báo `onDirtyChange` → Add trip hỏi "Discard this trip?" khi đã gõ gì (kể cả phí). ⏳ phiên B.
+- [ ] **B-135** 🟡 (A13 phiên E, a3a1f6b) Continue trip lúc 11:28:52 → chuyến tự kết thúc 11:37:50 (sớm ~1 phút so với Merge stops 10 phút) và hiện "Trip ended at
+  11:27" — trước cả lúc bấm Continue. Gốc: fix đầu tiên sau Continue là vị trí cũ hệ thống giữ (giờ 11:27:50) → lưu làm đầu đoạn mới → mốc đỗ lùi.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
