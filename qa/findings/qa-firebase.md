@@ -76,7 +76,14 @@ dùng thử nội bộ, không qua store). Bằng chứng: `qa-runs/firebase/r2-
   `src/domain/pro.ts:59`; tiến độ `src/app/pro.tsx:191`. Gợi ý: kẹp `daysLeft ≤ TRIAL_DAYS` hoặc dùng
   `max(now, trialStartedAt)`; Home badge cũng dùng chung (`src/app/(tabs)/index.tsx:73`).
 
-### 🟡 F-2 — Pixel 11 thật: ô số tiền mở Gboard chữ (QWERTY) thay vì bàn phím số — tái hiện 2/2
+### 🟡 F-2 (= B-126) — Pixel 11 thật: ô số tiền mở Gboard chữ (QWERTY) thay vì bàn phím số — tái hiện 2/2 — ✅ đã sửa
+- **Kiểm lại 2026-11-19, APK dc84207 (commit sửa 429b02b: `inputMode="decimal"`, `autoCapitalize="none"`,
+  `autoCorrect={false}`, `autoComplete="off"`), Pixel 11 thật, script `robo-us-keyboard.json`, matrix-3d94eks0jsst6
+  SUCCESS:** New expense → Gboard **bàn phím số** (có "," và ".") (`b126-dc84207/cubs-37/artifacts/8–11.png`); gõ "7,7"
+  → "$7.70" → Save → "Saved · $7.70 expense", Entries −$7.70 (`12–14.png`). `dumpsys input_method` (logcat, dòng Robo
+  "ADB shell command dumpsys input_method … finished"): ô đang focus `inputType=0x282002` (NUMBER 0x2 | DECIMAL 0x2000 |
+  0x80000 | 0x200000), `imeOptions=0x6` (DONE), `mInputShown=true`. Ghi chú: 0x80000/0x200000 là cờ nhóm chữ vẫn còn
+  trên ô số nhưng Gboard Pixel 11 nay hiện bàn phím số.
 - Máy: Pixel 11 (Android 17, Gboard) — lượt 1 bản 97ceb60 (`number-pad`): `cubs-37/artifacts/12–14.png`; lượt 2 bản
   19daeae (`decimal-pad`, B-122): `r2-19daeae/cubs-37/artifacts/13–14.png` — con trỏ ở ô số tiền ("$1,250.00|") mà
   bàn phím vẫn QWERTY, số chỉ có ở hàng gợi ý.

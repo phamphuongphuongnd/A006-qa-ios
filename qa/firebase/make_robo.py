@@ -86,10 +86,27 @@ def full_actions(region):
     return a
 
 
+def keyboard_actions(region):
+    """B-126 check (Pixel 11 opened QWERTY on the amount field): onboarding -> New expense, dump the IME state of the
+    focused field (Robo writes ADB output to logcat), type "7,7" (B-122: 7.70), dump again, Save, open Entries."""
+    def tap(label):
+        return {'eventType': 'VIEW_CLICKED', 'elementDescriptors': [{'contentDescription': label}]}
+
+    dump = {'eventType': 'ADB_SHELL_COMMAND',
+            'command': "dumpsys input_method | grep -E 'mInputShown|inputType|imeOptions|mCurEditorInfo|packageName|mCurId|mCurMethodId'"}
+    a = [wait(4000)]
+    for label in ('Get started', REGION_DESC[region], 'Continue', 'Continue', 'Looks good', 'Continue free', 'Not now'):
+        a += [tap(label), wait(1500)]
+    a += [tap('New expense'), wait(3000), dump, wait(1500),
+          {'eventType': 'ADB_SHELL_COMMAND', 'command': 'input text 7,7'}, wait(1500), dump, wait(1500),
+          tap('Save'), wait(3000), tap('Entries'), wait(2500), tap('Home'), wait(1500)]
+    return a
+
+
 if __name__ == '__main__':
     here = os.path.dirname(os.path.abspath(__file__))
     for region in ('UK', 'US'):
-        for kind, fn in (('simple', simple_actions), ('full', full_actions)):
+        for kind, fn in (('simple', simple_actions), ('full', full_actions), ('keyboard', keyboard_actions)):
             with open(os.path.join(here, f'robo-{region.lower()}-{kind}.json'), 'w', encoding='utf-8', newline='\n') as f:
                 json.dump(fn(region), f, indent=1, ensure_ascii=False)
                 f.write('\n')
