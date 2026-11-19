@@ -1,6 +1,6 @@
 import { Briefcase, CheckCircle2, ChevronDown, Combine, Pencil, Plus, SkipForward, Split, User, X, type LucideIcon } from '@/ui/icons';
 import { Zap } from '@/ui/icons';
-import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Animated, Image, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 
 import { listCategories } from '@/db/categoriesRepo';
@@ -66,12 +66,19 @@ export function SortEntryCard({
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const keyboardUp = useKeyboardUp();
   const open = mode !== 'view';
-  // The screen shrinks after the keyboard opens; scroll once the card has its new height.
+  // Where the Edit panel starts inside the card (B-128).
+  const editY = useRef(0);
+  // The screen shrinks after the keyboard opens; scroll once the card has its new height. Split: to the end ("Left to
+  // assign" / "Split & sort", B-38). Edit: to the panel's top — its end is Date / chips, which hid Amount + Done (B-128).
+  const keepFormInView = useCallback(() => {
+    if (mode === 'split') scrollRef.current?.scrollToEnd({ animated: true });
+    else if (mode === 'edit') scrollRef.current?.scrollTo({ y: Math.max(0, editY.current - 8), animated: true });
+  }, [mode]);
   useEffect(() => {
     if (!keyboardUp || !open) return;
-    const id = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 150);
+    const id = setTimeout(keepFormInView, 150);
     return () => clearTimeout(id);
-  }, [keyboardUp, open]);
+  }, [keyboardUp, open, keepFormInView]);
   const receipts = useLive(() => (entry.receiptCount > 0 ? listReceipts(db, entry.id) : []), [entry.id, entry.receiptCount], ['receipts']);
   const currency = entry.currency as Currency;
   const income = entry.type === 'income';
@@ -111,7 +118,7 @@ export function SortEntryCard({
           onContentSizeChange={() => scrollRef.current?.flashScrollIndicators()}
           keyboardShouldPersistTaps="handled"
           onLayout={() => {
-            if (keyboardUp && open) scrollRef.current?.scrollToEnd({ animated: true });
+            if (keyboardUp && open) keepFormInView();
           }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
             <View style={{ flex: 1, gap: 2 }}>
@@ -146,7 +153,11 @@ export function SortEntryCard({
             ) : null}
           </View>
 
-          {mode === 'edit' ? <EditPanel entry={entry} onDone={() => setMode('view')} /> : null}
+          {mode === 'edit' ? (
+            <View onLayout={(e) => (editY.current = e.nativeEvent.layout.y)}>
+              <EditPanel entry={entry} onDone={() => setMode('view')} />
+            </View>
+          ) : null}
           {mode === 'split' ? (
             <SplitPanel
               entry={entry}

@@ -594,4 +594,8 @@
   file rỗng; (b) mở link export khi màn Export đang mở thì giữ kỳ cũ; (c) gõ quá 999,999.99 thì chữ số bị bỏ, chỉ rung nhẹ (máy không rung / giả lập:
   không biết gì). Sửa: `saneReportYear` (2000 … năm sau, số nguyên; sai → năm thuế hiện tại) + test; `ExportPanel` key theo tham số link (link mới =
   kỳ mới); `useAmountExpr.atLimit` + `AmountLimitHint` "Max £999,999.99" ở Ghi nhanh, Sửa khoản, phí đỗ xe. 947 test xanh. ⏳ kiểm trên máy.
+- [ ] **B-128** 🟠 (QA F-3, phiên G — Pixel 11 thật, 0bf4283) Sort → thẻ → Edit → chạm Amount: bàn phím mở, thẻ tự cuộn xuống cuối → ô Amount, Note, nút Done
+  khuất (chỉ thấy Date / MOST USED / Work-Personal) — gõ tiền không thấy số. Ảnh `qa-runs/firebase/numeric-0bf4283/cubs-37/artifacts/17–19.png`.
+  Gốc: `SortEntryCard.tsx` `scrollToEnd()` khi bàn phím mở (useEffect + onLayout) dành cho Split (B-38, giữ "Split & sort" trong tầm) nhưng cũng chạy ở Edit.
+  Sửa: Split vẫn cuộn tới cuối; Edit cuộn tới đầu khung Edit (`editY` từ onLayout) → Done + Amount trong tầm. 947 test xanh. ⏳ Pixel 11 thật / giả lập.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
