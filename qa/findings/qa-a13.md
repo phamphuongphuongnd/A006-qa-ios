@@ -157,6 +157,11 @@ kết quả kick/start. Đã báo điều phối.
   drive (> 100 m) + gps_mode trong chẩn đoán.
 - **57646f8 cài 11:53:13** (không có chuyến, Back up now trước). **B-135 ✅**: Start 11:54:41 → tự kết thúc 12:05:30 → Phương
   chờ ~5 phút → Continue 12:10:34 → tự kết thúc 12:21:30 (10 phút 56 s sau Continue), "Trip ended at 12:10" ≥ giờ bấm.
+- **0882755 cài 12:25:58**. B-136 Max: 12345678 → £123,456.00 CÓ "Max…"; 999999.99 → KHÔNG có dòng Max (ngược mô tả "chỉ khi
+  chạm trần" — đã báo). **B-136 Split ✅**: sửa Part 1 → Close → "Discard this split?" → Discard → khoản £189.99 nguyên.
+  B-131 chẩn đoán ✅ gps_mode drive 12:10:34 → parked 12:12:46. **B-88 Drive check chưa kích hoạt**: Phương chỉ cầm máy đi vài bước;
+  ⚠️ không có transition activity nào từ 08:30:03 tới 13:33 (qua ~15 lần cài đè) dù health.registered=true → nhờ điều phối kiểm
+  đăng ký lại ActivityTransition sau MY_PACKAGE_REPLACED. `diagnostics/SundaySort-trip-diagnostics-2026-11-19-06-37.json`.
 - **A13-14 tái hiện lần 2 (lượt sạch, không cài/đổi cài đặt)**: Start 10:52:01 → tự kết thúc 11:02:46 (Merge 10) "Trip ended at
   10:52 · 0.0 km" ✅ → Continue 11:03:25 → tắt lại 11:03:48.9 (23 s) ❌. Điều phối sửa B-130.
   Phương chốt: chuyến đang chờ Continue mà nối BT / sạc + đi / Start → tạo chuyến mới như hiện tại (không tự nối).
