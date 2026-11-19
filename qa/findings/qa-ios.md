@@ -27,6 +27,7 @@
 | 4k | 44462217035 (công khai) | da3f127 (dev 1770c49: B-96 v2 833c872, B-123…B-135) | B-96 (P022, iPhone SE) | 0 | **B-96 ✅** cả 2 biến thể: đúng 1 thông báo "Trip ended at HH:MM · 0.0 mi"; bấm Continue trip ⏭ (Maestro không mở được nút hành động trên màn khoá simulator) |
 | 4l | 44462331611, 44463898975 (công khai) | cee0c20, c284d4c | P022, P092 ×2 | 0 | `17_gps_trip` speed 10: ✅ 3/3 (2.5 mi) → QI-5 đóng. Kiểm mạng bản đồ từ runner: 200 → QI-6 do code (hẹn giờ 12 s) |
 | 4m | 44471864915 (công khai) | f974a7c (dev c9bb293: B-137) | P092 + kịch bản B-137 | 0 | **B-137 ✅** (bản đồ MapLibre hiện ở 30 s và 60 s dù điểm GPS đầu tiên về ở +21 s). P092 bộ chính 12/18 ✅; 15/16/17/99 ❌ do hộp "Open in “Sunday Sort”?" của deep link hiện sau 20 s che các bước sau — đã sửa `common/home.yaml` |
+| 4n | 44478021185 (công khai) | f974a7c (dev c9bb293) | P016 14/18 ✅, P031 12/18 ✅ (iPhone SE, chữ lớn) | 0 | **B-66 ✅**. ❌ còn lại đều kịch bản: 02 bấm tên file chưa chọn được file (trình chọn file hiện đúng "P031.sundaysort"), 05 nút "Save changes" mờ (chưa sửa gì — đúng) không được tính là thấy, 06 "Sort.*" trúng "Sort now" ngoài màn → đã đổi sang chạm tab, 08/09 như cũ. 0 crash |
 | 4f | 44274384593 (công khai) | febb184 | 0 | 0 | ❌ GitHub không khởi chạy job (lỗi thanh toán tài khoản) — cả repo công khai |
 
 Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ lượt 4c chạy trên repo công khai `phamphuongphuongnd/A006-qa-ios` (Phương chọn; không tính phút) — **xoá repo này sau QA-100 khi Phương đồng ý**.
@@ -125,6 +126,10 @@ Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ 
 - **Biến thể K (tắt app, `stopApp`) ✅**: phút ~11 có **đúng 1** thông báo "**Trip ended at 21:29 · 0.0 mi**" — "You hadn't moved for a while, so the trip was saved. Still on your way? Tap Continue trip." (21:29 = lúc bắt đầu đứng yên; bắn ≈ 10 min + 90 s). Ảnh `qa-runs/ios/44462217035/b96/shots/P022_b96d_K13_notification_center.jpg`. **Continue trip ⏭**: giữ lâu thông báo trên màn khoá simulator không mở ra nút hành động (`P022_b96e_K13_expanded.jpg` giống ảnh trước) → chưa kiểm được "bấm Continue khi app đã tắt → chuyến ghi tiếp".
 - **Biến thể H (về Home) ✅**: phút ~13 có **đúng 1** thông báo "Trip ended at 21:55 · 0.0 mi" (`P022_b96d_H13_notification_center.jpg`); mở app → màn chuyến "No trip running" (chuyến đã kết thúc) (`P022_b96f_H13_app_opened.jpg`). Chưa chụp được danh sách Miles (app mở vào màn chuyến, không có tab bar) → giờ kết thúc trong danh sách ⏭.
 - Máy ngủ thật: ⏭ (simulator không có).
+
+### Kiểm B-66 (lượt 4n, run 44478021185, dev c9bb293) ✅
+- P016 (iPhone SE, `accessibility-large`, US): màn chào hiện đủ tiêu đề "Log it in 10 seconds. Sort it on Sunday."; đoạn mô tả bị cắt ở dòng 2 nhưng có viên "**More below ⌄**" ở đáy, không bị nút "Get started" che; hình minh hoạ thu nhỏ (~155 pt so với ~280 pt trên Pro Max cỡ chữ thường ≈ 55 %). Màn chọn vùng: thẻ US thấy sau khi cuộn, cũng có "More below". Ảnh `qa-runs/ios/44478021185/personas/P016/shots/P016_01a_welcome.jpg`, `P016_01b_region.jpg`; đối chiếu `qa-runs/ios/44455496596/personas/P092/shots/P092_01a_welcome.jpg`.
+- P031 (iPhone SE, `extra-extra-extra-large`, UK): thấy **hết** tiêu đề + cả đoạn mô tả, không cần cuộn (`…/P031/shots/P031_01a_welcome.jpg`).
 
 ### QI-4 🟠 Thẻ ở màn Sort bị cắt mất phần chọn danh mục khi chữ cỡ trợ năng
 - Persona/thiết bị: P041 (iPhone 16 Pro Max, `accessibility-large`, tối, UK), P016 (iPhone SE 3rd gen, `accessibility-large`, sáng, US). Lượt 4d.

@@ -40,6 +40,13 @@ name: 02_restore
                 timeout: 3000
       - takeScreenshot: ${PID}_02c_picker_files
       - tapOn: ".*${FIXTURE}.*"
+      # The file name label did not always select the file (run 44478021185): tap its icon (first grid cell) as well.
+      - runFlow:
+          when:
+            visible: "On My iPhone"
+          commands:
+            - tapOn:
+                point: "26%,37%"
       - extendedWaitUntil:
           visible: "Replace this phone's data"
           timeout: 120000

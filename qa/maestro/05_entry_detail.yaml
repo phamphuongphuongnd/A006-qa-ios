@@ -7,7 +7,7 @@ name: 05_entry_detail
     timeout: 3000
 - tapOn: ".*QA-${PID}.*"
 - extendedWaitUntil:
-    visible: "Save changes"
+    visible: ".*Save changes.*|Date & time.*"
     timeout: 10000
 - takeScreenshot: ${PID}_05a_detail
 - tapOn: "More"

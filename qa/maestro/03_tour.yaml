@@ -10,7 +10,9 @@ name: 03_tour
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: ${PID}_03c_entries
-- tapOn: "Sort.*"
+# Tap the Sort TAB (middle of the tab bar): "Sort.*" also matched an off-screen "Sort now" on Home (runs 44450726271, 44478021185).
+- tapOn:
+    point: "50%,94%"
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: ${PID}_03d_sort
