@@ -81,17 +81,39 @@ for PIDX in ${PERSONAS//,/ }; do
     touch "$MARKER"
     LOG_START=$(date '+%Y-%m-%d %H:%M:%S')
     T0=$(date +%s)
-    (
-      cd "$OUT/raw" || exit 99
-      perl -e 'alarm shift; exec @ARGV' "$PER_PERSONA_TIMEOUT" \
-        maestro --device "$UDID" test "$SUITE" $REINSTALL \
-        --format junit --output "$OUT/junit.xml" --debug-output "$OUT/debug" --test-output-dir "$OUT/maestro-out" \
-        -e "PID=$PID" -e "REGION=$REGION" -e "REGION_LABEL=$REGION_LABEL" -e "OTHER_REGION_LABEL=$OTHER_REGION_LABEL" \
-        -e "AMOUNT=$AMOUNT" -e "NOTE=$NOTE" -e "FIXTURE=$FIXTURE" -e "DO_REGION_SWITCH=$DO_REGION_SWITCH" \
-        -e "DO_KILL=$DO_KILL" -e "DO_WIPE=$DO_WIPE"
-    ) > "$OUT/maestro.txt" 2>&1
+    run_maestro() { # $1 = extra flag (--no-reinstall-driver or empty)
+      (
+        cd "$OUT/raw" || exit 99
+        perl -e 'alarm shift; exec @ARGV' "$PER_PERSONA_TIMEOUT" \
+          maestro --device "$UDID" test "$SUITE" $1 \
+          --format junit --output "$OUT/junit.xml" --debug-output "$OUT/debug" --test-output-dir "$OUT/maestro-out" \
+          -e "PID=$PID" -e "REGION=$REGION" -e "REGION_LABEL=$REGION_LABEL" -e "OTHER_REGION_LABEL=$OTHER_REGION_LABEL" \
+          -e "AMOUNT=$AMOUNT" -e "NOTE=$NOTE" -e "FIXTURE=$FIXTURE" -e "DO_REGION_SWITCH=$DO_REGION_SWITCH" \
+          -e "DO_KILL=$DO_KILL" -e "DO_WIPE=$DO_WIPE"
+      ) >> "$OUT/maestro.txt" 2>&1
+    }
+    : > "$OUT/maestro.txt"
+    run_maestro "$REINSTALL"
     CODE=$?
-    touch "$OUT_ROOT/.driver-$LANE"
+    # XCTest driver never came up (no flow ran, runs 44241312809..44441656898): reboot this simulator, reinstall the
+    # driver and try once more.
+    if [ ! -f "$OUT/junit.xml" ] && grep -q "IOSDriverTimeoutException\|DeviceUnreachableException" "$OUT/maestro.txt" \
+       && [ "$(date +%s)" -lt "$DEADLINE" ]; then
+      log "$PIDX driver did not start: reboot simulator and retry once"
+      echo "=== retry after simulator reboot ===" >> "$OUT/maestro.txt"
+      echo retry > "$OUT/driver_retry.txt"
+      xcrun simctl shutdown "$UDID" >/dev/null 2>&1
+      xcrun simctl boot "$UDID" >/dev/null 2>&1
+      xcrun simctl bootstatus "$UDID" -b >/dev/null 2>&1
+      xcrun simctl install "$UDID" "$APP" >/dev/null 2>&1
+      xcrun simctl ui "$UDID" appearance "$APPEARANCE"
+      xcrun simctl ui "$UDID" content_size "$CONTENT_SIZE"
+      xcrun simctl spawn "$UDID" launchctl setenv TZ "$P_TZ" >/dev/null 2>&1
+      run_maestro ""
+      CODE=$?
+    fi
+    # Only a driver that actually ran flows is reused by the next persona.
+    if [ -f "$OUT/junit.xml" ]; then touch "$OUT_ROOT/.driver-$LANE"; else rm -f "$OUT_ROOT/.driver-$LANE"; fi
     DUR=$(( $(date +%s) - T0 ))
     log "$PIDX maestro exit $CODE in ${DUR}s"
 

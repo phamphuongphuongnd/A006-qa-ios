@@ -25,8 +25,8 @@ on:
         description: 'macOS runner label'
         default: 'macos-26'
       parallel:
-        description: 'Run the small-iPhone and Pro Max lanes at the same time'
-        default: 'true'
+        description: 'Run the small-iPhone and Pro Max lanes at the same time (false = one simulator at a time; slow public runners)'
+        default: 'false'
 
 concurrency:
   group: qa-ios-${{ github.event_name }}-${{ inputs.personas }}
@@ -181,12 +181,14 @@ jobs:
           PM_UDID=$(xcrun simctl create qa-pm "$PM_TYPE" "$RUNTIME_ID")
           IPAD_UDID=""
           if [ -n "$IPAD_TYPE" ]; then IPAD_UDID=$(xcrun simctl create qa-ipad "$IPAD_TYPE" "$RUNTIME_ID"); fi
-          for U in $SE_UDID $PM_UDID; do xcrun simctl boot "$U"; done
-          for U in $SE_UDID $PM_UDID; do xcrun simctl bootstatus "$U" -b >/dev/null; done
+          # Only the small iPhone is booted here; the Run step boots the others when their lane starts, so a
+          # sequential run keeps ONE simulator on the 3-core runner (XCTest driver timed out in 15/31 starts with two).
+          xcrun simctl boot "$SE_UDID"
+          xcrun simctl bootstatus "$SE_UDID" -b >/dev/null
           # Open Files once so "On My iPhone" (File Provider local storage) exists for the restore step.
-          for U in $SE_UDID $PM_UDID; do xcrun simctl launch "$U" com.apple.DocumentsApp >/dev/null 2>&1 || true; done
+          xcrun simctl launch "$SE_UDID" com.apple.DocumentsApp >/dev/null 2>&1 || true
           sleep 10
-          for U in $SE_UDID $PM_UDID; do xcrun simctl terminate "$U" com.apple.DocumentsApp >/dev/null 2>&1 || true; done
+          xcrun simctl terminate "$SE_UDID" com.apple.DocumentsApp >/dev/null 2>&1 || true
           {
             echo "RUNTIME=$RUNTIME_VER"
             echo "SE_UDID=$SE_UDID"; echo "SE_NAME=$SE_NAME"
@@ -201,7 +203,7 @@ jobs:
           IPAD_IN: ${{ github.event_name == 'workflow_dispatch' && inputs.ipad_personas || 'P002-ipad,P041-ipad' }}
           BUDGET_MIN: ${{ inputs.test_budget_min || '85' }}
           PER_PERSONA_TIMEOUT: '1500'
-          PARALLEL: ${{ inputs.parallel || 'true' }}
+          PARALLEL: ${{ inputs.parallel || 'false' }}
         run: |
           chmod +x qa/ios/run-lane.sh
           OUT="$PWD/out"
@@ -219,7 +221,15 @@ jobs:
           echo "$SE_LIST,$PM_LIST,$IPAD_IN" | tr ',' '\n' | sed '/^$/d;/^none$/d' > "$OUT/planned.txt"
           echo "small: $SE_LIST"; echo "max: $PM_LIST"; echo "ipad: $IPAD_IN"
           DEADLINE=$(( $(date +%s) + BUDGET_MIN * 60 ))
+          bootsim() { # boot + open Files once (restore step needs "On My iPhone")
+            xcrun simctl boot "$1" 2>/dev/null || true
+            xcrun simctl bootstatus "$1" -b >/dev/null
+            xcrun simctl launch "$1" com.apple.DocumentsApp >/dev/null 2>&1 || true
+            sleep 8
+            xcrun simctl terminate "$1" com.apple.DocumentsApp >/dev/null 2>&1 || true
+          }
           if [ "$PARALLEL" = true ]; then
+            bootsim "$PM_UDID"
             RUN_WIDGET=1 qa/ios/run-lane.sh se "$SE_UDID" "$SE_NAME" "$RUNTIME" "$APP" "$OUT" "$DEADLINE" "$SE_LIST" > "$OUT/lane-se.log" 2>&1 &
             P1=$!
             qa/ios/run-lane.sh pm "$PM_UDID" "$PM_NAME" "$RUNTIME" "$APP" "$OUT" "$DEADLINE" "$PM_LIST" > "$OUT/lane-pm.log" 2>&1 &
@@ -227,6 +237,8 @@ jobs:
             wait $P1 $P2 || true
           else
             RUN_WIDGET=1 qa/ios/run-lane.sh se "$SE_UDID" "$SE_NAME" "$RUNTIME" "$APP" "$OUT" "$DEADLINE" "$SE_LIST" > "$OUT/lane-se.log" 2>&1 || true
+            xcrun simctl shutdown "$SE_UDID" || true
+            if [ -n "$PM_LIST" ] && [ "$(date +%s)" -lt "$DEADLINE" ]; then bootsim "$PM_UDID"; fi
             qa/ios/run-lane.sh pm "$PM_UDID" "$PM_NAME" "$RUNTIME" "$APP" "$OUT" "$DEADLINE" "$PM_LIST" > "$OUT/lane-pm.log" 2>&1 || true
           fi
           cat "$OUT/lane-se.log" "$OUT/lane-pm.log"
