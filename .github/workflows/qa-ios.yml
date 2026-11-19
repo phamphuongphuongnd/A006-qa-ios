@@ -199,6 +199,17 @@ jobs:
             echo "IPAD_UDID=$IPAD_UDID"; echo "IPAD_NAME=$IPAD_NAME"
           } >> "$GITHUB_ENV"
 
+      - name: Network check for map tiles (QI-6)
+        run: |
+          mkdir -p out
+          for u in https://tiles.openfreemap.org/styles/liberty https://tiles.openfreemap.org/styles/dark; do
+            echo "== $u"
+            curl -sS -o /dev/null -w 'http %{http_code} / %{time_total}s / %{size_download} bytes\n' --max-time 20 "$u" 2>&1 || true
+            # One tile too (the style alone loading does not prove tiles do).
+            curl -sS -o /dev/null -w 'tile http %{http_code} / %{time_total}s\n' --max-time 20 "https://tiles.openfreemap.org/planet" 2>&1 || true
+          done | tee out/net-tiles.txt
+          { echo "## Map tiles from the runner (QI-6)"; echo '```'; cat out/net-tiles.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Run personas
         env:
           # Push runs: personas not covered yet (round 4 = the 13 left after run 44221266865).
