@@ -618,7 +618,8 @@
   phần hao pin chính là GPS HIGH_ACCURACY mỗi 5 s chạy suốt tới khi tự kết thúc (tối đa = Merge stops). Đề xuất: cảm biến báo đứng yên / không di chuyển
   thật > 1–2 phút → hạ GPS (BALANCED hoặc 30–60 s), xe chạy lại ("driving" / điểm xa > 100 m) → về 5 s. Rủi ro: hụt vài chục mét đầu khi xe lăn bánh. **Phương duyệt 19/11.**
   Sửa (Android): `gpsPower.ts` `gpsModeFor` (không di chuyển thật ≥ 2 phút và cảm biến không báo lái → 'parked'), `syncGpsMode` đổi tham số GPS (High,
-  30 s) / về BestForNavigation 5 s; gọi từ task GPS (≤ 20 s/lần) và sau mỗi lượt engine; nhật ký `gps_mode`. 953 test xanh. ⏳ phiên E đo A13.
+  30 s) / về BestForNavigation 5 s; gọi từ task GPS (≤ 20 s/lần) và sau mỗi lượt engine; nhật ký `gps_mode`. 953 test xanh. ✅ A13 (8619687): Start 11:40:44 nằm yên → 11:42:55 đăng ký lại HIGH_ACCURACY 30 s (giảm 6 lần số lần
+  lấy vị trí), CPU 0,28 %, không wakelock (`perf-trip-still-8619687.json`). ⏳ nhánh lái lại → 5 s (cần đi > 100 m / lái xe thật).
 - [ ] **B-132** 🟡 (QA A37-10, phiên A — a3a1f6b) Reports: "1620 entries in this period aren't sorted yet" thiếu dấu phẩy nghìn (như B-79 ở Home).
   Gốc: `reports.tsx` truyền `report.unsortedCount` thô vào `t('reports.unsortedWarn')`.
   Sửa chung: `t()` nhóm nghìn cho tham số đếm (`count`, `total`, `done`) — mọi câu "N entries / trips" trong app; năm, phút không đổi + test.
