@@ -1,6 +1,6 @@
 # B-117: Start a trip by hand → End trip → the end sheet must show, Save must work, and the app must stay usable
 # (iOS bug: "Attempt to present … while a presentation is in progress" froze the screen).
-# Draft written 2026-11-18, not run yet on iOS: permission screens are handled with optional taps.
+# First run 44274943533: P052 passed (sheet, Save, toast, Miles responsive). Permission screens use optional taps.
 appId: com.phiotron.sundaysort
 name: 16_end_trip
 ---
@@ -38,6 +38,13 @@ name: 16_end_trip
     visible: "Trip saved.*|Save"
     timeout: 15000
 - takeScreenshot: ${PID}_16b_end_sheet
+# Large text: Save sits below the fold of the sheet (P091, run 44274943533).
+- scrollUntilVisible:
+    element:
+      text: "Save"
+    timeout: 15000
+    optional: true
+- takeScreenshot: ${PID}_16b2_end_sheet_save
 - tapOn:
     text: "Save"
     index: 0

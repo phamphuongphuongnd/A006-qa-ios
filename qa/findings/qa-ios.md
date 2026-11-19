@@ -20,7 +20,7 @@
 | 4c | 44241312809 (repo công khai `A006-qa-ios`) | e25dc9a (dev 322acd6 + QA) | 17/29 có chạy, **0 bước ✅ ngoài onboarding** | 0 (repo công khai, miễn phí; job 136 phút) | ❌ **hạ tầng**: runner chậm gấp 3–4 lần (build 18 phút thay vì 7, khởi động simulator 14 phút). 9 persona `IOSDriverTimeoutException` (XCTest driver không sẵn sàng sau 240 s); P001/P076 `DeviceUnreachableException`; 5 persona qua onboarding (2–6 phút/persona) rồi hết hạn 600 s. 10 persona + 2 iPad ⏭ hết ngân sách. 0 crash. → tăng driver 480 s, 25 phút/persona |
 | 4d | 44258898134 (công khai) | 94de76a (dev 322acd6) | 4/4 (P016 7 bước ✅, P041 6 bước ✅ trước khi hết 25 phút, P031 ❌ do hộp hệ thống còn treo, P052 ⏭ DeviceUnreachable) | 0 | Tuần tự. **0 crash.** Thấy **QI-4 🟠**. Bước 15: hộp "Open in “Sunday Sort”?" hiện chậm, app ở Home → B-95 ⏭; hộp đó treo sang P031 → sửa kịch bản (febb184) |
 | 4e | 44264516648 (công khai) | 67fd42b (dev f424978) | 1/4 (P052: 11/16 bước ✅) | 0 | P091, P016, P041 ⏭ `IOSDriverTimeoutException` (driver XCTest không lên sau 480 s). P052: **B-101 ✅**, **B-100 v2 ✅** (viên "More below ⌄" thấy rõ). ❌ 02 (khôi phục), 06 (chạm tab Sort vẫn ở Home), 08/09 (kịch bản cũ, đã sửa ở 730b76a), 15 (kịch bản cũ). 0 crash |
-| 4g | 44274943533 (công khai) | e5f0714 (dev 4e4b030: B-117, B-118, B-114 v2, B-100 v3) | đang chạy | 0 | P052, P016, P091 (SE) ‖ P041 (Pro Max); thêm bước 16 Start trip → End trip → Save (B-117) |
+| 4g | 44274943533 (công khai) | e5f0714 (dev 4e4b030: B-117, B-118, B-114 v2, B-100 v3) | 3/4 (P052 13/17 ✅, P091 10/17 ✅, P016 6 bước ✅ rồi DeviceUnreachable từ bước 08; P041 ⏭ driver không lên) | 0 | **B-117 ✅, B-95 ✅, B-100 v3 ✅, B-114 v2 ✅ (thẻ cuộn được)**. ❌ còn lại: 02 khôi phục, 06/16 ở chữ lớn (kịch bản chưa cuộn — đã sửa), 09 bảng chia sẻ, 12 P091. 0 crash |
 | 4f | 44274384593 (công khai) | febb184 | 0 | 0 | ❌ GitHub không khởi chạy job (lỗi thanh toán tài khoản) — cả repo công khai |
 
 Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ lượt 4c chạy trên repo công khai `phamphuongphuongnd/A006-qa-ios` (Phương chọn; không tính phút) — **xoá repo này sau QA-100 khi Phương đồng ý**.
@@ -77,6 +77,14 @@ Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ 
 ### Kiểm bản sửa (lượt 4e, dev f424978)
 - **B-101 ✅** P052 (SE, `extra-extra-extra-large`): ô Note hiện đúng "QA-P052 Shell M62" (`qa-runs/ios/44264516648/personas/P052/shots/P052_04a_capture_filled.jpg`), bước 04 assert "QA-P052" trong danh sách ✅ — lượt 3 cùng persona ra "QA-052 Shell M62P".
 - **B-100 v2 ✅** P052: màn chọn vùng có viên "More below ⌄" ở đáy (`…/P052_01b_region.jpg`); 🟡 viên đè lên dòng mô tả thẻ United States ("$ · Calendar year · S…") — v3 (dev 1565783) đã dời sang góc phải, chờ 4g. Màn chào cùng cỡ chữ hiện đủ, không cần viên.
+
+### Kiểm bản sửa (lượt 4g, dev 4e4b030)
+- **B-117 ✅** (bước 16 mới) P052 (SE, `extra-extra-extra-large`, US): Start trip (qua màn quyền vị trí + hộp iOS) → "End trip" → bảng "Trip saved · 0.0 mi" hiện đủ (Work/Personal, Purpose, Parking & tolls, Save, Discard trip) → Save → snack "Trip saved · 0.0 mi", tab Miles bấm được, chuyến nằm trong danh sách; **màn không treo**. P091 (SE, `accessibility-large`, UK): bảng kết thúc hiện đúng (có gợi ý mục đích "QA trip P091" từ bước 08) nhưng nút Save dưới mép bảng → kịch bản không cuộn tới (đã sửa) — chưa bấm Save ở cỡ chữ này. Ảnh `qa-runs/ios/44274943533/personas/P052/shots/P052_16b_end_sheet.jpg`, `P052_16d_miles_after.jpg`, `…/P091/shots/step-020-tapOnElement-Save.jpg`.
+- **B-95 ✅** P052, P091: mở "Automatic trips" hiện "This phone can't recognise driving. Use Start trip or an NFC tag.", không có "Working" (`…/P052/shots/P052_15a_auto_trips.jpg`).
+- **B-100 v3 ✅** P091: viên "More below ⌄" ở góc phải đáy màn chọn vùng; 🟡 vẫn che một phần dòng mô tả thẻ UK ("Apr – 5 A…") nhưng đọc được ý (`…/P091/shots/P091_01b_region.jpg`).
+- **B-114 v2 ✅ (một phần)** P016, P091 (SE, `accessibility-large`): thẻ Sort nay cao đủ, hiện "Expense · $0.81 · QA-P016 Shell…" và có thanh cuộn bên phải (lượt 4d chỉ còn "Expense" + nút bị cắt). Kịch bản chưa cuộn tới các nút danh mục nên **chưa xác nhận bấm được Fuel/More…** (đã thêm cuộn ở 06). Ảnh `…/P016/shots/P016_06a_sort.jpg`.
+- B-90: lượt này P041 (tối) ⏭ — giữ kết quả lượt 4c/4d ✅.
+- B-118 (câu quyền vị trí): màn quyền đã đi qua ở bước 16 (P052) nhưng không chụp riêng câu chữ → ⏭.
 
 ### QI-4 🟠 Thẻ ở màn Sort bị cắt mất phần chọn danh mục khi chữ cỡ trợ năng
 - Persona/thiết bị: P041 (iPhone 16 Pro Max, `accessibility-large`, tối, UK), P016 (iPhone SE 3rd gen, `accessibility-large`, sáng, US). Lượt 4d.

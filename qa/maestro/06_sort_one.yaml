@@ -8,6 +8,12 @@ name: 06_sort_one
     timeout: 3000
 - takeScreenshot: ${PID}_06a_sort
 - assertNotVisible: "Nothing to sort"
+# Large text: the card scrolls (B-114) → bring the category chips into view first.
+- scrollUntilVisible:
+    element:
+      text: "Fuel|More…"
+    timeout: 15000
+    optional: true
 - runFlow:
     when:
       visible: "Fuel"
