@@ -568,13 +568,15 @@
   tới 55 km/h; cảm biến 'still' từ 19:00:57; Bluetooth van nối/ngắt nhiều lần 17:35–18:40 trong khi chuyến vẫn mở. Chạy lại điểm thật qua logic mới:
   chuyến BT mwm01sj7… 11184 m → 10647 m, đỗ từ 18:55:05 → tự tắt ~19:15 (cũ: không tắt tới 20:50); chuyến tay mwm6ism0… 584 m → 0 m, tắt ~21:10.
   946 test xanh. ⏳ Phương thử thật trên A13 (ngồi nhà Start tay ≥ 25 phút; chuyến Bluetooth về nhà; Continue trip).
-- [ ] **B-124** 🟠 (A13-13, phiên E) Bluetooth xe nối khi app ở nền → **không bật chuyến**, chỉ hiện "Driving? Tap to record" (18/11 17:35, tái hiện
+- [x] **B-124** 🟠 (A13-13, phiên E) Bluetooth xe nối khi app ở nền → **không bật chuyến**, chỉ hiện "Driving? Tap to record" (18/11 17:35, tái hiện
   19/11 09:12); chuyến 17:46 hôm đó là do cảm biến "driving", không phải Bluetooth. Logcat `qa-runs/a13/logcat-1119-bt-start-failed.txt`: Android 14
   **cho phép** service vị trí khởi động từ nền (`Background started FGS: Allowed … SYSTEM_ALLOW_LISTED`, app đã tắt tối ưu pin + vị trí "luôn luôn"),
   nhưng không hề có lần gọi `LocationTaskService` nào → gốc: `expo-location` tự chặn `startLocationUpdatesAsync` có foreground service khi không có
   màn hình mở (`AppForegroundedSingleton.isForegrounded` = false → `ForegroundServiceStartNotAllowedException`). Sửa: hàm native
   `allowBackgroundLocationStart` (chỉ khi có quyền vị trí nền) bật cờ đó trước khi bắt đầu ghi lúc app ở nền; Android vẫn quyết định cuối (từ chối →
-  "Tap to record" như cũ). Nhật ký chẩn đoán thêm `start_ok` / `start_failed` (lý do + lỗi). ⏳ Phương thử trên A13: app ở nền, nối Bluetooth xe → chuyến tự bật.
+  "Tap to record" như cũ). Nhật ký chẩn đoán thêm `start_ok` / `start_failed` (lý do + lỗi). ✅ A13 (bcf8827, 09:40, app ở nền): bt_connected → `start_ok {reason: bluetooth, screen: background}`
+  cùng giây, chuyến running + thông báo, `dumpsys location` HIGH_ACCURACY 5 s (diagnostics 2026-11-19-02-43.json, logcat-1119-bcf8827-bt.txt).
+  Thiết bị lúc thử là tai nghe (B-125); ⏳ lần nối Bluetooth xe thật.
 - [ ] **B-125** 🟡 (A13, phiên E) Van Bluetooth trên A13 đang là tai nghe Redmi Buds 4 Lite → với B-123 (nối lại khi chưa có chuyến = chuyến mới), đeo
   tai nghe ở nhà sẽ bật chuyến giả. **Phương chốt 19/11:** cảnh báo, vẫn cho chọn. Sửa: native `getBondedDevices` trả `kind` theo Bluetooth class
   (car audio / hands-free = 'car'; tai nghe, loa, đồng hồ, điện thoại, máy tính = 'personal'); màn chọn + dòng Van Bluetooth hiện "Looks like
