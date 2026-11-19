@@ -1,0 +1,88 @@
+# B-96 v2 (iOS) part 1: Merge stops = 10 min → Start trip at ONE fixed point → leave the app.
+#   MODE=kill → stopApp (iOS no longer runs the app: only the booked "Trip ended at …" can tell the driver)
+#   MODE=home → Home key (app in the background; the engine or the booking posts it — never both)
+# Part 2 (b96_check.yaml) runs ~12 min later from qa/ios/run-b96.sh. Simulator: no real phone sleep (⏭).
+appId: com.phiotron.sundaysort
+name: b96_start
+---
+- launchApp:
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible: "Settings|End trip"
+    timeout: 60000
+# A trip left running by the previous variant: end it and discard, so this one starts clean.
+- runFlow:
+    when:
+      visible: "End trip"
+    commands:
+      - tapOn: "End trip"
+      - tapOn:
+          text: "Discard trip"
+          optional: true
+      - tapOn:
+          text: "Discard"
+          optional: true
+- openLink: sundaysort://trip/auto
+- extendedWaitUntil:
+    visible: "Open"
+    timeout: 20000
+    optional: true
+- tapOn:
+    text: "Open"
+    optional: true
+- extendedWaitUntil:
+    visible: "Automatic trips.*"
+    timeout: 20000
+- scrollUntilVisible:
+    element:
+      text: "10 min"
+    timeout: 15000
+- tapOn: "10 min"
+- takeScreenshot: ${PID}_b96a_merge_10min
+- launchApp:
+    stopApp: false
+- runFlow: ../common/home.yaml
+- setLocation:
+    latitude: 51.5007
+    longitude: -0.1246
+- scrollUntilVisible:
+    element:
+      text: "Start trip"
+    timeout: 15000
+- tapOn: "Start trip"
+- tapOn:
+    text: "Continue|Allow.*location.*"
+    optional: true
+- tapOn:
+    text: "Allow While Using App|Allow Once"
+    optional: true
+- tapOn:
+    text: "Allow precise location"
+    optional: true
+- tapOn:
+    text: "Allow While Using App|Allow Once"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "End trip"
+    timeout: 30000
+# Give GPS time for a first fix (the booking is made / moved as fixes arrive).
+- extendedWaitUntil:
+    visible: "GPS good.*"
+    timeout: 30000
+    optional: true
+- takeScreenshot: ${PID}_b96b_trip_running
+- runFlow:
+    when:
+      true: ${MODE == 'kill'}
+    commands:
+      - stopApp
+- runFlow:
+    when:
+      true: ${MODE != 'kill'}
+    commands:
+      - pressKey: Home
+- takeScreenshot: ${PID}_b96c_left_app
