@@ -561,5 +561,8 @@
   (≤ 2 giờ); Bluetooth ngắt không có luật riêng; kết nối lại khi chưa có chuyến → chuyến mới; cắm sạc vẫn cần xe chạy; chuyến cũ không tự tính lại.
   Sửa: `mileage.ts` (`isStationaryFix` + `parkedSince`), `tripsRepo.lastMoveAt` / `reopenTrip`, engine kết thúc theo `lastMoveAt` cho mọi chuyến
   (bỏ "Still on a trip?" 45 phút), runner `endDriverTrip` + thông báo Continue, task GPS chạy engine mỗi phút, backstop iOS theo Merge stops.
+  Bằng chứng (phiên E, A13-11/12): `qa-runs/a13/diagnostics/SundaySort-trip-diagnostics-2026-11-19-01-50.json` — trong nhà GPS báo tốc độ giả
+  tới 55 km/h; cảm biến 'still' từ 19:00:57; Bluetooth van nối/ngắt nhiều lần 17:35–18:40 trong khi chuyến vẫn mở. Chạy lại điểm thật qua logic mới:
+  chuyến BT mwm01sj7… 11184 m → 10647 m, đỗ từ 18:55:05 → tự tắt ~19:15 (cũ: không tắt tới 20:50); chuyến tay mwm6ism0… 584 m → 0 m, tắt ~21:10.
   946 test xanh. ⏳ Phương thử thật trên A13 (ngồi nhà Start tay ≥ 25 phút; chuyến Bluetooth về nhà; Continue trip).
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
