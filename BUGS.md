@@ -668,10 +668,11 @@
   điểm GPS đầu tiên về sau 12 s. Mạng tới tiles.openfreemap.org bình thường (HTTP 200, 0,2–0,7 s). Gốc: `TripMap.tsx` đếm 12 s từ lúc gắn, kể cả khi chưa có
   điểm → `failed` cả chuyến. Sửa: chỉ đếm khi bản đồ đã có khung (có điểm). 965 test xanh. ✅ Android (phiên A, 62d6558): khởi động lại máy (không có vị trí
   cũ) → Start → "Finding GPS…" → có fix → bản đồ ở 10/30/60 s. ⏳ iOS (phiên C).
-- [ ] **B-138** 🟡 (Phương thử A13 19/11 14:32, 62d6558) Ghi nhanh: gõ £12.05 rồi chụp hoá đơn $42 → chip "Receipt says £42.00 · Use" đúng (OCR đúng số), nhưng
+- [x] **B-138** 🟡 (Phương thử A13 19/11 14:32, 62d6558) Ghi nhanh: gõ £12.05 rồi chụp hoá đơn $42 → chip "Receipt says £42.00 · Use" đúng (OCR đúng số), nhưng
   dòng ghi chú đọc từ hoá đơn (tên cửa hàng · From receipt) nằm DƯỚI chip, không đọc được (ảnh scratchpad a13/now.png). Gốc: bàn phím mở, vùng giữa
   chật, số tiền lấy hết chiều cao → dòng ghi chú tràn xuống vùng dưới. Sửa: cỡ số tiền chừa 30dp cho dòng ghi chú; quá chật thì tạm ẩn dòng đó.
-  969 test xanh. ⏳ A13. Ghi chú: chụp chậm là camera Samsung — sau bấm chụp 3–4,4 s xử lý ảnh (AutoBeauty, logcat) + màn xác nhận ✓; app đọc hoá đơn ~2 s.
+  969 test xanh. ✅ A13 (d3459a5): bàn phím mở → dòng tên tạm ẩn, chip dưới số tiền không đè; bàn phím đóng → "FreshHarvest Market · From receipt" đủ.
+  Ghi chú: chụp chậm là camera Samsung — sau bấm chụp 3–4,4 s xử lý ảnh (AutoBeauty, logcat) + màn xác nhận ✓; app đọc hoá đơn ~2 s.
 - [ ] **B-139** 🟡 (QA A37-11, phiên A — 1/3 lần, giả lập) Chuyến đứng 0.0 mi suốt 5 phút dù nhận ~30 fix: fix đầu là vị trí cũ ở rất xa (giả lập phát lại) → mọi
   fix sau bị coi là nhiễu (> 56 m/s so với mốc). Máy thật hiếm (fix cũ hơn giờ bắt đầu đã bị bỏ) nhưng một fix mạng sai xa cũng gây ra. Sửa: `walkTrack` —
   3 fix liên tiếp khớp nhau mà đều "không thể" so với mốc → mốc mới là fix đầu của chuỗi (không cộng cú nhảy) + test. 971 test xanh. ⏳ giả lập.
