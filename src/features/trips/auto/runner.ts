@@ -179,6 +179,7 @@ async function endAutoTrip(at: number, state: EngineState) {
   if (done.distanceM < MIN_AUTO_TRIP_M) {
     // Not a real drive (car park shuffle, false detection): drop it quietly.
     deleteTrip(db, done.id);
+    logDiagnostic('trip_deleted', { how: 'auto_short', startedAt: done.startedAt, startedBy: done.startedBy, meters: Math.round(done.distanceM) });
     refreshWidgets().catch(() => {});
     return;
   }

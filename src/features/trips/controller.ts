@@ -256,6 +256,7 @@ export function saveEndedTrip(id: string, scope: Scope, purpose: string) {
 export async function discardTrip(id: string) {
   const trip = getTrip(db, id);
   deleteTrip(db, id);
+  if (trip) logDiagnostic('trip_deleted', { how: 'discard', startedAt: trip.startedAt, startedBy: trip.startedBy });
   if (trip && (trip.status === 'running' || trip.status === 'paused')) {
     await stopRecording();
     await clearTripNotification();

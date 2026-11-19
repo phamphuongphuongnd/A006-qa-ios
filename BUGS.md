@@ -436,9 +436,10 @@
   đóng bàn phím hàng hiện lại, phím ✓ lưu (`qa-runs/android-old/verify-4f297e1/`).
 > Phiên E (A13 thật, 8cb9c8f, dữ liệu thật + vân tay thật, 18/11): **B-62 ✅**, B-63 ✅, B-65 ✅ (Recents trắng; deep link khi khoá chỉ hiện Unlock), B-73 ✅,
 > B-84 ✅, widget cập nhật ✅, CPU nền 10 phút 0,01% (B-51 không tái hiện), 20.000 khoản: cuộn giật 12%.
-- [ ] **B-99** 🟠 (QA A13-3, phiên E — A13 thật, vân tay thật) App lock (Lock after 1 minute) → Ghi nhanh → Take photo → chụp hoá đơn > 1 phút → quay lại app
+- [x] **B-99** 🟠 (QA A13-3, phiên E — A13 thật, vân tay thật) App lock (Lock after 1 minute) → Ghi nhanh → Take photo → chụp hoá đơn > 1 phút → quay lại app
   đòi mở khoá → vân tay OK → về **Home, mất ảnh hoá đơn + khoản đang nhập**. Gốc: `features/entries/photo.tsx` gọi camera / thư viện ảnh KHÔNG bọc
-  `withLockSuspended` (share sheet, bộ chọn file, bộ chọn thư mục đều có). Sửa: bọc cả 3 lời gọi ImagePicker. (B-84/B-89 v2 cũng giữ lại nháp + ảnh nếu
+  `withLockSuspended` (share sheet, bộ chọn file, bộ chọn thư mục đều có). Sửa: bọc cả 3 lời gọi ImagePicker. ✅ A13 vân tay thật (62d6558,
+  phiên E + Phương, Lock after 1 minute): camera để 2 phút, chụp sau 1 phút 45 s, thư viện 1 phút 23 s → đều về Ghi nhanh, giữ số tiền + ảnh, không khoá. (B-84/B-89 v2 cũng giữ lại nháp + ảnh nếu
   app bị tắt.) ⏳ phiên E thử lại với vân tay thật.
 > **B-95 + B-96 — đã viết code (phiên H, nhánh `ios-auto-trips`, merge vào `dev` de75d74 theo Phương 18/11)**: iOS đánh thức bằng significant location change
 > + vùng 150 m quanh chỗ đỗ cuối, CoreMotion → vòng nhật ký bền `TripEventLog` → cùng `engine.step` với Android; kết thúc chuyến theo luật cũ; B-96: hẹn sẵn
@@ -674,4 +675,11 @@
 - [ ] **B-139** 🟡 (QA A37-11, phiên A — 1/3 lần, giả lập) Chuyến đứng 0.0 mi suốt 5 phút dù nhận ~30 fix: fix đầu là vị trí cũ ở rất xa (giả lập phát lại) → mọi
   fix sau bị coi là nhiễu (> 56 m/s so với mốc). Máy thật hiếm (fix cũ hơn giờ bắt đầu đã bị bỏ) nhưng một fix mạng sai xa cũng gây ra. Sửa: `walkTrack` —
   3 fix liên tiếp khớp nhau mà đều "không thể" so với mốc → mốc mới là fix đầu của chuỗi (không cộng cú nhảy) + test. 971 test xanh. ⏳ giả lập.
+- [ ] **B-140** 🟠 (A13-16, phiên E — 0882755, diag 07-54) Drive check kết thúc (14:02 probe_none) thì GPS của chuyến đang chạy (bật 13:52 do sạc + di chuyển) TẮT
+  theo — chuyến chạy không GPS tới khi mở app. Gốc: expo-location chỉ có MỘT foreground service cho mọi task vị trí; dừng task Drive check = dừng
+  service của chuyến. Kèm: lần kiểm không bị dừng khi chuyến bắt đầu (callback đang chạy ghi lại trạng thái đã xoá). Sửa: dừng Drive check xong mà còn
+  chuyến chạy → đăng ký lại ghi GPS (`restoreRecording`); callback chỉ ghi khi lần kiểm còn; luôn gọi stop (không tin `hasStarted`). 971 test xanh. ⏳ A13.
+- [x] **B-141** (A13-15, phiên E) Chuyến 11:16 (Phương bấm Start) mất khỏi Miles 11:39–11:52: nằm trong Settings → Recently deleted (4 chuyến 0 km, 3 do phiên E
+  xoá lúc 11:08–11:10 theo lời Phương) → bị xoá bằng Delete ở chi tiết chuyến, không phải app tự xoá. Thêm nhật ký `trip_deleted` (delete / discard /
+  auto_short) vào chẩn đoán để lần sau biết chắc. 🟡 đề xuất: Recently deleted ghi giờ xoá (hiện chỉ ngày).
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.

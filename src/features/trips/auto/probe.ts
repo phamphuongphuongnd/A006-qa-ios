@@ -9,7 +9,7 @@ import { ensureMigrated } from '@/db/migrate';
 import { appendPoints, getActiveTrip } from '@/db/tripsRepo';
 import { t } from '@/i18n';
 
-import { startGpsTrip } from '../controller';
+import { restoreRecording, startGpsTrip } from '../controller';
 import { NOTIF_COLOR } from '../constants';
 import type { EngineState } from './engine';
 import { allowBackgroundLocationStart, configureNative, hasActivityPermission, logDiagnostic, stepCount } from './native';
@@ -32,7 +32,7 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(PROBE_TASK, async ({ da
 async function onProbeFixes(locations: LocationObject[], now = Date.now()) {
   const p = getProbe();
   if (!p || now > p.until || getActiveTrip(db)) {
-    await stopProbe(false, now);
+    await stopProbe(false, now, restoreRecording);
     if (p && now > p.until) logDiagnostic('probe_none', { since: p.startedAt });
     return;
   }
@@ -47,6 +47,8 @@ async function onProbeFixes(locations: LocationObject[], now = Date.now()) {
     steps && prev && steps.at - prev.at >= 15_000 && steps.count >= prev.count
       ? ((steps.count - prev.count) * 60_000) / (steps.at - prev.at)
       : null;
+  // Only while the check is still on (a Trip start may have cleared it meanwhile — never bring it back).
+  if (!getProbe()) return;
   setProbe({ ...p, steps, cycling });
   const ctx = { onFoot, cycling, stepsPerMin };
   let origin = p.origin;
@@ -55,7 +57,7 @@ async function onProbeFixes(locations: LocationObject[], now = Date.now()) {
     if (fix.ts < p.startedAt || fix.accuracy > PROBE_MAX_ACCURACY_M) continue;
     if (!origin) {
       origin = fix;
-      setProbe({ ...p, origin, steps, cycling });
+      if (getProbe()) setProbe({ ...p, origin, steps, cycling });
       continue;
     }
     if (probeSaysDriving(origin, fix, ctx)) {
@@ -75,7 +77,7 @@ export async function syncProbe(input: { now: number; enabled: boolean; state: E
   const { now, enabled, state } = input;
   const p = getProbe();
   if (p && (now > p.until || !enabled || getActiveTrip(db))) {
-    await stopProbe(false, now);
+    await stopProbe(false, now, restoreRecording);
     return;
   }
   const start = shouldStartProbe({

@@ -28,12 +28,19 @@ export const getProbe = () => getKV<ProbeState | null>(db, KEY_PROBE, null);
 export const probeAfter = () => getKV<number>(db, 'probeAfter', 0);
 export const setProbe = (p: ProbeState | null) => setKV(db, KEY_PROBE, p);
 
-/** Stop a running check. `found`: a drive started (no cool-down — a Trip runs now anyway). */
-export async function stopProbe(found: boolean, now = Date.now()): Promise<void> {
+/**
+ * Stop a running check. `found`: a drive started (no cool-down — a Trip runs now anyway).
+ * A13-16: expo-location runs ONE foreground service for every location task — stopping the check's updates stopped the
+ * Trip's too (a trip started on charge mid-check lost GPS when the check ended). `onTripStillRecording` puts the Trip's
+ * recording back.
+ */
+export async function stopProbe(found: boolean, now = Date.now(), onTripStillRecording?: () => Promise<void>): Promise<void> {
   const p = getProbe();
   if (p) setProbe(null);
-  if (await Location.hasStartedLocationUpdatesAsync(PROBE_TASK).catch(() => false)) {
+  const started = await Location.hasStartedLocationUpdatesAsync(PROBE_TASK).catch(() => true);
+  if (started) {
     await Location.stopLocationUpdatesAsync(PROBE_TASK).catch(() => {});
+    await onTripStillRecording?.().catch(() => {});
   }
   if (p) {
     const after = found ? now : now + PROBE_COOLDOWN_MS;
