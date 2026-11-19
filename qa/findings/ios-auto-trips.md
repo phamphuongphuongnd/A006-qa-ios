@@ -87,3 +87,16 @@ Bản build simulator `55db0eb` (chưa có B-96). Gói Appetize miễn phí: m�
   (`Sheet` có sẵn `footer`). P016: bước 16 không chạy (hết giờ persona); P041 không có kết quả (driver).
 - **B-118 ⏭** chưa thấy: hộp xin quyền hệ thống không nằm trong ảnh/cây màn hình của lượt này → kiểm trên Appetize bản cuối
   hoặc iPhone thật.
+
+## B-118 — câu xin quyền trong cấu hình iOS cuối · 2026-11-19
+Kiểm bằng `npx expo config --type introspect` (Info.plist mà prebuild/EAS sinh ra từ dev 45e0b4e; iOS hiện nguyên văn câu này trong hộp xin quyền):
+- ✅ `NSLocationWhenInUseUsageDescription` = "Sunday Sort records the route of your trips to work out your mileage. Your routes stay on your phone."
+- ✅ `NSLocationAlwaysAndWhenInUseUsageDescription` = câu mới (Automatic trips + rời chỗ đỗ) — không còn "only while a trip you started is running".
+- ✅ `NSMotionUsageDescription` đúng; `UIBackgroundModes` = fetch, processing, location.
+- 🟡 Còn câu mặc định của thư viện (iOS 15+ không hiện, nhưng người duyệt App Store đọc được trong Info.plist):
+  `NSLocationAlwaysUsageDescription` = "Allow $(PRODUCT_NAME) to access your location" (chỉ iOS ≤ 10) → nên đặt `locationAlwaysPermission`
+  trong plugin expo-location bằng câu Always mới; `NSLocationTemporaryUsageDescriptionDictionary` (app không gọi xin vị trí chính xác tạm thời → không hiện);
+  `NSLocalNetworkUsageDescription` "Expo Dev Launcher…" do `expo-dev-client` nằm trong dependencies (không hiện ở bản release).
+- ⏭ Hình hộp xin quyền thật: xem lại trên Appetize bản cuối (không bắt buộc — chuỗi đã đúng).
+- Lỗ hổng test iOS còn lại không cần iPhone: `16_end_trip` chỉ đặt 1 điểm GPS → chuyến 0.0 mi; chưa thử chuyến **có quãng đường** trên iOS
+  (Maestro `travel` chạy tuyến giả trên simulator: ghi GPS nền, quãng đường, điểm đầu chỗ đỗ, thức khi rời vùng 150 m). CoreMotion không có trên simulator → dò lái tự động vẫn cần iPhone thật.
