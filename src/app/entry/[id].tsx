@@ -36,7 +36,7 @@ import { usePhotoAllowance, usePro } from '@/state/pro';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, radius, useTheme } from '@/theme';
-import { Badge, Button, Dialog, EmptyState, Group, IconButton, ReceiptThumb, Segmented, Sheet, Txt, useSnackbar } from '@/ui';
+import { Badge, Button, Dialog, EmptyState, Group, IconButton, NUMERIC_INPUT, ReceiptThumb, Segmented, Sheet, Txt, useSnackbar } from '@/ui';
 import { refocus } from '@/features/ocr/refocus';
 
 type Draft = Pick<EntryRowT, 'type' | 'amountMinor' | 'occurredAt' | 'note' | 'categoryId' | 'scope'>;
@@ -264,6 +264,7 @@ function Editor({ entry }: { entry: EntryRowT }) {
                 onChangeText={amount.onChangeText}
                 onBlur={() => setEditingAmount(false)}
                 keyboardType="decimal-pad"
+                {...NUMERIC_INPUT}
                 caretHidden
                 contextMenuHidden
                 style={styles.hidden}

@@ -13,7 +13,7 @@ import { receiptUri } from '@/files/receipts';
 import { t } from '@/i18n';
 import { useLive } from '@/state/useLive';
 import { fonts, radius, useTheme } from '@/theme';
-import { Button, Card, Chip, Divider, Segmented, Tag, Txt, useKeyboardUp } from '@/ui';
+import { Button, Card, Chip, Divider, NUMERIC_INPUT, Segmented, Tag, Txt, useKeyboardUp } from '@/ui';
 
 import { CategorySheet } from './CategorySheet';
 import { useDateTimePicker } from './DateTimePick';
@@ -270,6 +270,7 @@ function EditPanel({ entry, onDone }: { entry: EntryListItem; onDone: () => void
               setError(false);
             }}
             keyboardType="decimal-pad"
+            {...NUMERIC_INPUT}
             accessibilityLabel={t('sortV2.amount')}
             maxFontSizeMultiplier={1.6}
             style={{ flex: 1, minHeight: 40, fontSize: 20, fontFamily: fonts.bold, color: colors.text, padding: 0 }}
@@ -356,6 +357,7 @@ function SplitPanel({
                 value={p.text}
                 onChangeText={(v) => update(p.key, { text: v.replace(/[^\d.]/g, '') })}
                 keyboardType="decimal-pad"
+                {...NUMERIC_INPUT}
                 placeholder="0.00"
                 placeholderTextColor={colors.placeholder}
                 accessibilityLabel={`${t('sort.part', { n: i + 1 })} ${t('capture.amountLabel')}`}
