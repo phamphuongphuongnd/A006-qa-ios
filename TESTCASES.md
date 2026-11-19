@@ -434,7 +434,7 @@
 | TC-396 | F-12 | Chuyến chạy, xe đỗ > 2 phút | GPS 30 s/lần; lái lại → 5 s | M (E) | ✅ B-131 A13 (parked); ⏳ nhánh lái lại |
 | TC-397 | F-12 | Lái chậm / tắc đường (cảm biến không báo driving) | Drive check bật chuyến | M (Phương lái) + T `probeLogic.test.ts` | ⏳ B-88 tối 19/11 |
 | TC-398 | F-12 | Đi bộ > 500 m (máy trong túi) / đạp xe | Không bật chuyến | M (Phương) + T | ⏳ B-88 v2 tối 19/11 |
-| TC-399 | F-12 | Drive check đang chạy thì có chuyến bắt đầu, rồi Drive check hết hạn | GPS của chuyến vẫn chạy | M (E) | ❌ B-140 → sửa, ⏳ A13 |
+| TC-399 | F-12 | Drive check đang chạy thì có chuyến bắt đầu, rồi Drive check hết hạn | GPS của chuyến vẫn chạy | M (E) | ❌ B-140 → ✅ A13 (edecc6d) |
 | TC-400 | F-12 | Chọn tai nghe / loa làm Van Bluetooth | Cảnh báo vàng, vẫn chọn được | M (E) | ✅ B-125 A13 |
 | TC-401 | F-02 | Ô số tiền mọi màn trên Pixel 11 thật (Gboard) | Bàn phím số | M (G) | ❌ B-126 → ✅ 4 ô |
 | TC-402 | F-02 | Gõ "33,01", "33.011", "12345678" ở tách khoản / Sort Edit | 33.01 / 33.01 / dừng 123456 + "Max …"; "Max" không hiện ở số lẻ thứ 3 | M (B) + T | ❌ B-133, B-136 → ✅ |

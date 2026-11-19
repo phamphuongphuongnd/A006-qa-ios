@@ -679,10 +679,11 @@
   fix sau bị coi là nhiễu (> 56 m/s so với mốc). Máy thật hiếm (fix cũ hơn giờ bắt đầu đã bị bỏ) nhưng một fix mạng sai xa cũng gây ra. Sửa: `walkTrack` —
   3 fix liên tiếp khớp nhau mà đều "không thể" so với mốc → mốc mới là fix đầu của chuỗi (không cộng cú nhảy) + test. 971 test xanh. ✅ phiên A (giả lập): 62d6558 tái hiện 0.0 mi; d73ebaf: London rồi 12 fix NY → 1.2 mi
   (= 11 × 178 m, không cộng cú nhảy); thêm 1 fix London giữa đường → bị bỏ, không km ảo.
-- [ ] **B-140** 🟠 (A13-16, phiên E — 0882755, diag 07-54) Drive check kết thúc (14:02 probe_none) thì GPS của chuyến đang chạy (bật 13:52 do sạc + di chuyển) TẮT
+- [x] **B-140** 🟠 (A13-16, phiên E — 0882755, diag 07-54) Drive check kết thúc (14:02 probe_none) thì GPS của chuyến đang chạy (bật 13:52 do sạc + di chuyển) TẮT
   theo — chuyến chạy không GPS tới khi mở app. Gốc: expo-location chỉ có MỘT foreground service cho mọi task vị trí; dừng task Drive check = dừng
   service của chuyến. Kèm: lần kiểm không bị dừng khi chuyến bắt đầu (callback đang chạy ghi lại trạng thái đã xoá). Sửa: dừng Drive check xong mà còn
-  chuyến chạy → đăng ký lại ghi GPS (`restoreRecording`); callback chỉ ghi khi lần kiểm còn; luôn gọi stop (không tin `hasStarted`). 971 test xanh. ⏳ A13.
+  chuyến chạy → đăng ký lại ghi GPS (`restoreRecording`); callback chỉ ghi khi lần kiểm còn; luôn gọi stop (không tin `hasStarted`). 971 test xanh. ✅ A13 (edecc6d, diag 08-42): probe_start 15:23:39 → chuyến (sạc) 15:26:54 →
+  GPS 30 s vẫn chạy sau mốc probe hết hạn 15:35:39 (15:36–15:37), không có probe_none sau khi chuyến bắt đầu; trip_deleted auto_short ghi đúng.
 - [x] **B-141** (A13-15, phiên E) Chuyến 11:16 (Phương bấm Start) mất khỏi Miles 11:39–11:52: nằm trong Settings → Recently deleted (4 chuyến 0 km, 3 do phiên E
   xoá lúc 11:08–11:10 theo lời Phương) → bị xoá bằng Delete ở chi tiết chuyến, không phải app tự xoá. Thêm nhật ký `trip_deleted` (delete / discard /
   auto_short) vào chẩn đoán để lần sau biết chắc. 🟡 đề xuất: Recently deleted ghi giờ xoá (hiện chỉ ngày).
