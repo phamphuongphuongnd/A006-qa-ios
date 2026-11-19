@@ -108,3 +108,5 @@ Kiểm bằng `npx expo config --type introspect` (Info.plist mà prebuild/EAS s
   đoạn 2 33 s (1,98 km → **~60 m/s ≈ 134 mph**). `walkTrack` bỏ điểm nhanh hơn `MAX_SPEED_MPS` = 56 m/s (125 mph, lọc GPS nhảy)
   → cả đoạn 2 bị bỏ, đường vẽ = đoạn 1 — đúng như ảnh. App làm đúng.
 - Sửa kịch bản: `speed: 10` (dư 5 lần dưới ngưỡng dù simulator chạy nhanh gấp đôi) rồi chạy lại P092 để đóng QI-5.
+- ✅ Chạy lại `speed: 10` (phiên C, commit cee0c20): run 44462331611 (P022, P092) + 44463898975 (P092) — 3/3 "Trip saved · 2.5 mi", 0 bước lỗi. QI-5 đóng.
+  Lưu ý kịch bản: Maestro vẫn không giữ tốc độ — P022 đi 2 km trong 40–41 s (~50 m/s, sát ngưỡng 56) → có thể chập chờn; muốn chắc thì chia tuyến nhiều điểm hơn / kiểm thời gian travel.
