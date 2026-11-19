@@ -589,7 +589,8 @@
   sang dạng mới (`exprV`, `legacyToPlain`) để không thành ×100. Các ô số khác (tách khoản, khoản lặp lại, luật…) vốn đã nhập kiểu này.
   941 test xanh. ✅ phiên B (19daeae, API 26 + Android 7): "1"/"7,7"/"1250"/"0.5" → 1.00/7.70/1,250.00/0.50, nháp cũ "1250" vẫn £12.50, sửa khoản
   "3" → 3.00. ✅ phiên F (Pixel 9 Pro XL API 37): như trên + "72.4"/"0.05"/"5+2.5", chip receipt, bàn phím có "." ",". 🟡 gõ "12345678" bị cắt
-  còn 123,456.00 không báo (trần 999,999.99) — ghi nhận. ⏳ A13 (Phương bấm) + iOS.
+  còn 123,456.00 không báo (trần 999,999.99) — ghi nhận (→ B-127 dòng Max). ✅ A13 (edecc6d, Phương tự bấm bàn phím Samsung):
+  "1"/"7,7"/"1250"/"0,5" → 1.00/7.70/1,250.00/0.50, "12.34"+"5" giữ 12.34 không Max, 12345678 → Max. ✅ iOS lượt 4i: "45" → $45.00.
 - [x] **B-123** 🟠 (Phương thử A13 tối 18/11) (1) Start tay trong nhà 20:50→21:48: đứng yên mà quãng đường vẫn tăng; (2) chuyến Bluetooth 17:46→20:50 về
   nhà ngồi > 20 phút không tự tắt; (3) Bluetooth xe chỉ bật chuyến 1 lần. Gốc (code): trong nhà Android trả điểm GPS **không có tốc độ**, nhảy
   25–80 m → `isStationaryFix` giữ lại (chỉ lọc khi có tốc độ) → cộng quãng đường + `lastPointAt` cứ mới → luật "20 phút không có điểm" không bao giờ
