@@ -9,6 +9,40 @@
 
 ---
 
+## ★ Bản đầu lên store — miễn phí toàn bộ (Phương chốt 2026-11-19)
+
+> **Mục này đè lên mọi chỗ khác trong file.** Pro chỉ **tạm tắt** (code giữ lại, bật lại ở bản sau với mô hình thu phí mới).
+> Phần Pro / dùng thử / giá bên dưới giữ làm tài liệu cho bản sau — **chưa áp dụng ở bản đầu**.
+
+**Luật đọc file ở bản đầu**
+- Mọi tính năng ghi **[Pro]** = **có cho mọi người**, không khoá: chuyến tự động, luật tự phân loại + khoản tự xếp, khoản
+  lặp lại, đọc hoá đơn (OCR), chip "Suggested" + "Accept all suggestions", file năm thuế (PDF, tổng theo ô thuế, MTD CSV/
+  .xlsx, FreeAgent, ZIP ảnh), ảnh hoá đơn không giới hạn, A → B tự tính dặm, quãng đường thật cho chuyến sót.
+- **Không có ở bản đầu:** trang onboarding S-01e "Free & Pro" · màn/sheet S-19 "Sunday Sort Pro" · thẻ "Sunday Sort Pro"
+  trong Settings · huy hiệu "PRO" / "Trial · n days left" · nhãn "PRO" cạnh tính năng · trạng thái khoá / công tắc mờ ·
+  bộ đếm "14 of 20 free photos" + sheet hết ảnh · thông báo "Pro renews…" / "Your Pro trial ends tomorrow" · thẻ Home gia
+  hạn · thông báo "Automatic trips are off — Pro ended". Không mua trong app, không quảng cáo, không tip.
+- **Câu chữ:** không viết "free", "free forever", "no ads", "no account" ở app lẫn store. Điểm nhấn duy nhất về cách
+  chạy: **"Works offline"** + **"we never see your data"** (không hứa "dữ liệu không rời máy" — xem §11 sao lưu hệ thống).
+
+**Màn đổi so với mockup bản 2** (Claude Design vẽ lại đúng các màn này, giữ nguyên phong cách `design/`):
+
+| Màn | Đổi ở bản đầu | Lấp chỗ trống (UX) |
+|---|---|---|
+| S-01a Welcome | Thân: "A simple money and mileage log for self-employed drivers. Works offline — we never see your data." | — |
+| Onboarding | Bỏ S-01e: S-01d "Looks good" → S-01f Reminder; chấm bước còn **5** | — |
+| S-02 Home | Header không huy hiệu; "9 auto-sorted this week" cho mọi người; bỏ thẻ "Pro renews" | Thẻ chuyến khi tự động **chưa bật**: "Start trip" + dòng chữ "Record trips automatically · Set up" (→ S-07d), ẩn sau khi đã bật hoặc ✕ |
+| S-03 Quick capture | Bỏ bộ đếm ảnh + sheet hết ảnh; nút "Photo" không ổ khoá; "Reading receipt…" / "From receipt" / "Receipt says" cho mọi người | — |
+| S-06 Sort · S-06a | Chip "Suggested" (chip đầu viền vàng) thay "Most used"; dòng "9 auto-sorted · Review"; thẻ đề nghị luật; nút "Accept all suggestions (12)" | — |
+| S-07d Automatic trips | Công tắc mở, không "PRO" | — |
+| S-08 Add trip | 3 lựa chọn "Odometer · Distance · A → B" không nhãn "PRO" | — |
+| S-10 Export | Một danh sách 8 loại, không thẻ khoá, chia 2 nhóm: **"Raw data"** (CSV – all entries, CSV – mileage log) · **"For your accountant & MTD"** (PDF report, Totals by tax form line, MTD summary, MTD records, MTD spreadsheet, FreeAgent, Receipt photos ZIP) | Mỗi dòng 1 câu ngắn nói file dùng để làm gì |
+| S-15 Settings | Bỏ thẻ "Sunday Sort Pro" — nhóm đầu là "Region & tax" | — |
+| S-17 Recurring · S-18 Rules | Không trạng thái khoá; "⋯ → Make recurring" ở S-05 không nhãn PRO | — |
+| S-20 Notifications | Bỏ 2 dòng "Pro renewal", "Trial ending" | — |
+
+---
+
 ## 0. Tóm tắt một đoạn
 
 Tài xế van / courier tự kinh doanh được trả và tiêu tiền rải rác cả ngày nhưng không có thời gian làm sổ. Sunday Sort tách
@@ -19,7 +53,8 @@ trên máy, sao lưu tự động mỗi đêm — và **luôn báo ngay khi app 
 MTD · Mỹ Schedule C) và file đúng mẫu để nhập vào phần mềm MTD (MTDsorted, BrightBooks, TaxCalc…) hoặc FreeAgent.
 Không quảng cáo, không tài khoản, không server, không kết nối ngân hàng, dữ liệu không rời điện thoại (ngoại lệ Q25: ảnh nền
 bản đồ tải từ OpenFreeMap; địa chỉ gõ ở chuyến A → B gửi openrouteservice để tính đường — tuyến GPS không bao giờ gửi đi).
-**Miễn phí** phần ghi và phân loại tay; **Pro** (thuê bao năm) cho tự động + xuất file năm thuế/MTD + ảnh không giới hạn.
+**Bản đầu: mọi tính năng mở cho mọi người** (mục ★). Sau này (chưa áp dụng): miễn phí phần ghi và phân loại tay; **Pro**
+(thuê bao năm) cho tự động + xuất file năm thuế/MTD + ảnh không giới hạn.
 
 ---
 
@@ -161,6 +196,8 @@ hiện: "Estimate only — not tax advice."
 ---
 
 ## 6. Miễn phí và Pro
+
+> **Chưa áp dụng ở bản đầu** — bản đầu mở mọi tính năng (mục ★). Bảng dưới giữ cho bản sau.
 
 | Tính năng | Miễn phí | Pro (thuê bao năm) |
 |---|---|---|
@@ -737,6 +774,8 @@ giá "$31.99 / year".
 ---
 
 ## 10. Danh sách màn cho Claude Design (vẽ lại toàn bộ)
+
+> Bản đầu (2026-11-19): chỉ vẽ lại các màn trong bảng "Màn đổi" ở mục ★; S-01e, S-19 và trạng thái free/khoá không vẽ.
 
 | Mã | Màn | Trạng thái cần vẽ | Sáng/Tối |
 |---|---|---|---|
