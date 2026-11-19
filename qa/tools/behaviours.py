@@ -92,12 +92,21 @@ def find_save_band(r):
     return w // 2, best[0] + best[1] // 2
 
 
+def typed_amount(digits):
+    """Callers pass cash-register digits ("1234" = 12.34). Since 19daeae (B-122) the field reads amounts as written
+    ("1234" = 1,234.00), so type the point: "12.34". QA_AMOUNT_STYLE=cents keeps the old typing for older APKs."""
+    if os.environ.get('QA_AMOUNT_STYLE', 'written') == 'cents' or not digits.isdigit():
+        return digits
+    d = digits.rjust(3, '0')
+    return f"{int(d[:-2])}.{d[-2:]}"
+
+
 def capture(r, digits, note=None, income=False, double=False, kill_after_ms=None):
     """Home → Expense/Income → digits → (note) → Save. Returns the 'Saved · …' toast text (or None)."""
     home(r)
     r.tap_vis('New income' if income else 'New expense')
     time.sleep(1.8)
-    r.d.shell(f'input text {digits}')
+    r.d.shell(f'input text {typed_amount(digits)}')
     time.sleep(0.6)
     if note:
         sv = find_save_band(r)

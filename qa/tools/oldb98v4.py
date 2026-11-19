@@ -66,7 +66,7 @@ for fs in ('0.85', '1.3'):
     r.back_home()
     r.tap_vis('New expense')
     time.sleep(2.5)
-    d.shell('input text 1250')
+    d.shell(f"input text {b.typed_amount('1250')}")
     time.sleep(1.5)
     im, kb, band = snap(f'v4_f{fs}_1_typing')
     rec['1_kb_top'] = kb

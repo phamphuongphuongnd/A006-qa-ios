@@ -183,6 +183,18 @@ Log `[B98v4]`: API 26 `top=363 y=216 h=200.5 covered=54 cramped=false` → `y=32
 Android 7 `top=305 … covered=68` → `y=263 h=66 cramped=true`. (`covered=24` còn lại ở trạng thái gọn là phần đệm dưới của khối; ảnh cho thấy Save
 nằm trọn trên bàn phím, cách mép 27 px.) Ảnh: `api26/v4_strip.png`, `api24/v4_strip.png`.
 
+### APK 19daeae (B-122 số tiền nhập như viết), 2026-11-19 09:00–09:19 · `qa-runs/android-old/verify-19daeae/` — ✅
+| Kiểm | API 26 (360×640dp) | Android 7 |
+|---|---|---|
+| B-122 gõ "1" / "7,7" / "1250" | ✅ "Saved · $1.00" / "$7.70" / "$1,250.00" (thêm "0.5" → $0.50, "12.345" → $12.34) | ✅ £1.00 / £7.70 / £1,250.00 |
+| Bàn phím số tiền | ✅ bàn phím số có "," và "." | ✅ có "." và "," |
+| "$1,250.00" trên màn 360dp | ✅ vừa một dòng, không co | — |
+| Nháp cũ: gõ "1250" ở ef470b7 (nháp `expr:"1250"` = 12.50) → cài 19daeae → mở | ✅ hiện $12.50 (không thành $1,250.00); Save → "Saved · $12.50" | — |
+| Sửa khoản: ô số tiền gõ "3" | ✅ "Edit amount, $3.00" | — |
+| B-98 v4 (chữ 0.85 + 1.3) | ✅ Save 651–744 / bàn phím 771; Note + Save thấy; hàng hiện lại; ✓ lưu | ✅ Save 615–708 / bàn phím 735 (bàn phím số mới thấp hơn) |
+| Persona P003 / P016 / P041 | ✅ 12/0/0 · 10/0/0 · ✅ (⏭ Try Pro); log sạch | — |
+Runner: `typed_amount()` gõ "12.34" thay "1234" (đặt `QA_AMOUNT_STYLE=cents` để chạy APK cũ).
+
 ### Bản cuối ef470b7 (B-114 v3, B-109 v3, B-115, B-116), API 26 360×640dp, 2026-11-18 16:19–16:30 · `qa-runs/android-old/verify-ef470b7/` — ✅
 | Kiểm | Kết quả |
 |---|---|
