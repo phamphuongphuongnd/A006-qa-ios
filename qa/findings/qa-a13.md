@@ -166,6 +166,8 @@ kết quả kick/start. Đã báo điều phối.
 - **62d6558 cài 14:23:33. B-99 ✅** (vân tay thật, App lock 1 phút): camera mở 2 phút tự đóng → về Ghi nhanh không khoá, nháp còn;
   chụp sau 1:45 → thêm ảnh, không khoá; thư viện 1:23 → thêm ảnh. Camera Samsung ~4 s từ chụp tới màn xem lại (chế độ làm đẹp) —
   không phải lỗi app. Đã Discard nháp, tắt App lock.
+- **edecc6d cài 15:06:49** (B-139 + B-140 + nhật ký trip_deleted; Back up now trước; không có chuyến). Bài B-140 (đi bộ →
+  probe_start → Start → không mở app → GPS chuyến còn sau mốc probe hết hạn) ⏳ Phương để sau.
 - **d3459a5 cài 14:59:53. B-138 ✅**: £12.05 + chụp FreshHarvest → bàn phím mở: dòng tên cửa hàng tạm ẩn, chip "Receipt says
   £21.74" không đè chữ; bàn phím đóng: "FreshHarvest Market · From receipt" hiện đủ; ngày 20 Nov 2019 đúng. Nháp đã bỏ.
 - **0882755 cài 12:25:58**. B-136 Max: 12345678 → £123,456.00 CÓ "Max…"; 999999.99 → KHÔNG có dòng Max (ngược mô tả "chỉ khi
