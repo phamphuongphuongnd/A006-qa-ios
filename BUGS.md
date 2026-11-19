@@ -542,6 +542,8 @@
 - [ ] **B-118** 🟠 (QA iOS — phiên H) Câu xin quyền vị trí iOS (app.json) hứa "only while a trip you started is running" / "Recording stops when you end the
   trip" — sai từ khi có chuyến tự động (theo dõi rời chỗ đỗ / vùng 150 m ở nền) → Apple 5.1.1. Sửa: câu mới nói rõ chuyến tự động; câu trong app
   (`trip.permBody`) cũng sửa. Cần build iOS mới mới có hiệu lực. ⏳ Phương xem chữ trước khi nộp.
+  ✅ cấu hình (phiên H, expo config introspect dev 45e0b4e): Info.plist có 2 câu vị trí mới + Motion. 19/11 thêm `locationAlwaysPermission` (câu Always
+  cũ còn mặc định "Allow $(PRODUCT_NAME)…"). 🟡 NSLocalNetworkUsageDescription "Expo Dev Launcher" có vì expo-dev-client trong dependencies.
 - [x] **B-119** 🟡 (QA SPE-11, phiên D) `sundaysort://dev/gallery` mở được trong bản release (gallery.tsx thiếu chặn `__DEV__`). Sửa: chuyển về Home như dev/ocr,
   dev/probe. Link lạ khác ra màn "Unmatched Route" + nút Sitemap → thêm `src/app/+not-found.tsx` chuyển về Home. ✅ A13 (b843037):
   `sundaysort://abc`, `sundaysort://abc/xyz?q=1` → Home, logcat sạch (app đang chạy). ✅ phiên D (19daeae, emulator): `dev/gallery` → Home; link lạ / chuỗi RTL → Home; 34 deep link lạ 0 crash/ANR.
@@ -607,4 +609,7 @@
 - [ ] **B-130** 🟠 (A13-14 phiên E, 0bf4283) Bấm **Continue trip** khi xe còn đứng yên → chuyến tự kết thúc lại sau 3 giây. Gốc: fix đầu tiên sau Continue được
   lưu (đầu đoạn mới) → `lastMoveAt` mất mốc "resume" và tính `parkedSince` trên **mọi** điểm → về lại giờ đỗ cũ ≥ 20 phút → kết thúc ngay. Resume sau
   Personal stop cũng dính. Sửa: `lastMoveAt` chỉ xét đoạn cuối (từ điểm `segmentStart`), mốc = đầu đoạn + test tái hiện (`lastMoveAt.test.ts`). ⏳ A13.
+- [ ] **B-131** 🟡 đề xuất (A13 phiên E, 0bf4283 — `qa-runs/a13/perf-trip-still-300s.json`) Chuyến chạy mà xe đứng yên 5 phút: CPU app 0,19 %, không wakelock;
+  phần hao pin chính là GPS HIGH_ACCURACY mỗi 5 s chạy suốt tới khi tự kết thúc (tối đa = Merge stops). Đề xuất: cảm biến báo đứng yên / không di chuyển
+  thật > 1–2 phút → hạ GPS (BALANCED hoặc 30–60 s), xe chạy lại ("driving" / điểm xa > 100 m) → về 5 s. Rủi ro: hụt vài chục mét đầu khi xe lăn bánh. Chờ Phương.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
