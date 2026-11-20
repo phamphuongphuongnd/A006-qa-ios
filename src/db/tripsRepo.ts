@@ -59,7 +59,12 @@ export interface PointInput {
  * Fixes taken while the phone stands still (`isStationaryFix`) are dropped. Distance is recomputed from all points
  * so filtering stays consistent with `trackDistance`.
  */
-export function appendPoints(db: AppDb, tripId: string, points: PointInput[], opts: { sensorStill?: boolean } = {}): void {
+export function appendPoints(
+  db: AppDb,
+  tripId: string,
+  points: PointInput[],
+  opts: { sensorStill?: boolean; onFoot?: boolean; walkSpeed?: boolean } = {},
+): void {
   const trip = getTrip(db, tripId);
   if (!trip || trip.status !== 'running' || points.length === 0) return;
   db.transaction((tx) => {

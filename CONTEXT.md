@@ -58,7 +58,8 @@ _Avoid_: day trip, session
 
 **Stop**:
 A period inside a Trip where the vehicle is not moving (a drop, a red light, queueing); short Stops never end a Trip.
-GPS wander while the phone stays put (indoors, parked) is part of a Stop, never distance.
+GPS wander while the phone stays put (indoors, parked) is part of a Stop, never distance; so is the driver walking away
+from the vehicle (a delivery, home) — the Stop starts when the vehicle stopped, not when the walk ends.
 
 **Trip end**:
 A Trip — automatic or started by the driver — ends on its own when a Stop outlasts the merge threshold, whether or not
@@ -75,9 +76,11 @@ The vehicle's own Bluetooth device the driver picks; connecting to it starts an 
 _Avoid_: car kit, paired device
 
 **Drive check**:
-A few minutes of low-power GPS after the phone starts moving with no Trip running; getting far away faster than a walk
-(or far away while the phone isn't walking) starts an automatic Trip from when it started moving. Catches drives in slow
-traffic that the motion sensor never calls driving. Walking (counted steps) or cycling never starts one; a bus or taxi can.
+A few minutes of low-power GPS after the phone starts moving with no Trip running; getting far away faster than a walk,
+while the motion sensor doesn't say walking, starts an automatic Trip from when it started moving (or from where the
+vehicle set off, after a walk to it). Catches drives in slow traffic that the motion sensor never calls driving; goes on
+for a while longer if it is still moving when its time is up. Walking or cycling never starts one; a bus or taxi can.
+After a check finds nothing, no new check for the same movement — a stop and a new start check again.
 
 **Start on charge**:
 Starting an automatic Trip when the phone is charging and the vehicle starts moving; charging alone never starts one.

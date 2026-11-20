@@ -1,4 +1,4 @@
-// B-88 drive check (Android): see probeLogic.ts.
+// B-88 / B-143 drive check (Android): see probeLogic.ts.
 import type { LocationObject } from 'expo-location';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
@@ -11,13 +11,21 @@ import { t } from '@/i18n';
 
 import { restoreRecording, startGpsTrip } from '../controller';
 import { NOTIF_COLOR } from '../constants';
-import type { EngineState } from './engine';
+import { isOnFoot, type EngineState } from './engine';
 import { allowBackgroundLocationStart, configureNative, hasActivityPermission, logDiagnostic, stepCount } from './native';
-import { PROBE_MAX_ACCURACY_M, PROBE_WINDOW_MS, probeSaysDriving, shouldStartProbe } from './probeLogic';
-import { getProbe, PROBE_TASK, probeAfter, setProbe, stopProbe } from './probeState';
+import { extendProbe, findDrive, PROBE_EXTEND_MAX_MS, PROBE_MAX_ACCURACY_M, PROBE_MAX_FIXES, PROBE_WINDOW_MS, shouldStartProbe } from './probeLogic';
+import {
+  getProbe,
+  PROBE_TASK,
+  probeAfter,
+  probeFixes,
+  probeLastSince,
+  type ProbeState,
+  setProbe,
+  setProbeTrip,
+  stopProbe,
+} from './probeState';
 import { getKV } from './repo';
-
-const ON_FOOT = new Set(['walking', 'running']);
 
 TaskManager.defineTask<{ locations?: LocationObject[] }>(PROBE_TASK, async ({ data, error }) => {
   if (error) return;
@@ -29,15 +37,34 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(PROBE_TASK, async ({ da
   }
 });
 
+/**
+ * B-143 (d): the check ran out — go on while it still moves (`extendProbe`), else stop it (cool-down). True = still on.
+ */
+async function expireOrExtend(p: ProbeState, now: number, onFoot: boolean): Promise<boolean> {
+  if (now <= p.until) return true;
+  const until = extendProbe({ now, until: p.until, maxUntil: p.maxUntil ?? p.until, fixes: probeFixes(p), onFoot });
+  if (until !== null) {
+    setProbe({ ...p, until });
+    configureNative({ probeAfter: until });
+    logDiagnostic('probe_extend', { since: p.startedAt, until });
+    return true;
+  }
+  await stopProbe(false, now, restoreRecording);
+  logDiagnostic('probe_none', { since: p.startedAt });
+  return false;
+}
+
+const engineOnFoot = (engine: EngineState | null) => isOnFoot(engine?.activity);
+
 async function onProbeFixes(locations: LocationObject[], now = Date.now()) {
-  const p = getProbe();
-  if (!p || now > p.until || getActiveTrip(db)) {
+  let p = getProbe();
+  if (!p || getActiveTrip(db)) {
     await stopProbe(false, now, restoreRecording);
-    if (p && now > p.until) logDiagnostic('probe_none', { since: p.startedAt });
     return;
   }
   const engine = getKV<EngineState | null>(db, 'engine', null);
-  const onFoot = engine?.activity ? ON_FOOT.has(engine.activity) : false;
+  // B-143 (a): the sensor's current activity — walking / running right now is never a drive.
+  const onFoot = engineOnFoot(engine);
   const cycling = !!p.cycling || engine?.activity === 'cycling';
   // B-88 v2: steps a minute since the previous fix — walking / running right now.
   const count = await stepCount();
@@ -48,27 +75,35 @@ async function onProbeFixes(locations: LocationObject[], now = Date.now()) {
       ? ((steps.count - prev.count) * 60_000) / (steps.at - prev.at)
       : null;
   // Only while the check is still on (a Trip start may have cleared it meanwhile — never bring it back).
-  if (!getProbe()) return;
-  setProbe({ ...p, steps, cycling });
-  const ctx = { onFoot, cycling, stepsPerMin };
-  let origin = p.origin;
+  p = getProbe();
+  if (!p) return;
+  const fixes = probeFixes(p).slice();
   for (const l of locations) {
     const fix = { lat: l.coords.latitude, lng: l.coords.longitude, ts: l.timestamp, accuracy: l.coords.accuracy ?? 999 };
     if (fix.ts < p.startedAt || fix.accuracy > PROBE_MAX_ACCURACY_M) continue;
-    if (!origin) {
-      origin = fix;
-      if (getProbe()) setProbe({ ...p, origin, steps, cycling });
-      continue;
-    }
-    if (probeSaysDriving(origin, fix, ctx)) {
-      await stopProbe(true, now);
-      const row = await startGpsTrip({ startedBy: 'auto', at: p.startedAt, askNotifications: false });
-      // The check's first and latest fixes are the drive's first miles.
-      appendPoints(db, row.id, [origin, fix]);
-      logDiagnostic('probe_drive', { since: p.startedAt, onFoot, stepsPerMin: stepsPerMin === null ? null : Math.round(stepsPerMin) });
-      return;
-    }
+    if (fixes.length && fix.ts <= fixes[fixes.length - 1].ts) continue;
+    fixes.push(fix);
   }
+  const kept = fixes.slice(-PROBE_MAX_FIXES);
+  p = { ...p, fixes: kept, origin: undefined, steps, cycling };
+  setProbe(p);
+  const ctx = { onFoot, cycling, stepsPerMin };
+  // Each new fix as the newest: did the check see a drive up to it?
+  for (let n = Math.max(2, kept.length - locations.length); n <= kept.length; n++) {
+    const upTo = kept.slice(0, n);
+    const from = findDrive(upTo, ctx);
+    if (from < 0) continue;
+    await stopProbe(true, now);
+    // From where the drive began: when the phone left 'still' if right at the start, else that fix (after a walk).
+    const at = from === 0 ? p.startedAt : upTo[from].ts;
+    const row = await startGpsTrip({ startedBy: 'auto', at, askNotifications: false });
+    setProbeTrip(row.id, now);
+    // The check's fixes from there on are the drive's first miles.
+    appendPoints(db, row.id, upTo.slice(from));
+    logDiagnostic('probe_drive', { since: p.startedAt, at, onFoot, stepsPerMin: stepsPerMin === null ? null : Math.round(stepsPerMin) });
+    return;
+  }
+  await expireOrExtend(p, now, onFoot);
 }
 
 /** After an engine pass (runner): start a check when the phone just left 'still' and no Trip runs; end an old one. */
@@ -76,26 +111,37 @@ export async function syncProbe(input: { now: number; enabled: boolean; state: E
   if (Platform.OS !== 'android') return;
   const { now, enabled, state } = input;
   const p = getProbe();
-  if (p && (now > p.until || !enabled || getActiveTrip(db))) {
+  if (p && (!enabled || getActiveTrip(db))) {
     await stopProbe(false, now, restoreRecording);
     return;
   }
+  // Ran out: go on while it still moves, else stop — a new movement may start a new check right away (B-143 b).
+  if (p) await expireOrExtend(p, now, engineOnFoot(state));
   const start = shouldStartProbe({
     now,
     enabled: enabled && hasActivityPermission(),
     tripActive: !!getActiveTrip(db),
     movedAt: state.movedAt,
     probeAfter: probeAfter(),
-    probing: !!p,
+    probing: !!getProbe(),
+    stillEnterAt: state.stillEnterAt ?? 0,
+    lastCheckSince: probeLastSince(),
   });
   if (!start) return;
   const until = now + PROBE_WINDOW_MS;
-  setProbe({ startedAt: state.movedAt, until, origin: null, steps: null, cycling: state.activity === 'cycling' });
+  setProbe({
+    startedAt: state.movedAt,
+    until,
+    maxUntil: until + PROBE_EXTEND_MAX_MS,
+    fixes: [],
+    steps: null,
+    cycling: state.activity === 'cycling',
+  });
   configureNative({ probeAfter: until });
   try {
     allowBackgroundLocationStart();
     await Location.startLocationUpdatesAsync(PROBE_TASK, {
-      // Wifi / cell is enough to see 500 m; one fix every 30 s for at most 12 minutes.
+      // Wifi / cell is enough to see 500 m; one fix every 30 s for 12 minutes (up to 24 while it still moves).
       accuracy: Location.Accuracy.Balanced,
       timeInterval: 30_000,
       distanceInterval: 0,

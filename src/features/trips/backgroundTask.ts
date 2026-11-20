@@ -15,8 +15,9 @@ import { refreshWidgets } from '@/features/widgets/refresh';
 
 import { addSignalListener, TRIP_DETECT_TASK } from '../../../modules/trip-detect';
 import { syncIosBackstops } from './auto/backstop';
-import type { EngineState } from './auto/engine';
+import { recordingFilter, type EngineState } from './auto/engine';
 import { hasActivityPermission, logDiagnostic } from './auto/native';
+import { probeTripFoundAt } from './auto/probeState';
 import { getKV } from './auto/repo';
 import { processAutoSignals, syncAutoDetection } from './auto/runner';
 import { TRIP_TASK } from './constants';
@@ -59,9 +60,14 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
   // showed "stopped recording at 17:57"); drop anything older than the trip.
   const locations = (data?.locations ?? []).filter((l) => l.timestamp >= active.startedAt);
   if (locations.length === 0) return;
-  // Phương 19/11: when the motion sensor says the phone is still (and the driver allowed it), GPS wander adds nothing.
-  const engine = getKV<EngineState | null>(db, 'engine', null);
-  const sensorStill = engine?.activity === 'still' && hasActivityPermission();
+  // Phương 19/11: when the motion sensor says the phone is still (and the driver allowed it), GPS wander adds nothing;
+  // B-143: nor does walking away from the van.
+  const filter = recordingFilter({
+    state: getKV<EngineState | null>(db, 'engine', null),
+    permission: hasActivityPermission(),
+    tripStartedAt: active.startedAt,
+    probeFoundAt: probeTripFoundAt(active.id),
+  });
   appendPoints(
     db,
     active.id,
@@ -72,7 +78,7 @@ TaskManager.defineTask<{ locations?: LocationObject[] }>(TRIP_TASK, async ({ dat
       accuracy: l.coords.accuracy ?? 999,
       speed: l.coords.speed,
     })),
-    { sensorStill },
+    filter,
   );
   // iOS (B-96): move the booked "Still on a trip?" / "Trip isn't recording" past this fix.
   if (Platform.OS === 'ios') await syncIosBackstops();
