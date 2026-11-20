@@ -111,6 +111,21 @@ Cập nhật: điều phối gỡ camera riêng (revert 147d3e2) → bản build
   (`manual/auto-68b2976.png`).
 - Chờ Phương chạy xe: (1) đi bộ ≥ 500 m máy trong túi; (2) xe chậm ngay sau đi bộ; (3) đỗ rồi đi bộ lên nhà; (4) giao hàng vài phút rồi
   lái tiếp; (5) restore_ok/restore_failed nếu Samsung tắt app giữa chuyến.
+- Chờ APK có B-153 (phiên Pro báo): kiểm tab bar, nút cuối màn, Sheet, bàn phím với CẢ 2 kiểu Navigation bar (3 nút / cử chỉ) —
+  không bị che, không thừa khoảng trống. Cài đặt gốc của Phương: `navigation_mode` 0 = 3 nút. Đổi kiểu: Phương tự đổi
+  (Settings → Display → Navigation bar), QA không đổi cài đặt hệ thống bằng adb; xong nhắc Phương trả về 3 nút.
+
+- **A13-18 🟠 nút "Save as a regular trip" khuất dưới thanh điều hướng** (Phương báo; kiểm 13:49, bản 68b2976). Máy 1080×2408,
+  density 420 (gốc 450), font_scale 0.8, điều hướng 3 nút: thanh `navigationBars` y 2282–2408 (126 px = 48 dp). Trip detail chuyến
+  07:39 cuộn hết cỡ: nút y 2209–2356 → **nửa dưới (74 px) nằm dưới thanh điều hướng, không kéo lên thêm được**
+  (`manual/A13-18-trip-detail-bottom.png/.xml`). Bàn phím mở (bấm ô Purpose, IME y 1417–2408): cuộn hết cỡ nút ở y 1749 → khuất
+  hẳn sau bàn phím, Parking & tolls cũng khuất một nửa (`A13-18-trip-detail-keyboard.png`). Settings cuối trang 2196 < 2282 → không bị.
+  Nguyên nhân: `src/ui/Layout.tsx:83` ScrollView của `Screen` chỉ có `paddingBottom: 20` (không cộng `insets.bottom`);
+  `bottomInset` (`:136`) chỉ đệm thanh `bottom`, mà `src/app/trip/[id].tsx:233-234` chỉ có `bottom` khi đang sửa phí đỗ xe → bình
+  thường không có gì đệm. Các màn tự viết ScrollView đều cộng `insets.bottom + 24/32` (settings.tsx:154, backup.tsx:241…). Màn khác
+  cùng kiểu (`bottomInset`, `bottom` có lúc không có): mileage-rates.tsx:74, trip/odometer.tsx:101/224 — cần xem.
+  Đề xuất: `Layout.tsx:83` `paddingBottom: (showFab ? 100 : 20) + (bottomInset && !bottom ? insets.bottom : 0)`; bàn phím:
+  KeyboardAvoidingView `height` trên Android chỉ thu ~460/991 px → cân nhắc đệm nội dung bằng chiều cao bàn phím.
 
 ## 19/11 08:43 — chẩn đoán chuyến tối 18/11 (bản 19daeae, Phương lái + đã cho cầm máy)
 Lúc cắm: chuyến sáng 07:24 đang chạy (11.3 km); Phương tự bấm End trip 08:45 (xác nhận qua popup). Không xoá/sửa chuyến nào.

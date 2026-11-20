@@ -21,9 +21,11 @@ export function useReport(period: ReportPeriod, settings: AppSettings, region: R
   const entries = useLive(() => listEntries(db, { period }), [period.start, period.end], ['entries', 'receipts']);
   const categories = useLive(() => listCategories(db, { includeHidden: true }), [], ['categories']);
   const win = mileageWindow(period.start, period.end, region);
+  const unit = settings.distanceUnit;
   const trips = useLive(
-    () => ({ summary: tripSummary(db, period), work: businessTripMiles(db, win) }),
-    [period.start, period.end, win.start],
+    // `summary` (miles) prices the allowance and feeds the files; `shown` is the same trips in the display unit (B-154).
+    () => ({ summary: tripSummary(db, period), shown: tripSummary(db, period, unit), work: businessTripMiles(db, win) }),
+    [period.start, period.end, win.start, unit],
     ['trips'],
   );
   const rates = settings.mileageRates[region];
@@ -50,7 +52,9 @@ export function useReport(period: ReportPeriod, settings: AppSettings, region: R
     treatment,
     miles: s.workMiles,
     trips: s,
-    businessUse: businessUse(s.workMiles, s.workMiles + s.personalMiles + s.unsortedMiles),
+    /** Trip totals in the display unit (mi or km), each trip fixed to 0.1 then added: what Reports prints. */
+    shown: trips.shown,
+    businessUse: businessUse(trips.shown.workMiles, trips.shown.workMiles + trips.shown.personalMiles + trips.shown.unsortedMiles),
     mileageEstimateMinor,
     ratesText: ratesLabel(rates, currencyOf(region), period.start, period.end),
   };

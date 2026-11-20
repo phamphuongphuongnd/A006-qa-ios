@@ -154,7 +154,7 @@ describe('export documents', () => {
     expect(html).toContain('6 Oct – 5 Nov 2026');
     expect(html).toContain("1 entry in this period isn't sorted yet");
     // B-26: readable labels, thousands separators, oldest trip first, header repeats on each printed page.
-    expect(html).toContain('8,478 business miles');
+    expect(html).toContain('8,477.5 business miles');
     expect(html).toContain('(55p / 25p)');
     expect(html).toContain('<td>1,070.0</td>');
     expect(html).toContain('<td>Personal</td>');

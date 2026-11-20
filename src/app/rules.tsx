@@ -12,7 +12,19 @@ import { CategorySheet } from '@/features/entries/CategorySheet';
 import { categoryIcon } from '@/features/entries/icons';
 import { openPro } from '@/features/pro/openPro';
 import { checkRule, type RuleDraft, type RuleError } from '@/features/rules/match';
-import { createRule, deleteRule, findSameRule, getRule, listRules, restoreRule, setRuleEnabled, updateRule, type RuleListItem } from '@/features/rules/repo';
+import {
+  createRule,
+  deleteRule,
+  findSameRule,
+  getRule,
+  listRules,
+  restoreRule,
+  restoreRuleValues,
+  setRuleEnabled,
+  undoCreateRule,
+  updateRule,
+  type RuleListItem,
+} from '@/features/rules/repo';
 import { NavHeader } from '@/features/settings/ui';
 import { PRO_PAUSED } from '@/domain/pro';
 import { t, type TKey } from '@/i18n';
@@ -130,7 +142,14 @@ export default function RulesScreen() {
         visible={!!editing}
         rule={editing?.rule ?? null}
         onClose={() => setEditing(null)}
-        onSaved={(name, category) => snack({ above: 'none', message: t('sortV2.ruleSaved', { name, category }) })}
+        onSaved={(name, category, undo) =>
+          snack({
+            above: 'none',
+            message: t('sortV2.ruleSaved', { name, category }),
+            actionLabel: t('common.undo'),
+            onAction: () => (undo.kind === 'created' ? undoCreateRule(db, undo.id) : restoreRuleValues(db, undo.before)),
+          })
+        }
         onDeleted={(row) =>
           snack({ above: 'none', message: t('sortV2.ruleDeleted'), actionLabel: t('common.undo'), onAction: () => restoreRule(db, row) })
         }
@@ -138,6 +157,9 @@ export default function RulesScreen() {
     </Screen>
   );
 }
+
+/** What Undo on the "Rule saved" snackbar puts back (mockup S-18). */
+type RuleSaveUndo = { kind: 'created'; id: string } | { kind: 'edited'; before: RuleRow };
 
 function RuleSheet({
   visible,
@@ -149,7 +171,7 @@ function RuleSheet({
   visible: boolean;
   rule: RuleRow | null;
   onClose: () => void;
-  onSaved: (name: string, category: string) => void;
+  onSaved: (name: string, category: string, undo: RuleSaveUndo) => void;
   onDeleted: (row: RuleRow) => void;
 }) {
   const { colors } = useTheme();
@@ -177,10 +199,15 @@ function RuleSheet({
       setError(err);
       return;
     }
-    if (rule) updateRule(db, rule.id, d);
-    else createRule(db, d);
+    let undo: RuleSaveUndo;
+    if (rule) {
+      updateRule(db, rule.id, d);
+      undo = { kind: 'edited', before: rule };
+    } else {
+      undo = { kind: 'created', id: createRule(db, d).id };
+    }
     onClose();
-    onSaved(text.trim(), cat?.name ?? '');
+    onSaved(text.trim(), cat?.name ?? '', undo);
   };
 
   const box = { backgroundColor: colors.surfaceAlt, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 10, gap: 2 };

@@ -7,10 +7,12 @@ import { Platform, Pressable, useWindowDimensions, View } from 'react-native';
 import { db } from '@/db/client';
 import { entryCount } from '@/db/entriesRepo';
 import { changeVehicleCostMethod } from '@/db/vehicleCostsRepo';
+import { formatDistanceNumber, sumTenths } from '@/domain/mileage';
 import { formatMoney } from '@/domain/money';
 import { MILEAGE_ID, mtdRowLabel, UNSORTED_NAME } from '@/domain/report';
 import { taxYearOf } from '@/domain/taxYear';
 import type { Period, Region, VehicleCostMethod } from '@/domain/types';
+import { percentText } from '@/domain/vehicleCosts';
 import { CategoryBars, MonthlyLines, type Bar } from '@/features/reports/charts';
 import { ExportPanel } from '@/features/reports/ExportPanel';
 import {
@@ -65,10 +67,8 @@ const MODE_LABEL: Record<PeriodMode, () => string> = {
   custom: () => t('reports.custom'),
 };
 
-const KM_PER_MILE = 1.609344;
 /** Wall clock, read only from event handlers. */
 const nowMs = () => Date.now();
-const grouped = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
 function linkedPeriod(p: { from?: string; to?: string }): Period | null {
   const start = Number(p.from);
@@ -231,7 +231,7 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
   const { colors } = useTheme();
   const narrow = useWindowDimensions().width < 420;
   const stacked = useStackedRows();
-  const { report, months, currency, miles, mileageEstimateMinor, ratesText, entries, method, treatment, trips, businessUse } = useReport(
+  const { report, months, currency, mileageEstimateMinor, ratesText, entries, method, treatment, trips, shown, businessUse } = useReport(
     period,
     settings,
     region,
@@ -260,8 +260,11 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
   }
 
   const unit = settings.distanceUnit;
-  const dist = (mi: number) =>
-    unit === 'km' ? t('reports.kmValue', { km: grouped(mi * KM_PER_MILE) }) : t('reports.milesValue', { miles: grouped(mi) });
+  // B-154: values already in the display unit (each trip fixed to 0.1, then added), printed with 1 decimal.
+  const dist = (v: number) =>
+    unit === 'km' ? t('reports.kmValue', { km: formatDistanceNumber(v, 1) }) : t('reports.milesValue', { miles: formatDistanceNumber(v, 1) });
+  const miles = shown.workMiles;
+  const shownTotal = sumTenths([shown.workMiles, shown.personalMiles, shown.unsortedMiles]);
 
   const bars: Bar[] = report.byCategory
     .filter((c) => c.type === 'expense')
@@ -455,10 +458,10 @@ function ReportBody({ period, region }: { period: ReportPeriod; region: Region }
           </View>
           {businessUse ? (
             <>
-              <Txt v="amount" size={40} accessibilityLabel={t('mtd.reports.businessUseA11y', { percent: businessUse.percent })}>
-                {businessUse.percent}%
+              <Txt v="amount" size={40} accessibilityLabel={t('mtd.reports.businessUseA11y', { percent: percentText(businessUse.percent) })}>
+                {percentText(businessUse.percent)}%
               </Txt>
-              <Txt c="textSecondary">{t('mtd.reports.businessUse', { work: dist(trips.workMiles), total: dist(totalMiles) })}</Txt>
+              <Txt c="textSecondary">{t('mtd.reports.businessUse', { work: dist(shown.workMiles), total: dist(shownTotal) })}</Txt>
               <Progress value={businessUse.share} tone="ok" />
             </>
           ) : (

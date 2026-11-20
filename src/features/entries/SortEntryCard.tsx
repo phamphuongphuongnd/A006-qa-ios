@@ -118,7 +118,7 @@ export function SortEntryCard({
   };
 
   const best = suggestion.categories;
-  const pro = suggestion.kind === 'suggested';
+  const suggested = suggestion.kind === 'suggested';
   return (
     <Animated.View style={[{ position: 'absolute', left: 0, right: 0, top: stacked ? 16 : 0, bottom: 0 }, { transform: [{ translateX: x }] }]}>
       <Card style={[styles.card, { shadowColor: '#161D2B' }]}>
@@ -205,9 +205,9 @@ export function SortEntryCard({
           {mode !== 'split' ? (
             <>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                {pro ? <Zap size={18} color={colors.textTertiary} /> : null}
+                {suggested ? <Zap size={18} color={colors.textTertiary} /> : null}
                 <Txt v="label" c="textTertiary">
-                  {pro ? t('sort.suggested') : t('sortV2.mostUsed')}
+                  {suggested ? t('sort.suggested') : t('sortV2.mostUsed')}
                 </Txt>
               </View>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -215,8 +215,8 @@ export function SortEntryCard({
                   <Chip
                     key={c.id}
                     label={c.name}
-                    icon={pro && i === 0 ? categoryIcon(c.icon) : undefined}
-                    state={pro && i === 0 ? 'best' : 'default'}
+                    icon={suggested && i === 0 ? categoryIcon(c.icon) : undefined}
+                    state={suggested && i === 0 ? 'best' : 'default'}
                     onPress={() => pick(c.id, c.name)}
                   />
                 ))}
