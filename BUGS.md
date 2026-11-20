@@ -745,5 +745,7 @@
   Edit/Split/Merge/Skip che, không thấy chip danh mục, không cuộn ra. Pro Max cùng cỡ và SE ở AX-L đạt. Nghi `src/app/(tabs)/sort.tsx` ~51: bố cục cuộn
   `short` chỉ bật khi fontScale ≥ 1.8 (B-114), iOS XXXL ≈ 1.35 → 667/1.35 ≈ 493 < 520 nên cần điều kiện theo chiều cao chia fontScale cho mọi cỡ
   (vd. h/fs < 520 dù fs < 1.8). Ảnh `qa-runs/ios/44500573190/qa-ios-18/personas/P052/shots/step-020-…jpg`. Giao phiên "A006 gỡ giới hạn pro".
+  ⚠️ Không hạ ngưỡng chung (h/fs < 520 mọi cỡ) — tái lỗi B-114 lần 2 trên Android 640dp chữ 1.3; cần cách khác (thẻ thường tự cuộn / ngưỡng
+  theo nền tảng) + thử iOS giả lập. Gộp vào phiên con iPad (B-146) sau khi ghép free-ui.
   Theo dõi (chưa kết luận): iOS 18 giả lập chuyến GPS "Finding GPS…" suốt, 0.0 mi (iOS 26 ra 2.x mi) → thử iPhone iOS 18 thật.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
