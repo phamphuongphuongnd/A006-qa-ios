@@ -768,3 +768,8 @@
   Lượt 2 (giả lập điện thoại 360 dp, chữ 1.3 + 2.0): hàng 4 ô đủ chữ. Lỗi đã sửa: `autoFocus` trong Dialog (Modal) không mở bàn phím số trên
   Android → `Dialog` thêm `onShow`, ô nhập focus 250 ms sau khi hộp hiện (focus ngay lúc onShow có lần không lên); ✓ khi số sai giữ bàn phím
   (`submitBehavior="submit"`). TESTCASES TC-280/282/283/392 sửa theo luật mới, thêm TC-423…427.
+  Lượt 3 (Phương giao 20/11): lỗi `autoFocus` không mở bàn phím có ở MỌI ô tự focus trong Dialog / Sheet trên Android (đã thấy ở hộp tỉ giá
+  Settings → Region). Sửa chung thay cho cách riêng của lượt 2: `src/ui/modalShown.ts` — Dialog / Sheet báo khi Modal đã hiện (onShow), `Field`
+  có `autoFocus` trong đó (Android) focus sau 250 ms; `trip/auto.tsx` về lại `autoFocus` thường, `Dialog` bỏ prop `onShow`. Giả lập 360 dp: tỉ giá
+  5/5, Custom 3/3, gõ DELETE 3/3 (chỉ mở rồi Cancel), tên danh mục mới 3/3, "Save as a regular trip" 3/3 — bàn phím tự lên, nút không bị che;
+  Odometer (ô ngoài Modal) vẫn tự lên. Sheet sửa số dặm chuyến GPS (`MilesSheet`) cùng đường code, chưa mở được trên giả lập (không có chuyến GPS).

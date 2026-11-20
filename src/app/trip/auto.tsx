@@ -1,6 +1,6 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useRef, useState, type ComponentRef } from 'react';
-import { Linking, PermissionsAndroid, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { Linking, PermissionsAndroid, Platform, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MERGE_STOP_MAX, MERGE_STOP_MIN, parseMergeStopMinutes, type AppSettings } from '@/db/settingsRepo';
@@ -66,7 +66,6 @@ export default function AutoTripsScreen() {
   /** Custom merge minutes being typed (null = dialog closed). */
   const [mergeText, setMergeText] = useState<string | null>(null);
   const [mergeError, setMergeError] = useState(false);
-  const mergeRef = useRef<ComponentRef<typeof TextInput>>(null);
   const mergeOpen = mergeText !== null;
   const refresh = useCallback(() => {
     setHealth(nativeHealth());
@@ -238,15 +237,11 @@ export default function AutoTripsScreen() {
         visible={mergeOpen}
         title={t('autoTrip.mergeTitle')}
         onClose={closeMerge}
-        // autoFocus inside the dialog's Modal doesn't raise the Android keyboard, nor does focus() before the dialog's window
-        // has focus (B-149, emulator 360 dp): focus a moment after it's shown.
-        onShow={() => setTimeout(() => mergeRef.current?.focus(), 250)}
         actions={[
           { label: t('common.cancel'), onPress: closeMerge },
           { label: t('common.save'), variant: 'primary', onPress: saveMerge },
         ]}>
         <Field
-          ref={mergeRef}
           label={t('autoTrip.mergeCustomLabel')}
           value={mergeText ?? ''}
           onChangeText={(v) => {
@@ -255,6 +250,7 @@ export default function AutoTripsScreen() {
           }}
           keyboardType="number-pad"
           maxLength={2}
+          autoFocus
           selectTextOnFocus
           returnKeyType="done"
           // A wrong number keeps the keyboard up next to its error; a good one closes the dialog.

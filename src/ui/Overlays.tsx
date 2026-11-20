@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CONTENT_MAX, fonts, radius, useTheme } from '@/theme';
 
 import { Button, type ButtonVariant } from './Button';
+import { ModalShownContext, useShownState } from './modalShown';
 import { Txt } from './Txt';
 
 // ---------------- Snackbar ----------------
@@ -138,29 +139,32 @@ export function Sheet({
 }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { shown, onShow } = useShownState(visible);
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent>
-      {/* Android too: the modal window doesn't resize for the keyboard, so a field's Save would sit under it (B-32). */}
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <Pressable accessibilityLabel="Close" style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }]} onPress={onClose} />
-        <View style={{ flex: 1 }} pointerEvents="box-none" />
-        <View style={[styles.sheet, { backgroundColor: colors.surface, paddingBottom: Math.max(insets.bottom, 16) + 18 }]}>
-          <View style={[styles.grab, { backgroundColor: colors.lineStrong }]} />
-          {title ? (
-            <Txt v="h2" accessibilityRole="header">
-              {title}
-            </Txt>
-          ) : null}
-          {scroll ? (
-            <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ gap: 16 }} keyboardShouldPersistTaps="handled">
-              {children}
-            </ScrollView>
-          ) : (
-            children
-          )}
-          {footer}
-        </View>
-      </KeyboardAvoidingView>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} onShow={onShow} statusBarTranslucent navigationBarTranslucent>
+      <ModalShownContext.Provider value={shown}>
+        {/* Android too: the modal window doesn't resize for the keyboard, so a field's Save would sit under it (B-32). */}
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+          <Pressable accessibilityLabel="Close" style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }]} onPress={onClose} />
+          <View style={{ flex: 1 }} pointerEvents="box-none" />
+          <View style={[styles.sheet, { backgroundColor: colors.surface, paddingBottom: Math.max(insets.bottom, 16) + 18 }]}>
+            <View style={[styles.grab, { backgroundColor: colors.lineStrong }]} />
+            {title ? (
+              <Txt v="h2" accessibilityRole="header">
+                {title}
+              </Txt>
+            ) : null}
+            {scroll ? (
+              <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ gap: 16 }} keyboardShouldPersistTaps="handled">
+                {children}
+              </ScrollView>
+            ) : (
+              children
+            )}
+            {footer}
+          </View>
+        </KeyboardAvoidingView>
+      </ModalShownContext.Provider>
     </Modal>
   );
 }
@@ -181,7 +185,6 @@ export function Dialog({
   body,
   actions,
   onClose,
-  onShow,
   children,
 }: {
   visible: boolean;
@@ -189,33 +192,34 @@ export function Dialog({
   body?: string;
   actions: DialogAction[];
   onClose: () => void;
-  /** Once the dialog window is up — focus a field here (autoFocus in a Modal doesn't raise the Android keyboard). */
-  onShow?: () => void;
   children?: ReactNode;
 }) {
   const { colors } = useTheme();
+  const { shown, onShow } = useShownState(visible);
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} onShow={onShow} statusBarTranslucent>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={[styles.dlgWrap, { backgroundColor: colors.scrim }]}>
-        <View accessibilityViewIsModal style={[styles.dlg, { backgroundColor: colors.surface }]}>
-          <Txt v="h2" accessibilityRole="header">
-            {title}
-          </Txt>
-          {body ? (
-            <Txt v="body" c="textSecondary">
-              {body}
+      <ModalShownContext.Provider value={shown}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={[styles.dlgWrap, { backgroundColor: colors.scrim }]}>
+          <View accessibilityViewIsModal style={[styles.dlg, { backgroundColor: colors.surface }]}>
+            <Txt v="h2" accessibilityRole="header">
+              {title}
             </Txt>
-          ) : null}
-          {children}
-          <View style={styles.acts}>
-            {actions.map((a) => (
-              <Button key={a.label} label={a.label} onPress={a.onPress} variant={a.variant ?? 'text'} size="sm" disabled={a.disabled} />
-            ))}
+            {body ? (
+              <Txt v="body" c="textSecondary">
+                {body}
+              </Txt>
+            ) : null}
+            {children}
+            <View style={styles.acts}>
+              {actions.map((a) => (
+                <Button key={a.label} label={a.label} onPress={a.onPress} variant={a.variant ?? 'text'} size="sm" disabled={a.disabled} />
+              ))}
+            </View>
           </View>
-        </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </ModalShownContext.Provider>
     </Modal>
   );
 }
