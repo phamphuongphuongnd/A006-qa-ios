@@ -30,7 +30,8 @@ export type ProFeature = 'auto_trips' | 'rules' | 'recurring' | 'ocr' | 'suggest
 
 /**
  * First store release: every feature is open to everyone, nothing is sold (Phương, 2026-11-19 — product.md "★ Bản đầu").
- * The Pro / trial / purchase code stays for a later release: set to `false` to bring Pro back. While true,
+ * The Pro / trial / purchase code stays for a later release. To bring Pro back: set this to `false` AND remove
+ * "com.android.vending.BILLING" from `android.blockedPermissions` in app.json (then prebuild). While true,
  * `effectiveProStatus` answers `{ kind: 'all_free' }`, the store is never contacted and no Pro notice is scheduled.
  */
 export const PRO_PAUSED = true;
