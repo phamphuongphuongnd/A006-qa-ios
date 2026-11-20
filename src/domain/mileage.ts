@@ -5,6 +5,23 @@ export const METERS_PER_MILE = 1609.344;
 export const metersToMiles = (m: number) => m / METERS_PER_MILE;
 export const milesToMeters = (mi: number) => Math.round(mi * METERS_PER_MILE);
 
+// ---------------- B-154: one number per trip ----------------
+// Every trip is fixed to 0.1 (mile, or km on screen when the driver uses km) once, and everything else is built from
+// those fixed values: totals add them up, the mileage allowance prices them, and every screen and file prints them. An
+// accountant adding the CSV's miles column and multiplying by the rate gets the app's figure to the penny / cent.
+
+/** A distance in whole tenths (12.34 → 123). The tiny nudge keeps 12.35 from becoming 123 through float error. */
+export const toTenths = (value: number): number => (Number.isFinite(value) && value > 0 ? Math.round(value * 10 + 1e-9) : 0);
+/** A distance fixed to 0.1 — the value every screen and file shows for it. */
+export const roundTenth = (value: number): number => toTenths(value) / 10;
+/** A trip's miles as printed (0.1 mi). */
+export const tripMiles = (distanceM: number): number => roundTenth(metersToMiles(distanceM));
+/** Sum of fixed values, added in whole tenths so there is no float drift (3 × 0.1 = 0.3, not 0.30000000000000004). */
+export const sumTenths = (values: number[]): number => values.reduce((n, v) => n + toTenths(v), 0) / 10;
+
+/** Fractional minor units → whole pence / cents, rounded once (half up). `toFixed` drops float noise first. */
+export const roundMinor = (minor: number): Minor => Math.round(Number(minor.toFixed(6)));
+
 /** B-50: a trip ended from an NFC tag / `sundaysort://trip/toggle` under 0.1 mi is not kept (a double tap, no drive). */
 export const MIN_KEPT_TRIP_M = 0.1 * METERS_PER_MILE;
 export const tooShortToKeep = (distanceM: number) => !(distanceM >= MIN_KEPT_TRIP_M);
@@ -50,18 +67,19 @@ export const LEGACY_UK_RATES: RateTier[] = [
  * Ignores `from` dates; use `mileageEstimateByDate` for date-ranged rates.
  */
 export function mileageEstimate(businessMiles: number, tiers: RateTier[]): Minor {
-  let left = Math.max(0, businessMiles);
+  // B-154: the miles are fixed to 0.1 first; each tier is rounded to the penny once.
+  let left = toTenths(businessMiles);
   let used = 0;
   let total = 0;
   for (const t of tiers) {
     if (left <= 0) break;
-    const room = t.upToMiles === null ? left : Math.max(0, t.upToMiles - used);
+    const room = t.upToMiles === null ? left : Math.max(0, toTenths(t.upToMiles) - used);
     const take = Math.min(left, room);
-    total += take * t.minorPerMile;
+    total += roundMinor((take * t.minorPerMile) / 10);
     left -= take;
     used += take;
   }
-  return Math.round(total);
+  return total;
 }
 
 export type OdometerCheck = { ok: true; miles: number } | { ok: false; reason: 'end_before_start' | 'invalid' };
@@ -292,57 +310,122 @@ export function ratesOn(rates: RateTier[], at: number): RateTier[] {
   return pick.tiers;
 }
 
-/** Cost of the miles from cumulative position `used` to `used + miles` at the given tiers (fractional minor units). */
-function tieredCost(used: number, miles: number, tiers: RateTier[]): number {
-  let total = 0;
-  let pos = used;
-  let left = miles;
-  for (const t of tiers) {
-    if (left <= 0) break;
-    const ceil = t.upToMiles === null ? Infinity : t.upToMiles;
-    if (pos >= ceil) continue;
-    const take = Math.min(left, ceil - pos);
-    total += take * t.minorPerMile;
-    left -= take;
-    pos += take;
-  }
-  return total;
+/** One priced line: the miles one rate covered (fixed to 0.1) and their money, rounded to the penny once. */
+export interface MileageLine {
+  /** Rate period start 'YYYY-MM-DD', or null for the first period. */
+  from: string | null;
+  /** The tier's limit (UK 10,000) or null. */
+  upToMiles: number | null;
+  minorPerMile: number;
+  miles: number;
+  minor: Minor;
+}
+
+export interface MileageBreakdown {
+  /** Lines in date order of first use: one per rate period × tier the counted trips touched. */
+  lines: MileageLine[];
+  /** Counted business miles = sum of the trips' fixed values (what the CSV column adds up to). */
+  miles: number;
+  /** Sum of the lines' money. */
+  minor: Minor;
 }
 
 /**
- * Estimate for one tax year's business trips with date-ranged rates. Tier thresholds (UK 10,000 mi) count
- * cumulative miles in date order; each trip is priced at the rates in force on its day.
- * Estimate only — not tax advice.
+ * B-154 — the mileage allowance from fixed trip values. `trips` = one tax year's business trips (any order; miles are
+ * fixed to 0.1 here, so raw or already-fixed values give the same result). Tier limits (UK 10,000 mi) count cumulative
+ * fixed miles in date order from the first trip given; each trip is priced at the rates in force on its day.
+ *
+ * Rounding: the money is summed per rate period × tier and rounded to the penny / cent **once per line** (55p and 25p,
+ * or the IRS rate before and after 1 July, are separate lines). That is what an accountant does with the printed
+ * figures ("9,999.9 mi × 55p", "123.4 mi × 25p"), and it keeps every line exact; rounding only the grand total could
+ * be a penny off the lines when two of them end in half a penny.
+ *
+ * `range` [start, end): only trips inside are counted, but earlier trips still move the tier counter, so a quarter
+ * after the 10,000th mile is all at 25p.
+ */
+export function mileageBreakdown(
+  trips: { at: number; miles: number }[],
+  rates: RateTier[],
+  range?: { start: number; end: number },
+): MileageBreakdown {
+  const periods = ratePeriods(rates);
+  const periodIndexOn = (at: number) => {
+    let pick = 0;
+    periods.forEach((p, i) => {
+      if (periodStart(p) <= at) pick = i;
+    });
+    return pick;
+  };
+  const sorted = trips
+    .map((t) => ({ at: t.at, tenths: toTenths(t.miles) }))
+    .filter((t) => t.tenths > 0 && (!range || t.at < range.end))
+    .sort((a, b) => a.at - b.at);
+  const buckets = new Map<string, { line: Omit<MileageLine, 'miles' | 'minor'>; tenths: number }>();
+  let used = 0;
+  let counted = 0;
+  for (const t of sorted) {
+    const inRange = !range || t.at >= range.start;
+    if (inRange) counted += t.tenths;
+    if (periods.length === 0) {
+      used += t.tenths;
+      continue;
+    }
+    const pi = periodIndexOn(t.at);
+    const p = periods[pi];
+    let left = t.tenths;
+    p.tiers.forEach((tier, ti) => {
+      if (left <= 0) return;
+      const ceil = tier.upToMiles === null ? Infinity : toTenths(tier.upToMiles);
+      if (used >= ceil) return;
+      const take = Math.min(left, ceil - used);
+      if (inRange) {
+        const key = `${pi}:${ti}`;
+        const b = buckets.get(key) ?? { line: { from: p.from, upToMiles: tier.upToMiles, minorPerMile: tier.minorPerMile }, tenths: 0 };
+        b.tenths += take;
+        buckets.set(key, b);
+      }
+      left -= take;
+      used += take;
+    });
+    // Past every tier's limit (a capped last tier): those miles carry no rate.
+    used += left;
+  }
+  const lines = [...buckets.values()].map((b) => ({ ...b.line, miles: b.tenths / 10, minor: roundMinor((b.tenths * b.line.minorPerMile) / 10) }));
+  return { lines, miles: counted / 10, minor: lines.reduce((n, l) => n + l.minor, 0) };
+}
+
+/**
+ * Estimate for one tax year's business trips with date-ranged rates (`mileageBreakdown`). Estimate only, not tax
+ * advice.
  */
 export function mileageEstimateByDate(trips: { at: number; miles: number }[], rates: RateTier[]): Minor {
-  const sorted = trips.filter((t) => t.miles > 0).sort((a, b) => a.at - b.at);
-  let used = 0;
-  let total = 0;
-  for (const t of sorted) {
-    total += tieredCost(used, t.miles, ratesOn(rates, t.at));
-    used += t.miles;
-  }
-  return Math.round(total);
+  return mileageBreakdown(trips, rates).minor;
 }
 
 /**
- * The day this tax year's business miles passed the first tier's limit (UK 10,000 mi), counting cumulative miles in
- * date order like `mileageEstimateByDate` — for the Miles line "10,000 mi at 55p reached on 14 Aug · now 25p" (B-49).
+ * The day this tax year's business miles passed the first tier's limit (UK 10,000 mi), counting cumulative fixed miles
+ * in date order like `mileageBreakdown`, for the Miles line "10,000 mi at 55p reached on 14 Aug · now 25p" (B-49).
  * Null while under the limit or when the rates have a single tier (US).
  */
 export function tierThresholdReached(
   trips: { at: number; miles: number }[],
   rates: RateTier[],
 ): { at: number; limitMiles: number; fromMinor: number; toMinor: number } | null {
-  const sorted = trips.filter((t) => t.miles > 0).sort((a, b) => a.at - b.at);
+  const sorted = trips
+    .map((t) => ({ at: t.at, tenths: toTenths(t.miles) }))
+    .filter((t) => t.tenths > 0)
+    .sort((a, b) => a.at - b.at);
   let used = 0;
   for (const t of sorted) {
     const tiers = ratesOn(rates, t.at);
     const first = tiers[0];
-    if (first && first.upToMiles !== null && tiers[1] && used < first.upToMiles && used + t.miles >= first.upToMiles) {
-      return { at: t.at, limitMiles: first.upToMiles, fromMinor: first.minorPerMile, toMinor: tiers[1].minorPerMile };
+    if (first && first.upToMiles !== null && tiers[1]) {
+      const limit = toTenths(first.upToMiles);
+      if (used < limit && used + t.tenths >= limit) {
+        return { at: t.at, limitMiles: first.upToMiles, fromMinor: first.minorPerMile, toMinor: tiers[1].minorPerMile };
+      }
     }
-    used += t.miles;
+    used += t.tenths;
   }
   return null;
 }
@@ -387,6 +470,8 @@ export const KM_PER_MILE = 1.609344;
 /** 128.4 → "128.4"; 8412 → "8,412" (whole numbers from 1,000 unless `decimals` is given). */
 export function formatDistanceNumber(value: number, decimals?: 0 | 1): string {
   const d = decimals ?? (Math.abs(value) >= 1000 ? 0 : 1);
-  const [w, f] = Math.max(0, value).toFixed(d).split('.');
+  // B-154: 1 decimal = the same tenth `toTenths` fixes (toFixed alone can round 12.35 down through float error).
+  const v = d === 1 ? toTenths(value) / 10 : Math.round(Math.max(0, value));
+  const [w, f] = v.toFixed(d).split('.');
   return `${w.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}${f ? `.${f}` : ''}`;
 }

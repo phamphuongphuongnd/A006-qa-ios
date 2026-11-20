@@ -3,7 +3,7 @@ import { min } from 'drizzle-orm';
 import { entries, trips, type TripRow } from '@/db/schema';
 import { listTrips } from '@/db/tripsRepo';
 import type { AppDb } from '@/db/types';
-import { metersToMiles } from '@/domain/mileage';
+import { metersToMiles, toTenths } from '@/domain/mileage';
 import type { Period } from '@/domain/types';
 
 /** Oldest entry or trip time — the first tax year offered in the Reports year picker. */
@@ -27,17 +27,22 @@ export interface TripSummary {
   unsortedCount: number;
 }
 
-/** Miles by scope for Reports (Business use = work / all sorted + unsorted miles). Running trips count so far. */
-export function tripSummary(db: AppDb, period: Period): TripSummary {
-  const out: TripSummary = { workMiles: 0, personalMiles: 0, unsortedMiles: 0, unsortedCount: 0 };
+/**
+ * Miles by scope for Reports (Business use = work / all sorted + unsorted miles). Running trips count so far.
+ * B-154: each trip is fixed to 0.1 (mi, or km with `unit: 'km'` for the screen) and the fixed values are added up in
+ * whole tenths, so the totals equal the trip rows in the CSV / PDF added up. Fields keep the "Miles" names in km too.
+ */
+export function tripSummary(db: AppDb, period: Period, unit: 'mi' | 'km' = 'mi'): TripSummary {
+  const tenths = { work: 0, personal: 0, unsorted: 0 };
+  let unsortedCount = 0;
   for (const t of listTrips(db, period)) {
-    const mi = metersToMiles(t.distanceM);
-    if (t.scope === 'work') out.workMiles += mi;
-    else if (t.scope === 'personal') out.personalMiles += mi;
+    const v = toTenths(unit === 'km' ? t.distanceM / 1000 : metersToMiles(t.distanceM));
+    if (t.scope === 'work') tenths.work += v;
+    else if (t.scope === 'personal') tenths.personal += v;
     else {
-      out.unsortedMiles += mi;
-      out.unsortedCount++;
+      tenths.unsorted += v;
+      unsortedCount++;
     }
   }
-  return out;
+  return { workMiles: tenths.work / 10, personalMiles: tenths.personal / 10, unsortedMiles: tenths.unsorted / 10, unsortedCount };
 }

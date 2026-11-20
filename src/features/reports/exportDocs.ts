@@ -1,5 +1,6 @@
 import { isoDate } from '@/domain/csv';
 import { formatDistanceNumber } from '@/domain/mileage';
+import { percentText } from '@/domain/vehicleCosts';
 import { formatMoney, toDecimalString } from '@/domain/money';
 import type { Report } from '@/domain/report';
 import type { Currency, EntryType, Minor, Scope, TripScope } from '@/domain/types';
@@ -182,9 +183,9 @@ export function reportHtml(p: PdfInput): string {
           .join('')}</table>`
       : '',
     p.mileage
-      ? `<h2>Mileage</h2><p>${formatDistanceNumber(p.mileage.workMiles)} business miles · ≈ ${m(p.mileage.estimateMinor)} ${e(p.mileage.ratesNote)}</p><p class="note">Estimate only — not tax advice.</p>`
+      ? `<h2>Mileage</h2><p>${formatDistanceNumber(p.mileage.workMiles, 1)} business miles · ≈ ${m(p.mileage.estimateMinor)} ${e(p.mileage.ratesNote)}</p><p class="note">Estimate only — not tax advice.</p>`
       : p.businessUse
-        ? `<h2>Mileage</h2><p>Business use ${p.businessUse.percent}% · ${formatDistanceNumber(p.businessUse.workMiles)} of ${formatDistanceNumber(p.businessUse.totalMiles)} mi</p><p class="note">Your accountant applies the business-use share.</p>`
+        ? `<h2>Mileage</h2><p>Business use ${percentText(p.businessUse.percent)}% · ${formatDistanceNumber(p.businessUse.workMiles, 1)} of ${formatDistanceNumber(p.businessUse.totalMiles, 1)} mi</p><p class="note">Your accountant applies the business-use share.</p>`
         : '',
     p.trips.length
       ? `<h2>Mileage log</h2><table class="trips">${head(['Date', 'Miles', 'Work/Personal', 'Purpose', 'Source'])}${[...p.trips]

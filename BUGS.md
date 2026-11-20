@@ -773,3 +773,17 @@
   có `autoFocus` trong đó (Android) focus sau 250 ms; `trip/auto.tsx` về lại `autoFocus` thường, `Dialog` bỏ prop `onShow`. Giả lập 360 dp: tỉ giá
   5/5, Custom 3/3, gõ DELETE 3/3 (chỉ mở rồi Cancel), tên danh mục mới 3/3, "Save as a regular trip" 3/3 — bàn phím tự lên, nút không bị che;
   Odometer (ô ngoài Modal) vẫn tự lên. Sheet sửa số dặm chuyến GPS (`MilesSheet`) cùng đường code, chưa mở được trên giả lập (không có chuyến GPS).
+- [x] **B-154** 🟠 (Phương chốt 20/11, giao phiên verify) **Tiền dặm khớp số dặm in ra; % dùng xe 2 số lẻ.** Tiền dặm tính trên số dặm chưa làm
+  tròn (`mileageEstimateByDate`), file in số đã làm tròn (CSV/PDF từng chuyến 1 số lẻ, mô tả MTD tổng 0 số lẻ, PDF ≥ 1.000 dặm 0 số lẻ) → kế toán lấy
+  tổng dặm × giá lệch vài xu tới vài chục xu; theo quý = hiệu hai tổng luỹ kế làm tròn → lệch thêm 1p; `businessUse` làm tròn % về số nguyên.
+  Sửa (tiền vẫn INTEGER theo xu): `mileage.ts` mỗi chuyến chốt 1 giá trị 0,1 dặm (`toTenths` / `tripMiles`, đếm bằng số nguyên phần mười, không trôi
+  số thực); `mileageBreakdown(trips, rates, range?)` cộng dặm đã chốt theo từng dòng giá (kỳ giá × bậc: 55p / 25p, 72,5¢ / 76¢), mỗi dòng làm tròn xu
+  **1 lần** (đúng phép kế toán làm với số in ra; làm tròn 1 lần trên tổng có thể lệch 1p so với các dòng khi 2 dòng cùng dư nửa xu); khoảng (quý) chỉ
+  tính chuyến trong khoảng, chuyến trước đó chỉ đẩy bộ đếm 10.000 dặm. `mileageEstimateByDate` / `periodMileageEstimate` / `tierThresholdReached` /
+  `mileageEstimate` dùng chung. Tổng dặm (`mileageTotals`, `tripSummary`, `businessTripMiles`) = cộng giá trị đã chốt; màn hình km thì chốt từng
+  chuyến theo km. In 1 số lẻ ở Miles (tổng, tháng), Reports, PDF, CSV, mô tả MTD (0 → 1 số lẻ), FreeAgent; `formatDistanceNumber(…, 1)` làm tròn
+  như `toTenths`. `businessUse`: `share` giữ chính xác, `percent` 2 số lẻ, `percentText` in "12.25" ở app, PDF, MTD.
+  Test `src/features/reports/__tests__/mileageB154.test.ts`: 200 chuyến lẻ UK qua mốc 10.000 dặm (cả năm + 4 quý) và 160 chuyến US qua 1/7 —
+  cộng cột miles của CSV × giá = tiền dặm của app (Miles), Reports / MTD (`rangeMileageEstimate`) và dòng "Mileage allowance" MTD từng xu; % 2 số
+  lẻ khớp share và khớp số dặm in cạnh; km. Test cũ sửa theo cách in mới (841 → 841.2, 8,478 → 8,477.5, 87% → 87.00%).
+  Ghi chú: cộng 4 quý có thể lệch tổng năm vài xu (mỗi quý làm tròn riêng từng dòng) — mỗi file tự khớp với số dặm in trong chính nó.
