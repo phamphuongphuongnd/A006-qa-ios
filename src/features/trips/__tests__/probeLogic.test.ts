@@ -19,6 +19,13 @@ describe('B-88 drive check', () => {
     expect(probeSaysDriving(O, at(0.0054, 120), { ...car, onFoot: true })).toBe(false);
     expect(probeSaysDriving(O, at(0.0054, 480), { ...car, onFoot: true })).toBe(false);
   });
+  it('B-148: 10 km/h is the line — 600 m at 9 km/h is not a drive, at 11 km/h it is', () => {
+    expect(probeSaysDriving(O, at(0.0054, 240), car)).toBe(false); // ≈ 2.5 m/s = 9 km/h
+    expect(probeSaysDriving(O, at(0.0054, 196), car)).toBe(true); // ≈ 3.06 m/s = 11 km/h
+    // Still never while the sensor says walking / running, or once it said cycling.
+    expect(probeSaysDriving(O, at(0.0054, 196), { ...car, onFoot: true })).toBe(false);
+    expect(probeSaysDriving(O, at(0.0054, 196), { ...car, cycling: true })).toBe(false);
+  });
   it('not far enough, or poor fixes, is not', () => {
     expect(probeSaysDriving(O, at(0.002, 60), car)).toBe(false);
     expect(probeSaysDriving(O, at(0.0054, 60, 300), car)).toBe(false);

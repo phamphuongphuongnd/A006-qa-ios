@@ -749,3 +749,9 @@
   theo nền tảng) + thử iOS giả lập. Gộp vào phiên con iPad (B-146) sau khi ghép free-ui.
   Theo dõi (chưa kết luận): iOS 18 giả lập chuyến GPS "Finding GPS…" suốt, 0.0 mi (iOS 26 ra 2.x mi) → thử iPhone iOS 18 thật.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
+- [ ] **B-148** 🟡 (Phương chốt 20/11, giao phiên "A006 gỡ giới hạn pro") **Drive check ngưỡng 10 km/h** (thay 9 km/h của B-143): lo Drive check
+  bật nhầm khi chạy bộ / đạp xe nhanh; phạm vi giữ ô tô/van (product.md). Đối thủ: TripLog 8 km/h, Hurdlr & Property Miles 10 mph (~16 km/h),
+  Trip Mileage Tracker 20 km/h. Luật: ≥ 500 m từ điểm đầu lần kiểm VÀ trung bình ≥ 10 km/h; không bao giờ khi cảm biến hiện tại walking/running,
+  từng báo cycling trong lần kiểm, hay bước chân ≥ 40/phút. "Đứng yên" theo GPS — cảm biến báo still mà GPS thấy xe bò ≥ 500 m vẫn bật.
+  Sửa `probeLogic.ts` `PROBE_MIN_SPEED_MPS = 10 / 3.6` + test (600 m: 9 km/h không, 11 km/h có) + CONTEXT.md. Lọc điểm đi bộ sau khi đỗ (B-143 c,
+  `WALK_AFTER_DRIVE_MAX_MPS` 9 km/h) giữ nguyên. ⏳ Phương thử thật cùng B-143.

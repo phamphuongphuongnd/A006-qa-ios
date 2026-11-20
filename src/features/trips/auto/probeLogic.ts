@@ -19,8 +19,12 @@ export const PROBE_COOLDOWN_MS = 20 * 60_000;
 export const PROBE_START_WITHIN_MS = 3 * 60_000;
 /** Away from where the drive began… */
 export const PROBE_MIN_DISTANCE_M = 500;
-/** …at more than a brisk walk on average (9 km/h). */
-export const PROBE_MIN_SPEED_MPS = 2.5;
+/**
+ * …at 10 km/h or more on average (B-148, Phương 2026-11-20 — was 9 km/h in B-143): above a brisk walk or a jog, still
+ * low enough for a van crawling in traffic. Competitors: TripLog 8 km/h, Hurdlr / Property Miles 10 mph, Trip Mileage
+ * Tracker 20 km/h. Walking / running / cycling never count, whatever the speed.
+ */
+export const PROBE_MIN_SPEED_MPS = 10 / 3.6;
 /** Fixes worse than this are ignored (balanced power: wifi / cell). */
 export const PROBE_MAX_ACCURACY_M = 100;
 /** B-143 (d): a check still moving over its last 2 minutes goes on… */

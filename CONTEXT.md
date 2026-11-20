@@ -76,7 +76,7 @@ The vehicle's own Bluetooth device the driver picks; connecting to it starts an 
 _Avoid_: car kit, paired device
 
 **Drive check**:
-A few minutes of low-power GPS after the phone starts moving with no Trip running; getting far away faster than a walk,
+A few minutes of low-power GPS after the phone starts moving with no Trip running; getting far away at 10 km/h or more,
 while the motion sensor doesn't say walking, starts an automatic Trip from when it started moving (or from where the
 vehicle set off, after a walk to it). Catches drives in slow traffic that the motion sensor never calls driving; goes on
 for a while longer if it is still moving when its time is up. Walking or cycling never starts one; a bus or taxi can.
