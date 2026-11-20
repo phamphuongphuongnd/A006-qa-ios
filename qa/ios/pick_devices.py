@@ -36,7 +36,9 @@ def pick(prefs, pattern):
 
 se = pick(['iPhone SE (3rd generation)', 'iPhone SE (2nd generation)', 'iPhone 16e', 'iPhone 13 mini'], r'^iPhone (SE|\d+e|\d+ mini)')
 pm = pick(['iPhone 16 Pro Max', 'iPhone 17 Pro Max', 'iPhone 15 Pro Max'], r'^iPhone \d+ Pro Max$')
-ipad = pick(['iPad (A16)', 'iPad (10th generation)', 'iPad (11th generation)'], r'^iPad( Air)? ')
+# B-146: the app supports iPad now → test the biggest screen (iPad Pro 13", the App Store screenshot size).
+ipad = pick(['iPad Pro 13-inch (M5)', 'iPad Pro 13-inch (M4)', 'iPad Air 13-inch (M3)', 'iPad Air 13-inch (M2)',
+             'iPad Pro (12.9-inch) (6th generation)', 'iPad (A16)', 'iPad (10th generation)'], r'^iPad.*13')
 ident = dict(types)
 out = {
     'RUNTIME_ID': r['identifier'], 'RUNTIME_VER': r['version'],

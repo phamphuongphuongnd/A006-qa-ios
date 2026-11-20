@@ -1,0 +1,89 @@
+# Free launch: Auto-sort rules and Recurring entries work without Pro (they were locked before PRO_PAUSED).
+# Rule: note says "QAR<PID>" → Fuel. Recurring: monthly expense, Fuel, today. Then a capture with that note.
+appId: com.phiotron.sundaysort
+name: 22_rules_recurring
+---
+- runFlow:
+    file: common/settings_item.yaml
+    env:
+      ITEM: "Auto-sort rules"
+      SHOT: "22a_rules"
+- assertNotVisible: "See Pro"
+- assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial)\b.*'
+- scrollUntilVisible:
+    element:
+      text: "Add rule"
+    timeout: 10000
+- tapOn: "Add rule"
+- extendedWaitUntil:
+    visible: "New rule"
+    timeout: 10000
+- tapOn: 'e\.g\. Shell'
+- inputText: "QAR${PID}"
+- pressKey: Enter
+- tapOn: "Sort as, .*"
+- waitForAnimationToEnd:
+    timeout: 2000
+- scrollUntilVisible:
+    element:
+      text: "Fuel"
+    timeout: 10000
+- tapOn: "Fuel"
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: ${PID}_22b_rule_sheet
+- tapOn: "Save rule"
+- extendedWaitUntil:
+    visible: "Rule saved.*|.*QAR.*"
+    timeout: 8000
+- takeScreenshot: ${PID}_22c_rule_saved
+# Recurring entry.
+- runFlow:
+    file: common/settings_item.yaml
+    env:
+      ITEM: "Recurring entries"
+      SHOT: "22d_recurring"
+- assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial)\b.*'
+- scrollUntilVisible:
+    element:
+      text: "Add recurring entry"
+    timeout: 10000
+- tapOn: "Add recurring entry"
+- extendedWaitUntil:
+    visible: "New recurring entry|Repeats"
+    timeout: 10000
+- takeScreenshot: ${PID}_22e_recurring_sheet
+# Text fields first (Return closes the keyboard); the amount uses a decimal pad Maestro cannot close → last.
+- tapOn: 'e\.g\. Van lease'
+- inputText: "QA lease ${PID}"
+- pressKey: Enter
+- tapOn: "Category, .*"
+- waitForAnimationToEnd:
+    timeout: 2000
+- scrollUntilVisible:
+    element:
+      text: "Fuel"
+    timeout: 10000
+- tapOn: "Fuel"
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn: '0\.00'
+- inputText: "${AMOUNT}"
+- takeScreenshot: ${PID}_22f_recurring_filled
+- tapOn:
+    text: "Save"
+    index: 0
+- extendedWaitUntil:
+    visible: "Recurring entry saved|.*added to your log.*|.*QA lease.*"
+    timeout: 8000
+- takeScreenshot: ${PID}_22g_recurring_saved
+# A capture whose note matches the rule.
+- runFlow:
+    file: common/capture.yaml
+    env:
+      NOTE: "QAR${PID} pump 4"
+- tapOn: "Save"
+- extendedWaitUntil:
+    visible: "Saved · .*"
+    timeout: 10000
+- takeScreenshot: ${PID}_22h_rule_capture_saved

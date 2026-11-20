@@ -1,0 +1,61 @@
+# Free launch (PRO_PAUSED, dev 08b3930): no PRO badge / trial / upgrade text on the main screens, Settings rows for
+# rules and recurring entries unlocked, Automatic trips without "Start when charging" (B-145).
+appId: com.phiotron.sundaysort
+name: 20_free_texts
+---
+- runFlow: common/home.yaml
+- takeScreenshot: ${PID}_20a_home
+- assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial|Upgrade|Subscribe)\b.*'
+- scroll
+- assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial|Upgrade|Subscribe)\b.*'
+- scroll
+- takeScreenshot: ${PID}_20b_home_bottom
+- assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial|Upgrade|Subscribe)\b.*'
+- runFlow: common/home.yaml
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "Region.*"
+    timeout: 15000
+- takeScreenshot: ${PID}_20c_settings_1
+- assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial|Upgrade|Subscribe)\b.*'
+- scroll
+- takeScreenshot: ${PID}_20c_settings_2
+- assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial|Upgrade|Subscribe)\b.*'
+- scroll
+- takeScreenshot: ${PID}_20c_settings_3
+- assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial|Upgrade|Subscribe)\b.*'
+- scroll
+- takeScreenshot: ${PID}_20c_settings_4
+- assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial|Upgrade|Subscribe)\b.*'
+- scroll
+- takeScreenshot: ${PID}_20c_settings_5
+- assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial|Upgrade|Subscribe)\b.*'
+- scroll
+- takeScreenshot: ${PID}_20c_settings_6
+- assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial|Upgrade|Subscribe)\b.*'
+# Automatic trips (deep link as in 15): no "Start when charging" switch any more.
+- runFlow: common/home.yaml
+- openLink: sundaysort://trip/auto
+- extendedWaitUntil:
+    visible: "Open"
+    timeout: 20000
+    optional: true
+- tapOn:
+    text: "Open"
+    optional: true
+- extendedWaitUntil:
+    visible: "Automatic trips.*|.*recognise driving.*"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_20d_auto_trips_1
+- assertNotVisible: '(?s).*[Cc]harging.*'
+- assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial)\b.*'
+- scroll
+- takeScreenshot: ${PID}_20d_auto_trips_2
+- assertNotVisible: '(?s).*[Cc]harging.*'
+- assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial)\b.*'
+- scroll
+- takeScreenshot: ${PID}_20d_auto_trips_3
+- assertNotVisible: '(?s).*[Cc]harging.*'
+- assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial)\b.*'

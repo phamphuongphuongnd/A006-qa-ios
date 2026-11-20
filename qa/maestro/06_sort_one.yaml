@@ -3,9 +3,9 @@ appId: com.phiotron.sundaysort
 name: 06_sort_one
 ---
 - runFlow: common/home.yaml
-# Tap the Sort TAB (middle of the tab bar): "Sort.*" also matched an off-screen "Sort now" on Home (runs 44450726271, 44478021185).
+# Tap the Sort TAB (middle of the tab bar; SORT_TAB_Y from run-lane.sh: 94 % iPhone, 96 % iPad): "Sort.*" also matched an off-screen "Sort now" on Home (runs 44450726271, 44478021185).
 - tapOn:
-    point: "50%,94%"
+    point: "50%,${SORT_TAB_Y}"
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: ${PID}_06a_sort

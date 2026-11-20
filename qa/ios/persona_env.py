@@ -15,6 +15,16 @@ CONTENT_SIZE = {
     1.3: 'extra-extra-extra-large',  # 23 pt ≈ 1.35
     2: 'accessibility-large',  # 33 pt ≈ 1.94
 }
+# Persona id suffixes (`P052-xxl`, `P001-ipad`): `-ipad` only names the lane; a size suffix overrides the persona's
+# Dynamic Type so one persona can be re-run at a neighbouring size (B-147 regression: SE XXL vs XXXL).
+SIZE_SUFFIX = {
+    'l': 'large',
+    'xl': 'extra-large',
+    'xxl': 'extra-extra-large',
+    'xxxl': 'extra-extra-extra-large',
+    'axm': 'accessibility-medium',
+    'axl': 'accessibility-large',
+}
 REGION_LABEL = {'UK': 'United Kingdom', 'US': 'United States'}
 REGION_SWITCH = {'region_switch', 'recurring_rules'}
 
@@ -26,6 +36,7 @@ def main():
     p = next(x for x in personas if x['id'] == pid.split('-')[0])
     fixture_file = os.path.join(fixtures, f"{p['id']}.sundaysort")
     has_fixture = p['entries'] > 0 and os.path.isfile(fixture_file)
+    size = next((SIZE_SUFFIX[x] for x in pid.lower().split('-')[1:] if x in SIZE_SUFFIX), None)
     other = 'US' if p['region'] == 'UK' else 'UK'
     env = {
         'PID': pid,
@@ -35,7 +46,7 @@ def main():
         'P_NETWORK': p['network'],
         'P_FONT_SCALE': str(p['fontScale']),
         'P_TZ': p['timeZone'],
-        'CONTENT_SIZE': CONTENT_SIZE.get(p['fontScale'], 'large'),
+        'CONTENT_SIZE': size or CONTENT_SIZE.get(p['fontScale'], 'large'),
         'APPEARANCE': 'dark' if p['dark'] else 'light',
         'REGION': p['region'],
         'REGION_LABEL': REGION_LABEL[p['region']],

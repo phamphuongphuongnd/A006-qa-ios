@@ -24,4 +24,9 @@ executionOrder:
     - 17_gps_trip
     - 18_recently_deleted
     - 19_notifications
+    - 20_free_texts
+    - 21_export_groups
+    - 22_rules_recurring
+    - 23_sort_edit_split
+    - 24_trip_map
     - 99_final_state

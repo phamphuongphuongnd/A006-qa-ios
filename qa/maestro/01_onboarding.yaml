@@ -31,6 +31,28 @@ name: 01_onboarding
     visible: 'How do you claim your vehicle\?'
     timeout: 15000
 - takeScreenshot: ${PID}_01c_vehicle
+# iPad lane (B-146): the "What's the difference?" Sheet must sit centred, at most 640 pt wide.
+- runFlow:
+    when:
+      true: ${LANE == 'ipad'}
+    commands:
+      - tapOn:
+          text: 'What.s the difference\?'
+          optional: true
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - takeScreenshot: ${PID}_01c2_difference_sheet
+      - tapOn:
+          text: "Close|Got it|Done|OK"
+          optional: true
+      - runFlow:
+          when:
+            notVisible: 'How do you claim your vehicle\?'
+          commands:
+            - swipe:
+                direction: DOWN
+      - waitForAnimationToEnd:
+          timeout: 2000
 - scrollUntilVisible:
     element:
       text: "Continue"
@@ -45,12 +67,17 @@ name: 01_onboarding
       text: "Looks good"
     timeout: 10000
 - tapOn: "Looks good"
+# Free launch (PRO_PAUSED, dev 08b3930): "Looks good" goes straight to the reminder page; the Free / Pro page only
+# exists while Pro is on. Never See Pro / trial / Subscribe.
 - extendedWaitUntil:
-    visible: "Continue free"
+    visible: 'Continue free|When do you want to sort your week\?'
     timeout: 15000
-- takeScreenshot: ${PID}_01e_free_pro
-# Never See Pro / trial / Subscribe.
-- tapOn: "Continue free"
+- runFlow:
+    when:
+      visible: "Continue free"
+    commands:
+      - takeScreenshot: ${PID}_01e_free_pro
+      - tapOn: "Continue free"
 - extendedWaitUntil:
     visible: 'When do you want to sort your week\?'
     timeout: 15000

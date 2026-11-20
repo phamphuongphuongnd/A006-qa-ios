@@ -36,6 +36,8 @@ fi
 FIXTURES="${FIXTURES_DIR:-$REPO/qa/fixtures}"
 BUNDLE=com.phiotron.sundaysort
 PER_PERSONA_TIMEOUT=${PER_PERSONA_TIMEOUT:-1200}
+# Sort tab centre (custom tab bar, 6 + 56 pt + bottom inset): iPhone SE ≈ 93 %, iPad Pro 13" (1376 pt, inset 20) ≈ 96.5 %.
+if [ "$LANE" = ipad ]; then SORT_TAB_Y=96%; else SORT_TAB_Y=94%; fi
 mkdir -p "$OUT_ROOT/personas"
 
 log() { echo "[$LANE $(date +%H:%M:%S)] $*"; }
@@ -114,7 +116,7 @@ for PIDX in ${PERSONAS//,/ }; do
           --format junit --output "$OUT/junit.xml" --debug-output "$OUT/debug" --test-output-dir "$OUT/maestro-out" \
           -e "PID=$PID" -e "REGION=$REGION" -e "REGION_LABEL=$REGION_LABEL" -e "OTHER_REGION_LABEL=$OTHER_REGION_LABEL" \
           -e "AMOUNT=$AMOUNT" -e "NOTE=$NOTE" -e "FIXTURE=$FIXTURE" -e "DO_REGION_SWITCH=$DO_REGION_SWITCH" \
-          -e "DO_KILL=$DO_KILL" -e "DO_WIPE=$DO_WIPE"
+          -e "DO_KILL=$DO_KILL" -e "DO_WIPE=$DO_WIPE" -e "LANE=$LANE" -e "SORT_TAB_Y=$SORT_TAB_Y"
       ) >> "$OUT/maestro.txt" 2>&1
     }
     : > "$OUT/maestro.txt"

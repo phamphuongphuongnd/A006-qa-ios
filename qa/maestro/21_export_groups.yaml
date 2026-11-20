@@ -1,0 +1,100 @@
+# Free launch: Export shows two groups — "Raw data" and "For your accountant & MTD" (UK) / "For your accountant" (US),
+# no PRO lock. PDF + MTD summary / records / xlsx (UK) or tax-line totals (US) are ticked and exported (all used to
+# be Pro only). FreeAgent is left out: it asks for a FreeAgent user name first.
+appId: com.phiotron.sundaysort
+name: 21_export_groups
+---
+- runFlow: common/home.yaml
+- tapOn: "Reports"
+- waitForAnimationToEnd:
+    timeout: 3000
+- scrollUntilVisible:
+    element:
+      text: "Export"
+    timeout: 15000
+- tapOn: "Export"
+- extendedWaitUntil:
+    visible: '(?i)raw data'
+    timeout: 15000
+- takeScreenshot: ${PID}_21a_export_groups
+- assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial)\b.*'
+- scrollUntilVisible:
+    element:
+      text: '(?i)for your accountant.*'
+    timeout: 15000
+- takeScreenshot: ${PID}_21b_accountant_group
+# Defaults with Pro on/paused: entries CSV + PDF (+ MTD summary in the UK). Tick the rest of the accountant files.
+- runFlow:
+    when:
+      true: ${REGION == 'UK'}
+    commands:
+      - scrollUntilVisible:
+          element:
+            text: 'MTD records \(CSV\).*'
+          timeout: 10000
+      - tapOn: 'MTD records \(CSV\).*'
+      - scrollUntilVisible:
+          element:
+            text: 'MTD spreadsheet \(\.xlsx\).*'
+          timeout: 10000
+      - tapOn: 'MTD spreadsheet \(\.xlsx\).*'
+- runFlow:
+    when:
+      true: ${REGION == 'US'}
+    commands:
+      - scrollUntilVisible:
+          element:
+            text: 'CSV – totals by tax form line.*'
+          timeout: 10000
+      - tapOn: 'CSV – totals by tax form line.*'
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: ${PID}_21c_ticked
+- scrollUntilVisible:
+    element:
+      text: '.*Export \d+ files?.*'
+    timeout: 40000
+    visibilityPercentage: 50
+- swipe:
+    start: "50%,60%"
+    end: "50%,35%"
+    duration: 600
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: ${PID}_21d_export_button
+- tapOn: '.*Export \d+ files?.*'
+- waitForAnimationToEnd:
+    timeout: 3000
+- runFlow:
+    when:
+      visible: "Export anyway"
+    commands:
+      - takeScreenshot: ${PID}_21e_unsorted_ask
+      - tapOn: "Export anyway"
+- runFlow:
+    when:
+      visible: "Leave them out"
+    commands:
+      - takeScreenshot: ${PID}_21e_mtd_ask
+      - tapOn: "Leave them out"
+- extendedWaitUntil:
+    visible: "Copy|Save to Files|AirDrop|Messages|Mail|View More|More"
+    timeout: 60000
+- takeScreenshot: ${PID}_21f_share_sheet
+- tapOn:
+    text: "Close"
+    optional: true
+- runFlow:
+    when:
+      visible: "Save to Files"
+    commands:
+      - swipe:
+          direction: DOWN
+- waitForAnimationToEnd:
+    timeout: 3000
+- runFlow:
+    when:
+      visible: 'Did you send or save the files\?'
+    commands:
+      - takeScreenshot: ${PID}_21g_sent_ask
+      - tapOn: "Not sent"

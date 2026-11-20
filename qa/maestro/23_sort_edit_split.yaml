@@ -1,0 +1,88 @@
+# B-147 (QI-8): on the Sort card at big text the category chips must be reachable, and Edit / Split must keep the
+# field being typed and the "Done" / "Split & sort" button reachable with the number pad up. Run on iPhone SE XXXL
+# (scrolling layout on iOS), SE XXL / Pro Max XXXL (normal layout), SE AX-L (scrolling) and iPad.
+appId: com.phiotron.sundaysort
+name: 23_sort_edit_split
+---
+# A fresh unsorted entry (06/07 already sorted and split the first one).
+- runFlow:
+    file: common/capture.yaml
+    env:
+      NOTE: "QA-${PID} B147"
+- tapOn: "Save"
+- extendedWaitUntil:
+    visible: "Saved · .*"
+    timeout: 10000
+- runFlow: common/home.yaml
+- tapOn:
+    point: "50%,${SORT_TAB_Y}"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_23a_sort
+- assertNotVisible: "Nothing to sort"
+- scrollUntilVisible:
+    element:
+      text: "More…"
+    timeout: 15000
+- takeScreenshot: ${PID}_23b_chips
+- assertVisible: "More…"
+# Edit on the card: amount field with the number pad up.
+- scrollUntilVisible:
+    element:
+      text: "Edit"
+    timeout: 10000
+- tapOn: "Edit"
+- extendedWaitUntil:
+    visible: "Done"
+    timeout: 5000
+- tapOn:
+    text: "Amount"
+    index: 1
+- inputText: "1"
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: ${PID}_23c_edit_typing
+- scrollUntilVisible:
+    element:
+      text: "Done"
+    direction: UP
+    timeout: 8000
+- takeScreenshot: ${PID}_23d_edit_done_visible
+- tapOn: "Done"
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: ${PID}_23e_after_edit
+# Split on the card: two parts, 2 + rest, then "Split & sort".
+- scrollUntilVisible:
+    element:
+      text: "Split"
+    timeout: 10000
+- tapOn: "Split"
+- extendedWaitUntil:
+    visible: "Split into parts"
+    timeout: 5000
+- takeScreenshot: ${PID}_23f_split_open
+- tapOn: "Part 1 Amount"
+- eraseText: 12
+- inputText: "2"
+- scrollUntilVisible:
+    element:
+      text: "Part 2 Amount"
+    timeout: 8000
+- tapOn: "Part 2 Amount"
+- eraseText: 12
+- inputText: "${AMOUNT - 2}"
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: ${PID}_23g_split_typing
+- scrollUntilVisible:
+    element:
+      text: "Split & sort"
+    timeout: 10000
+- takeScreenshot: ${PID}_23h_split_button
+- tapOn: "Split & sort"
+# Parts without a category go back to the queue as two unsorted entries (2.00 + rest): the split panel closes.
+- extendedWaitUntil:
+    notVisible: "Split & sort"
+    timeout: 8000
+- takeScreenshot: ${PID}_23i_after_split

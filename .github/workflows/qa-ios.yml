@@ -13,11 +13,14 @@ on:
   workflow_dispatch:
     inputs:
       personas:
-        description: 'Comma list of persona ids (empty = every persona with an ios device)'
+        description: 'Comma list of persona ids (empty = every persona with an ios device); a size suffix re-runs one at another Dynamic Type (P052-xxl, P091-axl)'
         default: ''
       ipad_personas:
-        description: 'Extra runs on iPad (app is iPhone-only → compatibility mode); empty = none'
-        default: 'P002-ipad,P041-ipad'
+        description: 'Extra runs on iPad Pro 13" (B-146: iPad supported); empty or none = none'
+        default: 'P001-ipad,P002-ipad'
+      ipad_flows:
+        description: 'Numbered steps for the iPad lane only (same format as flows); empty = same as flows'
+        default: ''
       test_budget_min:
         description: 'Stop starting new personas after this many minutes of testing'
         default: '50'
@@ -233,18 +236,24 @@ jobs:
           PER_PERSONA_TIMEOUT: '1500'
           PARALLEL: ${{ inputs.parallel || 'false' }}
           FLOWS: ${{ inputs.flows }}
+          IPAD_FLOWS: ${{ inputs.ipad_flows }}
         run: |
           chmod +x qa/ios/run-lane.sh
           OUT="$PWD/out"
           mkdir -p "$OUT"
           APP=$(ls -d "$PWD"/build/app/*.app | head -1)
           # Personas with special behaviour first, so a time-budget cut drops the plain ones.
+          # A listed id may carry a size suffix (P052-xxl): it runs on its base persona's device, in the given order.
           PICK='import json,os,sys
           w=[x.strip() for x in os.environ["PERSONAS_IN"].split(",") if x.strip()]
           pri=["backup_restore_other_phone","large_history","region_switch","kill_mid_save","wipe_all","weird_text","double_tap_save","year_end_export","split_merge_heavy","weekly_sorter"]
-          ps=[p for p in json.load(open("qa/personas.json")) if p["ios"]==sys.argv[1] and (not w or p["id"] in w)]
-          ps.sort(key=lambda p:(w.index(p["id"]),) if w else (pri.index(p["behaviour"]) if p["behaviour"] in pri else 99, p["id"]))
-          print(",".join(p["id"] for p in ps))'
+          dev={p["id"]:p["ios"] for p in json.load(open("qa/personas.json"))}
+          if w:
+              print(",".join(x for x in w if dev.get(x.split("-")[0])==sys.argv[1]))
+          else:
+              ps=[p for p in json.load(open("qa/personas.json")) if p["ios"]==sys.argv[1]]
+              ps.sort(key=lambda p:(pri.index(p["behaviour"]) if p["behaviour"] in pri else 99, p["id"]))
+              print(",".join(p["id"] for p in ps))'
           SE_LIST=$(python3 -c "$PICK" iphone_se)
           PM_LIST=$(python3 -c "$PICK" iphone_pro_max)
           echo "$SE_LIST,$PM_LIST,$IPAD_IN" | tr ',' '\n' | sed '/^$/d;/^none$/d' > "$OUT/planned.txt"
@@ -278,7 +287,7 @@ jobs:
             xcrun simctl launch "$IPAD_UDID" com.apple.DocumentsApp >/dev/null 2>&1 || true
             sleep 8
             xcrun simctl terminate "$IPAD_UDID" com.apple.DocumentsApp >/dev/null 2>&1 || true
-            qa/ios/run-lane.sh ipad "$IPAD_UDID" "$IPAD_NAME" "$RUNTIME" "$APP" "$OUT" "$DEADLINE" "$IPAD_IN" > "$OUT/lane-ipad.log" 2>&1 || true
+            FLOWS="${IPAD_FLOWS:-$FLOWS}" qa/ios/run-lane.sh ipad "$IPAD_UDID" "$IPAD_NAME" "$RUNTIME" "$APP" "$OUT" "$DEADLINE" "$IPAD_IN" > "$OUT/lane-ipad.log" 2>&1 || true
             cat "$OUT/lane-ipad.log"
           fi
 
