@@ -112,18 +112,28 @@ Ghi chú nhỏ (không phải bug): ở màn Split (page sheet), thanh dưới "
 - **Workflow:** làn iPad có hạn 2700 s/persona (`IPAD_PERSONA_TIMEOUT`).
 - **`collect_result.py`:** đã biết các bước 20–24.
 
-Khi điều phối báo `ios-fixes` đã vào dev: ghép dev vào `ios-ipad-run`, rồi push lên `qa-public` (A006-qa-ios) và chạy:
+Khi điều phối báo `ios-fixes` và `b154-mileage-money` đã vào dev:
+1. Ghép dev vào `ios-ipad-run`.
+2. Hỏi Phương bằng popup. Repo A006-qa-ios nay là **Private**, macOS tính ×10 phút, chỉ còn khoảng 30 phút/tháng, nên phải hỏi có tạm Public không.
+3. Push lên `qa-public` rồi chạy.
+
+Gộp luôn phần dở của phiên QA-100 iOS, gồm bản sửa kịch bản ở `053535f` (đã có sẵn trong nhánh này):
+- 02: bấm Restore cuối;
+- 09: Export ở chữ AX-L;
+- 19: Notifications;
+- P026: lần trước bấm "Get started" một lần mà không sang màn tiếp.
 
 ```
-gh workflow run qa-ios.yml -R phamphuongphuongnd/A006-qa-ios --ref ios-ipad-run \
-  -f personas="P052,P091,P052-xxl,P077" -f ipad_personas="P001-ipad,P002-ipad" \
-  -f flows="04,05,06,07,20,21,22,23" -f ipad_flows="04,05,06,07,09,20,21,22,23,24" -f test_budget_min=150
+gh workflow run qa-ios.yml -R phamphuongphuongnd/A006-qa-ios --ref ios-ipad-run   -f personas="P052,P091,P052-xxl,P077,P026" -f ipad_personas="P001-ipad,P002-ipad"   -f flows="02,04,05,06,07,09,19,20,21,22,23" -f ipad_flows="04,05,06,07,09,20,21,22,23,24" -f test_budget_min=170
 ```
 
-Ước tính khoảng 2 giờ 15 phút: build ~15′, iPhone 4 × ~12′, iPad 2 × ~30′. Lần chạy này phủ:
+Ước tính khoảng 2 giờ 40 phút: build ~15′, iPhone 5 × ~16′, iPad 2 × ~30′. Lần chạy này phủ:
 - B-150: ảnh 05b trên iPad và iPhone;
 - B-151: bước 23 trên SE XXXL và AX-L;
-- B-152: bước 06 và 23 trên SE XXL;
+- B-152: bước 06/23 trên SE XXL;
 - iPad: trip map (24), Sort Edit/Split (23), persona dark + chữ to (P002-ipad);
 - P077: export 5 file (21);
-- P091: các bước 21 và 22.
+- P091: bước 09 AX-L và các bước 21, 22;
+- 02 Restore: P052 (fixture 131 khoản);
+- 19 Notifications: cả 5 iPhone;
+- P026: onboarding 01 trên Pro Max.
