@@ -12,7 +12,7 @@ import { t } from '@/i18n';
 import { router } from '@/services/router';
 import { useLive } from '@/state/useLive';
 import { fonts, useTheme } from '@/theme';
-import { Badge, Button, Card, Txt } from '@/ui';
+import { Badge, Button, Card, Txt, useContentWidth } from '@/ui';
 
 /**
  * S-06 trip card (P1-2): an automatic trip the app couldn't classify. One tap "Work" / "Personal" = done;
@@ -33,6 +33,8 @@ export function SortTripCard({
 }) {
   const { colors, dark } = useTheme();
   const [x] = useState(() => new Animated.Value(0));
+  // Far enough to leave the column on any width (B-146: the iPad column is 640pt).
+  const away = Math.max(480, useContentWidth());
   const busy = useRef(false);
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const points = useLive(() => tripPointsOf(db, trip.id), [trip.id], ['trip_points']);
@@ -44,9 +46,9 @@ export function SortTripCard({
     busy.current = true;
     Animated.timing(x, { toValue: to, duration: 200, useNativeDriver: true }).start(after);
   };
-  const sort = (scope: Scope) => go(-480, () => onSort(scope));
+  const sort = (scope: Scope) => go(-away, () => onSort(scope));
   const skip = () =>
-    go(480, () => {
+    go(away, () => {
       busy.current = false;
       x.setValue(0);
       onSkip();

@@ -15,7 +15,7 @@ import { useLive } from '@/state/useLive';
 import { fonts, radius, useTheme } from '@/theme';
 import { moneyLimitHit, sanitizeAmount } from '@/features/ocr/calc';
 import { MaxAmountNote } from '@/features/ocr/ui';
-import { Button, Card, Chip, Divider, NUMERIC_INPUT, Segmented, Tag, Txt, useKeyboardUp } from '@/ui';
+import { Button, Card, Chip, Divider, NUMERIC_INPUT, Segmented, Tag, Txt, useContentWidth, useKeyboardUp } from '@/ui';
 
 import { CategorySheet } from './CategorySheet';
 import { useDateTimePicker } from './DateTimePick';
@@ -64,6 +64,8 @@ export function SortEntryCard({
   const [more, setMore] = useState(false);
   const [viewer, setViewer] = useState(false);
   const [x] = useState(() => new Animated.Value(0));
+  // Far enough to leave the column on any width (B-146: the iPad column is 640pt).
+  const away = Math.max(480, useContentWidth());
   const busy = useRef(false);
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const keyboardUp = useKeyboardUp();
@@ -95,12 +97,12 @@ export function SortEntryCard({
   const pick = (categoryId: string, name: string) => {
     if (busy.current) return;
     busy.current = true;
-    Animated.timing(x, { toValue: -480, duration: 200, useNativeDriver: true }).start(() => onSort(categoryId, name, scope));
+    Animated.timing(x, { toValue: -away, duration: 200, useNativeDriver: true }).start(() => onSort(categoryId, name, scope));
   };
   const skip = () => {
     if (busy.current) return;
     busy.current = true;
-    Animated.timing(x, { toValue: 480, duration: 200, useNativeDriver: true }).start(() => {
+    Animated.timing(x, { toValue: away, duration: 200, useNativeDriver: true }).start(() => {
       busy.current = false;
       x.setValue(0);
       onSkip();
@@ -482,7 +484,8 @@ function CardAction({ label, icon: Icon, onPress }: { label: string; icon: Lucid
   const { colors } = useTheme();
   // QA-100 (phiên B, 360dp + text 2.0): side by side the labels were cut to "E… Sp.. Mer… Sk.." — at large text the
   // icon goes above a smaller label so all four fit.
-  const stack = useWindowDimensions().fontScale >= 1.3;
+  // Android reports text size 1.3 as 1.2999… — compare with a little slack, or "Large" kept the cut labels.
+  const stack = useWindowDimensions().fontScale >= 1.29;
   return (
     <Pressable
       accessibilityRole="button"

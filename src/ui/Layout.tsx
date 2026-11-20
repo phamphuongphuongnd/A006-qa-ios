@@ -4,10 +4,32 @@ import { useCallback, useRef, type ComponentRef, type ReactNode, type Ref } from
 import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { GUTTER, radius, touch, useTheme } from '@/theme';
+import { CONTENT_MAX, GUTTER, radius, touch, useTheme } from '@/theme';
 
 import { useReportFabTop } from './Overlays';
 import { Txt } from './Txt';
+
+/**
+ * Width the content column actually gets: the window, but never more than {@link CONTENT_MAX}. Use this instead of the
+ * window width when sizing something to fit across a screen (B-146: on an iPad the window is 1032pt, the column 640).
+ */
+export function useContentWidth(): number {
+  return Math.min(useWindowDimensions().width, CONTENT_MAX);
+}
+
+/**
+ * Every screen sits in this (root Stack `screenLayout`): full-width background, content in a centred column no wider than
+ * {@link CONTENT_MAX}. Per screen rather than around the navigator, so iOS modals (an iPad page sheet, the full-screen
+ * capture) get the same column, and a pushed screen still slides across the whole window (B-146; tablets: MOD-4 / B-85).
+ */
+export function ContentColumn({ children, background }: { children: ReactNode; background?: string }) {
+  const { colors } = useTheme();
+  return (
+    <View style={{ flex: 1, backgroundColor: background ?? colors.background }}>
+      <View style={{ flex: 1, width: '100%', maxWidth: CONTENT_MAX, alignSelf: 'center' }}>{children}</View>
+    </View>
+  );
+}
 
 /**
  * Screen shell matching the mockup `.top` + `.scr`: big h1 title (or custom header), scrolling body, optional

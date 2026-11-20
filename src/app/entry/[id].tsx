@@ -2,7 +2,7 @@ import { useFocusEffect, useLocalSearchParams, useNavigation, usePreventRemove }
 import { router } from '@/services/router';
 import { CalendarClock, ChevronDown, Copy, ImagePlus, MoreHorizontal, Repeat, Split, Trash2, X } from '@/ui/icons';
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { listCategories } from '@/db/categoriesRepo';
@@ -91,6 +91,19 @@ function Editor({ entry }: { entry: EntryRowT }) {
   const [draft, setDraft] = useState<Draft>(() => draftOf(entry));
   const [editingAmount, setEditingAmount] = useState(false);
   const [menu, setMenu] = useState(false);
+  // B-146: the ⋯ menu opens under the ⋯ button wherever it is — on an iPad (page sheet) or a tablet (centred column)
+  // the button is far from the window's top-right corner the menu used to be pinned to.
+  const moreRef = useRef<ComponentRef<typeof View>>(null);
+  const [menuAt, setMenuAt] = useState<{ top: number; right: number } | null>(null);
+  const { width: windowWidth } = useWindowDimensions();
+  const openMenu = () => {
+    const button = moreRef.current;
+    if (!button) return setMenu(true);
+    button.measureInWindow((x, y, w, h) => {
+      setMenuAt(w > 0 ? { top: y + h + 4, right: Math.max(8, windowWidth - x - w) } : null);
+      setMenu(true);
+    });
+  };
   const [photoAsk, setPhotoAsk] = useState(false);
   const [sheet, setSheet] = useState<'category' | 'siblings' | null>(null);
   const [dialog, setDialog] = useState<'delete' | 'discard' | null>(null);
@@ -230,7 +243,9 @@ function Editor({ entry }: { entry: EntryRowT }) {
         <Txt v="h3" accessibilityRole="header">
           {draft.type === 'income' ? t('common.income') : t('common.expense')}
         </Txt>
-        <IconButton icon={MoreHorizontal} label={t('entries.detailMore')} filled onPress={() => setMenu(true)} />
+        <View ref={moreRef} collapsable={false}>
+          <IconButton icon={MoreHorizontal} label={t('entries.detailMore')} filled onPress={openMenu} />
+        </View>
       </View>
 
       <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 20 }}>
@@ -397,7 +412,17 @@ function Editor({ entry }: { entry: EntryRowT }) {
       {/* ⋯ menu */}
       <Modal visible={menu} transparent animationType="fade" onRequestClose={() => setMenu(false)} statusBarTranslucent>
         <Pressable style={StyleSheet.absoluteFill} onPress={() => setMenu(false)} accessibilityLabel={t('common.close')} />
-        <View style={[styles.menu, { top: (Platform.OS === 'ios' ? 8 : insets.top) + 68, right: 16, backgroundColor: colors.surface, borderColor: colors.line }]}>
+        <View
+          style={[
+            styles.menu,
+            {
+              // Android keeps its measured-on-device offset (the window's y origin differs by version, QA-100 OLD-12).
+              top: Platform.OS === 'ios' && menuAt ? menuAt.top : (Platform.OS === 'ios' ? 8 : insets.top) + 68,
+              right: menuAt?.right ?? 16,
+              backgroundColor: colors.surface,
+              borderColor: colors.line,
+            },
+          ]}>
           <MenuItem
             icon={Split}
             label={t('entries.split')}

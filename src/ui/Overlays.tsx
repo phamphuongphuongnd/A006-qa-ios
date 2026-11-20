@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { AccessibilityInfo, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { fonts, radius, useTheme } from '@/theme';
+import { CONTENT_MAX, fonts, radius, useTheme } from '@/theme';
 
 import { Button, type ButtonVariant } from './Button';
 import { Txt } from './Txt';
@@ -219,6 +219,9 @@ export function Dialog({
 
 const styles = StyleSheet.create({
   snack: {
+    width: '100%',
+    maxWidth: CONTENT_MAX - 24,
+    alignSelf: 'center',
     minHeight: 56,
     borderRadius: 14,
     flexDirection: 'row',
@@ -234,9 +237,10 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   snackBtn: { minHeight: 44, paddingHorizontal: 14, justifyContent: 'center' },
-  sheet: { borderTopLeftRadius: radius.sheet, borderTopRightRadius: radius.sheet, paddingTop: 10, paddingHorizontal: 20, gap: 16, maxHeight: '92%' },
+  // B-146: on an iPad / tablet the sheet is as wide as the content column, centred — not the whole window.
+  sheet: { borderTopLeftRadius: radius.sheet, borderTopRightRadius: radius.sheet, paddingTop: 10, paddingHorizontal: 20, gap: 16, maxHeight: '92%', width: '100%', maxWidth: CONTENT_MAX, alignSelf: 'center' },
   grab: { width: 40, height: 5, borderRadius: 3, alignSelf: 'center' },
   dlgWrap: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
-  dlg: { borderRadius: radius.dialog, padding: 24, gap: 10 },
+  dlg: { borderRadius: radius.dialog, padding: 24, gap: 10, width: '100%', maxWidth: 480, alignSelf: 'center' },
   acts: { flexDirection: 'row', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 8, marginTop: 10 },
 });
