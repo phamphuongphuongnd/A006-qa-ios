@@ -7,7 +7,7 @@ export type Activity = 'driving' | 'walking' | 'cycling' | 'running' | 'still' |
 export type EngineSignal =
   | { kind: 'activity' | 'sample'; activity: Activity; transition?: 'enter' | 'exit'; confidence?: number; at: number; eventAt?: number }
   | { kind: 'bt_connected' | 'bt_disconnected'; address: string | null; at: number }
-  | { kind: 'power_connected' | 'power_disconnected' | 'wake' | 'boot'; at: number; reason?: string };
+  | { kind: 'wake' | 'boot'; at: number; reason?: string };
 
 /** Persisted between runs (features/trips/auto/store.ts). */
 export interface EngineState {
@@ -48,7 +48,6 @@ export interface EngineConfig {
   /** settings.autoTrips && Pro. Running automatic trips still end on their own when this turns off. */
   enabled: boolean;
   vanAddress: string | null;
-  startOnCharge: boolean;
   mergeStopMinutes: number;
 }
 
@@ -67,7 +66,7 @@ export interface EngineTrip {
 }
 
 export type EngineAction =
-  | { type: 'start'; at: number; reason: 'motion' | 'bluetooth' | 'charging' }
+  | { type: 'start'; at: number; reason: 'motion' | 'bluetooth' }
   | { type: 'end'; tripId: string; at: number; startedBy: EngineTrip['startedBy'] }
   | { type: 'notifyStill'; tripId: string; since: number }
   | { type: 'notifySilent'; tripId: string; since: number }
@@ -95,7 +94,7 @@ const isVehicle = (a: Activity) => a === 'driving' || a === 'cycling';
 
 /**
  * One decision step. `signals` may include ones already seen (they are skipped by `seenUntil`).
- * `charging` = phone charging right now. Returns the new state and what to do.
+ * Returns the new state and what to do.
  */
 export function step(
   state0: EngineState,
@@ -103,12 +102,11 @@ export function step(
   cfg: EngineConfig,
   trip: EngineTrip | null,
   now: number,
-  charging: boolean,
 ): { state: EngineState; actions: EngineAction[] } {
   const state: EngineState = { ...state0 };
   const actions: EngineAction[] = [];
   let startAt: number | null = null;
-  let startReason: 'motion' | 'bluetooth' | 'charging' = 'motion';
+  let startReason: 'motion' | 'bluetooth' = 'motion';
   const fresh = signals.filter((s) => s.at > state0.seenUntil).sort((a, b) => a.at - b.at);
 
   for (const s of fresh) {
@@ -120,11 +118,6 @@ export function step(
         (s.kind === 'sample' && (s.activity !== 'driving' || (s.confidence ?? 0) >= SAMPLE_DRIVING_CONFIDENCE));
       if (s.kind === 'activity' && s.transition === 'exit' && (s.activity === 'still' || s.activity === 'walking')) {
         state.movedAt = Math.max(state.movedAt, at);
-        if (cfg.startOnCharge && charging && s.activity === 'still' && !trip && startAt === null) {
-          // "Start when charging" + moving (Android: the charger is the van's).
-          startAt = at;
-          startReason = 'charging';
-        }
       }
       if (s.kind === 'activity' && s.transition === 'exit' && isVehicle(s.activity)) {
         state.vehicleExitAt = Math.max(state.vehicleExitAt ?? 0, at);
@@ -161,7 +154,7 @@ export function step(
         }
       }
     }
-    // bt_disconnected never ends a trip (P1-1); power / wake / boot only trigger a re-check.
+    // bt_disconnected never ends a trip (P1-1); wake / boot only trigger a re-check.
   }
 
   if (!trip) {

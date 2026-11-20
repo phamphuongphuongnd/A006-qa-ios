@@ -31,15 +31,7 @@ export function readSignals(sinceMs: number): TripSignal[] {
   return motionToSignals(readRawSignals(sinceMs - MOTION_LOOKBACK_MS), sinceMs);
 }
 
-export const isCharging = (): boolean => {
-  try {
-    return TripDetect?.isCharging() ?? false;
-  } catch {
-    return false;
-  }
-};
-
-export function configureNative(cfg: { enabled?: boolean; tripActive?: boolean; startOnCharge?: boolean; vanAddress?: string | null; probeAfter?: number }) {
+export function configureNative(cfg: { enabled?: boolean; tripActive?: boolean; vanAddress?: string | null; probeAfter?: number }) {
   try {
     TripDetect?.configure?.(cfg);
   } catch {

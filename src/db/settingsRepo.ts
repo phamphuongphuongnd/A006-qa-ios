@@ -34,8 +34,7 @@ export interface AppSettings {
   autoTrips: boolean;
   /** Android: van Bluetooth device that starts a trip at once (S-07d "Start faster"). */
   vanBtDevice: { address: string; name: string | null } | null;
-  /** Android: start when charging + moving. */
-  startOnCharge: boolean;
+  // B-145 (Phương 20/11): "Start when charging" is gone — a value still stored is ignored (not in DEFAULT_SETTINGS).
   /**
    * Q10: folder picked once for nightly backups. Android: SAF tree URI (permission persisted). iOS: `bookmark` from
    * modules/backup-folder (the URI alone dies with the process). `label`: "Google Drive / Sunday Sort".
@@ -97,7 +96,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   workHours: { on: false, days: [1, 2, 3, 4, 5], startMin: 7 * 60, endMin: 19 * 60 },
   autoTrips: false,
   vanBtDevice: null,
-  startOnCharge: false,
   backupFolder: null,
   backupNightly: false,
   backupFailCount: 0,

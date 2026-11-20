@@ -15,7 +15,7 @@ import { endActiveTrip, startGpsTrip, syncGpsMode } from '../controller';
 import { formatDistance } from '../format';
 import { classifyTrip } from './classify';
 import { INITIAL_ENGINE_STATE, MIN_AUTO_TRIP_M, step, type EngineSignal, type EngineState } from './engine';
-import { configureNative, hasActivityPermission, isCharging, isSamsung, logDiagnostic, nativeHealth, readSignals, scheduleWake, setTransitions } from './native';
+import { configureNative, hasActivityPermission, isSamsung, logDiagnostic, nativeHealth, readSignals, scheduleWake, setTransitions } from './native';
 import { syncIosBackstops } from './backstop';
 import {
   isPresented,
@@ -103,9 +103,8 @@ async function runOnce(now: number) {
   const { state, actions } = step({ ...state0, seenUntil: since }, signals, {
     enabled,
     vanAddress: s.vanBtDevice?.address ?? null,
-    startOnCharge: s.startOnCharge,
     mergeStopMinutes: s.mergeStopMinutes,
-  }, engineTrip, now, isCharging());
+  }, engineTrip, now);
   setKV(db, KEY_ENGINE, state);
 
   for (const a of actions) {
@@ -219,7 +218,6 @@ export async function syncAutoDetection(now = Date.now()): Promise<void> {
     const active = getActiveTrip(db);
     configureNative({
       enabled,
-      startOnCharge: s.startOnCharge,
       vanAddress: s.vanBtDevice?.address ?? null,
       tripActive: !!active,
     });

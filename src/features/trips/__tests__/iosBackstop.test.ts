@@ -31,10 +31,10 @@ describe('iOS missed-trip backstops', () => {
     ] as const) {
       const p = planBackstops(manual(), state, now, MERGE);
       // At the booked time the engine itself would act (end the trip / keep waiting while driving).
-      if (p.still) expect(step(state, [], { enabled: true, vanAddress: null, startOnCharge: false, mergeStopMinutes: 20 }, manual(), p.still - REBOOK_MIN_SHIFT_MS, false).actions.map((a) => a.type)).toContain(
+      if (p.still) expect(step(state, [], { enabled: true, vanAddress: null, mergeStopMinutes: 20 }, manual(), p.still - REBOOK_MIN_SHIFT_MS).actions.map((a) => a.type)).toContain(
         state === still ? 'end' : 'wake',
       );
-      if (p.silent) expect(step(state, [], { enabled: true, vanAddress: null, startOnCharge: false, mergeStopMinutes: 20 }, manual(), p.silent - REBOOK_MIN_SHIFT_MS, false).actions.map((a) => a.type)).toContain('notifySilent');
+      if (p.silent) expect(step(state, [], { enabled: true, vanAddress: null, mergeStopMinutes: 20 }, manual(), p.silent - REBOOK_MIN_SHIFT_MS).actions.map((a) => a.type)).toContain('notifySilent');
     }
   });
 

@@ -18,7 +18,7 @@ import com.google.android.gms.location.DetectedActivity
 /**
  * What the receivers need to know while JS is dead (S1). JS writes it with `configure()`:
  * - enabled: automatic trips on and Pro (re-register transitions after reboot / update)
- * - vanAddress / startOnCharge: start signals worth waking JS for
+ * - vanAddress: start signal worth waking JS for
  * - tripActive: a trip is recording (then every activity change and wake alarm goes to JS)
  */
 internal object AutoConfig {
@@ -33,7 +33,6 @@ internal object AutoConfig {
   fun enabled(c: Context) = prefs(c).getBoolean("enabled", false)
   fun tripActive(c: Context) = prefs(c).getBoolean("tripActive", false)
   fun vanAddress(c: Context): String? = prefs(c).getString("vanAddress", null)
-  fun startOnCharge(c: Context) = prefs(c).getBoolean("startOnCharge", false)
   fun registeredAt(c: Context) = prefs(c).getLong("registeredAt", 0L)
   /** B-88: no new GPS check for a drive before this (JS sets it while one runs and for a cool-down after). */
   fun probeAfter(c: Context) = prefs(c).getLong("probeAfter", 0L)
@@ -42,7 +41,8 @@ internal object AutoConfig {
     val e = prefs(c).edit()
     (cfg["enabled"] as? Boolean)?.let { e.putBoolean("enabled", it) }
     (cfg["tripActive"] as? Boolean)?.let { e.putBoolean("tripActive", it) }
-    (cfg["startOnCharge"] as? Boolean)?.let { e.putBoolean("startOnCharge", it) }
+    // B-145: "Start when charging" is gone — drop what an older build stored.
+    e.remove("startOnCharge")
     if (cfg.containsKey("vanAddress")) e.putString("vanAddress", cfg["vanAddress"] as? String)
     (cfg["probeAfter"] as? Number)?.let { e.putLong("probeAfter", it.toLong()) }
     e.apply()

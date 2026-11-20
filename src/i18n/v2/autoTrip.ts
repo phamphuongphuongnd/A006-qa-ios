@@ -44,7 +44,6 @@ export const autoTrip = {
   startFaster: 'Start faster',
   vanBt: 'Van Bluetooth',
   vanBtNone: 'Not set',
-  startCharging: 'Start when charging',
   // B-95: iOS wakes the app on leaving the last parking spot (geofence) or a significant location change (~500 m+).
   iosNote:
     'iPhone notices a drive when you leave where your last trip ended, or after about half a mile, and starts the trip from when you set off. For an instant start, add an NFC tag.',

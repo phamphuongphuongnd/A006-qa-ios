@@ -82,9 +82,6 @@ vehicle set off, after a walk to it). Catches drives in slow traffic that the mo
 for a while longer if it is still moving when its time is up. Walking or cycling never starts one; a bus or taxi can.
 After a check finds nothing, no new check for the same movement — a stop and a new start check again.
 
-**Start on charge**:
-Starting an automatic Trip when the phone is charging and the vehicle starts moving; charging alone never starts one.
-
 **Personal segment**:
 A part of a Trip re-scoped as Personal after the fact (a detour to or from a Stop), or skipped live with Personal stop.
 _Avoid_: personal trip, exclusion

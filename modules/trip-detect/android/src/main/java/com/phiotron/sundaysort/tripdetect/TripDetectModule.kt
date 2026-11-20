@@ -4,10 +4,8 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.bluetooth.BluetoothManager
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -39,8 +37,6 @@ class TripDetectModule : Module() {
   private val context: Context
     get() = appContext.reactContext ?: throw Exceptions.ReactContextLost()
 
-  private var powerReceiver: BroadcastReceiver? = null
-
   private fun pendingIntent(requestCode: Int): PendingIntent {
     val intent = Intent(context, TripDetectReceiver::class.java)
     // Activity recognition fills the intent with results, so it must be mutable on Android 12+.
@@ -50,11 +46,6 @@ class TripDetectModule : Module() {
   }
 
   private fun hasActivityPermission(): Boolean = AutoConfig.hasActivityPermission(context)
-
-  private fun unregisterPower() {
-    powerReceiver?.let { runCatching { context.unregisterReceiver(it) } }
-    powerReceiver = null
-  }
 
   @SuppressLint("MissingPermission")
   override fun definition() = ModuleDefinition {
@@ -201,26 +192,9 @@ class TripDetectModule : Module() {
 
     Function("clearEvents") { EventLog.clear(context) }
 
+    /** Dev screen only (B-145: "Start when charging" is gone). */
     Function("isCharging") {
       (context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager).isCharging
-    }
-
-    /** Power connect / disconnect are not delivered to manifest receivers (Android 8+): runtime receiver. */
-    Function("watchPower") { on: Boolean ->
-      unregisterPower()
-      if (on) {
-        val r = object : BroadcastReceiver() {
-          override fun onReceive(c: Context, i: Intent) {
-            EventLog.add(c, if (i.action == Intent.ACTION_POWER_CONNECTED) "power_connected" else "power_disconnected")
-          }
-        }
-        val filter = IntentFilter().apply {
-          addAction(Intent.ACTION_POWER_CONNECTED)
-          addAction(Intent.ACTION_POWER_DISCONNECTED)
-        }
-        ContextCompat.registerReceiver(context, r, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
-        powerReceiver = r
-      }
     }
 
     /** Paired devices for the "Van Bluetooth" picker; empty without BLUETOOTH_CONNECT (Android 12+). */
@@ -236,7 +210,6 @@ class TripDetectModule : Module() {
     }
 
     OnDestroy {
-      unregisterPower()
       EventLog.listener = null
     }
   }

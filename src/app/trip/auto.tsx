@@ -15,8 +15,8 @@ import { router } from '@/services/router';
 import { usePro } from '@/state/pro';
 import { useSettings } from '@/state/settings';
 import { useTheme } from '@/theme';
-import { Badge, Button, Card, Divider, Group, Segmented, Sheet, StatusDot, Toggle, Txt } from '@/ui';
-import { Bluetooth, ChevronLeft, ChevronRight, Clock, Zap } from '@/ui/icons';
+import { Badge, Button, Card, Group, Segmented, Sheet, StatusDot, Toggle, Txt } from '@/ui';
+import { Bluetooth, ChevronLeft, ChevronRight, Clock } from '@/ui/icons';
 
 const MERGE: MergeStopMinutes[] = [10, 20, 45];
 
@@ -164,12 +164,6 @@ export default function AutoTripsScreen() {
               warn={vanIsPersonal ? t('autoTrip.btNotVan') : undefined}
               right={<ChevronRight size={20} color={colors.textTertiary} />}
               onPress={() => setBtOpen(true)}
-            />
-            <Divider />
-            <Row
-              icon={<Zap size={20} color={colors.textSecondary} />}
-              title={t('autoTrip.startCharging')}
-              right={<Toggle value={settings.startOnCharge} onChange={(v) => apply({ startOnCharge: v })} label={t('autoTrip.startCharging')} />}
             />
           </Group>
         ) : (

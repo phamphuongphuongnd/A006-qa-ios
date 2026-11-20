@@ -9,7 +9,7 @@ import { lastParkedPoint, seedStartPoint } from '../auto/repo';
 
 const MIN = 60_000;
 const T0 = new Date(2026, 10, 18, 8, 0).getTime(); // Wed 18 Nov 2026 08:00 local
-const cfg: EngineConfig = { enabled: true, vanAddress: null, startOnCharge: false, mergeStopMinutes: 20 };
+const cfg: EngineConfig = { enabled: true, vanAddress: null, mergeStopMinutes: 20 };
 
 type Snap = Extract<TripSignal, { kind: 'motion' }>;
 const snap = (activity: Snap['activity'], eventAt: number, at: number, confidence = 2): Snap => ({ kind: 'motion', activity, confidence, eventAt, at });
@@ -21,7 +21,7 @@ const transitions = (s: TripSignal[]) =>
 function pass(log: TripSignal[], state0: EngineState, trip: EngineTrip | null, now: number) {
   const since = state0.seenUntil || now - 60_000;
   const read = log.filter((e) => e.at >= since + 1 - MOTION_LOOKBACK_MS && e.at <= now);
-  return step({ ...state0, seenUntil: since }, motionToSignals(read, since + 1) as EngineSignal[], cfg, trip, now, false);
+  return step({ ...state0, seenUntil: since }, motionToSignals(read, since + 1) as EngineSignal[], cfg, trip, now);
 }
 
 describe('iOS motion snapshots → transitions', () => {
@@ -140,7 +140,7 @@ describe('iOS automatic trip through the engine', () => {
 
   it('automatic trips off: transitions are tracked, nothing starts', () => {
     const log: TripSignal[] = [snap('still', T0 - 40 * MIN, T0 - 30 * MIN), snap('driving', T0, T0 + 5 * MIN)];
-    const r = step(INITIAL_ENGINE_STATE, motionToSignals(log, 0) as EngineSignal[], { ...cfg, enabled: false }, null, T0 + 5 * MIN, false);
+    const r = step(INITIAL_ENGINE_STATE, motionToSignals(log, 0) as EngineSignal[], { ...cfg, enabled: false }, null, T0 + 5 * MIN);
     expect(r.actions).toEqual([]);
     expect(r.state.activity).toBe('driving');
   });

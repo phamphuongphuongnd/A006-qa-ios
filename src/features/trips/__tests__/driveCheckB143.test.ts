@@ -28,7 +28,7 @@ import { gpsModeFor } from '../gpsPower';
 
 const S = 1000;
 const MIN = 60_000;
-const cfg: EngineConfig = { enabled: true, vanAddress: null, startOnCharge: false, mergeStopMinutes: 10 };
+const cfg: EngineConfig = { enabled: true, vanAddress: null, mergeStopMinutes: 10 };
 const act = (activity: Activity, transition: 'enter' | 'exit', at: number): EngineSignal => ({
   kind: 'activity',
   activity,
@@ -81,7 +81,6 @@ describe('B-143: an enter dated 1 ms before its exit (A13: 6 of 44 pairs, 18–2
       cfg,
       null,
       1795133503917,
-      false,
     );
     expect(r.state.activity).toBe('walking');
     expect(r.actions).toEqual([]);
@@ -94,7 +93,6 @@ describe('B-143: an enter dated 1 ms before its exit (A13: 6 of 44 pairs, 18–2
       cfg,
       null,
       1795085194300,
-      false,
     );
     expect(r.state).toMatchObject({ activity: 'still', stillEnterAt: 1795085187212 });
   });
@@ -107,7 +105,6 @@ describe('B-143: an enter dated 1 ms before its exit (A13: 6 of 44 pairs, 18–2
       cfg,
       null,
       exitAt + 6 * S,
-      false,
     );
     expect(r.actions[0]).toMatchObject({ type: 'start', reason: 'motion' });
   });
@@ -119,7 +116,6 @@ describe('B-143: an enter dated 1 ms before its exit (A13: 6 of 44 pairs, 18–2
       cfg,
       null,
       1795133503917,
-      false,
     );
     expect(r.state.activity).toBeNull();
   });
@@ -239,8 +235,8 @@ describe('B-143 (c): walking up home after parking at 08:26 on 20/11 is not coun
   const all = withSpeed([...drive, ...walk]);
 
   function engineAt(signals: EngineSignal[], now: number, trip: EngineTrip | null) {
-    const driving = step({ ...INITIAL_ENGINE_STATE, seenUntil: tripStart }, [act('driving', 'enter', drivingEnter)], cfg, trip, drivingEnter + 5 * S, false).state;
-    return step(driving, signals, cfg, trip, now, false);
+    const driving = step({ ...INITIAL_ENGINE_STATE, seenUntil: tripStart }, [act('driving', 'enter', drivingEnter)], cfg, trip, drivingEnter + 5 * S).state;
+    return step(driving, signals, cfg, trip, now);
   }
 
   it('the sensor says the driver walked away from the van', () => {
@@ -249,7 +245,7 @@ describe('B-143 (c): walking up home after parking at 08:26 on 20/11 is not coun
     const f = recordingFilter({ state, permission: true, tripStartedAt: tripStart, probeFoundAt: null });
     expect(f.onFoot).toBe(true);
     // Home: walking → still keeps it (the stop began when the van parked).
-    const home = step(state, [act('walking', 'exit', stillEnter), act('still', 'enter', stillEnter)], cfg, null, stillEnter + 10 * S, false).state;
+    const home = step(state, [act('walking', 'exit', stillEnter), act('still', 'enter', stillEnter)], cfg, null, stillEnter + 10 * S).state;
     expect(home.footAfterDrive).toBe(true);
   });
 
@@ -295,7 +291,7 @@ describe('B-143 (c): a delivery — out of the van for a few minutes, then on �
   const driving: EngineState = { ...INITIAL_ENGINE_STATE, seenUntil: T0 - MIN, activity: 'driving', activityAt: T0 - 30 * MIN };
 
   it('walking 4 min to the door and back, sitting down, driving on: no end, and the walk is not the van', () => {
-    const out = step(driving, [act('driving', 'exit', T0), act('walking', 'enter', T0)], cfg, trip, T0 + MIN, false);
+    const out = step(driving, [act('driving', 'exit', T0), act('walking', 'enter', T0)], cfg, trip, T0 + MIN);
     expect(out.actions.find((a) => a.type === 'end')).toBeUndefined();
     expect(recordingFilter({ state: out.state, permission: true, tripStartedAt: trip.startedAt, probeFoundAt: null }).onFoot).toBe(true);
     const back = step(
@@ -304,7 +300,6 @@ describe('B-143 (c): a delivery — out of the van for a few minutes, then on �
       cfg,
       trip,
       T0 + 6 * MIN,
-      false,
     );
     expect(back.state.footAfterDrive).toBe(false);
     expect(back.actions.find((a) => a.type === 'end')).toBeUndefined();
@@ -312,23 +307,23 @@ describe('B-143 (c): a delivery — out of the van for a few minutes, then on �
     const f = recordingFilter({ state: back.state, permission: true, tripStartedAt: trip.startedAt, probeFoundAt: null });
     expect(f).toEqual({ sensorStill: false, onFoot: false, walkSpeed: false });
     // Even 12 minutes after the van stopped, driving keeps it open (it moved again).
-    expect(step(back.state, [], cfg, trip, T0 + 12 * MIN, false).actions.find((a) => a.type === 'end')).toBeUndefined();
+    expect(step(back.state, [], cfg, trip, T0 + 12 * MIN).actions.find((a) => a.type === 'end')).toBeUndefined();
   });
 
   it('out of the van longer than the merge threshold → ends when the van stopped', () => {
-    const out = step(driving, [act('driving', 'exit', T0 + 30 * S), act('walking', 'enter', T0 + 30 * S)], cfg, trip, T0 + MIN, false);
-    const r = step(out.state, [], cfg, trip, T0 + 30 * S + 10 * MIN, false);
+    const out = step(driving, [act('driving', 'exit', T0 + 30 * S), act('walking', 'enter', T0 + 30 * S)], cfg, trip, T0 + MIN);
+    const r = step(out.state, [], cfg, trip, T0 + 30 * S + 10 * MIN);
     expect(r.actions).toContainEqual({ type: 'end', tripId: 't', at: T0 + 30 * S, startedBy: 'auto' });
   });
 
   it('a crawl the sensor calls cycling still counts; a walking pace with the sensor silent after the van stopped does not', () => {
-    const crawl = step(driving, [act('driving', 'exit', T0), act('cycling', 'enter', T0)], cfg, trip, T0 + MIN, false).state;
+    const crawl = step(driving, [act('driving', 'exit', T0), act('cycling', 'enter', T0)], cfg, trip, T0 + MIN).state;
     expect(recordingFilter({ state: crawl, permission: true, tripStartedAt: trip.startedAt, probeFoundAt: null })).toEqual({
       sensorStill: false,
       onFoot: false,
       walkSpeed: false,
     });
-    const silent = step(driving, [act('driving', 'exit', T0)], cfg, trip, T0 + MIN, false).state;
+    const silent = step(driving, [act('driving', 'exit', T0)], cfg, trip, T0 + MIN).state;
     const f = recordingFilter({ state: silent, permission: true, tripStartedAt: trip.startedAt, probeFoundAt: null });
     expect(f.walkSpeed).toBe(true);
     const prev = { lat: 21, lng: 105.8 };

@@ -20,7 +20,7 @@ export type TripSignal =
     }
   | { kind: 'bt_connected' | 'bt_disconnected'; address: string | null; name: string | null; at: number }
   /** iOS wake: `reason` 'location' (significant change) / 'departure' / 'timer' (scheduleWake) / 'motion_error'. */
-  | { kind: 'power_connected' | 'power_disconnected' | 'wake' | 'boot'; at: number; reason?: string };
+  | { kind: 'wake' | 'boot'; at: number; reason?: string };
 
 export interface BondedDevice {
   address: string;
@@ -61,11 +61,11 @@ interface TripDetectNative {
   /** Android: add a diagnostics line to the signal log. */
   log?(kind: string, extra: Record<string, string | number | boolean | null>): void;
   clearEvents(): void;
+  /** Dev screen only (B-145: "Start when charging" is gone). */
   isCharging(): boolean;
-  watchPower(on: boolean): void;
   getBondedDevices(): BondedDevice[];
   /** S1: state the receivers read while JS is dead (Android; a no-op on iOS). */
-  configure?(cfg: { enabled?: boolean; tripActive?: boolean; startOnCharge?: boolean; vanAddress?: string | null; probeAfter?: number }): void;
+  configure?(cfg: { enabled?: boolean; tripActive?: boolean; vanAddress?: string | null; probeAfter?: number }): void;
   /** S1: one pending wake-up (end-of-trip check) that runs the JS task (Android alarm; iOS timer while the app runs). */
   scheduleWake?(atMs: number): void;
   cancelWake?(): void;

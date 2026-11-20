@@ -3,15 +3,11 @@ package com.phiotron.sundaysort.tripdetect
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.BatteryManager
 import android.os.SystemClock
 import com.google.android.gms.location.ActivityRecognitionResult
 import com.google.android.gms.location.ActivityTransition
 import com.google.android.gms.location.ActivityTransitionResult
 import com.google.android.gms.location.DetectedActivity
-
-internal fun isCharging(c: Context): Boolean =
-  (c.getSystemService(Context.BATTERY_SERVICE) as BatteryManager).isCharging
 
 internal fun activityName(type: Int): String = when (type) {
   DetectedActivity.IN_VEHICLE -> "driving"
@@ -48,7 +44,6 @@ class TripDetectReceiver : BroadcastReceiver() {
       for (e in result.transitionEvents) {
         val enter = e.transitionType == ActivityTransition.ACTIVITY_TRANSITION_ENTER
         if (enter && e.activityType == DetectedActivity.IN_VEHICLE) startCandidate = true
-        if (!enter && e.activityType == DetectedActivity.STILL && AutoConfig.startOnCharge(context) && isCharging(context)) startCandidate = true
         // B-88: leaving 'still' may be a drive the sensor never calls driving (slow traffic): JS runs a short GPS check.
         if (!enter && e.activityType == DetectedActivity.STILL && System.currentTimeMillis() >= AutoConfig.probeAfter(context)) startCandidate = true
         EventLog.add(
