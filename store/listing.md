@@ -34,8 +34,8 @@ SORT THE WEEK ON SUNDAY
 • Work or personal in one tap.
 
 MILEAGE WITHOUT GAPS
-• Automatic trips: recorded when your phone notices you are driving (motion sensor, your van's Bluetooth, or the car
-  charger). Your delivery stops are joined into one shift trip.
+• Automatic trips: recorded when your phone notices you are driving (motion sensor or your van's Bluetooth). Your
+  delivery stops are joined into one shift trip.
 • Start / Stop trips by hand, or tap an NFC sticker in the van.
 • Add trips by odometer, by distance, or from A to B with the driving distance worked out.
 • Trip map with your route and stops.

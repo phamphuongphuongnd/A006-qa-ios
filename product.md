@@ -66,7 +66,7 @@ bản đồ tải từ OpenFreeMap; địa chỉ gõ ở chuyến A → B gửi 
 | Hàng chờ phân loại theo tuần | Không | Không | Không | Không | Không | **Có** |
 | Tự ghi chuyến | Có (iBeacon / tự dò) | Có | Có | Có (trả phí) | Không | **Có [Pro]**, gộp chuyến ca, báo khi ngừng ghi |
 | Start/Stop tay | Có | Không | Có | Có (free) | — | **Có, miễn phí** |
-| Bật chuyến không chạm máy | iBeacon (mua thêm) | Không | Không | Bluetooth | — | **Bluetooth van, cắm sạc, thẻ NFC** |
+| Bật chuyến không chạm máy | iBeacon (mua thêm) | Không | Không | Bluetooth | — | **Bluetooth van, thẻ NFC** |
 | Vuốt phân loại chuyến | Có | Có | Có | Có (Speed Tagging) | — | **Có** + Personal segment sau chuyến |
 | Luật tự phân loại / học nơi quen | Không | Nơi quen + giờ làm | Nơi quen + luật tự đặt (giờ làm trả phí) | Có (AI) | Không | **Có [Pro]**, hỏi 1 chạm trước khi áp |
 | Đọc hoá đơn (OCR) | Không | Không | Có | Có | Không | **Có [Pro], chạy trên máy** |
@@ -210,7 +210,7 @@ hiện: "Estimate only — not tax advice."
 | Chuyến Start/Stop tay, thẻ NFC, Personal stop, nhập tay | Có | Có |
 | Bản đồ thật trong chuyến (S-07b, S-07c, ảnh nhỏ ở Miles) — Q25 | Có | Có |
 | **A → B tự tính dặm** (tìm địa chỉ, tuyến lái xe, khứ hồi, chỗ hay đi) — Q25 | — | Có |
-| Chuyến tự động (cảm biến, Bluetooth van, cắm sạc), gộp chuyến ca | — | Có |
+| Chuyến tự động (cảm biến, Bluetooth van), gộp chuyến ca | — | Có |
 | Tách Personal segment sau chuyến, sửa giờ chuyến, vuốt Work/Personal | Có | Có |
 | Báo khi nghi sót (quên Stop, GPS im, ngày làm không có chuyến) | Có | Có |
 | **[Mới]** Phát hiện chuyến bị sót giữa 2 chuyến (Q26) + đối chiếu đồng hồ dặm (Q27) | Có — ước tính chim bay × 1,25 | Có — có mạng thì quãng đường thật (openrouteservice) |
@@ -467,7 +467,7 @@ Personal" · "Purpose" ("e.g. Amazon route DLS4") · "Save trip". Lỗi: End < S
 **Chuyến tự động [Pro]** (Q1, Q9, P1-1):
 - Điện thoại nhận ra đang **lái xe** (cảm biến chuyển động + nhận diện hoạt động; phân biệt đi bộ, xe đạp) → tự bắt đầu,
   điểm đầu lấy lùi về lúc xe bắt đầu chạy (không hụt dặm đầu). Tín hiệu thêm (Android): **nối Bluetooth van** (chọn thiết bị
-  1 lần) hoặc **cắm sạc** + đang chuyển động → bắt đầu ngay. iOS: chỉ cảm biến + vị trí thay đổi đáng kể.
+  1 lần) → bắt đầu ngay (**cắm sạc đã bỏ** — B-145, Phương 2026-11-20: sạc dự phòng / cáp máy tính bật nhầm). iOS: chỉ cảm biến + vị trí thay đổi đáng kể.
 - Đang chạy giống chuyến tay, nhãn "Auto". Khi tự bắt đầu, thông báo cố định ghi "Trip started automatically" · "Not driving
   for work? Tap to mark as personal." (không thêm thông báo riêng).
 - **Dừng ngắn < 20 phút** (đi bộ giao hàng, đèn đỏ, chờ kho; Settings đổi 10/20/45) → vẫn cùng một **chuyến ca**; ngắt
@@ -514,8 +514,8 @@ nhãn "Auto" nếu có · "Personal stop" · "End trip". End → sheet "Trip sav
 **S-07d Automatic trips** **[Mới] [Pro]** (Miles → "⋯ → Automatic trips" hoặc Settings)
 - Công tắc lớn "Record trips automatically". Bản free / hết Pro: công tắc khoá + "PRO" → S-19.
 - Bật lần đầu → chuỗi quyền S-07e.
-- Mục "Start faster" (Android): "Van Bluetooth" (chọn thiết bị đã ghép, vd "Ford Transit Audio") · "Start when charging"
-  (công tắc). iOS: ghi chú "iPhone starts trips from motion. Add an NFC tag for instant start."
+- Mục "Start faster" (Android): "Van Bluetooth" (chọn thiết bị đã ghép, vd "Ford Transit Audio"). ~~"Start when charging"~~
+  đã bỏ (B-145). iOS: ghi chú "iPhone starts trips from motion. Add an NFC tag for instant start."
 - "Merge stops shorter than" — "10 min" · "20 min" (mặc định) · "45 min" + "Deliveries and red lights stay in one trip."
 - "Work hours" (công tắc, mặc định tắt) → ngày + giờ; "Trips outside these hours are still recorded, as personal."
 - Trạng thái: "Working · last check 2 min ago" (xanh) / "Paused by battery saving · Fix" (cam).
@@ -737,7 +737,7 @@ Ghép từ thẻ / sheet / chip / dòng có sẵn của mockup v2 (như Q26/Q27)
 - **ProState** **[Mới]**: trial_started_at, trial_ends_at, entitlement (none/trial/active/expired), expires_at, product_id,
   last_verified_at.
 - **Free photo allowance**: tính từ Receipt theo tháng (không cần bảng).
-- **Settings**: + vehicle_cost_method, merge_stop_minutes, work_hours, auto_trips, van_bt_device, start_on_charge,
+- **Settings**: + vehicle_cost_method, merge_stop_minutes, work_hours, auto_trips, van_bt_device, ~~start_on_charge~~ (bỏ, B-145),
   backup_folder_uri, backup_nightly, backup_fail_count, daily_nudge (on, time, days), freeagent_claimant, mtd_period
   (standard/calendar), nfc_tag_written, **odometer_check** (off/weekly/monthly, mặc định monthly).
 - Tuần = T2 00:00 → CN 23:59 giờ máy. Năm thuế UK: ngày 5/4 thuộc năm cũ. Tiền số nguyên.
