@@ -658,12 +658,12 @@
   lưu (đầu đoạn mới) → `lastMoveAt` mất mốc "resume" và tính `parkedSince` trên **mọi** điểm → về lại giờ đỗ cũ ≥ 20 phút → kết thúc ngay. Resume sau
   Personal stop cũng dính. Sửa: `lastMoveAt` chỉ xét đoạn cuối (từ điểm `segmentStart`), mốc = đầu đoạn + test tái hiện (`lastMoveAt.test.ts`). ✅ A13 (a3a1f6b): Continue 11:28:52 → chuyến chạy tiếp tới 11:37:50
   (bản cũ tắt sau 3–23 s). Còn lệch 1 phút → B-135.
-- [ ] **B-131** 🟡 đề xuất (A13 phiên E, 0bf4283 — `qa-runs/a13/perf-trip-still-300s.json`) Chuyến chạy mà xe đứng yên 5 phút: CPU app 0,19 %, không wakelock;
+- [x] **B-131** 🟡 đề xuất (A13 phiên E, 0bf4283 — `qa-runs/a13/perf-trip-still-300s.json`) Chuyến chạy mà xe đứng yên 5 phút: CPU app 0,19 %, không wakelock;
   phần hao pin chính là GPS HIGH_ACCURACY mỗi 5 s chạy suốt tới khi tự kết thúc (tối đa = Merge stops). Đề xuất: cảm biến báo đứng yên / không di chuyển
   thật > 1–2 phút → hạ GPS (BALANCED hoặc 30–60 s), xe chạy lại ("driving" / điểm xa > 100 m) → về 5 s. Rủi ro: hụt vài chục mét đầu khi xe lăn bánh. **Phương duyệt 19/11.**
   Sửa (Android): `gpsPower.ts` `gpsModeFor` (không di chuyển thật ≥ 2 phút và cảm biến không báo lái → 'parked'), `syncGpsMode` đổi tham số GPS (High,
   30 s) / về BestForNavigation 5 s; gọi từ task GPS (≤ 20 s/lần) và sau mỗi lượt engine; nhật ký `gps_mode`. 953 test xanh. ✅ A13 (8619687): Start 11:40:44 nằm yên → 11:42:55 đăng ký lại HIGH_ACCURACY 30 s (giảm 6 lần số lần
-  lấy vị trí), CPU 0,28 %, không wakelock (`perf-trip-still-8619687.json`). ⏳ nhánh lái lại → 5 s (cần đi > 100 m / lái xe thật).
+  lấy vị trí), CPU 0,28 %, không wakelock (`perf-trip-still-8619687.json`). ✅ nhánh lái lại (xe thật 19–20/11, phiên E): parked 08:11:41 → drive 08:16:44; parked 18:01:06 → drive 18:01:47.
   ✅ **nhánh lái lại (A13 edecc6d, xe thật, phiên E 20/11)**: tối 19/11 chuyến BT 17:57 → parked 18:01:06 (ngồi chờ trong xe) → driving enter
   18:01:39 → gps_mode drive 18:01:47; sáng 20/11 kẹt xe → parked 08:11:41 (đứng 08:11–08:16) → drive 08:16:44, chuyến không tách. 🟡 chuyến 17:57–18:31
   có vài khoảng trống điểm 1,5–2,7 phút lúc đang chạy (18:08–18:20) dù không có gps_mode parked — xem thêm nếu quãng đường thiếu.
