@@ -374,6 +374,12 @@
   Physical activity sẵn có) — ≥ 40 bước/phút giữa 2 fix = đang đi bộ / chạy → không bật; cảm biến báo đạp xe lúc nào trong lần kiểm → không bật; không
   có bộ đếm → luật cũ. Đi bộ ra xe rồi lái vẫn bật (hết bước khi ngồi vào xe). Còn lại: xe buýt / taxi (Phương chấp nhận). 969 test xanh. ⏳ A13 đi bộ
   > 500 m (máy trong túi) không được bật chuyến.
+  **A13 thật (edecc6d, phiên E 20/11, diag `qa-runs/a13/diagnostics/SundaySort-trip-diagnostics-2026-11-20-01-43.json` + backup 0850):**
+  ✅ đi bộ > 500 m tối 19/11: walking 17:36:44–17:46:27 → probe_start 17:38 → probe_none 17:50:50, không chuyến. ✅ lái sáng 20/11 (tắc đường):
+  start_ok motion 07:39:54 → 1 chuyến 07:39–08:29 10,3 km, không bị tách dù dừng 08:11–08:16; endedAt 08:29:36 ≈ lúc đỗ (điểm nhanh cuối 08:28:11).
+  ✅ tối 19/11 start_ok motion 18:38:29 (chuyến 5,0 km). ❌ **đi bộ (máy trong túi/cặp, Phương xác nhận) 07:10–07:21 sáng 20/11 → probe_drive
+  07:17:59 {onFoot: false, stepsPerMin: 0} → chuyến auto 659 m 07:10:25–07:19:33** (bộ đếm bước báo 0 khi máy trong túi/cặp → coi là lái).
+  Gợi ý: stepsPerMin 0 mà cảm biến vẫn báo walking (07:10:25 walking enter, chưa exit tới 07:21:28) → không bật; hoặc yêu cầu tốc độ ≥ 15 km/h.
 - [x] **B-89** 🟡 (QA MOD-10, phiên F — hồi quy một phần B-84) Nháp được mở lại nhưng **ảnh chụp trong lúc app đã bị giết** vẫn mất: `getPendingResultAsync`
   gọi 1 lần lúc màn mở, trước khi kết quả camera tới Activity mới. Sửa (`capture.tsx`): gọi lại sau 1 s, 3 s và mỗi khi app trở lại active, bỏ ảnh trùng.
   Kèm: cửa sổ thấp < 520dp (chia đôi màn 436dp) → ẩn nút nổi "+" (`ui/Layout.tsx`) vì nó đè "Sort now" ở Reports.
@@ -650,6 +656,9 @@
   Sửa (Android): `gpsPower.ts` `gpsModeFor` (không di chuyển thật ≥ 2 phút và cảm biến không báo lái → 'parked'), `syncGpsMode` đổi tham số GPS (High,
   30 s) / về BestForNavigation 5 s; gọi từ task GPS (≤ 20 s/lần) và sau mỗi lượt engine; nhật ký `gps_mode`. 953 test xanh. ✅ A13 (8619687): Start 11:40:44 nằm yên → 11:42:55 đăng ký lại HIGH_ACCURACY 30 s (giảm 6 lần số lần
   lấy vị trí), CPU 0,28 %, không wakelock (`perf-trip-still-8619687.json`). ⏳ nhánh lái lại → 5 s (cần đi > 100 m / lái xe thật).
+  ✅ **nhánh lái lại (A13 edecc6d, xe thật, phiên E 20/11)**: tối 19/11 chuyến BT 17:57 → parked 18:01:06 (ngồi chờ trong xe) → driving enter
+  18:01:39 → gps_mode drive 18:01:47; sáng 20/11 kẹt xe → parked 08:11:41 (đứng 08:11–08:16) → drive 08:16:44, chuyến không tách. 🟡 chuyến 17:57–18:31
+  có vài khoảng trống điểm 1,5–2,7 phút lúc đang chạy (18:08–18:20) dù không có gps_mode parked — xem thêm nếu quãng đường thiếu.
 - [x] **B-132** 🟡 (QA A37-10, phiên A — a3a1f6b) Reports: "1620 entries in this period aren't sorted yet" thiếu dấu phẩy nghìn (như B-79 ở Home).
   Gốc: `reports.tsx` truyền `report.unsortedCount` thô vào `t('reports.unsortedWarn')`.
   Sửa chung: `t()` nhóm nghìn cho tham số đếm (`count`, `total`, `done`) — mọi câu "N entries / trips" trong app; năm, phút không đổi + test.

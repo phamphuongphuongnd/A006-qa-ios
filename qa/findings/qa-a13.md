@@ -183,6 +183,19 @@ kết quả kick/start. Đã báo điều phối.
 - **Tối 19/11 (Phương lái thật, edecc6d, KHÔNG cài APK mới)**: 1) B-140 ở nhà (watcher `watch-1119-evening.log`); 2) B-88 v2 đi bộ;
   3) B-88/B-131/kết thúc khi đỗ; 4) Bluetooth xe; 5) (tuỳ chọn) vuốt tắt app khỏi Recents khi đang chuyến → GPS còn không. Khi về:
   Back up now + chẩn đoán + `logcat -b all -d` NGAY (trước khi buffer xoay) → chấm từng bài theo mốc giờ Phương ghi.
+  **Chấm sáng 20/11 08:42** (logcat tối qua đã bị ghi đè; dùng `diagnostics/SundaySort-trip-diagnostics-2026-11-20-01-43.json` +
+  `real-backup/SundaySort-REAL-2026-11-20-0850-after-drives.sundaysort`; Phương xác nhận mốc):
+  - TC01 đi bộ > 500 m 17:36–17:46 → probe_start → probe_none 17:50:50, không chuyến ✅.
+  - TC02 kẹt xe sáng 20/11: start_ok motion 07:39:54 → 1 chuyến 10,3 km 07:39–08:29, không tách khi đứng 08:11–08:16; B-131 parked 08:11:41 →
+    drive 08:16:44 ✅; endedAt 08:29:36 ≈ đỗ (điểm nhanh cuối 08:28:11) ✅.
+  - TC03 tối 19/11: chuyến motion 18:38–18:58 5,0 km ✅; chuyến 17:57–18:31 4,0 km Phương bấm End trip 18:31 (không phải lỗi).
+  - TC04 BT: bt_connected van 17:57:35 → start_ok bluetooth (background) ✅ — nhưng Van = Redmi Buds 4 Lite (tai nghe), không phải BT xe
+    (xe chưa ghép) → cơ chế ✅, BT xe thật ⏭. B-131 parked 18:01:06 → drive 18:01:47 ✅.
+  - TC05 vuốt tắt app: ⏭ (Phương không làm).
+  - ❌ **A13-17 (B-88 v2)**: sáng 20/11 Phương đi bộ, máy trong túi/cặp, 07:10–07:21 → probe_drive 07:17:59 {onFoot false, stepsPerMin 0} →
+    chuyến auto 659 m 07:10:25–07:19:33 (bật nhầm). Đã ghi BUGS.md B-88.
+  - 🟡 chuyến 17:57–18:31 có khoảng trống điểm 1,5–2,7 phút lúc đang chạy (không có gps_mode parked). Ghi B-131.
+  - Pin lúc 08:42: 13% (không đo được hao pin theo ca).
   **Bài 1 B-140 ✅ (15:23–15:37)**: probe_start 15:23:39 → start_ok charging 15:26:50 (cắm cáp khi đang đi) → GPS chuyến còn chạy
   sau mốc probe hết hạn 15:35:39 (watcher fg=1, @+30s lúc 15:36–15:37), không có probe_none sau khi chuyến bắt đầu → 15:37:20
   trip_deleted {auto_short, 0 m} (nhật ký mới ✅). `diagnostics/SundaySort-trip-diagnostics-2026-11-19-08-42.json`.
