@@ -813,6 +813,9 @@
   nút), Parking & tolls (thanh tính + số đang gõ trên bàn phím), Sheet "Save as a regular trip" (Save trên bàn phím), Sheet New category,
   Dialog Merge stops Custom, Add trip (Save trip trên bàn phím), chi tiết khoản (Note). Giả lập không tái hiện lỗi bàn phím A13 (hai cách
   tính mép trùng nhau 577,9 dp → khoảng hụt 0); cơ chế đệm thử bằng cách tạm giả hụt 150 dp: ô đang gõ vẫn thấy, cuộn tới nút. ⏳ A13 (qa-a13).
+  Sau ghép dev (B-154): 3 cấu hình thanh điều hướng — 3 nút (thanh 2274–2400) ✅, cử chỉ (2337–2400) ✅: Home (tab bar, nút Expense/Income),
+  Trip detail cuộn hết, Sort (FAB, thẻ), Sheet "Save as a regular trip" có bàn phím. Thanh ẩn: giả lập API 37 không ẩn được (`policy_control`,
+  `qemu.hw.mainkeys` bị bỏ qua) — mọi phần đệm lấy `insets.bottom` thật (0 khi thanh ẩn), không cộng cứng → ⏳ A13 (Phương đổi cài đặt).
 - [x] **B-154** 🟠 (Phương chốt 20/11, giao phiên verify) **Tiền dặm khớp số dặm in ra; % dùng xe 2 số lẻ.** Tiền dặm tính trên số dặm chưa làm
   tròn (`mileageEstimateByDate`), file in số đã làm tròn (CSV/PDF từng chuyến 1 số lẻ, mô tả MTD tổng 0 số lẻ, PDF ≥ 1.000 dặm 0 số lẻ) → kế toán lấy
   tổng dặm × giá lệch vài xu tới vài chục xu; theo quý = hiệu hai tổng luỹ kế làm tròn → lệch thêm 1p; `businessUse` làm tròn % về số nguyên.
