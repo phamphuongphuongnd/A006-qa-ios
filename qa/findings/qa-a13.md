@@ -191,7 +191,9 @@ kết quả kick/start. Đã báo điều phối.
   - TC03 tối 19/11: chuyến motion 18:38–18:58 5,0 km ✅; chuyến 17:57–18:31 4,0 km Phương bấm End trip 18:31 (không phải lỗi).
   - TC04 BT: bt_connected van 17:57:35 → start_ok bluetooth (background) ✅ — nhưng Van = Redmi Buds 4 Lite (tai nghe), không phải BT xe
     (xe chưa ghép) → cơ chế ✅, BT xe thật ⏭. B-131 parked 18:01:06 → drive 18:01:47 ✅.
-  - TC05 vuốt tắt app: ⏭ (Phương không làm).
+  - TC05 vuốt tắt app: ✅ **suy ra** (Phương sau đó nói "hình như tối qua tôi đóng hết", không có giờ vuốt): 17:50–19:15 không có boot /
+    restore_ok / segmentStart; chuyến 17:57–18:31 điểm liên tục (trung vị 5 s, 8 khoảng 1,1–2,7 phút rồi ghi tiếp không mở app); chuyến
+    18:38–18:56 không hụt > 60 s → GPS không bị giết. Lần sau ghi giờ vuốt.
   - ❌ **A13-17 (B-88 v2)**: sáng 20/11 Phương đi bộ, máy trong túi/cặp, 07:10–07:21 → probe_drive 07:17:59 {onFoot false, stepsPerMin 0} →
     chuyến auto 659 m 07:10:25–07:19:33 (bật nhầm). Đã ghi BUGS.md B-88.
   - 🟡 chuyến 17:57–18:31 có khoảng trống điểm 1,5–2,7 phút lúc đang chạy (không có gps_mode parked). Ghi B-131.
