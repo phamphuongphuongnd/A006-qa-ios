@@ -102,6 +102,16 @@ thử liệt kê thư mục) → End trip chuyến tự động ngắn CHỈ khi
 Cập nhật: điều phối gỡ camera riêng (revert 147d3e2) → bản build kế tiếp dùng camera điện thoại cả Android/iOS; thêm B-112
 (chip ngày có năm khi khác năm nay). Kiểm thêm khi cài: Take photo mở camera Samsung (không phải màn camera của app).
 
+## 20/11 — bản 68b2976 (free launch + B-143/144/145 + B-148 10 km/h), cài đè 10:58:35
+- Trước cài: 0 dịch vụ nền (không chuyến / Drive check); Back up now 10:56 →
+  `real-backup/SundaySort-REAL-2026-11-20-1056-before-68b2976.sundaysort` (233 entries / 276 trips / 8 photos / 12 categories,
+  tripPoints 2792); bản Drive → thùng rác, bản Download trên máy đã xoá. `install -r` Success, không pm clear.
+- Sau cài ✅: quyền vị trí chính xác + nền, hoạt động thể chất, BT, thông báo còn; không có quyền BILLING. Home: "Automatic trips on";
+  Automatic trips: "Working · last check just now", Van BT Redmi Buds 4 Lite, Merge 10 min. **(6) không còn "Start when charging" ✅**
+  (`manual/auto-68b2976.png`).
+- Chờ Phương chạy xe: (1) đi bộ ≥ 500 m máy trong túi; (2) xe chậm ngay sau đi bộ; (3) đỗ rồi đi bộ lên nhà; (4) giao hàng vài phút rồi
+  lái tiếp; (5) restore_ok/restore_failed nếu Samsung tắt app giữa chuyến.
+
 ## 19/11 08:43 — chẩn đoán chuyến tối 18/11 (bản 19daeae, Phương lái + đã cho cầm máy)
 Lúc cắm: chuyến sáng 07:24 đang chạy (11.3 km); Phương tự bấm End trip 08:45 (xác nhận qua popup). Không xoá/sửa chuyến nào.
 File: `diagnostics/SundaySort-trip-diagnostics-2026-11-19-01-50.json` (Drive → thùng rác) · `real-backup/SundaySort-REAL-2026-11-19-0852-after-drive.sundaysort`
