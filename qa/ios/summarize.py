@@ -27,7 +27,7 @@ def main():
     lines.append('|' + '---|' * (len(steps) + 5))
     for r in results:
         st = r['settings']
-        look = f"{st['appearance']}/{st['content_size']}/{st['region']}"
+        look = f"{st['appearance']}/{st['content_size']}/{st['region']}" + ('/landscape' if st.get('orientation') == 'LANDSCAPE_LEFT' else '')
         cells = [ICON.get(s['status'], s['status']) for s in r['steps']]
         lines.append(f"| {r['persona']} | {r['device']['name']} | {look} | " + ' | '.join(cells) + f" | {len(r['crash_reports'])} | {len(r['screenshots'])} |")
     lines += ['', 'Steps: ' + ', '.join(steps), '', '## Failures', '']

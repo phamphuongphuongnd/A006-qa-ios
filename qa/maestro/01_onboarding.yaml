@@ -3,6 +3,15 @@ name: 01_onboarding
 ---
 - launchApp:
     clearState: true
+# `-land` personas (B-155): the whole run in landscape. Portrait personas never call setOrientation; the landscape
+# persona runs last on the iPad lane.
+- runFlow:
+    when:
+      true: ${ORIENT == 'LANDSCAPE_LEFT'}
+    commands:
+      - setOrientation: LANDSCAPE_LEFT
+      - waitForAnimationToEnd:
+          timeout: 2000
 # A late iOS "Open in “Sunday Sort”?" alert from the previous persona's deep link can still be on screen (run 44258898134).
 - tapOn:
     text: "Cancel"

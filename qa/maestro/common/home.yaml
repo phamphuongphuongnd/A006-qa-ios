@@ -2,6 +2,13 @@
 appId: com.phiotron.sundaysort
 ---
 - launchApp
+- runFlow:
+    when:
+      true: ${ORIENT == 'LANDSCAPE_LEFT'}
+    commands:
+      - setOrientation: LANDSCAPE_LEFT
+      - waitForAnimationToEnd:
+          timeout: 2000
 # A late iOS "Open in “Sunday Sort”?" alert from an earlier deep link (step 15) blocks every later step on a slow
 # runner (runs 44258898134, 44471864915) → dismiss it first.
 - runFlow:

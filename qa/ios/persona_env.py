@@ -16,7 +16,8 @@ CONTENT_SIZE = {
     2: 'accessibility-large',  # 33 pt ≈ 1.94
 }
 # Persona id suffixes (`P052-xxl`, `P001-ipad`): `-ipad` only names the lane; a size suffix overrides the persona's
-# Dynamic Type so one persona can be re-run at a neighbouring size (B-147 regression: SE XXL vs XXXL).
+# Dynamic Type so one persona can be re-run at a neighbouring size (B-147 regression: SE XXL vs XXXL). `-land` runs the
+# persona in landscape (B-155: Android tablets + iPad rotate freely, phones stay portrait); ORIENT feeds setOrientation.
 SIZE_SUFFIX = {
     'l': 'large',
     'xl': 'extra-large',
@@ -37,6 +38,7 @@ def main():
     fixture_file = os.path.join(fixtures, f"{p['id']}.sundaysort")
     has_fixture = p['entries'] > 0 and os.path.isfile(fixture_file)
     size = next((SIZE_SUFFIX[x] for x in pid.lower().split('-')[1:] if x in SIZE_SUFFIX), None)
+    land = 'land' in pid.lower().split('-')[1:]
     other = 'US' if p['region'] == 'UK' else 'UK'
     env = {
         'PID': pid,
@@ -59,6 +61,7 @@ def main():
         'DO_REGION_SWITCH': 'true' if p['behaviour'] in REGION_SWITCH else 'false',
         'DO_KILL': 'true' if p['behaviour'] == 'kill_mid_save' else 'false',
         'DO_WIPE': 'true' if p['behaviour'] == 'wipe_all' else 'false',
+        'ORIENT': 'LANDSCAPE_LEFT' if land else 'PORTRAIT',
     }
     for k, v in env.items():
         print(f'export {k}={shlex.quote(v)}')

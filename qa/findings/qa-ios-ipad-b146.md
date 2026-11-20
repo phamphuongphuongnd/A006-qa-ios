@@ -124,10 +124,10 @@ Gộp luôn phần dở của phiên QA-100 iOS, gồm bản sửa kịch bản 
 - P026: lần trước bấm "Get started" một lần mà không sang màn tiếp.
 
 ```
-gh workflow run qa-ios.yml -R phamphuongphuongnd/A006-qa-ios --ref ios-ipad-run   -f personas="P052,P091,P052-xxl,P077,P026" -f ipad_personas="P001-ipad,P002-ipad"   -f flows="02,04,05,06,07,09,19,20,21,22,23" -f ipad_flows="04,05,06,07,09,20,21,22,23,24" -f test_budget_min=170
+gh workflow run qa-ios.yml -R phamphuongphuongnd/A006-qa-ios --ref ios-ipad-run   -f personas="P052,P091,P052-xxl,P077,P026" -f ipad_personas="P001-ipad,P002-ipad,P001-land"   -f flows="02,04,05,06,07,09,19,20,21,22,23" -f ipad_flows="04,05,06,07,08,09,18,20,21,22,23,24" -f test_budget_min=210
 ```
 
-Ước tính khoảng 2 giờ 40 phút: build ~15′, iPhone 5 × ~16′, iPad 2 × ~30′. Lần chạy này phủ:
+Ước tính khoảng 3 giờ 20 phút: build ~15′, iPhone 5 × ~16′, iPad 3 × ~35′. Lần chạy này phủ:
 - B-150: ảnh 05b trên iPad và iPhone;
 - B-151: bước 23 trên SE XXXL và AX-L;
 - B-152: bước 06/23 trên SE XXL;
@@ -137,3 +137,15 @@ gh workflow run qa-ios.yml -R phamphuongphuongnd/A006-qa-ios --ref ios-ipad-run 
 - 02 Restore: P052 (fixture 131 khoản);
 - 19 Notifications: cả 5 iPhone;
 - P026: onboarding 01 trên Pro Max.
+
+**Làn iPad nằm ngang (B-155), persona `P001-land`, chạy sau cùng trên làn iPad:**
+- Cách chạy: hậu tố `-land` → `ORIENT=LANDSCAPE_LEFT` → `setOrientation` sau mỗi lần mở app (bước 01 và `common/home.yaml`). Tab Sort được bấm ở y = 95 %.
+- Các màn được phủ:
+  - Onboarding: bước 01, kèm sheet "What's the difference?".
+  - Home: ảnh 04b và 20a.
+  - Ghi nhanh với bàn phím: ảnh 04a.
+  - Sort + Split: bước 06, 07, 23.
+  - Trip detail: bước 08 và 24 (có bản đồ).
+  - Sheet và Dialog: menu ⋯ (05b), Dialog xoá (18a), sheet Export (09, 21), sheet Rule/Recurring (22).
+- Cách kiểm: `python -I qa/ios/ipad_column.py personas/P001-land/shots`. Ảnh ngang tự tính khung 1376 pt và mỗi dòng ghi `[landscape]`. Dòng nào ghi `[portrait]` nghĩa là simulator không xoay, khi đó cả làn này không có giá trị.
+- Rủi ro: có báo cáo Appium về lỗi xoay trên simulator iOS 26.1, và `setOrientation` trên iOS chưa chạy thử ở repo này. Vì vậy phải xem ảnh 01a của `P001-land` trước khi đọc các kết quả khác.

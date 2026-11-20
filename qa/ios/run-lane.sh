@@ -65,7 +65,9 @@ for PIDX in ${PERSONAS//,/ }; do
   mkdir -p "$OUT/raw" "$OUT/crash"
   (
     eval "$(python3 "$REPO/qa/ios/persona_env.py" "$PIDX" "$FIXTURES")"
-    log "$PIDX $P_BEHAVIOUR region=$REGION $APPEARANCE $CONTENT_SIZE tz=$P_TZ fixture=$FIXTURE"
+    log "$PIDX $P_BEHAVIOUR region=$REGION $APPEARANCE $CONTENT_SIZE tz=$P_TZ fixture=$FIXTURE orient=$ORIENT"
+    # iPad landscape (B-155): 1032 pt tall, bar 6 + 56 + 20 pt → Sort tab centre ≈ 95 %.
+    if [ "$LANE" = ipad ] && [ "$ORIENT" = LANDSCAPE_LEFT ]; then SORT_TAB_Y=95%; fi
     xcrun simctl terminate "$UDID" "$BUNDLE" >/dev/null 2>&1
     xcrun simctl uninstall "$UDID" "$BUNDLE" >/dev/null 2>&1
     xcrun simctl install "$UDID" "$APP" || { log "install failed"; }
@@ -116,7 +118,7 @@ for PIDX in ${PERSONAS//,/ }; do
           --format junit --output "$OUT/junit.xml" --debug-output "$OUT/debug" --test-output-dir "$OUT/maestro-out" \
           -e "PID=$PID" -e "REGION=$REGION" -e "REGION_LABEL=$REGION_LABEL" -e "OTHER_REGION_LABEL=$OTHER_REGION_LABEL" \
           -e "AMOUNT=$AMOUNT" -e "NOTE=$NOTE" -e "FIXTURE=$FIXTURE" -e "DO_REGION_SWITCH=$DO_REGION_SWITCH" \
-          -e "DO_KILL=$DO_KILL" -e "DO_WIPE=$DO_WIPE" -e "LANE=$LANE" -e "SORT_TAB_Y=$SORT_TAB_Y"
+          -e "DO_KILL=$DO_KILL" -e "DO_WIPE=$DO_WIPE" -e "LANE=$LANE" -e "SORT_TAB_Y=$SORT_TAB_Y" -e "ORIENT=$ORIENT"
       ) >> "$OUT/maestro.txt" 2>&1
     }
     : > "$OUT/maestro.txt"
