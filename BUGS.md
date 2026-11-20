@@ -728,4 +728,8 @@
   (giao hàng xuống xe vài phút rồi lái tiếp vẫn một chuyến). (d) tối 19/11 Phương đi xe chậm từ UBND phường Từ Liêm tới chỗ nối Bluetooth không bật chuyến:
   AR giữ still, lần kiểm (từ lúc đi bộ) hết hạn đúng lúc xe lăn bánh → gia hạn lần kiểm khi 2 phút cuối GPS còn di chuyển thật (tối đa +12 phút), không
   probe_none + nghỉ (Phương mô tả tình huống, áp theo đề xuất).
+- [ ] **B-144** 🟡 phòng hờ (Phương duyệt 20/11) Bài 5 vuốt đóng app giữa chuyến ✅ suy ra trên A13 (diag 01-43: GPS liền tới cuối chuyến, không khởi động lại),
+  nhưng Samsung có thể tắt app nền (pin yếu, "sleeping apps"). Yêu cầu: mỗi lần native đánh thức JS (activity / bluetooth / wake alarm / sample / boot),
+  nếu có chuyến running mà task GPS không chạy (`hasStartedLocationUpdatesAsync` false hoặc không có fix > merge… ) → `restoreRecording()` + nhật ký
+  `restore_ok {reason}`. Hiện chỉ làm khi reason 'restart' (B-129). Giao phiên "A006 gỡ giới hạn pro" (`backgroundTask.ts` headless task, `controller.ts`).
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
