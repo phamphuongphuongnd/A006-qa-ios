@@ -1,0 +1,72 @@
+# Reports → Export → share sheet opens → close it.
+appId: com.phiotron.sundaysort
+name: 09_export_csv
+---
+- runFlow: common/home.yaml
+- tapOn: "Reports"
+- waitForAnimationToEnd:
+    timeout: 3000
+- scrollUntilVisible:
+    element:
+      text: "Export"
+    timeout: 15000
+- tapOn: "Export"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_09a_export_panel
+# The button sits at the sheet's bottom edge: accept it half visible (P041, run 44450726271).
+- scrollUntilVisible:
+    element:
+      text: '.*Export \d+ files?.*'
+    timeout: 40000
+    visibilityPercentage: 50
+# Runs 44481342409/52656 (P007, P061 iPhone SE, UK): the button was at y 630-686 pt but the sheet clips at ~634 pt,
+# so the tap at its centre landed outside the sheet. Swipe the sheet content up once more so the button is clear.
+- swipe:
+    start: "50%,60%"
+    end: "50%,35%"
+    duration: 600
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: ${PID}_09a2_export_button
+- tapOn: '.*Export \d+ files?.*'
+- waitForAnimationToEnd:
+    timeout: 3000
+- runFlow:
+    when:
+      visible: "Export anyway"
+    commands:
+      - takeScreenshot: ${PID}_09b_unsorted_ask
+      - tapOn: "Export anyway"
+- runFlow:
+    when:
+      visible: "Leave them out"
+    commands:
+      - takeScreenshot: ${PID}_09b_mtd_ask
+      - tapOn: "Leave them out"
+- extendedWaitUntil:
+    visible: "Copy|Save to Files|AirDrop|Messages|Mail"
+    timeout: 30000
+- takeScreenshot: ${PID}_09c_share_sheet
+- tapOn:
+    text: "Close"
+    optional: true
+- runFlow:
+    when:
+      visible: "Save to Files"
+    commands:
+      - swipe:
+          direction: DOWN
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_09d_after_share
+# B-62 (dev 7fd7305): the app asks whether the files were really sent. We closed the sheet → "Not sent".
+- runFlow:
+    when:
+      visible: 'Did you send or save the files\?'
+    commands:
+      - takeScreenshot: ${PID}_09e_sent_ask
+      - tapOn: "Not sent"
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - takeScreenshot: ${PID}_09f_after_not_sent

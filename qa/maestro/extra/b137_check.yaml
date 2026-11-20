@@ -1,0 +1,19 @@
+# B-137 part 2: a GPS fix arrived late (after the old 12 s limit). The map ("Map of the trip") must be on screen.
+# TAG = 30s / 60s (seconds after Start trip). FINAL=1 → end and discard the trip afterwards.
+appId: com.phiotron.sundaysort
+name: b137_check
+---
+- takeScreenshot: ${PID}_b137b_${TAG}
+# The map's accessibility label is not exposed to XCTest; the attribution line of the map is.
+- assertVisible: ".*OpenStreetMap.*|.*OpenFreeMap.*|.*Map of the trip.*"
+- runFlow:
+    when:
+      true: ${FINAL == '1'}
+    commands:
+      - tapOn: "End trip"
+      - tapOn:
+          text: "Discard trip"
+          optional: true
+      - tapOn:
+          text: "Discard"
+          optional: true

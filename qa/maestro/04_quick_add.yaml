@@ -1,0 +1,16 @@
+# Quick capture with the app's amount field (system number pad + calc bar) and a note.
+appId: com.phiotron.sundaysort
+name: 04_quick_add
+---
+- runFlow: common/capture.yaml
+- takeScreenshot: ${PID}_04a_capture_filled
+- tapOn: "Save"
+- extendedWaitUntil:
+    visible: "Saved · .*"
+    timeout: 10000
+- takeScreenshot: ${PID}_04b_saved
+- tapOn: "Entries.*"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_04c_in_entries
+- assertVisible: ".*QA-${PID}.*"

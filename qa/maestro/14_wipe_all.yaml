@@ -1,0 +1,41 @@
+appId: com.phiotron.sundaysort
+name: 14_wipe_all
+---
+- runFlow:
+    when:
+      true: ${DO_WIPE == 'true'}
+    commands:
+      - runFlow: common/home.yaml
+      - tapOn: "Settings"
+      - scrollUntilVisible:
+          element:
+            text: "Delete all data.*"
+          timeout: 20000
+      - tapOn: "Delete all data.*"
+      - extendedWaitUntil:
+          visible: 'Delete all data\?'
+          timeout: 10000
+      - takeScreenshot: ${PID}_14a_ask
+      - tapOn: "Continue"
+      - extendedWaitUntil:
+          visible: "Type DELETE to confirm"
+          timeout: 10000
+      - tapOn: "DELETE"
+      - inputText: "DELETE"
+      - takeScreenshot: ${PID}_14b_typed
+      - tapOn:
+          text: "Delete all data"
+          below: "Type DELETE to confirm"
+      - waitForAnimationToEnd:
+          timeout: 5000
+      - takeScreenshot: ${PID}_14c_after_wipe
+      # A wiped app starts again at the welcome screen.
+      - launchApp
+      - extendedWaitUntil:
+          visible: "Get started"
+          timeout: 30000
+      - takeScreenshot: ${PID}_14d_relaunch_after_wipe
+      # Steps 15-17 come after this one and need a set-up app (runs 44481352656: P046/P047 15-17 waited for
+      # "Settings" on the welcome screen) → set the app up again, as a new user would.
+      - runFlow: 01_onboarding.yaml
+      - takeScreenshot: ${PID}_14e_set_up_again

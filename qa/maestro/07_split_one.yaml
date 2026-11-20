@@ -1,0 +1,25 @@
+# Entry detail → More → Split → default 2 equal parts → Split.
+appId: com.phiotron.sundaysort
+name: 07_split_one
+---
+- runFlow: common/home.yaml
+- tapOn: "Entries.*"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn: ".*QA-${PID}.*"
+- extendedWaitUntil:
+    visible: "Save changes"
+    timeout: 10000
+- tapOn: "More"
+- tapOn: "Split"
+- extendedWaitUntil:
+    visible: "Left to assign.*"
+    timeout: 10000
+- takeScreenshot: ${PID}_07a_split
+- tapOn:
+    text: "Split"
+    below: "Left to assign.*"
+- extendedWaitUntil:
+    visible: "Split into .* entries"
+    timeout: 8000
+- takeScreenshot: ${PID}_07b_split_done

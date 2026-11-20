@@ -1,0 +1,40 @@
+# Sort tab: give one entry a category.
+appId: com.phiotron.sundaysort
+name: 06_sort_one
+---
+- runFlow: common/home.yaml
+# Tap the Sort TAB (middle of the tab bar): "Sort.*" also matched an off-screen "Sort now" on Home (runs 44450726271, 44478021185).
+- tapOn:
+    point: "50%,94%"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_06a_sort
+- assertNotVisible: "Nothing to sort"
+# Large text: the card scrolls (B-114) → bring the category chips into view first.
+- scrollUntilVisible:
+    element:
+      text: "Fuel|More…"
+    timeout: 15000
+    optional: true
+- runFlow:
+    when:
+      visible: "Fuel"
+    commands:
+      - tapOn: "Fuel"
+- runFlow:
+    when:
+      notVisible: "Sorted as .*|Week sorted.*"
+    commands:
+      - tapOn:
+          text: "More…"
+          optional: true
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - takeScreenshot: ${PID}_06b_more
+      - tapOn:
+          text: "Fuel|Delivery income"
+          index: 0
+- extendedWaitUntil:
+    visible: "Sorted as .*|Week sorted.*"
+    timeout: 8000
+- takeScreenshot: ${PID}_06c_sorted

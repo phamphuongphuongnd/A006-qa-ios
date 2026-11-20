@@ -1,0 +1,27 @@
+# QA-100 Maestro suite (Android + iOS). One persona = one `maestro test qa/maestro` run with -e values
+# (qa/ios/persona_env.py prints them). Every numbered flow restarts the app, so a failed step does not hide the next.
+flows:
+  - "*"
+executionOrder:
+  continueOnFailure: true
+  flowsOrder:
+    - 01_onboarding
+    - 02_restore
+    - 03_tour
+    - 04_quick_add
+    - 05_entry_detail
+    - 06_sort_one
+    - 07_split_one
+    - 08_manual_trip
+    - 09_export_csv
+    - 10_weird_note
+    - 11_double_save
+    - 12_region_switch
+    - 13_kill_mid_save
+    - 14_wipe_all
+    - 15_auto_trips
+    - 16_end_trip
+    - 17_gps_trip
+    - 18_recently_deleted
+    - 19_notifications
+    - 99_final_state

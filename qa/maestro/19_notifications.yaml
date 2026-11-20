@@ -1,0 +1,36 @@
+# Settings › Notifications: turn the Daily nudge on (time chip + day line appear) and off again; the Sunday reminder row
+# shows its day/time chips when on. UI only: a simulator does not deliver a reminder at a real time of day.
+appId: com.phiotron.sundaysort
+name: 19_notifications
+---
+- runFlow: common/home.yaml
+- tapOn: "Settings"
+- scrollUntilVisible:
+    element:
+      text: "Notifications.*"
+    timeout: 20000
+- tapOn: "Notifications.*"
+- extendedWaitUntil:
+    visible: "Sunday reminder.*"
+    timeout: 10000
+- takeScreenshot: ${PID}_19a_notifications
+- assertVisible: "Daily nudge.*"
+- assertVisible: "No sales messages, ever.*"
+# Switch = second element labelled "Daily nudge" (the first is the row title).
+- tapOn:
+    text: "Daily nudge"
+    index: 1
+- tapOn:
+    text: "Allow"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: ${PID}_19b_daily_on
+- assertVisible: ".*Nothing logged today.*"
+- assertVisible: "Time, .*"
+- tapOn:
+    text: "Daily nudge"
+    index: 1
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: ${PID}_19c_daily_off

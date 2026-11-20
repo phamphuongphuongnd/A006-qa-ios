@@ -1,0 +1,19 @@
+# Unusual characters in a note: accents, CJK, RTL, emoji ZWJ, quotes, comma (CSV escaping).
+appId: com.phiotron.sundaysort
+name: 10_weird_note
+---
+- runFlow:
+    file: common/capture.yaml
+    env:
+      NOTE: "QW-${PID} Café ☕ 日本語 العربية 👨‍👩‍👧 'q', x"
+      AMOUNT: "7"
+- takeScreenshot: ${PID}_10a_weird_typed
+- tapOn: "Save"
+- extendedWaitUntil:
+    visible: "Saved · .*"
+    timeout: 10000
+- tapOn: "Entries.*"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_10b_weird_in_list
+- assertVisible: ".*QW-${PID}.*"

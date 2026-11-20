@@ -1,0 +1,14 @@
+# Restart the app and wait for Home.
+appId: com.phiotron.sundaysort
+---
+- launchApp
+# A late iOS "Open in “Sunday Sort”?" alert from an earlier deep link (step 15) blocks every later step on a slow
+# runner (runs 44258898134, 44471864915) → dismiss it first.
+- runFlow:
+    when:
+      visible: 'Open in .*Sunday Sort.*'
+    commands:
+      - tapOn: "Cancel"
+- extendedWaitUntil:
+    visible: "Settings"
+    timeout: 30000

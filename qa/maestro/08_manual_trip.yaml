@@ -1,0 +1,51 @@
+# Miles → Add manually → odometer readings → Save trip.
+appId: com.phiotron.sundaysort
+name: 08_manual_trip
+---
+- runFlow: common/home.yaml
+- tapOn: "Miles"
+- waitForAnimationToEnd:
+    timeout: 3000
+- scrollUntilVisible:
+    element:
+      text: "Add manually"
+    timeout: 15000
+- tapOn: "Add manually"
+- extendedWaitUntil:
+    visible: "Add trip"
+    timeout: 10000
+- takeScreenshot: ${PID}_08a_add_trip
+- tapOn:
+    text: "Odometer"
+    optional: true
+# Purpose FIRST (text keyboard, Return closes it). The odometer fields use a decimal pad that has no Return key and
+# that Maestro cannot close (runs 44481342409..63012: the Purpose tap landed on the pad's "8" → "482388QA trip…" in
+# End reading). So type the numbers last and tap "Save trip", which sits above the pad.
+- scrollUntilVisible:
+    element:
+      text: 'e\.g\. Amazon route DLS4'
+    timeout: 10000
+- tapOn: 'e\.g\. Amazon route DLS4'
+- inputText: "QA trip ${PID}"
+- pressKey: Enter
+- hideKeyboard:
+    optional: true
+- scrollUntilVisible:
+    element:
+      text: 'e\.g\. 48,210'
+    direction: UP
+    timeout: 10000
+- tapOn: 'e\.g\. 48,210'
+- inputText: "48210"
+- tapOn: 'e\.g\. 48,338'
+- inputText: "48238"
+- extendedWaitUntil:
+    visible: '.*28\.0.*'
+    timeout: 5000
+- takeScreenshot: ${PID}_08b_odometer_typed
+- takeScreenshot: ${PID}_08c_before_save
+- tapOn: "Save trip"
+- extendedWaitUntil:
+    visible: "Trip saved.*"
+    timeout: 10000
+- takeScreenshot: ${PID}_08d_trip_saved

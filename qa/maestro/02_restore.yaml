@@ -1,0 +1,99 @@
+# Load the persona's backup (qa/fixtures/<id>.sundaysort, copied into Files › On My iPhone by the runner).
+appId: com.phiotron.sundaysort
+name: 02_restore
+---
+- runFlow:
+    when:
+      platform: iOS
+      true: ${FIXTURE != 'none'}
+    commands:
+      - runFlow: common/home.yaml
+      - tapOn: "Settings"
+      - scrollUntilVisible:
+          element:
+            text: "Backup & restore.*"
+          timeout: 20000
+      - tapOn: "Backup & restore.*"
+      # Large text: "Restore from backup" sits below the "Back up every night" card (run 44450726271).
+      - scrollUntilVisible:
+          element:
+            text: "Restore from backup.*"
+          timeout: 20000
+      - takeScreenshot: ${PID}_02a_backup
+      - tapOn: "Restore from backup.*"
+      - waitForAnimationToEnd:
+          timeout: 5000
+      - takeScreenshot: ${PID}_02b_picker
+      - runFlow:
+          when:
+            notVisible: ".*${FIXTURE}.*"
+          commands:
+            - tapOn:
+                text: "Browse"
+                optional: true
+            - waitForAnimationToEnd:
+                timeout: 3000
+            - tapOn:
+                text: "On My iPhone"
+                optional: true
+            - waitForAnimationToEnd:
+                timeout: 3000
+      # P076 (run 44481363012): the picker opened somewhere else and the file never showed → navigate once more.
+      - runFlow:
+          when:
+            notVisible: ".*${FIXTURE}.*"
+          commands:
+            - tapOn:
+                text: "Browse"
+                optional: true
+            - tapOn:
+                text: "On My iPhone"
+                optional: true
+            - waitForAnimationToEnd:
+                timeout: 3000
+      - takeScreenshot: ${PID}_02c_picker_files
+      # iOS 26 picker: a plain tap on the file name/icon left the picker open in every round (4n–4q). Try, in turn:
+      # tap the name, tap the icon, double-tap the icon, long-press → "Open". Stop as soon as the picker is gone.
+      - tapOn: ".*${FIXTURE}.*"
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - runFlow:
+          when:
+            visible: "On My iPhone"
+          commands:
+            # file icon on iPhone SE (on Pro Max this point is empty space: harmless)
+            - tapOn:
+                point: "18%,33%"
+            - waitForAnimationToEnd:
+                timeout: 3000
+      - runFlow:
+          when:
+            visible: "On My iPhone"
+          commands:
+            - doubleTapOn: ".*${FIXTURE}.*"
+            - waitForAnimationToEnd:
+                timeout: 3000
+      - runFlow:
+          when:
+            visible: "On My iPhone"
+          commands:
+            - longPressOn: ".*${FIXTURE}.*"
+            - takeScreenshot: ${PID}_02c2_long_press
+            - tapOn:
+                text: "Open|Select|Choose"
+                optional: true
+      - takeScreenshot: ${PID}_02c3_after_pick
+      - extendedWaitUntil:
+          visible: "Replace this phone's data"
+          timeout: 120000
+      - takeScreenshot: ${PID}_02d_preview
+      - tapOn: "Replace this phone's data"
+      - extendedWaitUntil:
+          visible: "Replace"
+          timeout: 10000
+      - takeScreenshot: ${PID}_02e_confirm
+      - tapOn: "Replace"
+      - extendedWaitUntil:
+          visible: "Backup restored"
+          timeout: 240000
+      - takeScreenshot: ${PID}_02f_restored

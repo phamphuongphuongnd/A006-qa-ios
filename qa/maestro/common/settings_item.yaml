@@ -1,0 +1,18 @@
+# Home → Settings → ITEM, screenshot as SHOT.
+appId: com.phiotron.sundaysort
+---
+- runFlow: home.yaml
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "Region.*"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      text: "${ITEM}.*"
+    timeout: 40000
+- tapOn:
+    text: "${ITEM}.*"
+    index: 0
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_${SHOT}

@@ -1,0 +1,52 @@
+# B-96 v2 (iOS) part 2: open Notification Center and look for "Trip ended at HH:MM · 0.0 mi" (exactly one).
+#   CONT=1 → long-press it and tap "Continue trip" → the app must open on a running trip.
+#   CONT=0 → only look; then open the app → Miles must list the ended trip.
+# Fails (exit ≠ 0) when the notice is not there, so qa/ios/run-b96.sh can wait longer and look again.
+appId: com.phiotron.sundaysort
+name: b96_check
+---
+- pressKey: Home
+- swipe:
+    start: 50%, 0%
+    end: 50%, 70%
+    duration: 600
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ${PID}_b96d_${TAG}_notification_center
+- assertVisible: ".*Trip ended at .*"
+# Never two of them (engine notice and booked notice share one identifier).
+- assertNotVisible:
+    text: ".*Trip ended at .*"
+    index: 1
+- runFlow:
+    when:
+      true: ${CONT == '1'}
+    commands:
+      - longPressOn: ".*Trip ended at .*"
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - takeScreenshot: ${PID}_b96e_${TAG}_expanded
+      - tapOn: "Continue trip"
+      - extendedWaitUntil:
+          visible: "End trip"
+          timeout: 30000
+      - takeScreenshot: ${PID}_b96f_${TAG}_after_continue
+- runFlow:
+    when:
+      true: ${CONT != '1'}
+    commands:
+      - swipe:
+          start: 50%, 95%
+          end: 50%, 30%
+          duration: 600
+      - launchApp:
+          stopApp: false
+      - waitForAnimationToEnd:
+          timeout: 4000
+      - takeScreenshot: ${PID}_b96f_${TAG}_app_opened
+      - tapOn:
+          text: "Miles"
+          optional: true
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - takeScreenshot: ${PID}_b96g_${TAG}_miles
