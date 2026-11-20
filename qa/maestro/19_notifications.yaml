@@ -5,11 +5,14 @@ name: 19_notifications
 ---
 - runFlow: common/home.yaml
 - tapOn: "Settings"
+# The group label above the row is also "Notifications" (run 44502436862 tapped it) → tap the row by its value.
 - scrollUntilVisible:
     element:
-      text: "Notifications.*"
+      text: "App lock"
     timeout: 20000
-- tapOn: "Notifications.*"
+- tapOn:
+    text: "Notifications"
+    index: 1
 - extendedWaitUntil:
     visible: "Sunday reminder.*"
     timeout: 10000
