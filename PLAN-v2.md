@@ -108,6 +108,23 @@
 - **Luật dừng (Phương 17/11):** xong P6 phần 1 → dừng; khoá ký, tag v1.0.0, AAB/iOS, listing, privacy/Data safety, nộp — chỉ làm khi Phương bảo.
 - Bàn giao: `side-session-notes/local_5b605898…/P5-handover-4.md` (+ `P5-Phuong-TalkBack-chay-xe.md`); phiên P6 local_1004d5bc đang chờ dữ liệu chạy xe.
 
+## Free launch (2026-11-19/20) — Pro tạm tắt, mọi tính năng mở
+- Đã ghép vào dev (08b3930): lõi `PRO_PAUSED` + giao diện theo mockup (`design/free-launch/`) + tài liệu/store + B-143/144/145
+  (drive check, đi bộ sau khi đỗ, khôi phục GPS, bỏ "Start when charging"); chặn quyền BILLING (app.json). Còn: B-146 iPad +
+  B-147 Sort SE (phiên con), build + Phương chạy xe thử bản ghép.
+
+## P7 — QA toàn diện (Phương yêu cầu 20/11, làm SAU khi code + thử thật xong)
+1. Test mọi case mới sửa + chức năng liên quan; 2. chạy lại mọi case cũ từng sai (BUGS.md ✅ + QA-100 findings).
+3. Nhiều thiết bị + điều kiện mạng (offline, mạng chậm, máy bay). 4. Không crash/treo; mọi thao tác ≤ 1 s (đo, có số liệu).
+5. Môi trường ảo: Bluetooth xe kết nối + chạy xe trên đường (giả lập tuyến GPS + sự kiện AR/BT); hoá đơn thật Mỹ/Anh để kiểm OCR.
+6. Vai "khách hàng khó tính nhất" dùng app và viết đánh giá. 7. Lỗi → bằng chứng → nguyên nhân gốc → sửa → chạy lại + regression
+   tới khi hết lỗi nghiêm trọng; **không báo PASS khi chưa test thật**.
+- iOS (phiên QA C): nhánh `qa-ios`, workflow `.github/workflows/qa-ios.yml` (personas, flows, ios_version, test_budget_min), Maestro
+  `qa/maestro` bước 01–19, kết quả `qa/findings/qa-ios.md`; repo chạy `phamphuongphuongnd/A006-qa-ios` (Private, phút macOS ×10 —
+  chạy nhiều cần Phương duyệt tạm công khai). Chưa kiểm iOS: khôi phục backup tới bước Restore, iPad, chuyến GPS iOS 18 (0.0 mi),
+  widget, Face ID, camera/OCR, "Continue trip" trên thông báo, khoản lặp lại, luật, PDF/MTD (trước bị khoá Pro). Lỗi iOS mở:
+  QI-8 = B-147 (đang sửa), QI-3 🟡 chữ ghi chú đảo khi gõ nhanh (chưa lặp lại); B-142 hết (dòng chữ đã thay).
+
 ## Rủi ro kỹ thuật (grill ở P1, kiểm ở P3)
 - Tự viết module dò chuyến: thử nhiều trên xe thật; Samsung tắt app nền → hướng dẫn tắt tối ưu pin trong app.
 - iOS không có sự kiện Bluetooth xe khi chạy nền → iOS dựa vào CoreMotion "automotive" + thay đổi vị trí đáng kể.
