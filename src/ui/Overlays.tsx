@@ -181,6 +181,7 @@ export function Dialog({
   body,
   actions,
   onClose,
+  onShow,
   children,
 }: {
   visible: boolean;
@@ -188,11 +189,13 @@ export function Dialog({
   body?: string;
   actions: DialogAction[];
   onClose: () => void;
+  /** Once the dialog window is up — focus a field here (autoFocus in a Modal doesn't raise the Android keyboard). */
+  onShow?: () => void;
   children?: ReactNode;
 }) {
   const { colors } = useTheme();
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} onShow={onShow} statusBarTranslucent>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={[styles.dlgWrap, { backgroundColor: colors.scrim }]}>

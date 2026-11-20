@@ -765,3 +765,6 @@
   native không nhận giá trị này. Test `src/db/__tests__/mergeStopB149.test.ts` (cài đặt, sao lưu, engine 5 phút).
   ✅ jest 1022 · tsc · lint sạch. Giả lập Tablet_API_37 (emulator-5560): mặc định 10 chọn sẵn; Custom 61 → báo lỗi; 7 → ô ghi "7 min", còn sau khi
   tắt mở app; 5 → 10 đổi đúng. ⏳ Phương thử thật (chuyến ca với số phút mới) cùng đợt B-143.
+  Lượt 2 (giả lập điện thoại 360 dp, chữ 1.3 + 2.0): hàng 4 ô đủ chữ. Lỗi đã sửa: `autoFocus` trong Dialog (Modal) không mở bàn phím số trên
+  Android → `Dialog` thêm `onShow`, ô nhập focus 250 ms sau khi hộp hiện (focus ngay lúc onShow có lần không lên); ✓ khi số sai giữ bàn phím
+  (`submitBehavior="submit"`). TESTCASES TC-280/282/283/392 sửa theo luật mới, thêm TC-423…427.
