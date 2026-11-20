@@ -470,9 +470,9 @@ Personal" · "Purpose" ("e.g. Amazon route DLS4") · "Save trip". Lỗi: End < S
   1 lần) → bắt đầu ngay (**cắm sạc đã bỏ** — B-145, Phương 2026-11-20: sạc dự phòng / cáp máy tính bật nhầm). iOS: chỉ cảm biến + vị trí thay đổi đáng kể.
 - Đang chạy giống chuyến tay, nhãn "Auto". Khi tự bắt đầu, thông báo cố định ghi "Trip started automatically" · "Not driving
   for work? Tap to mark as personal." (không thêm thông báo riêng).
-- **Dừng ngắn < 20 phút** (đi bộ giao hàng, đèn đỏ, chờ kho; Settings đổi 10/20/45) → vẫn cùng một **chuyến ca**; ngắt
+- **Dừng ngắn < Merge stops** (mặc định **10 phút**, tài xế tự chọn 5 · 10 · 20 hoặc Custom 3–60 phút — B-149; đi bộ giao hàng, đèn đỏ, chờ kho) → vẫn cùng một **chuyến ca**; ngắt
   Bluetooth không dừng chuyến.
-- **Kết thúc:** không lái xe liên tục ≥ 20 phút → chuyến đóng, **giờ kết thúc = lúc xe dừng thật**. Thông báo im lặng:
+- **Kết thúc:** không lái xe liên tục ≥ Merge stops (mặc định 10 phút) → chuyến đóng, **giờ kết thúc = lúc xe dừng thật**. Thông báo im lặng:
   "Trip saved · 42.3 mi · Work" hoặc "· Sort on Sunday".
 - **Giờ làm** (P1-3, mặc định tắt): bật thì chuyến ngoài giờ vẫn ghi nhưng gắn Personal.
 - Người dùng bấm Start khi tự động đang bật → chuyến tay, tự động không chen.
@@ -516,7 +516,9 @@ nhãn "Auto" nếu có · "Personal stop" · "End trip". End → sheet "Trip sav
 - Bật lần đầu → chuỗi quyền S-07e.
 - Mục "Start faster" (Android): "Van Bluetooth" (chọn thiết bị đã ghép, vd "Ford Transit Audio"). ~~"Start when charging"~~
   đã bỏ (B-145). iOS: ghi chú "iPhone starts trips from motion. Add an NFC tag for instant start."
-- "Merge stops shorter than" — "10 min" · "20 min" (mặc định) · "45 min" + "Deliveries and red lights stay in one trip."
+- "Merge stops shorter than" — "5 min" · "10 min" (mặc định) · "20 min" · "Custom" (hộp nhập số phút, bàn phím số, 3–60; đã chọn thì ô
+  ghi "7 min", bấm lại để sửa; sai → "Enter whole minutes from 3 to 60.") + "Deliveries and red lights stay in one trip." (B-149,
+  Phương 20/11; giá trị đã lưu 10/20/45 giữ nguyên)
 - "Work hours" (công tắc, mặc định tắt) → ngày + giờ; "Trips outside these hours are still recorded, as personal."
 - Trạng thái: "Working · last check 2 min ago" (xanh) / "Paused by battery saving · Fix" (cam).
 - Link "Battery tips for Samsung" → S-07f.

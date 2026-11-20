@@ -26,7 +26,10 @@ export interface AppSettings {
   // ---- Bản 2 (product.md §8). UI comes with the v2 mockups; S1–S5 read / write these keys. ----
   /** X2 / Q24: asked in onboarding; 'unsure' counts like mileage and Reports nudges. See domain/vehicleCosts.ts. */
   vehicleCostMethod: VehicleCostMethod;
-  /** P1-1: stops shorter than this stay in one shift trip; end of trip after this long not driving. */
+  /**
+   * P1-1: stops shorter than this stay in one shift trip; end of trip after this long not driving.
+   * B-149 (Phương 20/11): the driver's choice, whole minutes MERGE_STOP_MIN–MERGE_STOP_MAX (quick picks 5 · 10 · 20 + Custom).
+   */
   mergeStopMinutes: MergeStopMinutes;
   /** P1-3: trips outside these hours are recorded as Personal. days: 0 = Sunday … 6; minutes after midnight. */
   workHours: WorkHours;
@@ -67,7 +70,19 @@ export interface AppSettings {
   exportLog: Partial<Record<string, number>>;
 }
 
-export type MergeStopMinutes = 10 | 20 | 45;
+/** Whole minutes, MERGE_STOP_MIN–MERGE_STOP_MAX. Values saved before B-149 (10 / 20 / 45) are inside the range and kept. */
+export type MergeStopMinutes = number;
+export const MERGE_STOP_MIN = 3;
+export const MERGE_STOP_MAX = 60;
+export const isMergeStopMinutes = (v: unknown): v is MergeStopMinutes =>
+  typeof v === 'number' && Number.isInteger(v) && v >= MERGE_STOP_MIN && v <= MERGE_STOP_MAX;
+/** What the driver typed in Custom: "7" → 7; anything else ("", "7.5", "2", "61", "1e1") → null. */
+export function parseMergeStopMinutes(text: string): MergeStopMinutes | null {
+  const s = text.trim();
+  if (!/^\d{1,2}$/.test(s)) return null;
+  const n = Number(s);
+  return isMergeStopMinutes(n) ? n : null;
+}
 
 export interface WorkHours {
   on: boolean;
@@ -92,7 +107,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   backupReminder: true,
   backupBannerSnoozedUntil: null,
   vehicleCostMethod: 'unsure',
-  mergeStopMinutes: 20,
+  mergeStopMinutes: 10,
   workHours: { on: false, days: [1, 2, 3, 4, 5], startMin: 7 * 60, endMin: 19 * 60 },
   autoTrips: false,
   vanBtDevice: null,
@@ -121,7 +136,6 @@ const ENUMS: Partial<Record<keyof AppSettings, readonly unknown[]>> = {
   lockAfterMs: [0, 60_000, 300_000],
   theme: ['system', 'light', 'dark'],
   vehicleCostMethod: ['mileage', 'actual', 'unsure'],
-  mergeStopMinutes: [10, 20, 45],
   mtdPeriod: ['standard', 'calendar'],
   odometerCheck: ['off', 'weekly', 'monthly'],
 };
@@ -139,6 +153,7 @@ export function saneSetting(key: keyof AppSettings, v: unknown): unknown {
   const def = DEFAULT_SETTINGS[key] as unknown;
   const allowed = ENUMS[key];
   if (allowed) return allowed.includes(v) ? v : undefined;
+  if (key === 'mergeStopMinutes') return isMergeStopMinutes(v) ? v : undefined;
   if (NULLABLE_NUM.has(key)) return v === null || isNum(v) ? v : undefined;
   if (NULLABLE_OBJ.has(key)) return v === null || isObj(v) ? v : undefined;
   if (key === 'mileageRates') return isObj(v) && ratesOk(v.UK) && ratesOk(v.US) ? v : undefined;

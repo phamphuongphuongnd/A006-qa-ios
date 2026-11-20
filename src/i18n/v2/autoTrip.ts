@@ -53,6 +53,10 @@ export const autoTrip = {
   mergeTitle: 'Merge stops shorter than',
   mergeHint: 'Deliveries and red lights stay in one trip.',
   min: '{n} min',
+  // B-149: Custom merge threshold (whole minutes).
+  mergeCustom: 'Custom',
+  mergeCustomLabel: 'Minutes',
+  mergeCustomError: 'Enter whole minutes from {min} to {max}.',
   workHours: 'Work hours',
   workHoursSub: 'Trips outside these hours are still recorded, as personal.',
   batteryTips: 'Battery tips for Samsung',

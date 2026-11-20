@@ -755,3 +755,13 @@
   từng báo cycling trong lần kiểm, hay bước chân ≥ 40/phút. "Đứng yên" theo GPS — cảm biến báo still mà GPS thấy xe bò ≥ 500 m vẫn bật.
   Sửa `probeLogic.ts` `PROBE_MIN_SPEED_MPS = 10 / 3.6` + test (600 m: 9 km/h không, 11 km/h có) + CONTEXT.md. Lọc điểm đi bộ sau khi đỗ (B-143 c,
   `WALK_AFTER_DRIVE_MAX_MPS` 9 km/h) giữ nguyên. ⏳ Phương thử thật cùng B-143.
+- [x] **B-149** 🟡 (Phương chốt 20/11, giao phiên "A006 gỡ giới hạn pro") **"Merge stops" tự chọn số phút, mặc định 10** (thay 10/20/45, mặc định 20):
+  20 phút làm chuyến chưa đóng khi tài xế đã đỗ hẳn; mỗi người giao hàng dừng dài ngắn khác nhau → để tự chỉnh. Luật gộp chuyến ca giữ nguyên (dừng ngắn
+  hơn Merge stops rồi lái tiếp = cùng chuyến; dừng ≥ Merge stops = hết chuyến, giờ kết thúc = lúc xe dừng). Automatic trips: mức nhanh **5 · 10 · 20 min**
+  + **Custom** (hộp nhập, bàn phím số, số nguyên **3–60** phút; đang dùng giá trị riêng thì ô thứ 4 ghi "7 min", bấm lại để sửa). Mặc định **10**.
+  Giá trị đã lưu của người dùng cũ (10/20/45) giữ nguyên; giá trị lạ (2, 61, 7.5, chuỗi) trong máy hay file sao lưu → về mặc định 10 (SPE-4).
+  Sửa `settingsRepo.ts` (`MergeStopMinutes` = số, `isMergeStopMinutes` / `parseMergeStopMinutes`), `trip/auto.tsx`, i18n `autoTrip.mergeCustom*`,
+  `backstopPlan.ts` (mặc định hàm 10), CONTEXT.md (Merge threshold), product.md. Engine / runner / sync / backstop / controller vốn nhận số bất kỳ;
+  native không nhận giá trị này. Test `src/db/__tests__/mergeStopB149.test.ts` (cài đặt, sao lưu, engine 5 phút).
+  ✅ jest 1022 · tsc · lint sạch. Giả lập Tablet_API_37 (emulator-5560): mặc định 10 chọn sẵn; Custom 61 → báo lỗi; 7 → ô ghi "7 min", còn sau khi
+  tắt mở app; 5 → 10 đổi đúng. ⏳ Phương thử thật (chuyến ca với số phút mới) cùng đợt B-143.
