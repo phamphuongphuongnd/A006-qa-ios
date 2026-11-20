@@ -737,4 +737,8 @@
   i18n `autoTrip.startCharging`), `settingsRepo.startOnCharge`, nhánh 'charging' trong `engine.ts` + `runner.ts`, `isCharging`/`watchPower` nếu không còn ai
   dùng, native `AutoConfig.startOnCharge` + `TripDetectReceiver` (startCandidate khi sạc), diagnostics, `CONTEXT.md` mục "Start on charge", product.md /
   store listing nếu có nhắc. Dữ liệu cũ: bỏ qua giá trị startOnCharge còn lưu. Giao phiên "A006 gỡ giới hạn pro".
+- [ ] **B-146** 🟡 (Phương chốt 20/11) **Hỗ trợ iPad** (iPadOS): app đang `ios.supportsTablet: false` → trên iPad chạy trong khung iPhone; Maestro trên iPad ❌ bước 01
+  (phiên C, 4 lượt). Làm: `supportsTablet: true`; app chỉ dọc (`orientation: portrait`) → cần `ios.requireFullScreen: true` (UIRequiresFullScreen, không thì
+  App Store từ chối vì iPad đa nhiệm cần mọi hướng); kiểm bố cục mọi màn trên iPad giả lập (nội dung quá rộng → giới hạn bề ngang ~600–700 pt ở giữa,
+  Sheet, FAB, bàn phím số, bản đồ, widget); App Store cần thêm ảnh màn hình iPad 13". Giao phiên "A006 gỡ giới hạn pro"; phiên C kiểm iPad sau khi có bản.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
