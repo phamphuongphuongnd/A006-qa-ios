@@ -70,6 +70,7 @@ export const backupAuto = {
     missed: 'Missed-trip alerts',
     missedSub: 'Forgot to stop, GPS went quiet, phone paused trips',
     account: 'Account',
+    backup: 'Backup',
     proRenewal: 'Pro renewal',
     proRenewalSub: '7 days before',
     trialEnding: 'Trial ending',

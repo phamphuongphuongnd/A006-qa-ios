@@ -14,6 +14,7 @@ import { openPro } from '@/features/pro/openPro';
 import { checkRule, type RuleDraft, type RuleError } from '@/features/rules/match';
 import { createRule, deleteRule, findSameRule, getRule, listRules, restoreRule, setRuleEnabled, updateRule, type RuleListItem } from '@/features/rules/repo';
 import { NavHeader } from '@/features/settings/ui';
+import { PRO_PAUSED } from '@/domain/pro';
 import { t, type TKey } from '@/i18n';
 import { usePro } from '@/state/pro';
 import { useSettings } from '@/state/settings';
@@ -95,7 +96,7 @@ export default function RulesScreen() {
   );
 
   return (
-    <Screen header={<NavHeader title={t('sortV2.rulesTitle')} right={<Badge kind="pro" label="PRO" />} />}>
+    <Screen header={<NavHeader title={t('sortV2.rulesTitle')} right={PRO_PAUSED ? undefined : <Badge kind="pro" label="PRO" />} />}>
       {!pro ? (
         <Card variant="sun" style={{ gap: 10 }}>
           <Txt v="h3">{status.kind === 'expired' ? t('sortV2.rulesPaused') : t('sortV2.rulesFree')}</Txt>

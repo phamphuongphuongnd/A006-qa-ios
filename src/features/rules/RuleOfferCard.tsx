@@ -1,6 +1,7 @@
 import { Zap } from '@/ui/icons';
 import { View } from 'react-native';
 
+import { PRO_PAUSED } from '@/domain/pro';
 import { t } from '@/i18n';
 import { useTheme } from '@/theme';
 import { Badge, Button, Card, Txt } from '@/ui';
@@ -17,7 +18,7 @@ export function RuleOfferCard({ offer, onAlways, onNotNow }: { offer: RuleOffer;
         <Txt v="label" style={{ color: colors.sunText }}>
           {t('sortV2.suggestedRule')}
         </Txt>
-        <Badge kind="pro" label="PRO" />
+        {PRO_PAUSED ? null : <Badge kind="pro" label="PRO" />}
       </View>
       <Txt v="h2" accessibilityRole="header">
         {t('sortV2.offerTitle', { name: offer.matchText, category: offer.categoryName })}

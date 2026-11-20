@@ -13,6 +13,7 @@ import { useEntryActions } from '@/features/entries/useEntryActions';
 import { useNow } from '@/features/entries/useNow';
 import { autoSortedIn, markAutoReviewed, restoreRuleEntries, rulesByIds, unsortRuleEntries, type AutoSortedItem } from '@/features/rules/repo';
 import { NavHeader } from '@/features/settings/ui';
+import { PRO_PAUSED } from '@/domain/pro';
 import { t, tn } from '@/i18n';
 import { router } from '@/services/router';
 import { useLive } from '@/state/useLive';
@@ -92,7 +93,7 @@ export default function AutoSortedScreen() {
   };
 
   return (
-    <Screen header={<NavHeader title={t('sortV2.reviewTitle')} right={<Badge kind="pro" label="PRO" />} />}>
+    <Screen header={<NavHeader title={t('sortV2.reviewTitle')} right={PRO_PAUSED ? undefined : <Badge kind="pro" label="PRO" />} />}>
       {groups.length === 0 ? (
         <EmptyState title={t('sortV2.reviewEmpty')} body={t('sortV2.reviewEmptyBody')} />
       ) : (

@@ -25,6 +25,7 @@ import {
 import { RecurringSheet } from '@/features/recurring/RecurringSheet';
 import { dayFieldFor, dayOf, repeatLabel, shortDay } from '@/features/recurring/schedule';
 import { NavHeader } from '@/features/settings/ui';
+import { PRO_PAUSED } from '@/domain/pro';
 import { t } from '@/i18n';
 import { router } from '@/services/router';
 import { usePro } from '@/state/pro';
@@ -143,7 +144,7 @@ export default function RecurringScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
-      <NavHeader title={t('recurring.title')} right={<Badge kind="pro" label={t('pro.badge')} />} />
+      <NavHeader title={t('recurring.title')} right={PRO_PAUSED ? undefined : <Badge kind="pro" label={t('pro.badge')} />} />
       <ScrollView contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 6, gap: 16, paddingBottom: insets.bottom + 24 }}>
         <Txt c="textSecondary">{t('recurring.intro')}</Txt>
         {!pro ? (

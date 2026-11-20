@@ -12,6 +12,7 @@ import { readingValue } from '@/features/trips/check/rows';
 import { formatDistance, parseNumberInput, type DistanceUnit } from '@/features/trips/format';
 import { ModalHeader } from '@/features/trips/ModalHeader';
 import { deleteReceiptFiles, receiptUri, saveReceipt } from '@/files/receipts';
+import { PRO_PAUSED } from '@/domain/pro';
 import { t } from '@/i18n';
 import { router } from '@/services/router';
 import { useSettings } from '@/state/settings';
@@ -129,9 +130,12 @@ function NewReading({ unit, close, onSaved }: { unit: DistanceUnit; close: () =>
         ) : (
           <View style={{ gap: 6 }}>
             <Button label={t('tripCheck.addPhoto')} icon={Camera} variant="outline" onPress={() => void addPhoto()} />
-            <Txt v="caption" c="textTertiary">
-              {t('tripCheck.photoFree')}
-            </Txt>
+            {/* No photo limit while Pro is paused, so nothing to say about the monthly allowance. */}
+            {PRO_PAUSED ? null : (
+              <Txt v="caption" c="textTertiary">
+                {t('tripCheck.photoFree')}
+              </Txt>
+            )}
           </View>
         )}
       </View>

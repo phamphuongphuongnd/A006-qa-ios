@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 
 import { db } from '@/db/client';
 import { entryCount } from '@/db/entriesRepo';
-import { PRO_FALLBACK_PRICE } from '@/domain/pro';
+import { PRO_FALLBACK_PRICE, PRO_PAUSED } from '@/domain/pro';
 import { backupAlertSignals } from '@/features/backup/homeAlerts';
 import { dayMonth } from '@/features/entries/format';
 import { BACKUP_SNOOZE_MS, daysSince } from '@/features/entries/logic';
@@ -47,7 +47,7 @@ export function HomeAlert({ now }: { now: number }) {
       odometer: odo?.kind === 'missing' || odo?.kind === 'over',
       odometerDue: odo?.kind === 'due',
       backupFailing: backup.failing,
-      proRenews: renewal.due,
+      proRenews: !PRO_PAUSED && renewal.due,
       // Its own snooze key (bản 1 banner), checked inside showBackupBanner.
       oldBackup: backup.old,
     },

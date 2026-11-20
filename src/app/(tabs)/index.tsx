@@ -1,5 +1,5 @@
 import { router } from '@/services/router';
-import { Flag, Minus, Pause, Play, Plus, Settings, Square, Check } from '@/ui/icons';
+import { Flag, Minus, Pause, Play, Plus, Settings, Square, Check, X, Zap } from '@/ui/icons';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { listCategories } from '@/db/categoriesRepo';
@@ -16,6 +16,7 @@ import { DownArrowArt, ReceiptCheckArt } from '@/features/entries/art';
 import { EntryRow } from '@/features/entries/EntryRow';
 import { durationLabel, greetingKey, milesLabel, sortMinutes } from '@/features/entries/format';
 import { HomeAlert } from '@/features/home/HomeAlert';
+import { autoTripsSupported } from '@/features/trips/auto/native';
 import { autoTripState } from '@/features/trips/autoState';
 import { useAppShortcuts } from '@/features/entries/quickActions';
 import { useNow } from '@/features/entries/useNow';
@@ -23,14 +24,14 @@ import { t } from '@/i18n';
 import { usePro } from '@/state/pro';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
-import { fonts } from '@/theme';
+import { fonts, useTheme } from '@/theme';
 import { Avatar, Badge, Button, Card, IconButton, Screen, SectionHeader, StatusDot, Txt } from '@/ui';
 import { formatCount } from '@/features/settings/ui';
 import { useResumeCaptureDraft } from '@/features/entries/captureDraft';
 
 /** S-02 Home: greeting, backup banner, this week, to-sort, trip, recent; Expense / Income fixed above the tab bar. */
 export default function HomeScreen() {
-  const { settings } = useSettings();
+  const { settings, update } = useSettings();
   const { status: proStatus, pro } = usePro();
   const now = useNow(30_000);
   useResumeCaptureDraft();
@@ -59,6 +60,10 @@ export default function HomeScreen() {
   const catById = new Map(cats.map((c) => [c.id, c]));
   const empty = data.count === 0;
   const auto = autoTripState(settings, pro);
+  // Free launch: "Record trips automatically · Set up" under Start trip until automatic trips are on or the tip is
+  // closed with ✕ (kept for good in alertSnoozedUntil, like the Home alert cards).
+  const autoHintHidden = (settings.alertSnoozedUntil[AUTO_HINT_ID] ?? 0) > now;
+  const hideAutoHint = () => update({ alertSnoozedUntil: { ...settings.alertSnoozedUntil, [AUTO_HINT_ID]: Number.MAX_SAFE_INTEGER } });
   const autoSorted = useLive(() => (pro ? autoSortedCount(db, week) : 0), [pro, week.start], ['entries']);
 
   const capture = (type: 'expense' | 'income') => router.push(`/capture?type=${type}&from=home`);
@@ -138,7 +143,17 @@ export default function HomeScreen() {
       ) : null}
 
       {!tripData.trip ? (
-        auto === 'off' ? (
+        auto === 'off' && pro && !autoHintHidden && autoTripsSupported() ? (
+          <Card style={{ gap: 12 }}>
+            {settings.nfcTagWritten ? (
+              <Txt v="small" c="textSecondary">
+                {t('homeV2.nfcHint')}
+              </Txt>
+            ) : null}
+            <Button label={t('home.startTrip')} icon={Flag} variant="outline" full onPress={() => router.push('/trip/active?start=1')} />
+            <AutoSetupHint onHide={hideAutoHint} />
+          </Card>
+        ) : auto === 'off' ? (
           <Card style={styles.rowCard}>
             <Avatar kind="work" icon={Flag} />
             <Txt v="small" c="textSecondary" style={rowText}>
@@ -212,7 +227,31 @@ function StatRow({ items }: { items: { label: string; value: string; c: 'text' |
   );
 }
 
-/** Pro: "9 auto-sorted this week" → S-06d review. */
+const AUTO_HINT_ID = 'autoTripsHint';
+
+/** "Record trips automatically · Set up" (mockup Home-AutoSetup) → S-07d; ✕ hides it for good. */
+function AutoSetupHint({ onHide }: { onHide: () => void }) {
+  const { colors } = useTheme();
+  return (
+    <View style={[styles.hint, { backgroundColor: colors.sunSoft }]}>
+      <Zap size={20} color={colors.sunText} />
+      <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 150, marginLeft: 4 }}>
+        <Txt style={{ fontSize: 15, lineHeight: 20, fontFamily: fonts.semibold }}>{t('homeV2.autoSetupTitle')}</Txt>
+        <Txt v="small" c="textSecondary">
+          {t('homeV2.autoSetupBody')}
+        </Txt>
+      </View>
+      <Pressable accessibilityRole="button" onPress={() => router.push('/trip/auto')} hitSlop={4} style={styles.hintAction}>
+        <Txt style={{ fontSize: 15, fontFamily: fonts.bold }}>{t('homeV2.autoSetupAction')}</Txt>
+      </Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={t('homeV2.autoSetupHide')} onPress={onHide} hitSlop={8} style={styles.hintClose}>
+        <X size={18} color={colors.textSecondary} />
+      </Pressable>
+    </View>
+  );
+}
+
+/** "9 auto-sorted this week" → S-06d review. */
 function AutoSortedLine({ count }: { count: number }) {
   if (count === 0) return null;
   return (
@@ -272,6 +311,9 @@ function NavyButton({ icon: Icon, label, onPress }: { icon: typeof Play; label: 
 
 const styles = StyleSheet.create({
   rowCard: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 14 },
+  hint: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, borderRadius: 12, paddingVertical: 8, paddingLeft: 12, paddingRight: 0 },
+  hintAction: { minHeight: 44, paddingHorizontal: 6, justifyContent: 'center' },
+  hintClose: { width: 36, height: 44, alignItems: 'center', justifyContent: 'center' },
   redDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#FF5A4E', borderWidth: 3, borderColor: 'rgba(255,90,78,0.35)' },
   navyBtn: {
     flex: 1,
