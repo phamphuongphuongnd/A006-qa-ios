@@ -732,4 +732,9 @@
   nhưng Samsung có thể tắt app nền (pin yếu, "sleeping apps"). Yêu cầu: mỗi lần native đánh thức JS (activity / bluetooth / wake alarm / sample / boot),
   nếu có chuyến running mà task GPS không chạy (`hasStartedLocationUpdatesAsync` false hoặc không có fix > merge… ) → `restoreRecording()` + nhật ký
   `restore_ok {reason}`. Hiện chỉ làm khi reason 'restart' (B-129). Giao phiên "A006 gỡ giới hạn pro" (`backgroundTask.ts` headless task, `controller.ts`).
+- [ ] **B-145** 🟠 (Phương chốt 20/11) **Bỏ hẳn "Start when charging"**: đang sạc + máy rời chỗ là bật chuyến, không biết có đi xe không → sạc dự phòng, cáp máy
+  tính bật nhầm (A13: B-107; 19/11 13:52 và 15:26 cáp PC). Điện thoại không phân biệt sạc xe / sạc dự phòng. Bỏ: công tắc ở Automatic trips (`trip/auto.tsx`,
+  i18n `autoTrip.startCharging`), `settingsRepo.startOnCharge`, nhánh 'charging' trong `engine.ts` + `runner.ts`, `isCharging`/`watchPower` nếu không còn ai
+  dùng, native `AutoConfig.startOnCharge` + `TripDetectReceiver` (startCandidate khi sạc), diagnostics, `CONTEXT.md` mục "Start on charge", product.md /
+  store listing nếu có nhắc. Dữ liệu cũ: bỏ qua giá trị startOnCharge còn lưu. Giao phiên "A006 gỡ giới hạn pro".
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
