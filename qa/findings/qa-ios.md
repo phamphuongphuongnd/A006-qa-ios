@@ -31,6 +31,10 @@
 | 4o | 44481342409 (công khai, #14) | 97e2c45 (dev c9bb293) | 5/7 (P001 15/16 ✅, P007 12/16, P011 14/16, P017 14/16, P037 14/16; P026, P032 ⏭ hết ngân sách 100 phút) | 0 | 1 simulator, 0 lỗi driver, **0 crash**. 03–07, 10, 11, 15, 16, 17 (2.x mi), 99 ✅ cả 5. ❌ đều kịch bản: 02 (4/5, chưa chọn được file), 08 (4/5, bàn phím số), 09 P007 (bấm nút Export nằm dưới mép tấm → không mở bảng chia sẻ), 09 P037 AX-L (cuộn hết thời gian trước khi tới nút Export). Thấy **QI-7 🟡** |
 | 4p | 44481352656 (công khai, #15) | 97e2c45 (dev c9bb293) | 5/7 (P056 14/16 ✅, P067 14/16, P061 14/17, P046 11/17, P047 11/17; P062, P071 ⏭ hết ngân sách) | 0 | 1 simulator, 0 lỗi driver, **0 crash**. P056 XXXL và P061 bước 13 (tắt app giữa lúc lưu) ✅. ❌ đều kịch bản: 02, 08 như 4o; 09 P061 như P007; P046/P047 15/16/17 ❌ vì bước 14 xoá hết dữ liệu (đúng: app về màn chào "Get started") mà 15–17 chạy sau và chờ "Settings" — kịch bản cần chạy lại onboarding sau bước 14 |
 | 4q | 44481363012 (công khai, #16) | 97e2c45 (dev c9bb293) | 5/7 (P076, P077, P082, P086, P097 đều 16/18 ✅; P002-ipad, P041-ipad ⏭ hết ngân sách 100 phút) | 0 | 1 simulator, 0 lỗi driver, **0 crash**. P077 Pro Max tối XXXL ✅ mọi bước trừ 02/08. ❌ chỉ còn 02 (khôi phục: chưa chọn được file / P076 không thấy tên file) và 08 (bàn phím số) — cả hai kịch bản, giống 4o/4p. iPad chưa chạy được ở lượt nào |
+| 4r | 44500559890 (công khai, #17) | 8c58b8f (dev c9bb293; kịch bản 02/08/09/14 đã sửa, không giới hạn 100 phút) | P032 17/18 ✅; P062 13/16 bước đã chạy (quá 25 phút trước 17/99 → ⏭); P026 ❌ từ 01; P071 ⏭ DeviceUnreachable; iPad ×2 ⏭ | 0 | **0 crash.** P032 (Pro Max, 2.000 khoản): **08 ✅, 09 ✅** (lần đầu đạt), 13 ✅ P062. P026: bấm "Get started" 1 lần không sang màn chọn vùng (ảnh `P026_01a_welcome`, `step-008…`), các bước sau ❌ theo → chưa kết luận (1/40+ lượt onboarding; cần chạy lại). P062 08 ❌ kịch bản (AX-L: số không vào ô đồng hồ). iPad: xem dưới |
+| 4s | 44500573190 (công khai, #18) | 8c58b8f | P037 16/18 ✅, P046 17/18 ✅, P052 16/18 ✅ (iPhone SE); iPad ×2 ⏭ | 0 | **0 crash.** **08 ✅** cả 3; **09 US ✅** (P046, P052); P037 UK AX-L bảng chia sẻ MỞ ĐƯỢC (ảnh step-024: "Health", "More", "View More") — kịch bản chờ "Copy/AirDrop" → đã nới. **14 → cài lại → 15/16/17 ✅** (P046). **12 ✅** (P052). **02**: chọn được file, màn xem trước đúng (P052 131 khoản; P046 0 khoản — persona wipe_all, file sau khi xoá, đúng), hộp xác nhận "Replace everything…? Restore / Cancel" hiện đúng; kịch bản chờ chữ "Replace" → bước khôi phục cuối chưa bấm (đã sửa kịch bản). **QI-8 🟠** (P052 06) |
+| 4t | 44502422218 (công khai, #22) | 8d95e43 | **iOS 18.0** (tải 8,4 GB lúc chạy): P011 Pro Max 14/17 bước đã chạy ✅ (quá 25 phút trước 18/19/99 → ⏭); P052 SE 3/5 ✅ rồi quá giờ; iPad 10th ×2 ⏭ | 0 | **App chạy được trên iOS 18**, 0 crash: P011 01, 03–08, 10–16 ✅. 17 chuyến GPS: suốt chuyến "Finding GPS…", lưu "0.0 mi" (ảnh `P011_17a…`, `17c…`) — trên iOS 26 cùng kịch bản 2.x mi → nghi giả lập iOS 18 + Maestro `travel` không cấp vị trí; **chưa kết luận, cần thử chuyến thật trên iPhone iOS 18**. P052 04: khoản đã lưu ($45 ở Home) nhưng snack "Saved ·" qua trước khi Maestro nhìn (giả lập iOS 18 rất chậm) → kịch bản |
+| 4u | 44502436862 (công khai, #23) | 8d95e43 (chỉ bước 04, 18, 19) | P082 3/4 ✅, P086 ⏭ DeviceUnreachable, iPad ×2 ⏭ | 0 | **18 "Recently deleted" ✅** (xoá → có trong thùng rác "30 days left" → Restore → về lại Entries). 19 ❌ kịch bản: chạm trúng tiêu đề nhóm "NOTIFICATIONS" thay vì dòng Notifications (ảnh step-011) → đã sửa |
 | 4f | 44274384593 (công khai) | febb184 | 0 | 0 | ❌ GitHub không khởi chạy job (lỗi thanh toán tài khoản) — cả repo công khai |
 
 Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ lượt 4c chạy trên repo công khai `phamphuongphuongnd/A006-qa-ios` (Phương chọn; không tính phút) — **xoá repo này sau QA-100 khi Phương đồng ý**.
@@ -162,4 +166,23 @@ Tổng phút macOS tính tiền (repo riêng): **168** (78 + 5 + 71 + 14). Từ 
 - Thấy: dòng phụ của "MTD records (CSV)" là "One row per entry, MTDsorted columns". Mong đợi: "MTD-sorted columns".
 - Ảnh: `qa-runs/ios/44481342409/qa-ios-14/personas/P007/shots/step-019-assertCondition-CopySave_to_FilesAirDrop.jpg`.
 - Nguồn: `src/i18n/v2/mtd.ts:60` (`mtdRecordsSub`), còn nguyên trên dev hiện tại; cũng có trong chú thích `src/features/reports/mtdFiles.ts:139` và tên test `mtd.test.ts:157`.
+
+### iPad (lượt 4r–4u) ⏭ — không phải lỗi app
+- App `supportsTablet: false` → trên iPad (A16, iOS 26.5) và iPad 10th (iOS 18.0) chạy ở chế độ iPhone: màn chào hiện đủ, đúng
+  trong khung iPhone (ảnh `qa-runs/ios/44500559890/qa-ios-17/personas/P002-ipad/shots/step-005-assertCondition-Get_started.jpg`),
+  nhưng XCTest/Maestro không thấy phần tử nào trong khung này → mọi bước ❌. 0 crash. Muốn kiểm iPad cần thử tay.
+
+### QI-8 🟠 Màn Sort trên iPhone SE ở cỡ chữ XXXL: thẻ bị ép thấp, không thấy chỗ chọn danh mục
+- Persona/thiết bị: P052 (iPhone SE 3rd gen, Dynamic Type `extra-extra-extra-large`, sáng, US) — lượt 4s, bước 06_sort_one.
+- Kỳ vọng: thấy ghi chú + hàng chọn danh mục (Fuel… / More…) trên thẻ, hoặc cuộn được tới đó.
+- Thực tế: thẻ chỉ cao ~200 pt (từ y≈615 tới ≈1035 trên ảnh 1400): "$45.00", dòng ghi chú bị hàng Edit/Split/Merge/Skip che
+  mất nửa, không có chip danh mục; Maestro cuộn 15 s không lộ ra. Pro Max cùng cỡ chữ (P056) và SE ở AX-L (P091, lượt 4i) đều đạt.
+- Ảnh: `qa-runs/ios/44500573190/qa-ios-18/personas/P052/shots/step-020-assertCondition-Sorted_as_.Week_sorted.jpg`, `P052_06a_sort.jpg`.
+- Nguyên nhân nghi ngờ: `src/app/(tabs)/sort.tsx:51` — bố cục cuộn (`short`) chỉ bật khi `fontScale >= 1.8`; iOS XXXL ≈ 1.35×
+  (SE: 667/1.35 ≈ 493 "dòng" < 520) nên rơi vào bố cục thường, thẻ `flex: 1` chỉ còn phần dưới tiêu đề 3 dòng + ô tuần 2 dòng.
+  Hướng sửa: bật `short` theo chiều cao còn lại thực tế của thẻ (hoặc `windowHeight / fontScale < 520` không cần điều kiện 1.8).
+
+### Chưa kết luận (cần thử tay)
+- P026 (Pro Max, tối, chữ lớn, US): 1 lần bấm "Get started" không sang màn chọn vùng (lượt 4r). Mọi lượt onboarding khác (40+) đạt.
+- iOS 18: chuyến GPS ghi 0.0 mi, màn chuyến "Finding GPS…" suốt 3 phút (lượt 4t, P011) — nghi giả lập; thử trên iPhone iOS 18 thật.
 

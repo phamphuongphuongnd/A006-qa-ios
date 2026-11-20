@@ -88,11 +88,12 @@ name: 02_restore
           timeout: 120000
       - takeScreenshot: ${PID}_02d_preview
       - tapOn: "Replace this phone's data"
+      # Confirm dialog: "Replace everything on this phone with this backup?" → Restore / Cancel (runs 44500573190).
       - extendedWaitUntil:
-          visible: "Replace"
+          visible: 'Replace everything.*'
           timeout: 10000
       - takeScreenshot: ${PID}_02e_confirm
-      - tapOn: "Replace"
+      - tapOn: "Restore"
       - extendedWaitUntil:
           visible: "Backup restored"
           timeout: 240000

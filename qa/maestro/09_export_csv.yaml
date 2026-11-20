@@ -45,7 +45,8 @@ name: 09_export_csv
       - takeScreenshot: ${PID}_09b_mtd_ask
       - tapOn: "Leave them out"
 - extendedWaitUntil:
-    visible: "Copy|Save to Files|AirDrop|Messages|Mail"
+    # Large text shows fewer share targets ("Health", "More", "View More": P037 AX-L, run 44500573190).
+    visible: "Copy|Save to Files|AirDrop|Messages|Mail|View More|More"
     timeout: 30000
 - takeScreenshot: ${PID}_09c_share_sheet
 - tapOn:
