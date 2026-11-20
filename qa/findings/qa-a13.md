@@ -196,6 +196,11 @@ kết quả kick/start. Đã báo điều phối.
     chuyến auto 659 m 07:10:25–07:19:33 (bật nhầm). Đã ghi BUGS.md B-88.
   - 🟡 chuyến 17:57–18:31 có khoảng trống điểm 1,5–2,7 phút lúc đang chạy (không có gps_mode parked). Ghi B-131.
   - Pin lúc 08:42: 13% (không đo được hao pin theo ca).
+  - **Đối chiếu 8 mốc Phương kể** (điều phối chuyển): (1) ✅ đi bộ 17:35–17:43 → probe_none 17:50:50; (2) ❌ 17:50–17:57 xe chậm: AR still từ
+    17:46:27, probe hết hạn 17:50:50 đúng lúc lăn bánh + cool-down → không gì tới BT 17:57; (3) ✅ 17:57:35 bluetooth; 18:38:29 motion (AR);
+    (4) ✅ đi bộ ~700 m sau 18:57 không probe/không chuyến; (5) ✅ Start ngồi yên 20:57 → 0 km; (6) ❌ đi bộ sáng 07:10–07:21 (4–6 km/h) →
+    probe_drive stepsPerMin 0 → chuyến 659 m; (7) ✅ 07:39:54 motion nhưng điểm đầu đã 40 km/h (hụt đoạn chậm); (8) ❌ đi bộ sau đỗ
+    08:26:10–08:31 (505 m, 4–6 km/h) tính vào chuyến, endedAt 08:29:36. Đã ghi BUGS.md B-88.
   **Bài 1 B-140 ✅ (15:23–15:37)**: probe_start 15:23:39 → start_ok charging 15:26:50 (cắm cáp khi đang đi) → GPS chuyến còn chạy
   sau mốc probe hết hạn 15:35:39 (watcher fg=1, @+30s lúc 15:36–15:37), không có probe_none sau khi chuyến bắt đầu → 15:37:20
   trip_deleted {auto_short, 0 m} (nhật ký mới ✅). `diagnostics/SundaySort-trip-diagnostics-2026-11-19-08-42.json`.

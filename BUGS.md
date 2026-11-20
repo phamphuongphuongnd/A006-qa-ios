@@ -380,6 +380,14 @@
   ✅ tối 19/11 start_ok motion 18:38:29 (chuyến 5,0 km). ❌ **đi bộ (máy trong túi/cặp, Phương xác nhận) 07:10–07:21 sáng 20/11 → probe_drive
   07:17:59 {onFoot: false, stepsPerMin: 0} → chuyến auto 659 m 07:10:25–07:19:33** (bộ đếm bước báo 0 khi máy trong túi/cặp → coi là lái).
   Gợi ý: stepsPerMin 0 mà cảm biến vẫn báo walking (07:10:25 walking enter, chưa exit tới 07:21:28) → không bật; hoặc yêu cầu tốc độ ≥ 15 km/h.
+  **Đối chiếu mốc Phương kể (20/11):** (2) ❌ 17:50–17:57 xe rất chậm, dừng nhiều → không bật: AR giữ `still` từ 17:46:27 (không có still exit /
+  driving), lần kiểm 17:38 (since 17:36:44 lúc đi bộ) hết hạn đúng 17:50:50 (probe_none) khi xe vừa lăn bánh → cool-down 20 phút chặn lần kiểm mới →
+  chỉ bật nhờ BT 17:57:35. Gợi ý: probe hết hạn mà vẫn có điểm di chuyển > X m trong 2 phút cuối → gia hạn thay vì probe_none; hoặc không cool-down khi
+  probe kết thúc vì 'hết giờ' sau một đoạn đi bộ. (3) chuyến 18:38:29 = start_ok `motion` (AR driving enter), không phải BT/probe ✅. (6) chuyến đi
+  bộ sáng: mọi đoạn 3,5–6 km/h (475 m 07:11–07:18 = 4,6 km/h) → stepsPerMin = 0 (không null) dù đi bộ, máy trong túi/cặp. (7) chuyến 07:39:54
+  `motion`: điểm đầu 07:40:08 đã 40 km/h → hụt đoạn xe chậm trước đó (AR vẫn `still`). (8) ❌ **đi bộ sau khi đỗ bị tính vào chuyến**: driving exit /
+  walking enter 08:26:10 → 15 điểm 08:26–08:31 tổng 505 m ở 4–6 km/h nằm trong chuyến; gps_mode drive lại 08:28:00; endedAt 08:29:36 (thay vì
+  ~08:26). Gợi ý: sau driving exit + walking enter → mốc đỗ = lúc driving exit, không cộng điểm khi AR = walking (hoặc tốc độ < 7 km/h kéo dài).
 - [x] **B-89** 🟡 (QA MOD-10, phiên F — hồi quy một phần B-84) Nháp được mở lại nhưng **ảnh chụp trong lúc app đã bị giết** vẫn mất: `getPendingResultAsync`
   gọi 1 lần lúc màn mở, trước khi kết quả camera tới Activity mới. Sửa (`capture.tsx`): gọi lại sau 1 s, 3 s và mỗi khi app trở lại active, bỏ ảnh trùng.
   Kèm: cửa sổ thấp < 520dp (chia đôi màn 436dp) → ẩn nút nổi "+" (`ui/Layout.tsx`) vì nó đè "Sort now" ở Reports.
