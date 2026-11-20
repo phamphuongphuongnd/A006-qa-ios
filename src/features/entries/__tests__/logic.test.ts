@@ -29,6 +29,7 @@ import {
   showBackupBanner,
   sortCardScope,
   sortQueue,
+  cardActionsStack,
   sortScrolls,
   mixedQueue,
   tripKey,
@@ -229,6 +230,23 @@ describe('QA-100 dates in lists', () => {
   });
 });
 
+// B-152 (and QA-100 phiên B): the Sort card's four actions go icon-above-label when they can't fit side by side.
+describe('cardActionsStack', () => {
+  it('stacks where the labels were cut', () => {
+    expect(cardActionsStack(295, 1.235)).toBe(true); // iPhone SE, XXL: "E… Split Mer… S…"
+    expect(cardActionsStack(295, 1.118)).toBe(true); // iPhone SE, XL
+    expect(cardActionsStack(288, 1.2999)).toBe(true); // Android 360dp, text 1.3 (reported as 1.2999)
+    expect(cardActionsStack(288, 2.0)).toBe(true); // Android 360dp, text 2.0
+  });
+  it('keeps one row where the labels fit', () => {
+    expect(cardActionsStack(295, 1.0)).toBe(false); // iPhone SE, default size
+    expect(cardActionsStack(288, 1.0)).toBe(false); // Android 360dp
+    expect(cardActionsStack(288, 0.85)).toBe(false);
+    expect(cardActionsStack(350, 1.353)).toBe(false); // Pro Max, XXXL
+    expect(cardActionsStack(560, 2.0)).toBe(false); // iPad column
+  });
+});
+
 // B-114 / B-147: which Sort layout a window gets (true = scrolling layout).
 describe('sortScrolls', () => {
   it('a short window scrolls on every platform (MOD-11 split screen)', () => {
@@ -243,8 +261,10 @@ describe('sortScrolls', () => {
   });
   it('iOS: iPhone SE at XXXL scrolls (B-147), roomier sizes stay normal', () => {
     expect(sortScrolls(667, 1.35, 'ios')).toBe(true); // SE, XXXL: 667 / 1.35 ≈ 494
-    expect(sortScrolls(667, 1.235, 'ios')).toBe(false); // SE, XXL: ≈ 540
+    expect(sortScrolls(667, 1.235, 'ios')).toBe(true); // SE, XXL: ≈ 540 — card scroll area ~95pt (B-152)
+    expect(sortScrolls(667, 1.118, 'ios')).toBe(true); // SE, XL: ≈ 597
     expect(sortScrolls(667, 1.0, 'ios')).toBe(false);
+    expect(sortScrolls(852, 1.35, 'ios')).toBe(false); // iPhone 16, XXXL: ≈ 631
     expect(sortScrolls(932, 1.35, 'ios')).toBe(false); // Pro Max, XXXL (passed in QA)
     expect(sortScrolls(667, 2.0, 'ios')).toBe(true); // SE, AX-Large (B-114 v3, passed in QA)
     expect(sortScrolls(1376, 1.35, 'ios')).toBe(false); // iPad 13"

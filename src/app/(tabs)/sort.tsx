@@ -52,13 +52,17 @@ export default function SortScreen() {
   const short = sortScrolls(windowHeight, fontScale, Platform.OS);
   // B-147: typing in Edit / Split on the card in the scrolling layout (iOS) — the screen shrinks above the keyboard;
   // bring the card's top up so the field the card scrolls to isn't left under the keyboard.
+  // B-151: and the card shrinks to what is left above the keyboard — at its full height (~490pt at XXXL) its end
+  // ("Left to assign" / "Split & sort") stayed under the number pad, which has no Return key to close it.
   const bodyRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const cardY = useRef(0);
+  const [viewport, setViewport] = useState(0);
+  const fitAboveKeyboard = short && keyboardUp && Platform.OS === 'ios' && viewport > 0;
   useEffect(() => {
-    if (!short || !keyboardUp || Platform.OS !== 'ios') return;
+    if (!fitAboveKeyboard) return;
     const id = setTimeout(() => bodyRef.current?.scrollTo({ y: cardY.current, animated: true }), 100);
     return () => clearTimeout(id);
-  }, [short, keyboardUp]);
+  }, [fitAboveKeyboard, viewport]);
   const header = (
     <View style={[styles.top, bigText && { flexDirection: 'column', alignItems: 'flex-start' }, { paddingTop: (short ? 0 : insets.top) + 14, paddingHorizontal: GUTTER }]}>
       <Txt v="h1" accessibilityRole="header" style={bigText ? undefined : { flexGrow: 1, flexShrink: 1, flexBasis: 180 }}>
@@ -171,7 +175,9 @@ export default function SortScreen() {
   // give the card more height when the text is large.
   // v3 (phiên B): only from 1.8× text — at 1.3 the scrolling layout cut the split form, and 1.3–1.7 were fine in the
   // normal one (3f26b33).
-  const cardHeight = Math.round(360 * Math.min(Math.max(fontScale, 1), 1.6));
+  const fullHeight = Math.round(360 * Math.min(Math.max(fontScale, 1), 1.6));
+  // Above the keyboard: the screen's scroll area less the card's top margin and the body's bottom padding (B-151).
+  const cardHeight = fitAboveKeyboard ? Math.max(160, Math.min(fullHeight, viewport - 18)) : fullHeight;
   // B-146: on an iPad / tablet the normal layout stretched the card to ~1000pt, a big empty middle. No phone reaches this
   // (a Pro Max leaves the card ~560pt).
   const cardMax = Math.round(640 * Math.min(Math.max(fontScale, 1), 1.6));
@@ -188,6 +194,7 @@ export default function SortScreen() {
       <Body
         short={short}
         scrollRef={bodyRef}
+        onViewport={setViewport}
         style={{ flexGrow: 1, paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: keyboardUp || windowHeight < 520 ? 12 : 96, gap: 12 }}>
         {short ? <View style={{ marginHorizontal: -GUTTER, marginTop: -6 }}>{header}</View> : null}
         <WeekProgress week={week} done={s.done} total={s.total} onPick={() => setWeekSheet(true)} />
@@ -264,16 +271,24 @@ function Body({
   short,
   style,
   scrollRef,
+  onViewport,
   children,
 }: {
   short: boolean;
   style: object;
   scrollRef: Ref<ComponentRef<typeof ScrollView>>;
+  /** Height of the scroll area (B-151: what is left above the keyboard). */
+  onViewport: (height: number) => void;
   children: ReactNode;
 }) {
   if (short) {
     return (
-      <ScrollView ref={scrollRef} style={{ flex: 1 }} contentContainerStyle={style} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        ref={scrollRef}
+        style={{ flex: 1 }}
+        contentContainerStyle={style}
+        keyboardShouldPersistTaps="handled"
+        onLayout={(e) => onViewport(Math.round(e.nativeEvent.layout.height))}>
         {children}
       </ScrollView>
     );

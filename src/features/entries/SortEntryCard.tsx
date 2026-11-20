@@ -12,7 +12,7 @@ import type { Currency, Scope } from '@/domain/types';
 import { receiptUri } from '@/files/receipts';
 import { t } from '@/i18n';
 import { useLive } from '@/state/useLive';
-import { fonts, radius, useTheme } from '@/theme';
+import { fonts, GUTTER, radius, useTheme } from '@/theme';
 import { moneyLimitHit, sanitizeAmount } from '@/features/ocr/calc';
 import { MaxAmountNote } from '@/features/ocr/ui';
 import { Button, Card, Chip, Divider, NUMERIC_INPUT, Segmented, Tag, Txt, useContentWidth, useKeyboardUp } from '@/ui';
@@ -21,7 +21,7 @@ import { CategorySheet } from './CategorySheet';
 import { useDateTimePicker } from './DateTimePick';
 import { dateDotTime, dayMonth } from './format';
 import { categoryIcon } from './icons';
-import { newPartMinor, partMinor, sortCardScope } from './logic';
+import { cardActionsStack, newPartMinor, partMinor, sortCardScope } from './logic';
 import { ReceiptViewer } from './ReceiptViewer';
 import type { SortSuggestion } from './useSortWeek';
 
@@ -64,8 +64,11 @@ export function SortEntryCard({
   const [more, setMore] = useState(false);
   const [viewer, setViewer] = useState(false);
   const [x] = useState(() => new Animated.Value(0));
+  const contentWidth = useContentWidth();
   // Far enough to leave the column on any width (B-146: the iPad column is 640pt).
-  const away = Math.max(480, useContentWidth());
+  const away = Math.max(480, contentWidth);
+  // Inside the card: the screen gutters and the footer's own padding (B-152).
+  const actionsStack = cardActionsStack(contentWidth - 2 * GUTTER - 40, useWindowDimensions().fontScale);
   const busy = useRef(false);
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const keyboardUp = useKeyboardUp();
@@ -75,12 +78,17 @@ export function SortEntryCard({
   // B-133: where the Split panel starts, and the row being typed in (null = none yet).
   const splitY = useRef(0);
   const focusY = useRef<number | null>(null);
+  // The card's scroll area: its height and its content's (B-151).
+  const area = useRef({ height: 0, content: 0 });
   // The screen shrinks after the keyboard opens; scroll once the card has its new height. Split: to the end ("Left to
-  // assign" / "Split & sort", B-38). Edit: to the panel's top — its end is Date / chips, which hid Amount + Done (B-128).
+  // assign" / "Split & sort", B-38) — B-151: as far toward it as keeps the row being typed in (B-133) in view; the
+  // number pad has no Return key, so the button must not be left under it. Edit: to the panel's top — its end is
+  // Date / chips, which hid Amount + Done (B-128).
   const keepFormInView = useCallback(() => {
     if (mode === 'split') {
-      if (focusY.current !== null) scrollRef.current?.scrollTo({ y: Math.max(0, focusY.current - 12), animated: true });
-      else scrollRef.current?.scrollToEnd({ animated: true });
+      const end = Math.max(0, area.current.content - area.current.height);
+      const y = focusY.current === null ? end : Math.min(Math.max(0, focusY.current - 12), end);
+      scrollRef.current?.scrollTo({ y, animated: true });
     }
     else if (mode === 'edit') scrollRef.current?.scrollTo({ y: Math.max(0, editY.current - 8), animated: true });
   }, [mode]);
@@ -125,9 +133,13 @@ export function SortEntryCard({
           contentContainerStyle={[styles.cardBody, mode === 'view' && { paddingBottom: 8 }]}
           // B-43: when the card scrolls, show it (Android keeps the bar; iOS flashes it once the content is taller).
           persistentScrollbar
-          onContentSizeChange={() => scrollRef.current?.flashScrollIndicators()}
+          onContentSizeChange={(_w, h) => {
+            area.current.content = h;
+            scrollRef.current?.flashScrollIndicators();
+          }}
           keyboardShouldPersistTaps="handled"
-          onLayout={() => {
+          onLayout={(e) => {
+            area.current.height = e.nativeEvent.layout.height;
             if (keyboardUp && open) keepFormInView();
           }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
@@ -231,10 +243,10 @@ export function SortEntryCard({
           <View testID="sort-card-actions" style={styles.footer}>
             <Divider />
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <CardAction label={t('sortV2.edit')} icon={Pencil} onPress={() => setMode('edit')} />
-              <CardAction label={t('sort.split')} icon={Split} onPress={() => setMode('split')} />
-              <CardAction label={t('sortV2.merge')} icon={Combine} onPress={onMerge} />
-              <CardAction label={t('sort.skip')} icon={SkipForward} onPress={skip} />
+              <CardAction stack={actionsStack} label={t('sortV2.edit')} icon={Pencil} onPress={() => setMode('edit')} />
+              <CardAction stack={actionsStack} label={t('sort.split')} icon={Split} onPress={() => setMode('split')} />
+              <CardAction stack={actionsStack} label={t('sortV2.merge')} icon={Combine} onPress={onMerge} />
+              <CardAction stack={actionsStack} label={t('sort.skip')} icon={SkipForward} onPress={skip} />
             </View>
           </View>
         ) : null}
@@ -480,12 +492,10 @@ function SplitPanel({
 }
 
 /** Small text action under the card ("Edit · Split · Merge · Skip"): four fit on a 360dp phone. */
-function CardAction({ label, icon: Icon, onPress }: { label: string; icon: LucideIcon; onPress: () => void }) {
+function CardAction({ label, icon: Icon, onPress, stack }: { label: string; icon: LucideIcon; onPress: () => void; stack: boolean }) {
   const { colors } = useTheme();
-  // QA-100 (phiên B, 360dp + text 2.0): side by side the labels were cut to "E… Sp.. Mer… Sk.." — at large text the
-  // icon goes above a smaller label so all four fit.
-  // Android reports text size 1.3 as 1.2999… — compare with a little slack, or "Large" kept the cut labels.
-  const stack = useWindowDimensions().fontScale >= 1.29;
+  // QA-100 (phiên B, 360dp + text 2.0): side by side the labels were cut to "E… Sp.. Mer… Sk.." — when they can't fit
+  // (`cardActionsStack`, B-152) the icon goes above a smaller label so all four fit.
   return (
     <Pressable
       accessibilityRole="button"

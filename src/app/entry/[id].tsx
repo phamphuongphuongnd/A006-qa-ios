@@ -2,7 +2,7 @@ import { useFocusEffect, useLocalSearchParams, useNavigation, usePreventRemove }
 import { router } from '@/services/router';
 import { CalendarClock, ChevronDown, Copy, ImagePlus, MoreHorizontal, Repeat, Split, Trash2, X } from '@/ui/icons';
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { BackHandler, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { listCategories } from '@/db/categoriesRepo';
@@ -91,19 +91,21 @@ function Editor({ entry }: { entry: EntryRowT }) {
   const [draft, setDraft] = useState<Draft>(() => draftOf(entry));
   const [editingAmount, setEditingAmount] = useState(false);
   const [menu, setMenu] = useState(false);
-  // B-146: the ⋯ menu opens under the ⋯ button wherever it is — on an iPad (page sheet) or a tablet (centred column)
-  // the button is far from the window's top-right corner the menu used to be pinned to.
-  const moreRef = useRef<ComponentRef<typeof View>>(null);
-  const [menuAt, setMenuAt] = useState<{ top: number; right: number } | null>(null);
-  const { width: windowWidth } = useWindowDimensions();
-  const openMenu = () => {
-    const button = moreRef.current;
-    if (!button) return setMenu(true);
-    button.measureInWindow((x, y, w, h) => {
-      setMenuAt(w > 0 ? { top: y + h + 4, right: Math.max(8, windowWidth - x - w) } : null);
-      setMenu(true);
+  // B-146 / B-150: the ⋯ menu opens under the ⋯ button wherever the screen is — an iPad page sheet, a tablet's centred
+  // column. Drawn inside the screen, under the header (not a Modal placed by a window measurement): in a page sheet
+  // that measurement counts from the sheet's corner while a Modal covers the whole screen, so the menu landed ~42pt up
+  // and ~48pt left, over the title (iPhone: over the ⋯ button itself).
+  const [headerBottom, setHeaderBottom] = useState(0);
+  const a11yHidden = menu ? 'no-hide-descendants' : 'auto';
+  // Android back closes the menu first, as the Modal did.
+  useEffect(() => {
+    if (!menu) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      setMenu(false);
+      return true;
     });
-  };
+    return () => sub.remove();
+  }, [menu]);
   const [photoAsk, setPhotoAsk] = useState(false);
   const [sheet, setSheet] = useState<'category' | 'siblings' | null>(null);
   const [dialog, setDialog] = useState<'delete' | 'discard' | null>(null);
@@ -238,17 +240,26 @@ function Editor({ entry }: { entry: EntryRowT }) {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1, backgroundColor: colors.background, paddingTop: Platform.OS === 'ios' ? 8 : insets.top }}>
-      <View style={[styles.top, { paddingHorizontal: GUTTER }]}>
+      <View
+        style={[styles.top, { paddingHorizontal: GUTTER }]}
+        importantForAccessibility={a11yHidden}
+        onLayout={(e) => setHeaderBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}>
         <IconButton icon={X} label={t('common.close')} onPress={() => (dirty ? setDialog('discard') : setLeaving(true))} />
         <Txt v="h3" accessibilityRole="header">
           {draft.type === 'income' ? t('common.income') : t('common.expense')}
         </Txt>
-        <View ref={moreRef} collapsable={false}>
-          <IconButton icon={MoreHorizontal} label={t('entries.detailMore')} filled onPress={openMenu} />
-        </View>
+        <IconButton
+          icon={MoreHorizontal}
+          label={t('entries.detailMore')}
+          filled
+          onPress={() => {
+            Keyboard.dismiss();
+            setMenu(true);
+          }}
+        />
       </View>
 
-      <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 20 }}>
+      <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 20 }} importantForAccessibility={a11yHidden}>
         <View>
           <View style={{ paddingHorizontal: GUTTER, gap: 14, paddingTop: 6 }}>
             <View style={{ alignItems: 'center', gap: 10, paddingTop: 4, paddingBottom: 6 }}>
@@ -399,7 +410,9 @@ function Editor({ entry }: { entry: EntryRowT }) {
         </View>
       </ScrollView>
 
-      <View style={{ paddingHorizontal: GUTTER, paddingTop: 8, paddingBottom: keyboardUp ? 12 : Math.max(insets.bottom, 16) + 12 }}>
+      <View
+        style={{ paddingHorizontal: GUTTER, paddingTop: 8, paddingBottom: keyboardUp ? 12 : Math.max(insets.bottom, 16) + 12 }}
+        importantForAccessibility={a11yHidden}>
         {dirty && entry.exportedAt ? (
           <Txt v="small" c="sunText" center style={{ marginBottom: 8, fontFamily: fonts.semibold }} accessibilityLiveRegion="polite">
             {t('s6.exportedWarn', { date: formatDay(entry.exportedAt) })}
@@ -409,41 +422,38 @@ function Editor({ entry }: { entry: EntryRowT }) {
       </View>
       {keyboardUp && editingAmount ? <CalcBar onOp={amount.op} /> : null}
 
-      {/* ⋯ menu */}
-      <Modal visible={menu} transparent animationType="fade" onRequestClose={() => setMenu(false)} statusBarTranslucent>
-        <Pressable style={StyleSheet.absoluteFill} onPress={() => setMenu(false)} accessibilityLabel={t('common.close')} />
-        <View
-          style={[
-            styles.menu,
-            {
-              // Android keeps its measured-on-device offset (the window's y origin differs by version, QA-100 OLD-12).
-              top: Platform.OS === 'ios' && menuAt ? menuAt.top : (Platform.OS === 'ios' ? 8 : insets.top) + 68,
-              right: menuAt?.right ?? 16,
-              backgroundColor: colors.surface,
-              borderColor: colors.line,
-            },
-          ]}>
-          <MenuItem
-            icon={Split}
-            label={t('entries.split')}
-            onPress={() => {
-              setMenu(false);
-              router.push(`/split/${entry.id}`);
-            }}
-          />
-          <MenuItem icon={Copy} label={t('entries.duplicate')} onPress={duplicate} />
-          <MenuItem icon={Repeat} label={t('ocr.makeRecurring')} pro={!pro} onPress={makeRecurring} />
-          <MenuItem
-            icon={Trash2}
-            label={t('common.delete')}
-            danger
-            onPress={() => {
-              setMenu(false);
-              setDialog('delete');
-            }}
-          />
+      {/* ⋯ menu — over the whole screen, last so it sits on top; a tap outside closes it. */}
+      {menu ? (
+        <View style={StyleSheet.absoluteFill} accessibilityViewIsModal>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setMenu(false)} accessibilityLabel={t('common.close')} />
+          <View
+            style={[
+              styles.menu,
+              // Right under the header's ⋯ button (the header's last item, at the gutter).
+              { top: headerBottom + 4, right: GUTTER, backgroundColor: colors.surface, borderColor: colors.line },
+            ]}>
+            <MenuItem
+              icon={Split}
+              label={t('entries.split')}
+              onPress={() => {
+                setMenu(false);
+                router.push(`/split/${entry.id}`);
+              }}
+            />
+            <MenuItem icon={Copy} label={t('entries.duplicate')} onPress={duplicate} />
+            <MenuItem icon={Repeat} label={t('ocr.makeRecurring')} pro={!pro} onPress={makeRecurring} />
+            <MenuItem
+              icon={Trash2}
+              label={t('common.delete')}
+              danger
+              onPress={() => {
+                setMenu(false);
+                setDialog('delete');
+              }}
+            />
+          </View>
         </View>
-      </Modal>
+      ) : null}
 
       <CategorySheet
         visible={sheet === 'category'}

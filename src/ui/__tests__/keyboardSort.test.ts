@@ -19,5 +19,11 @@ test('Sort screen avoids the keyboard and hides the FAB while typing', () => {
 test('Sort card scrolls Edit / Split into view when the keyboard opens', () => {
   const card = read('features/entries/SortEntryCard.tsx');
   expect(card).toMatch(/useKeyboardUp\(\)/);
-  expect(card).toMatch(/scrollToEnd/);
+  // Split scrolls toward the form's end (B-151: computed, so the row being typed in stays in view too).
+  expect(card).toMatch(/area\.current\.content - area\.current\.height/);
+});
+
+test('B-151: in the scrolling layout the card fits above the keyboard (iOS)', () => {
+  const sort = read('app/(tabs)/sort.tsx');
+  expect(sort).toMatch(/fitAboveKeyboard \? .*viewport - 18/);
 });

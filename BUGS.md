@@ -773,3 +773,25 @@
   có `autoFocus` trong đó (Android) focus sau 250 ms; `trip/auto.tsx` về lại `autoFocus` thường, `Dialog` bỏ prop `onShow`. Giả lập 360 dp: tỉ giá
   5/5, Custom 3/3, gõ DELETE 3/3 (chỉ mở rồi Cancel), tên danh mục mới 3/3, "Save as a regular trip" 3/3 — bàn phím tự lên, nút không bị che;
   Odometer (ô ngoài Modal) vẫn tự lên. Sheet sửa số dặm chuyến GPS (`MilesSheet`) cùng đường code, chưa mở được trên giả lập (không có chuyến GPS).
+- [ ] **B-150** 🟡 (QA iOS run 44672153434, phiên C — iPad Pro 13" P001-ipad, ảnh `05b`; iPhone Pro Max P077 `05b`) Chi tiết khoản: menu ⋯ lệch khỏi
+  nút — iPad lên ~42 pt, sang trái ~48 pt, đè tiêu đề + số tiền; iPhone che chính nút ⋯. Nguyên nhân: `measureInWindow` trong page sheet
+  (`presentation: 'modal'`) tính từ góc sheet, còn menu vẽ trong `<Modal>` phủ cả màn (B-146). Sửa: menu vẽ ngay trong màn (View phủ màn, đặt
+  sau cùng), ngay dưới header theo `onLayout` của header, `right: GUTTER` — không đo cửa sổ, không Modal; cả 2 nền tảng. Back Android đóng menu
+  trước; mở menu thì cất bàn phím; trợ năng: `accessibilityViewIsModal` (iOS) + ẩn phần còn lại (Android). `src/app/entry/[id].tsx`.
+  Giả lập Android (Tablet_API_37 dọc 800×1280 dp, ngang, và 360×640 dp): menu ngay dưới nút ⋯; chạm ngoài / Back đóng menu (màn còn);
+  Delete → hộp thoại; Split → màn Split; đang gõ Note mở menu → bàn phím cất. ⏳ iOS: iPad page sheet + iPhone (phiên C).
+- [ ] **B-151** 🟠 (QA iOS run 44672153434 — iPhone SE P052 XXXL `23h`, P091 AX-L `23h`) Thẻ Sort → Split, gõ số tiền: "Left to assign" / "Split & sort"
+  nằm dưới bàn phím số (không có phím Return để cất). Bố cục cuộn iOS (B-147) cho thẻ cao cố định 360 × cỡ chữ (~486 pt XXXL) > phần còn thấy
+  trên bàn phím (~410 pt); màn chỉ cuộn tới đầu thẻ, trong thẻ cuộn tới dòng đang gõ. Sửa: (1) iOS, bố cục cuộn + bàn phím lên → thẻ cao bằng phần
+  cuộn còn thấy (`viewport − 18`, tối thiểu 160) và màn cuộn tới đầu thẻ → cả thẻ nằm trên bàn phím, phần trong thẻ cuộn được; (2) Split: trong thẻ
+  cuộn về phía cuối form xa nhất mà dòng đang gõ vẫn thấy (`min(dòng − 12, cuối)`), trước chỉ tới dòng đang gõ (B-133). `sort.tsx`, `SortEntryCard.tsx`.
+  Giả lập Android 360×640 dp chữ 1.3, tạm ép nhánh iOS (bố cục cuộn + co thẻ): bàn phím lên → cả thẻ nằm trên bàn phím, 2 dòng + Left to
+  assign thấy, kéo trong thẻ tới "Split & sort" đủ nút; cất bàn phím → thẻ về cao cũ. Android thật giữ nguyên (chữ 1.3 thường, Split & sort
+  kéo tới được). ⏳ iOS SE XXXL / AX-L (phiên C): bàn phím số không có Return — kéo trong thẻ phải lộ nút.
+- [ ] **B-152** 🟡 (QA iOS run 44672153434 — iPhone SE P052-xxl, XXL, `06a` / `06_after_fuel_tap`) Sort ở SE chữ XXL chưa vào bố cục cuộn
+  (667/1.235 ≈ 540 ≥ 520): thẻ chỉ còn vùng cuộn ~95 pt, chip danh mục khuất (Maestro bấm "Fuel" trúng nút Edit bên dưới), nhãn nút cắt
+  "E… Split Mer… S…". Sửa: (1) iOS ngưỡng riêng `SORT_SCROLL_BELOW_IOS = 600` (SE từ XL ≈ 597 trở lên cuộn; iPhone 16 / Pro Max XXXL ≈ 631 / 690
+  giữ bố cục thường); Android giữ B-114 v3 (640 dp chữ 1.3 → thường, 2.0 → cuộn); (2) nhãn Edit/Split/Merge/Skip xếp dọc theo bề ngang thẻ
+  (`cardActionsStack`: cần ~124 + 160 × cỡ chữ (≤ 1.3) pt), thay ngưỡng cỡ chữ ≥ 1.29 — SE XL/XXL xếp dọc, Android 360 dp chữ 1.3/2.0 vẫn dọc,
+  chữ 1.0 vẫn một hàng. `logic.ts` (+ test), `SortEntryCard.tsx`.
+  Giả lập Android 360×640 dp: chữ 1.0 một hàng đủ chữ, 1.3 xếp dọc + bố cục thường, 2.0 bố cục cuộn. ⏳ iOS SE XXL / XL (phiên C).
