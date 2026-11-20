@@ -1,5 +1,5 @@
 import { DEFAULT_CATEGORIES } from '../categories';
-import { amountClose, mostUsed, normaliseNote, suggest, type SortedEntry, type SuggestCategory } from '../suggest';
+import { amountClose, mostUsed, normaliseNote, sortChoice, suggest, type SortedEntry, type SuggestCategory } from '../suggest';
 
 const cats: SuggestCategory[] = DEFAULT_CATEGORIES.UK.map((c, i) => ({ id: c.key, type: c.type, key: c.key, hidden: false, order: i }));
 
@@ -118,5 +118,50 @@ describe('suggest — bản 2 signals (F-07)', () => {
     expect(top.slice(0, 2)).toEqual(['fuel', 'parking']);
     expect(top).toHaveLength(3);
     expect(mostUsed('expense', cats, [])).toEqual(cats.filter((c) => c.type === 'expense').slice(0, 3).map((c) => c.id));
+  });
+});
+
+// L1 (verify dev 049dff0, 2026-11-20): an entry nothing is known about must not get a gold "Suggested" chip, nor be
+// swept into "Accept all suggestions" — a first "Greggs" was offered Fuel only because Fuel heads the list.
+describe('suggest — only a real signal is a suggestion (L1)', () => {
+  const sorted = (note: string, amountMinor: number, categoryId: string): SortedEntry => ({
+    type: 'expense', note, amountMinor, categoryId, scope: 'work',
+  });
+  // Two Shell receipts already filed under Fuel (what the emulator run had when Greggs came up).
+  const history = [sorted('Shell', 3810, 'fuel'), sorted('Shell', 4520, 'fuel')];
+  const usage = [{ categoryId: 'fuel', count: 2 }];
+
+  it('a never-sorted note with no keyword, amount or receipt match is not confident', () => {
+    const s = suggest({ type: 'expense', note: 'Greggs', amountMinor: 420 }, cats, history);
+    expect(s.confident).toBe(false);
+    expect(s.categoryIds[0]).toBe('fuel'); // ranking unchanged: frequency still orders the chips
+    expect(suggest({ type: 'expense', note: '', amountMinor: 500 }, cats, []).confident).toBe(false);
+  });
+
+  it('sortChoice falls back to "Most used" (90-day usage) for it', () => {
+    const c = sortChoice({ type: 'expense', note: 'Greggs', amountMinor: 420 }, cats, history, usage);
+    expect(c.kind).toBe('mostUsed');
+    expect(c.categoryIds).toEqual(mostUsed('expense', cats, usage));
+    expect(c.scope).toBeNull();
+  });
+
+  it('history, keyword, amount and OCR signals stay "Suggested"', () => {
+    const viaHistory = sortChoice({ type: 'expense', note: 'Shell M62', amountMinor: 5230 }, cats, history, usage);
+    expect(viaHistory).toEqual({ categoryIds: expect.arrayContaining(['fuel']), scope: 'work', kind: 'suggested' });
+    expect(viaHistory.categoryIds[0]).toBe('fuel');
+    expect(suggest({ type: 'expense', note: 'RingGo Leeds', amountMinor: 350 }, cats, []).confident).toBe(true); // keyword
+    expect(suggest({ type: 'expense', note: 'Direct debit', amountMinor: 3810 }, cats, history).confident).toBe(true); // amount ±2%
+    const ocr = [sorted('Kwik Fit', 18999, 'repairs')];
+    expect(suggest({ type: 'expense', note: '', amountMinor: 100, ocrAmountMinor: 18999 }, cats, ocr).confident).toBe(true);
+    expect(suggest({ type: 'expense', note: 'x', amountMinor: 1, merchant: 'Shell UK' }, cats, history).confident).toBe(true);
+  });
+
+  it('a signal for a lower-ranked category does not make a frequency-only first chip confident', () => {
+    // 499 Fuel sorts (0.01 each = 4.99) outweigh one fresh amount match for Phone (0.8 × 2 = 1.6): Fuel stays first but
+    // rests on usage only, so the entry is not confident; Phone, which has the real signal, comes second.
+    const heavy = [sorted('bill', 2499, 'phone'), ...Array.from({ length: 499 }, () => sorted('fill up', 5000, 'fuel'))];
+    const s = suggest({ type: 'expense', note: 'Direct debit', amountMinor: 2499 }, cats, heavy);
+    expect(s.categoryIds.slice(0, 2)).toEqual(['fuel', 'phone']);
+    expect(s.confident).toBe(false);
   });
 });

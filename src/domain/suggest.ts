@@ -35,6 +35,12 @@ export interface Suggestion {
   categoryIds: string[];
   /** Work/personal suggestion from history, or null when there is no signal. */
   scope: Scope | null;
+  /**
+   * The first category rests on a real signal (note / merchant history, amount, OCR, built-in keyword), not only on how
+   * often a category is used. False → the screens show "Most used" instead of "Suggested" and keep the entry out of
+   * "Accept all suggestions" (L1, 2026-11-20).
+   */
+  confident: boolean;
 }
 
 /** Lower-case, strip punctuation (keeps & and -), collapse spaces. */
@@ -88,8 +94,12 @@ export function suggest(
 ): Suggestion {
   const candidates = categories.filter((c) => c.type === input.type && !c.hidden);
   const score = new Map<string, number>(candidates.map((c) => [c.id, 0]));
-  const add = (id: string, v: number) => {
-    if (score.has(id)) score.set(id, (score.get(id) ?? 0) + v);
+  /** Score from real signals only (everything except the usage-frequency filler). */
+  const signal = new Map<string, number>();
+  const add = (id: string, v: number, real = true) => {
+    if (!score.has(id)) return;
+    score.set(id, (score.get(id) ?? 0) + v);
+    if (real) signal.set(id, (signal.get(id) ?? 0) + v);
   };
 
   const norm = normaliseNote(input.merchant ? `${input.note} ${input.merchant}` : input.note);
@@ -99,7 +109,7 @@ export function suggest(
 
   history.slice(0, HISTORY_LIMIT).forEach((h, i) => {
     if (h.type !== input.type) return;
-    add(h.categoryId, 0.01); // frequency
+    add(h.categoryId, 0.01, false); // frequency: tie-breaker / filler, not a signal
     const recency = 1 + 1 / (1 + i / 10);
     const hw = words.size === 0 ? [] : wordsOf(h.note, h.merchant);
     const shared = hw.filter((w) => words.has(w)).length;
@@ -130,7 +140,31 @@ export function suggest(
   const scope: Scope | null =
     scopeVotes.work === scopeVotes.personal ? null : scopeVotes.work > scopeVotes.personal ? 'work' : 'personal';
 
-  return { categoryIds: ranked.slice(0, 3).map((c) => c.id), scope };
+  const confident = ranked.length > 0 && (signal.get(ranked[0].id) ?? 0) > 0;
+  return { categoryIds: ranked.slice(0, 3).map((c) => c.id), scope, confident };
+}
+
+/** What a Sort card / List view row offers for one entry: "Suggested" or "Most used". */
+export interface SortChoice {
+  categoryIds: string[];
+  scope: Scope | null;
+  kind: 'suggested' | 'mostUsed';
+}
+
+/**
+ * Sort screens (L1, 2026-11-20): `suggest()` when its first category rests on a real signal; otherwise the entry gets the
+ * plain "Most used" chips (90-day usage) — no gold "best" chip and no place in "Accept all suggestions", so an entry
+ * nothing is known about (a first "Greggs") is never filed under Fuel just because Fuel heads the list.
+ */
+export function sortChoice(
+  input: SuggestInput,
+  categories: SuggestCategory[],
+  history: SortedEntry[],
+  usage: { categoryId: string; count: number }[],
+): SortChoice {
+  const s = suggest(input, categories, history);
+  if (s.confident) return { categoryIds: s.categoryIds, scope: s.scope, kind: 'suggested' };
+  return { categoryIds: mostUsed(input.type, categories, usage), scope: s.scope, kind: 'mostUsed' };
 }
 
 /** Free "Most used" (F-07): category ids by how often they were used in the last 90 days, ties by category order. */
