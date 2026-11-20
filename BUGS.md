@@ -722,4 +722,10 @@
   nghỉ 20 phút chặn lần kiểm mới, cảm biến không ra driving. **Phương chốt 20/11:** (a) Drive check chỉ bật khi trung bình ≥ 9 km/h (2,5 m/s) VÀ cảm
   biến không còn ở walking/running (activity hiện tại); (b) nghỉ 20 phút chỉ cho cùng một lần di chuyển — có 'still enter' sau lần kiểm trước rồi lại
   'still exit' thì kiểm lại ngay. Giao phiên "A006 gỡ giới hạn pro" sửa (`probeLogic.ts` `probeSaysDriving` / `shouldStartProbe`, `probe.ts`, `probeState.ts`).
+  **Bổ sung 20/11 (phiên E đối chiếu 8 mốc):** (c) xuống xe 08:26 đi bộ lên nhà → 505 m đi bộ (4–6 km/h, AR walking từ 08:26:10) cộng vào chuyến,
+  giờ kết thúc 08:29 thay vì 08:26, gps_mode chuyển drive vì đi bộ. **Phương chốt: đi bộ không tính** — AR walking (hoặc tốc độ đi bộ) sau khi lái → không cộng
+  km, không tính là "di chuyển thật" (lastMoveAt / parkedSince / gps_mode); giờ đỗ = lúc hết lái (driving exit); chuyến vẫn chờ đủ Merge stops mới đóng
+  (giao hàng xuống xe vài phút rồi lái tiếp vẫn một chuyến). (d) tối 19/11 Phương đi xe chậm từ UBND phường Từ Liêm tới chỗ nối Bluetooth không bật chuyến:
+  AR giữ still, lần kiểm (từ lúc đi bộ) hết hạn đúng lúc xe lăn bánh → gia hạn lần kiểm khi 2 phút cuối GPS còn di chuyển thật (tối đa +12 phút), không
+  probe_none + nghỉ (Phương mô tả tình huống, áp theo đề xuất).
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
