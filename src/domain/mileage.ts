@@ -185,18 +185,26 @@ export const STATIONARY_MAX_RADIUS_M = 150;
 export function isStationaryFix(
   prev: { lat: number; lng: number } | null,
   fix: { lat: number; lng: number; accuracy?: number; speed?: number | null },
-  opts: { sensorStill?: boolean } = {},
+  opts: { sensorStill?: boolean; onFoot?: boolean; walkSpeed?: boolean } = {},
 ): boolean {
+  // B-143 (Phương 20/11): the motion sensor says walking / running → the driver walked away from the van (a delivery,
+  // home): never the van's miles, not even the first fix.
+  if (opts.onFoot) return true;
   if (!prev) return false;
   // Phương 19/11 (A13: a trip started at home kept adding miles, an automatic one never ended): the motion sensor says
   // the phone is still → no fix counts, whatever GPS wanders to.
   if (opts.sensorStill) return true;
+  // B-143: after the van stopped, a walking pace is someone walking (features/trips/auto/engine.ts recordingFilter).
+  if (opts.walkSpeed && fix.speed != null && fix.speed >= 0 && fix.speed < WALK_AFTER_DRIVE_MAX_MPS) return true;
   if (fix.speed == null || fix.speed < 0) {
     // Indoors / network fixes come without a speed and wander 25–80 m: only a sure fix that moved well away counts.
     return (fix.accuracy ?? Infinity) > NO_SPEED_MAX_ACCURACY_M || haversine(prev, fix) < NO_SPEED_MIN_MOVE_M;
   }
   return fix.speed < STATIONARY_SPEED_MPS && haversine(prev, fix) < STATIONARY_MAX_RADIUS_M;
 }
+
+/** B-143: a fix slower than this (9 km/h) after the van stopped is someone walking. */
+export const WALK_AFTER_DRIVE_MAX_MPS = 2.5;
 
 /** A fix without an OS speed counts only when it is at least this sure… */
 export const NO_SPEED_MAX_ACCURACY_M = 30;

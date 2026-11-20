@@ -112,10 +112,8 @@ public class TripDetectModule: Module {
       TripEventLog.clear()
     }
 
-    // Android-only signals: keep the JS API identical on both platforms. Charging stays false on purpose: "Start when
-    // charging" means the van's charger on Android; on an iPhone it would start trips at home.
+    // Android-only signals: keep the JS API identical on both platforms (isCharging: dev screen only).
     Function("isCharging") { () -> Bool in false }
-    Function("watchPower") { (_: Bool) in }
     Function("getBondedDevices") { () -> [[String: Any]] in [] }
     AsyncFunction("startSampling") { (_: Double) in }
     AsyncFunction("stopSampling") { () in }

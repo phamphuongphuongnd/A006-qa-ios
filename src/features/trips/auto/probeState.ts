@@ -5,7 +5,7 @@ import * as Location from 'expo-location';
 import { db } from '@/db/client';
 
 import { configureNative } from './native';
-import { PROBE_COOLDOWN_MS } from './probeLogic';
+import { PROBE_COOLDOWN_MS, type ProbeFix } from './probeLogic';
 import { getKV, setKV } from './repo';
 
 export const PROBE_TASK = 'sunday-drive-check';
@@ -14,9 +14,14 @@ const KEY_PROBE = 'probe';
 export interface ProbeState {
   /** When the phone left 'still' (a drive found by the check starts here). */
   startedAt: number;
-  /** The check stops by itself after this. */
+  /** The check stops by itself after this (B-143 d: moved on while it still moves)… */
   until: number;
-  origin: { lat: number; lng: number; ts: number; accuracy: number } | null;
+  /** …but never past this. Missing (a check from before B-143) → `until`. */
+  maxUntil?: number;
+  /** The check's usable fixes, oldest first (B-143: a drive may begin after a walk). */
+  fixes?: ProbeFix[];
+  /** Before B-143: the first usable fix only. */
+  origin?: ProbeFix | null;
   /** B-88 v2: the step counter at the previous fix (steps a minute = walking). */
   steps?: { at: number; count: number } | null;
   /** B-88 v2: the motion sensor said cycling during this check. */
@@ -24,9 +29,24 @@ export interface ProbeState {
 }
 
 export const getProbe = () => getKV<ProbeState | null>(db, KEY_PROBE, null);
-/** No new check before this (cool-down after one found nothing). */
+/** No new check before this for the same movement (cool-down after one found nothing). */
 export const probeAfter = () => getKV<number>(db, 'probeAfter', 0);
+/** B-143 (b): when the movement of the last check that found nothing began. */
+export const probeLastSince = () => getKV<number>(db, 'probeSince', 0);
 export const setProbe = (p: ProbeState | null) => setKV(db, KEY_PROBE, p);
+
+/** The check's fixes (a check stored before B-143 kept only its first one). */
+export const probeFixes = (p: ProbeState): ProbeFix[] => p.fixes ?? (p.origin ? [p.origin] : []);
+
+/**
+ * B-143: the Trip the drive check started, and when it found the drive. A 'still' the motion sensor entered before that
+ * missed the drive (slow traffic) — it doesn't stop the Trip's fixes from counting (backgroundTask.ts).
+ */
+export const setProbeTrip = (tripId: string, at: number) => setKV(db, 'probeTrip', { tripId, at });
+export function probeTripFoundAt(tripId: string): number | null {
+  const pt = getKV<{ tripId: string; at: number } | null>(db, 'probeTrip', null);
+  return pt && pt.tripId === tripId ? pt.at : null;
+}
 
 /**
  * Stop a running check. `found`: a drive started (no cool-down — a Trip runs now anyway).
@@ -43,8 +63,10 @@ export async function stopProbe(found: boolean, now = Date.now(), onTripStillRec
     await onTripStillRecording?.().catch(() => {});
   }
   if (p) {
-    const after = found ? now : now + PROBE_COOLDOWN_MS;
-    setKV(db, 'probeAfter', after);
-    configureNative({ probeAfter: after });
+    setKV(db, 'probeAfter', found ? now : now + PROBE_COOLDOWN_MS);
+    setKV(db, 'probeSince', p.startedAt);
+    // B-143 (b): the next 'still' exit wakes JS whatever the cool-down — shouldStartProbe decides whether it is the
+    // same movement.
+    configureNative({ probeAfter: now });
   }
 }

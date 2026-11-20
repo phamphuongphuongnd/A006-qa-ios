@@ -48,7 +48,6 @@ export async function buildTripDiagnostics(now = Date.now()) {
     pro: getProStatus(db, now).kind,
     settings: {
       autoTrips: s.autoTrips,
-      startOnCharge: s.startOnCharge,
       vanBtDevice: s.vanBtDevice ? 'set' : null,
       mergeStopMinutes: s.mergeStopMinutes,
       workHours: s.workHours,

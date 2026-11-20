@@ -7,7 +7,7 @@ export type Activity = 'driving' | 'walking' | 'cycling' | 'running' | 'still' |
 export type EngineSignal =
   | { kind: 'activity' | 'sample'; activity: Activity; transition?: 'enter' | 'exit'; confidence?: number; at: number; eventAt?: number }
   | { kind: 'bt_connected' | 'bt_disconnected'; address: string | null; at: number }
-  | { kind: 'power_connected' | 'power_disconnected' | 'wake' | 'boot'; at: number; reason?: string };
+  | { kind: 'wake' | 'boot'; at: number; reason?: string };
 
 /** Persisted between runs (features/trips/auto/store.ts). */
 export interface EngineState {
@@ -23,6 +23,12 @@ export interface EngineState {
   /** "Still on a trip?" / "Trip isn't recording" already sent for this trip at this last-move time. */
   stillNotifiedFor: number;
   silentNotifiedFor: number;
+  /** B-143 (b): last 'still' enter (a stop: the drive check's cool-down ends for the next movement). */
+  stillEnterAt?: number;
+  /** B-143 (c): last time the sensor left driving / cycling (a crawling van reads as cycling)… */
+  vehicleExitAt?: number;
+  /** …and walking / running followed it, with no driving / cycling since: the driver walked away from the van. */
+  footAfterDrive?: boolean;
 }
 
 export const INITIAL_ENGINE_STATE: EngineState = {
@@ -33,13 +39,15 @@ export const INITIAL_ENGINE_STATE: EngineState = {
   vanConnectedAt: 0,
   stillNotifiedFor: 0,
   silentNotifiedFor: 0,
+  stillEnterAt: 0,
+  vehicleExitAt: 0,
+  footAfterDrive: false,
 };
 
 export interface EngineConfig {
   /** settings.autoTrips && Pro. Running automatic trips still end on their own when this turns off. */
   enabled: boolean;
   vanAddress: string | null;
-  startOnCharge: boolean;
   mergeStopMinutes: number;
 }
 
@@ -58,7 +66,7 @@ export interface EngineTrip {
 }
 
 export type EngineAction =
-  | { type: 'start'; at: number; reason: 'motion' | 'bluetooth' | 'charging' }
+  | { type: 'start'; at: number; reason: 'motion' | 'bluetooth' }
   | { type: 'end'; tripId: string; at: number; startedBy: EngineTrip['startedBy'] }
   | { type: 'notifyStill'; tripId: string; since: number }
   | { type: 'notifySilent'; tripId: string; since: number }
@@ -74,13 +82,19 @@ export const DRIVING_STALE_MS = 2 * 60 * 60_000;
 /** Raw samples count as driving from this confidence (0–100). */
 export const SAMPLE_DRIVING_CONFIDENCE = 75;
 
+/** An enter dated this little before the exit it pairs with still follows it (B-143). */
+export const EXIT_ENTER_SKEW_MS = 1_000;
+
 const when = (s: EngineSignal) => ('eventAt' in s && s.eventAt ? s.eventAt : s.at);
 
 const isMotion = (a: Activity | null) => a === 'driving';
+/** B-143: walking / running — never a drive, never a vehicle's miles. */
+export const isOnFoot = (a: Activity | null | undefined) => a === 'walking' || a === 'running';
+const isVehicle = (a: Activity) => a === 'driving' || a === 'cycling';
 
 /**
  * One decision step. `signals` may include ones already seen (they are skipped by `seenUntil`).
- * `charging` = phone charging right now. Returns the new state and what to do.
+ * Returns the new state and what to do.
  */
 export function step(
   state0: EngineState,
@@ -88,12 +102,11 @@ export function step(
   cfg: EngineConfig,
   trip: EngineTrip | null,
   now: number,
-  charging: boolean,
 ): { state: EngineState; actions: EngineAction[] } {
   const state: EngineState = { ...state0 };
   const actions: EngineAction[] = [];
   let startAt: number | null = null;
-  let startReason: 'motion' | 'bluetooth' | 'charging' = 'motion';
+  let startReason: 'motion' | 'bluetooth' = 'motion';
   const fresh = signals.filter((s) => s.at > state0.seenUntil).sort((a, b) => a.at - b.at);
 
   for (const s of fresh) {
@@ -105,17 +118,26 @@ export function step(
         (s.kind === 'sample' && (s.activity !== 'driving' || (s.confidence ?? 0) >= SAMPLE_DRIVING_CONFIDENCE));
       if (s.kind === 'activity' && s.transition === 'exit' && (s.activity === 'still' || s.activity === 'walking')) {
         state.movedAt = Math.max(state.movedAt, at);
-        if (cfg.startOnCharge && charging && s.activity === 'still' && !trip && startAt === null) {
-          // "Start when charging" + moving (Android: the charger is the van's).
-          startAt = at;
-          startReason = 'charging';
-        }
+      }
+      if (s.kind === 'activity' && s.transition === 'exit' && isVehicle(s.activity)) {
+        state.vehicleExitAt = Math.max(state.vehicleExitAt ?? 0, at);
       }
       if (s.kind === 'activity' && s.transition === 'exit' && s.activity === state.activity) {
         state.activity = null;
         state.activityAt = at;
       }
-      if (entered && at >= state.activityAt) {
+      // B-143: A13 dates an exit and the enter that goes with it from two clock reads — the enter can come out 1 ms
+      // before the exit (still exit 07:10:25.082 / walking enter .081): it still follows that exit.
+      const follows = at >= state.activityAt || (state.activity === null && state.activityAt - at <= EXIT_ENTER_SKEW_MS);
+      if (entered && follows) {
+        // B-143 (c): on foot after leaving the van (on foot straight from driving = a lost exit) → walked away from it,
+        // until the sensor says driving / cycling again.
+        if (isOnFoot(s.activity)) {
+          if (state.activity && isVehicle(state.activity)) state.vehicleExitAt = at;
+          if ((state.vehicleExitAt ?? 0) > 0) state.footAfterDrive = true;
+        }
+        if (isVehicle(s.activity)) state.footAfterDrive = false;
+        if (s.activity === 'still' && s.kind === 'activity') state.stillEnterAt = Math.max(state.stillEnterAt ?? 0, at);
         state.activity = s.activity;
         state.activityAt = at;
         if (s.activity === 'driving' && !trip && startAt === null) {
@@ -132,7 +154,7 @@ export function step(
         }
       }
     }
-    // bt_disconnected never ends a trip (P1-1); power / wake / boot only trigger a re-check.
+    // bt_disconnected never ends a trip (P1-1); wake / boot only trigger a re-check.
   }
 
   if (!trip) {
@@ -150,7 +172,7 @@ export function step(
   const lastFix = Math.max(trip.lastPointAt ?? 0, trip.startedAt);
   // Phương 19/11 (CONTEXT: Trip end): a Trip ends when the vehicle hasn't really moved for the merge threshold —
   // GPS wander at home no longer counts as moving — automatic or started by the driver, Van Bluetooth or not.
-  const lastMove = Math.max(trip.lastMoveAt ?? trip.lastPointAt ?? 0, trip.startedAt);
+  const lastMove = tripLastMove(trip, state);
   // Activity recognition still says 'driving' (GPS can drop out in tunnels): not a stop. A 'driving' state with no
   // fix for DRIVING_STALE_MS is not trusted any more (a lost exit transition must not keep a trip open forever).
   const driving = isMotion(state.activity) && now - Math.max(lastFix, state.activityAt) < DRIVING_STALE_MS;
@@ -166,6 +188,42 @@ export function step(
     actions.push({ type: 'notifySilent', tripId: trip.id, since: lastFix });
   }
   return { state, actions };
+}
+
+/**
+ * When the vehicle last really moved (CONTEXT: Trip end). B-143 (c, Phương 20/11): the driver walked away from the van
+ * — the walk adds no fixes (`recordingFilter`), and the van parked when the sensor stopped saying driving.
+ */
+export function tripLastMove(trip: EngineTrip, state: EngineState): number {
+  const lastMove = Math.max(trip.lastMoveAt ?? trip.lastPointAt ?? 0, trip.startedAt);
+  const parkedAt = state.footAfterDrive && (state.vehicleExitAt ?? 0) >= trip.startedAt ? (state.vehicleExitAt ?? 0) : 0;
+  return Math.max(lastMove, parkedAt);
+}
+
+/**
+ * Which fixes of a running Trip add nothing (backgroundTask.ts → appendPoints):
+ * - `sensorStill` (Phương 19/11): the motion sensor says still — GPS wander at home. B-143: not a 'still' entered
+ *   before the drive check found this Trip's drive (`probeFoundAt`) — the sensor missed that drive (slow traffic).
+ * - `onFoot` (B-143 c): walking / running — the driver walked away (a delivery, home); never the van's miles.
+ * - `walkSpeed` (B-143 c): the sensor left driving / cycling in this Trip and said nothing since — fixes slower than
+ *   WALK_AFTER_DRIVE_MAX_MPS (domain/mileage.ts) are someone walking.
+ * Without the motion permission the sensor is not read.
+ */
+export function recordingFilter(input: {
+  state: EngineState | null;
+  permission: boolean;
+  tripStartedAt: number;
+  probeFoundAt: number | null;
+}): { sensorStill: boolean; onFoot: boolean; walkSpeed: boolean } {
+  const { state, permission, tripStartedAt, probeFoundAt } = input;
+  if (!state || !permission) return { sensorStill: false, onFoot: false, walkSpeed: false };
+  const missedDrive = probeFoundAt !== null && state.activityAt <= probeFoundAt;
+  const exit = state.vehicleExitAt ?? 0;
+  return {
+    sensorStill: state.activity === 'still' && !missedDrive,
+    onFoot: isOnFoot(state.activity),
+    walkSpeed: state.activity === null && exit >= tripStartedAt && exit >= state.activityAt,
+  };
 }
 
 /** Automatic trips shorter than this were not real drives (car park shuffle, false detection): dropped silently. */
