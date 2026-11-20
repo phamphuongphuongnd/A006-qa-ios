@@ -51,12 +51,18 @@ export function splitCoveredByMileage<T extends { amountMinor: Minor; vehicleRun
   return { counted, covered, coveredMinor };
 }
 
-/** Business-use share for the actual-costs method; null when no miles were logged. Percent rounded to whole. */
+/**
+ * Business-use share for the actual-costs method; null when no miles were logged. `share` stays exact (any money
+ * worked out from it uses this); `percent` is rounded to 2 decimals for display (49 of 400 mi → 12.25), B-154.
+ */
 export function businessUse(workMiles: number, totalMiles: number): { share: number; percent: number } | null {
   if (!(totalMiles > 0)) return null;
   const share = Math.min(1, Math.max(0, workMiles / totalMiles));
-  return { share, percent: Math.round(share * 100) };
+  return { share, percent: Math.round(Number((share * 10000).toFixed(6))) / 100 };
 }
+
+/** "12.25" — the business-use percent as every screen and file prints it (always 2 decimals). */
+export const percentText = (percent: number): string => percent.toFixed(2);
 
 /**
  * "Change how you claim vehicle costs?" (§5.3): asked when switching between two real methods after this tax year

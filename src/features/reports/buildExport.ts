@@ -9,7 +9,7 @@ import type { CategoryRow } from '@/db/schema';
 import type { AppSettings } from '@/db/settingsRepo';
 import { businessTripMiles } from '@/db/tripsRepo';
 import { entriesCsv, mileageCsv, totalsCsv, tripSourceLabel } from '@/domain/csv';
-import { metersToMiles } from '@/domain/mileage';
+import { sumTenths, tripMiles } from '@/domain/mileage';
 import { hmrcLabel } from '@/domain/mtd';
 import { buildReport, MILEAGE_ID, MILEAGE_TAX_LINE, mtdOf, type Report } from '@/domain/report';
 import { currencyOf, type Period, type Region } from '@/domain/types';
@@ -77,8 +77,9 @@ function loadData(period: ReportPeriod, region: Region, settings: AppSettings) {
   };
   const useOf = (p: Period) => {
     const s = tripSummary(db, p);
-    const bu = businessUse(s.workMiles, s.workMiles + s.personalMiles + s.unsortedMiles);
-    return bu ? { percent: bu.percent, workMiles: s.workMiles, totalMiles: s.workMiles + s.personalMiles + s.unsortedMiles } : null;
+    const total = sumTenths([s.workMiles, s.personalMiles, s.unsortedMiles]);
+    const bu = businessUse(s.workMiles, total);
+    return bu ? { percent: bu.percent, workMiles: s.workMiles, totalMiles: total } : null;
   };
   const reportFor = (entries: EntryListItem[], p: Period, mileage: MtdMileage, includePersonal = false): Report =>
     buildReport(entries, [...cats.values()], p, {
@@ -185,13 +186,13 @@ export async function buildExport(opts: {
         trips.map((t) => ({
           startedAt: t.startedAt,
           endedAt: t.endedAt,
-          miles: metersToMiles(t.distanceM),
+          miles: tripMiles(t.distanceM),
           scope: t.scope,
           purpose: t.purpose,
           source: t.source,
           startedBy: t.startedBy,
           edited: t.edited,
-          originalMiles: t.originalDistanceM !== null ? metersToMiles(t.originalDistanceM) : null,
+          originalMiles: t.originalDistanceM !== null ? tripMiles(t.originalDistanceM) : null,
           odoStart: t.odoStart,
           odoEnd: t.odoEnd,
           fromLabel: t.fromLabel,
@@ -234,7 +235,7 @@ export async function buildExport(opts: {
       mtdRows: region === 'UK' ? mtdSummaryRows(report) : null,
       trips: trips.map((t) => ({
         startedAt: t.startedAt,
-        miles: metersToMiles(t.distanceM),
+        miles: tripMiles(t.distanceM),
         scope: t.scope,
         purpose: t.purpose,
         source: tripSourceLabel(t),
@@ -317,7 +318,7 @@ export async function buildExport(opts: {
       await writeParts('freeagent', 'expenses', freeAgentExpensesCsv(claimant, set, currency));
       const workTrips = finishedTrips(db, period)
         .filter((t) => t.scope === 'work')
-        .map((t) => ({ at: t.startedAt, miles: metersToMiles(t.distanceM), purpose: t.purpose }));
+        .map((t) => ({ at: t.startedAt, miles: tripMiles(t.distanceM), purpose: t.purpose }));
       await writeParts('freeagent', 'mileage', freeAgentMileageCsv(claimant, workTrips, vehicle, method));
       await step();
     }

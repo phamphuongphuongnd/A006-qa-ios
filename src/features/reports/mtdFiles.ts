@@ -1,11 +1,11 @@
 import type { CategoryKey } from '@/domain/categories';
 import { csvDocument, csvRow, ukDate } from '@/domain/csv';
-import { formatDistanceNumber } from '@/domain/mileage';
+import { formatDistanceNumber, roundTenth } from '@/domain/mileage';
 import { formatMoney, toDecimalString } from '@/domain/money';
 import { HMRC_EXPENSE_CATEGORIES, HMRC_INCOME_CATEGORIES, hmrcLabel, type HmrcCategory } from '@/domain/mtd';
 import { mtdOf, type Report } from '@/domain/report';
 import type { EntryType, Minor, Period, VehicleCostMethod } from '@/domain/types';
-import { vehicleTreatment } from '@/domain/vehicleCosts';
+import { percentText, vehicleTreatment } from '@/domain/vehicleCosts';
 
 /**
  * MTD and FreeAgent files (F-15, P1-8, X3). Pure: buildExport reads the DB and writes the files.
@@ -134,7 +134,8 @@ const lastDayOf = (p: Period) => {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12).getTime();
 };
 
-export const mileageDescription = (m: MtdMileage) => `Mileage allowance: ${formatDistanceNumber(m.miles, 0)} business miles at ${m.ratesText}`;
+/** B-154: the miles with 1 decimal, the same fixed total the mileage log adds up to (was rounded to whole miles). */
+export const mileageDescription = (m: MtdMileage) => `Mileage allowance: ${formatDistanceNumber(m.miles, 1)} business miles at ${m.ratesText}`;
 
 /** MTD records CSV — MTDsorted columns, one row per record, oldest first. */
 export function mtdRecordsCsv(set: MtdRecordSet): string {
@@ -219,7 +220,7 @@ export function vehicleNote(
     return `Mileage rate${method === 'unsure' ? ' (not chosen yet)' : ''}. ${claim}Fuel, repairs, insurance and road tax are covered by the rate${covered}; parking, tolls and congestion are added on top.`;
   }
   const bu = v.businessUse
-    ? ` Business use ${v.businessUse.percent}% (${formatDistanceNumber(v.businessUse.workMiles)} of ${formatDistanceNumber(v.businessUse.totalMiles)} mi).`
+    ? ` Business use ${percentText(v.businessUse.percent)}% (${formatDistanceNumber(v.businessUse.workMiles, 1)} of ${formatDistanceNumber(v.businessUse.totalMiles, 1)} mi).`
     : '';
   return `Actual costs. Vehicle costs are in full.${bu} Your accountant applies the business-use share.`;
 }
@@ -439,7 +440,7 @@ export function freeAgentMileageCsv(claimant: string, trips: FreeAgentTrip[], ve
         ...sorted
           .slice(i, i + FREEAGENT_MAX_ROWS)
           .map((t) =>
-            csvRow([claimant, ukDate(t.at), t.purpose.trim() || 'Business miles', t.miles.toFixed(1), 'Car', freeAgentEngineTypeOn(v.engineType, t.at), v.engineSize, reclaim]),
+            csvRow([claimant, ukDate(t.at), t.purpose.trim() || 'Business miles', roundTenth(t.miles).toFixed(1), 'Car', freeAgentEngineTypeOn(v.engineType, t.at), v.engineSize, reclaim]),
           ),
       ]),
     );

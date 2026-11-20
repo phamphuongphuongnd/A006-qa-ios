@@ -1,4 +1,4 @@
-import { formatRate, mileageEstimateByDate, periodsIn, type RateTier } from '@/domain/mileage';
+import { formatRate, mileageBreakdown, periodsIn, type RateTier } from '@/domain/mileage';
 import { taxYearOf } from '@/domain/taxYear';
 import type { EntryType, Minor, Period, Region, Scope } from '@/domain/types';
 
@@ -61,13 +61,13 @@ export function monthlySeries(
 }
 
 /**
- * Mileage estimate for part of a tax year with date-ranged rates. Tiers (UK 45p for the first 10,000) count from the
- * start of the tax year, so a quarter is priced as (year-to-end) − (year-to-start). `yearTrips` = the tax year's work
- * trips. Estimate only — not tax advice.
+ * Mileage estimate for part of a tax year with date-ranged rates. Tiers (UK 55p for the first 10,000) count from the
+ * start of the tax year: trips before `start` move the counter but are not priced. B-154: the range's own fixed miles
+ * are priced line by line (rate × tier, rounded once each), so the quarter's CSV miles × rate give this figure exactly
+ * (the old year-to-end − year-to-start could be a penny off). `yearTrips` = the tax year's work trips. Estimate only.
  */
 export function periodMileageEstimate(yearTrips: { at: number; miles: number }[], start: number, end: number, rates: RateTier[]): Minor {
-  const upTo = (t: number) => mileageEstimateByDate(yearTrips.filter((x) => x.at < t), rates);
-  return upTo(end) - upTo(start);
+  return mileageBreakdown(yearTrips, rates, { start, end }).minor;
 }
 
 /**
