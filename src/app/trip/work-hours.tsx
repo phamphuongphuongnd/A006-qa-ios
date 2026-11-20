@@ -29,7 +29,7 @@ export default function WorkHoursScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
       <ModalHeader icon={ChevronLeft} iconLabel={t('common.back')} onIcon={close} title={t('autoTrip.whTitle')} />
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 48 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 24 + insets.bottom }}>
         <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <View style={{ flex: 1 }}>
             <Txt v="h3">{t('autoTrip.whOn')}</Txt>

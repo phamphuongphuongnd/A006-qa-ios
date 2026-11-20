@@ -30,7 +30,7 @@ export default function BatteryTipsScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
       <ModalHeader icon={ChevronLeft} iconLabel={t('common.back')} onIcon={close} title={t('autoTrip.tipsTitle')} />
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 48 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 24 + insets.bottom }}>
         <Txt v="body">{samsung ? t('autoTrip.tipsIntro') : t('autoTrip.tipsIntroGeneric')}</Txt>
         {tips.map((tip, i) => (
           <Card key={tip} style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>

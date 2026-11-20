@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CONTENT_MAX, GUTTER, radius, touch, useTheme } from '@/theme';
 
+import { useKeyboardGap } from './keyboardGap';
 import { useReportFabTop } from './Overlays';
 import { Txt } from './Txt';
 
@@ -62,7 +63,10 @@ export function Screen({
   scroll?: boolean;
   contentStyle?: StyleProp<ViewStyle>;
   topInset?: boolean;
-  /** Pad the bottom bar above the system navigation bar (screens outside the tab bar, B-15). */
+  /**
+   * Screens outside the tab bar: keep the end clear of the system navigation bar (B-15) — the `bottom` bar when there
+   * is one, otherwise the scrolling content's end (B-153: Trip detail's last button sat under the 3-button bar).
+   */
   bottomInset?: boolean;
   /** Floating button over the content, bottom-right (above `bottom` when both are set). */
   fab?: ReactNode;
@@ -79,13 +83,18 @@ export function Screen({
   // buttons ("Sort now") — leave it out there; Home's buttons and the widget still add entries.
   const { height } = useWindowDimensions();
   const showFab = !!fab && height >= 520;
-  // With a FAB the last rows scroll clear of it (64dp button + 16dp margin + gap).
-  const body = [{ paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: showFab ? 100 : 20, gap: 14 }, contentStyle];
+  // With a FAB the last rows scroll clear of it (64dp button + 16dp margin + gap). B-153: no bottom bar outside the tab
+  // bar → the content's end clears the system navigation bar too.
+  const navBar = bottomInset && !bottom ? insets.bottom : 0;
+  // B-153: Android, where the keyboard-avoiding view stops short of the keyboard (Galaxy A13).
+  const keyboard = useKeyboardGap(avoidKeyboard);
+  const body = [{ paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: (showFab ? 100 : 20) + navBar, gap: 14 }, contentStyle];
   return (
     <KeyboardAvoidingView
       enabled={avoidKeyboard}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1, backgroundColor: colors.background, paddingTop: topInset ? insets.top : 0 }}>
+      style={{ flex: 1, backgroundColor: colors.background, paddingTop: topInset ? insets.top : 0, paddingBottom: keyboard.gap }}>
+      {keyboard.marker}
       {header ??
         (title || headerRight || headerLeft ? (
           <View style={[styles.top, { paddingHorizontal: GUTTER }]}>

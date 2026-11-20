@@ -133,10 +133,10 @@ describe('Reports by vehicle cost method (X2 / Q24)', () => {
   });
   it('vehicle note says what was claimed', () => {
     expect(vehicleNote('mileage', { mileage: { minor: 46260, miles: 841.2, ratesText: '55p / 25p' }, coveredMinor: 7240, businessUse: null }, 'GBP')).toBe(
-      'Mileage rate. Mileage allowance: 841 business miles at 55p / 25p = £462.60. Fuel, repairs, insurance and road tax are covered by the rate (£72.40 left out); parking, tolls and congestion are added on top.',
+      'Mileage rate. Mileage allowance: 841.2 business miles at 55p / 25p = £462.60. Fuel, repairs, insurance and road tax are covered by the rate (£72.40 left out); parking, tolls and congestion are added on top.',
     );
     expect(vehicleNote('actual', { mileage: null, coveredMinor: 0, businessUse: { percent: 87, workMiles: 30450, totalMiles: 35000 } }, 'GBP')).toBe(
-      'Actual costs. Vehicle costs are in full. Business use 87% (30,450 of 35,000 mi). Your accountant applies the business-use share.',
+      'Actual costs. Vehicle costs are in full. Business use 87.00% (30,450.0 of 35,000.0 mi). Your accountant applies the business-use share.',
     );
   });
 });
@@ -167,7 +167,7 @@ describe('MTD records (MTDsorted columns)', () => {
     expect(doc[0]).toBe('Date,Description,Merchant / customer name,Amount,Disallowable amount,Income tax category');
     expect(doc[1]).toBe('10/04/2026,DPD weekly payout,DPD,620.00,0.00,Turnover');
     expect(doc[3]).toBe('01/07/2026,Phone & data,,15.00,0.00,Administrative costs');
-    expect(doc[5]).toBe('05/04/2027,Mileage allowance: 841 business miles at 55p / 25p,,462.60,0.00,"Car, van and travel expenses"');
+    expect(doc[5]).toBe('05/04/2027,Mileage allowance: 841.2 business miles at 55p / 25p,,462.60,0.00,"Car, van and travel expenses"');
   });
   it('actual costs keep fuel and add no allowance row', () => {
     const set = mtdRecords(ENTRIES, CATS, q, { method: 'actual', mileage });

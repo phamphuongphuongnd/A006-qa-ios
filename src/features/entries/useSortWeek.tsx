@@ -5,7 +5,7 @@ import { listCategories } from '@/db/categoriesRepo';
 import { db } from '@/db/client';
 import { listEntries, type EntryListItem } from '@/db/entriesRepo';
 import type { CategoryRow, TripRow } from '@/db/schema';
-import { mostUsed, suggest, type SuggestCategory } from '@/domain/suggest';
+import { mostUsed, sortChoice, type SuggestCategory } from '@/domain/suggest';
 import type { Period, Scope } from '@/domain/types';
 import { weekLabel, weekOf } from '@/domain/week';
 import { unreviewedAutoCount } from '@/features/rules/repo';
@@ -21,7 +21,10 @@ import { categoryUsage90, openTrips, sortedQueueTrips, sortHistoryV2, sortWeeks 
 export interface SortSuggestion {
   categories: CategoryRow[];
   scope: Scope | null;
-  /** Pro "Suggested" (history, merchant, amount, OCR) or free "Most used" (90-day usage). */
+  /**
+   * Pro "Suggested" (history, merchant, amount, OCR, keywords) or "Most used" (90-day usage) — free, and Pro entries
+   * with no real signal (L1). Only 'suggested' gets the gold first chip and counts for "Accept all".
+   */
   kind: 'suggested' | 'mostUsed';
 }
 
@@ -51,11 +54,12 @@ export function useSortWeek(chosen: number | null, skipped: string[] = []) {
     [chosen],
     ['entries', 'receipts', 'trips'],
   );
+  // Usage feeds "Most used" for everyone: free users, and Pro entries with no real signal (L1).
   const learn = useLive(
-    () =>
-      pro
-        ? { history: sortHistoryV2(db), usage: { income: [], expense: [] } }
-        : { history: [], usage: { income: categoryUsage90(db, 'income'), expense: categoryUsage90(db, 'expense') } },
+    () => ({
+      history: pro ? sortHistoryV2(db) : [],
+      usage: { income: categoryUsage90(db, 'income'), expense: categoryUsage90(db, 'expense') },
+    }),
     [pro],
     ['entries'],
   );
@@ -65,12 +69,13 @@ export function useSortWeek(chosen: number | null, skipped: string[] = []) {
   const toRows = (ids: string[]) => ids.map((id) => byId.get(id)).filter((c): c is CategoryRow => !!c);
   const suggestFor = (e: EntryListItem): SortSuggestion => {
     if (!pro) return { categories: toRows(mostUsed(e.type, sugCats, learn.usage[e.type])), scope: null, kind: 'mostUsed' };
-    const s = suggest(
+    const s = sortChoice(
       { type: e.type, note: e.note, amountMinor: e.amountMinor, merchant: e.ocrMerchant, ocrAmountMinor: e.ocrAmountMinor },
       sugCats,
       learn.history,
+      learn.usage[e.type],
     );
-    return { categories: toRows(s.categoryIds), scope: s.scope, kind: 'suggested' };
+    return { categories: toRows(s.categoryIds), scope: s.scope, kind: s.kind };
   };
   const queue: SortItem[] = mixedQueue(data.entries, data.trips, skipped);
   const total = data.entries.length + data.trips.length + data.tripsDone;

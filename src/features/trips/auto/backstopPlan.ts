@@ -12,7 +12,7 @@ export interface BackstopPlan {
 }
 
 /** Pure: when each notification should fire if nothing else happens (null = none). Mirrors `engine.step`. */
-export function planBackstops(trip: EngineTrip | null, state: EngineState, now: number, mergeMs = 20 * 60_000): BackstopPlan {
+export function planBackstops(trip: EngineTrip | null, state: EngineState, now: number, mergeMs = 10 * 60_000): BackstopPlan {
   if (!trip || trip.status !== 'running') return { still: null, silent: null };
   const lastFix = Math.max(trip.lastPointAt ?? 0, trip.startedAt);
   const lastMove = Math.max(trip.lastMoveAt ?? trip.lastPointAt ?? 0, trip.startedAt);

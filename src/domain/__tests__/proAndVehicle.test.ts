@@ -156,7 +156,7 @@ describe('settings defaults for bản 2', () => {
     const s = getSettings(makeTestDb());
     expect(s).toMatchObject({
       vehicleCostMethod: 'unsure',
-      mergeStopMinutes: 20,
+      mergeStopMinutes: 10, // B-149
       autoTrips: false,
       backupNightly: false,
       backupFolder: null,

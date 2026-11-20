@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 
-import { isStationaryFix, metersToMiles, milesToMeters, parkedSince, trackDistance, TRIP_REMINDER_MS } from '@/domain/mileage';
+import { isStationaryFix, metersToMiles, milesToMeters, parkedSince, toTenths, trackDistance, TRIP_REMINDER_MS, tripMiles } from '@/domain/mileage';
 import type { Period, Scope, TripScope, TripStartedBy } from '@/domain/types';
 
 import { tripPoints, trips, type TripRow } from './schema';
@@ -280,16 +280,23 @@ export function listTrips(db: AppDb, period?: Period): TripRow[] {
     .all();
 }
 
-/** Miles by scope for a period. Running trips count with their distance so far. */
-export function mileageTotals(db: AppDb, period: Period): { work: number; personal: number } {
+/**
+ * Distance by scope for a period, in miles (default) or km. Running trips count with their distance so far.
+ * B-154: the sum of each trip's value fixed to 0.1 in that unit, so the total is exactly the trip rows added up.
+ */
+export function mileageTotals(db: AppDb, period: Period, unit: 'mi' | 'km' = 'mi'): { work: number; personal: number } {
   const rows = db
-    .select({ scope: trips.scope, m: sql<number>`COALESCE(SUM(${trips.distanceM}), 0)` })
+    .select({ scope: trips.scope, m: trips.distanceM })
     .from(trips)
     .where(and(gte(trips.startedAt, period.start), lt(trips.startedAt, period.end)))
-    .groupBy(trips.scope)
     .all();
-  const get = (s: Scope) => metersToMiles(Number(rows.find((r) => r.scope === s)?.m ?? 0));
-  return { work: get('work'), personal: get('personal') };
+  const tenths = { work: 0, personal: 0, unsorted: 0 } as Record<Scope | 'unsorted', number>;
+  for (const r of rows) {
+    const v = unit === 'km' ? Number(r.m) / 1000 : metersToMiles(Number(r.m));
+    const key = (r.scope ?? 'unsorted') as Scope | 'unsorted';
+    tenths[key] = (tenths[key] ?? 0) + toTenths(v);
+  }
+  return { work: tenths.work / 10, personal: tenths.personal / 10 };
 }
 
 export function deleteAllTrips(db: AppDb) {
@@ -339,11 +346,11 @@ export function updateManualTrip(db: AppDb, id: string, t: ManualTrip) {
     .run();
 }
 
-/** Work trips in a period as {at, miles} for `mileageEstimateByDate`. */
+/** Work trips in a period as {at, miles} for `mileageBreakdown`; miles fixed to 0.1 as printed (B-154). */
 export function businessTripMiles(db: AppDb, period: Period): { at: number; miles: number }[] {
   return listTrips(db, period)
     .filter((t) => t.scope === 'work')
-    .map((t) => ({ at: t.startedAt, miles: metersToMiles(t.distanceM) }));
+    .map((t) => ({ at: t.startedAt, miles: tripMiles(t.distanceM) }));
 }
 
 /** Last stored point of a trip (GPS status on the active trip screen). */

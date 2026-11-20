@@ -67,6 +67,23 @@ export function restoreRule(db: AppDb, row: RuleRow): void {
   db.insert(rules).values(row).onConflictDoNothing().run();
 }
 
+/**
+ * Undo on "Rule saved" for a rule just created (S-18 snackbar, L2): entries it auto-sorted since go back to the Sort
+ * queue (no longer "Auto"), then the rule is removed.
+ */
+export function undoCreateRule(db: AppDb, id: string, now = Date.now()): void {
+  db.transaction((tx) => {
+    tx.update(entries).set({ categoryId: null, sortedAt: null, ruleId: null, autoReviewedAt: null, updatedAt: now }).where(eq(entries.ruleId, id)).run();
+    tx.delete(rules).where(eq(rules.id, id)).run();
+  });
+}
+
+/** Undo on "Rule saved" after an edit (L2): the rule's previous words, amounts, category and Work/Personal come back. */
+export function restoreRuleValues(db: AppDb, before: RuleRow): void {
+  const { matchText, type, minMinor, maxMinor, categoryId, scope } = before;
+  db.update(rules).set({ matchText, type, minMinor, maxMinor, categoryId, scope }).where(eq(rules.id, before.id)).run();
+}
+
 /** Same type and the same words: saving would make a duplicate (the sheet edits that one instead). */
 export function findSameRule(db: AppDb, matchText: string, type: EntryType, exceptId?: string): RuleRow | null {
   const m = normaliseNote(matchText);

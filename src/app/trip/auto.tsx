@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Linking, PermissionsAndroid, Platform, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import type { AppSettings, MergeStopMinutes } from '@/db/settingsRepo';
+import { MERGE_STOP_MAX, MERGE_STOP_MIN, parseMergeStopMinutes, type AppSettings } from '@/db/settingsRepo';
 import { useNow } from '@/features/entries/useNow';
 import { openPro } from '@/features/pro/openPro';
 import { autoTripsSupported, bondedDevices, isSamsung, nativeHealth, simulateSignal, type TripDetectHealth } from '@/features/trips/auto/native';
@@ -16,10 +16,12 @@ import { router } from '@/services/router';
 import { usePro } from '@/state/pro';
 import { useSettings } from '@/state/settings';
 import { useTheme } from '@/theme';
-import { Badge, Button, Card, Group, Segmented, Sheet, StatusDot, Toggle, Txt } from '@/ui';
+import { Badge, Button, Card, Dialog, Field, Group, Segmented, Sheet, StatusDot, Toggle, Txt } from '@/ui';
 import { Bluetooth, ChevronLeft, ChevronRight, Clock } from '@/ui/icons';
 
-const MERGE: MergeStopMinutes[] = [10, 20, 45];
+/** B-149 (Phương 20/11): quick picks + Custom (whole minutes MERGE_STOP_MIN–MERGE_STOP_MAX); default 10. */
+const MERGE_QUICK = [5, 10, 20];
+const MERGE_CUSTOM = 'custom';
 
 function agoText(at: number, now: number) {
   const min = Math.floor((now - at) / 60_000);
@@ -61,6 +63,10 @@ export default function AutoTripsScreen() {
   const [health, setHealth] = useState(() => nativeHealth());
   const [flags, setFlags] = useState(() => getAutoFlags());
   const [btOpen, setBtOpen] = useState(false);
+  /** Custom merge minutes being typed (null = dialog closed). */
+  const [mergeText, setMergeText] = useState<string | null>(null);
+  const [mergeError, setMergeError] = useState(false);
+  const mergeOpen = mergeText !== null;
   const refresh = useCallback(() => {
     setHealth(nativeHealth());
     setFlags(getAutoFlags());
@@ -85,6 +91,22 @@ export default function AutoTripsScreen() {
     update(patch);
     await syncAutoDetection();
     refresh();
+  };
+
+  const merge = settings.mergeStopMinutes;
+  const mergeIsCustom = !MERGE_QUICK.includes(merge);
+  const closeMerge = () => {
+    setMergeText(null);
+    setMergeError(false);
+  };
+  const saveMerge = async () => {
+    const n = parseMergeStopMinutes(mergeText ?? '');
+    if (n === null) {
+      setMergeError(true);
+      return;
+    }
+    closeMerge();
+    await apply({ mergeStopMinutes: n });
   };
 
   const onToggle = async (v: boolean) => {
@@ -178,9 +200,13 @@ export default function AutoTripsScreen() {
         </Txt>
         <Segmented
           accessibilityLabel={t('autoTrip.mergeTitle')}
-          options={MERGE.map((n) => ({ value: String(n), label: t('autoTrip.min', { n }) }))}
-          value={String(settings.mergeStopMinutes)}
-          onChange={(v) => apply({ mergeStopMinutes: Number(v) as MergeStopMinutes })}
+          options={[
+            ...MERGE_QUICK.map((n) => ({ value: String(n), label: t('autoTrip.min', { n }) })),
+            // A custom value shows in its own slot ("7 min"); tapping it again edits it.
+            { value: MERGE_CUSTOM, label: mergeIsCustom ? t('autoTrip.min', { n: merge }) : t('autoTrip.mergeCustom') },
+          ]}
+          value={mergeIsCustom ? MERGE_CUSTOM : String(merge)}
+          onChange={(v) => (v === MERGE_CUSTOM ? setMergeText(String(merge)) : apply({ mergeStopMinutes: Number(v) }))}
         />
         <Txt v="small" c="textSecondary">
           {t('autoTrip.mergeHint')}
@@ -207,6 +233,33 @@ export default function AutoTripsScreen() {
         {__DEV__ && supported ? <DevTools vanAddress={settings.vanBtDevice?.address ?? null} onDone={refresh} /> : null}
       </ScrollBody>
 
+      <Dialog
+        visible={mergeOpen}
+        title={t('autoTrip.mergeTitle')}
+        onClose={closeMerge}
+        actions={[
+          { label: t('common.cancel'), onPress: closeMerge },
+          { label: t('common.save'), variant: 'primary', onPress: saveMerge },
+        ]}>
+        <Field
+          label={t('autoTrip.mergeCustomLabel')}
+          value={mergeText ?? ''}
+          onChangeText={(v) => {
+            setMergeText(v);
+            setMergeError(false);
+          }}
+          keyboardType="number-pad"
+          maxLength={2}
+          autoFocus
+          selectTextOnFocus
+          returnKeyType="done"
+          // A wrong number keeps the keyboard up next to its error; a good one closes the dialog.
+          submitBehavior="submit"
+          onSubmitEditing={saveMerge}
+          error={mergeError ? t('autoTrip.mergeCustomError', { min: MERGE_STOP_MIN, max: MERGE_STOP_MAX }) : null}
+        />
+      </Dialog>
+
       <VanBluetoothSheet
         visible={btOpen}
         onClose={() => setBtOpen(false)}
@@ -221,7 +274,9 @@ export default function AutoTripsScreen() {
 }
 
 function ScrollBody({ children }: { children: React.ReactNode }) {
-  return <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 48 }}>{children}</ScrollView>;
+  // B-153: the last row scrolls clear of the system navigation bar (3-button: 48dp).
+  const bottom = useSafeAreaInsets().bottom;
+  return <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 24 + bottom }}>{children}</ScrollView>;
 }
 
 function Row({

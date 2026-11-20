@@ -8,17 +8,17 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { db } from '@/db/client';
 import type { TripRow } from '@/db/schema';
 import { businessTripMiles, listTrips, mileageTotals, routeTitle } from '@/db/tripsRepo';
-import { formatDistanceNumber, formatRate, mileageEstimateByDate, periodsIn, tierThresholdReached } from '@/domain/mileage';
+import { formatDistanceNumber, formatRate, mileageEstimateByDate, periodsIn, sumTenths, tierThresholdReached } from '@/domain/mileage';
 import { formatMoney } from '@/domain/money';
 import { taxYearFor, taxYearOf } from '@/domain/taxYear';
 import { currencyOf, type Currency, type Region, type Scope } from '@/domain/types';
-import { businessUse, vehicleTreatment } from '@/domain/vehicleCosts';
+import { businessUse, percentText, vehicleTreatment } from '@/domain/vehicleCosts';
 import { setTripScope, restoreTripScope } from '@/features/trips/auto/repo';
 import { autoTripState } from '@/features/trips/autoState';
 import { useGapDistances, useGapLabels, useMissingTrips, useReadingChecks } from '@/features/trips/check/hooks';
 import { interleaveMonth } from '@/features/trips/check/listRows';
 import { GapRow, OdometerRow } from '@/features/trips/check/rows';
-import { distanceValue, formatClock, formatDay, formatDistance, groupByMonth, sameDay, type DistanceUnit } from '@/features/trips/format';
+import { formatClock, formatDay, formatDistance, groupByMonth, sameDay, sumTripDistance, type DistanceUnit } from '@/features/trips/format';
 import { dayMonth, weekdayTime } from '@/features/entries/format';
 import { sweepThumbs } from '@/features/trips/map/thumbs';
 import { TripThumb } from '@/features/trips/map/TripThumb';
@@ -84,7 +84,8 @@ export default function MilesScreen() {
     () => allTrips.filter((x) => x.startedAt >= year.start && x.startedAt < year.end && x.status !== 'running' && x.status !== 'paused'),
     [allTrips, year.start, year.end],
   );
-  const totals = useLive(() => mileageTotals(db, year), [year.start, year.end], ['trips']);
+  // B-154: totals in the display unit = each trip's shown value (0.1) added up.
+  const totals = useLive(() => mileageTotals(db, year, unit), [year.start, year.end, unit], ['trips']);
   // Q28 Parking & tolls typed on trips ("+ £3.50 parking & tolls" under the row).
   const parking = useLive(() => parkingByTrip(db, trips.map((x) => x.id)), [trips], ['entries']);
   // Q26 Missing trips (last 30 days) + Q27 odometer readings, drawn inside the month lists.
@@ -219,11 +220,13 @@ export default function MilesScreen() {
                   {m.label}
                 </Txt>
                 <Txt v="small" style={{ fontFamily: fonts.bold }}>
-                  {formatDistance(
-                    m.items.reduce((s, x) => s + x.distanceM, 0),
-                    unit,
-                    0,
-                  )}
+                  {`${formatDistanceNumber(
+                    sumTripDistance(
+                      m.items.map((x) => x.distanceM),
+                      unit,
+                    ),
+                    1,
+                  )} ${unit}`}
                 </Txt>
               </View>
               <Card style={{ paddingVertical: 0, paddingHorizontal: 14 }}>
@@ -346,19 +349,20 @@ function TotalsCard({
   use: { share: number; percent: number } | null;
 }) {
   const { colors } = useTheme();
-  const toM = (mi: number) => mi * 1609.344;
+  // `work` / `personal` are already in the display unit (sum of fixed trip values, B-154).
+  const d = (v: number) => `${formatDistanceNumber(v, 1)} ${unit}`;
   return (
     <Card style={{ gap: 10 }}>
       <Txt v="label" c="textSecondary">
         {t('miles.businessLabel')}
       </Txt>
-      <Txt v="amount" size={44} style={{ lineHeight: 50 }} accessibilityLabel={t('miles.business', { miles: formatDistance(toM(work), unit, 0) })}>
-        {formatDistance(toM(work), unit, 0)}
+      <Txt v="amount" size={44} style={{ lineHeight: 50 }} accessibilityLabel={t('miles.business', { miles: d(work) })}>
+        {d(work)}
       </Txt>
       <View style={[styles.flex, { gap: 8 }]}>
         <Tag kind="personal" label={t('common.personal')} />
         <Txt v="small" c="textSecondary">
-          {formatDistance(toM(personal), unit, 0)}
+          {d(personal)}
         </Txt>
       </View>
       <Divider />
@@ -366,13 +370,13 @@ function TotalsCard({
         <>
           <View
             accessible
-            accessibilityLabel={t('mtd.reports.businessUseA11y', { percent: use.percent })}
+            accessibilityLabel={t('mtd.reports.businessUseA11y', { percent: percentText(use.percent) })}
             style={[styles.flex, { justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }]}>
             <Txt v="body" style={{ fontFamily: fonts.bold }}>
-              {t('miles.businessUse', { percent: use.percent })}
+              {t('miles.businessUse', { percent: percentText(use.percent) })}
             </Txt>
             <Txt v="body" c="textSecondary">
-              {t('miles.businessUseOf', { work: formatDistanceNumber(distanceValue(toM(work), unit), 0), total: formatDistance(toM(work + personal), unit, 0) })}
+              {t('miles.businessUseOf', { work: formatDistanceNumber(work, 1), total: d(sumTenths([work, personal])) })}
             </Txt>
           </View>
           <Progress value={use.share} tone="ok" />

@@ -60,7 +60,7 @@ export default function NfcTagScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
       <ModalHeader icon={ChevronLeft} iconLabel={t('common.back')} onIcon={close} title={t('autoTrip.nfcTitle')} />
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 48 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 24 + insets.bottom }}>
         <View style={{ alignItems: 'center', paddingVertical: 16 }}>
           <View style={{ width: 120, height: 120, borderRadius: 60, backgroundColor: phase === 'done' ? colors.incomeSoft : colors.sunSoft, alignItems: 'center', justifyContent: 'center' }}>
             {phase === 'done' ? <Check size={56} color={colors.incomeText} strokeWidth={2} /> : <Nfc size={56} color={colors.text} strokeWidth={1.6} />}

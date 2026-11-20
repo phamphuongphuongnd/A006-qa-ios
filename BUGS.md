@@ -755,3 +755,78 @@
   từng báo cycling trong lần kiểm, hay bước chân ≥ 40/phút. "Đứng yên" theo GPS — cảm biến báo still mà GPS thấy xe bò ≥ 500 m vẫn bật.
   Sửa `probeLogic.ts` `PROBE_MIN_SPEED_MPS = 10 / 3.6` + test (600 m: 9 km/h không, 11 km/h có) + CONTEXT.md. Lọc điểm đi bộ sau khi đỗ (B-143 c,
   `WALK_AFTER_DRIVE_MAX_MPS` 9 km/h) giữ nguyên. ⏳ Phương thử thật cùng B-143.
+- [x] **B-149** 🟡 (Phương chốt 20/11, giao phiên "A006 gỡ giới hạn pro") **"Merge stops" tự chọn số phút, mặc định 10** (thay 10/20/45, mặc định 20):
+  20 phút làm chuyến chưa đóng khi tài xế đã đỗ hẳn; mỗi người giao hàng dừng dài ngắn khác nhau → để tự chỉnh. Luật gộp chuyến ca giữ nguyên (dừng ngắn
+  hơn Merge stops rồi lái tiếp = cùng chuyến; dừng ≥ Merge stops = hết chuyến, giờ kết thúc = lúc xe dừng). Automatic trips: mức nhanh **5 · 10 · 20 min**
+  + **Custom** (hộp nhập, bàn phím số, số nguyên **3–60** phút; đang dùng giá trị riêng thì ô thứ 4 ghi "7 min", bấm lại để sửa). Mặc định **10**.
+  Giá trị đã lưu của người dùng cũ (10/20/45) giữ nguyên; giá trị lạ (2, 61, 7.5, chuỗi) trong máy hay file sao lưu → về mặc định 10 (SPE-4).
+  Sửa `settingsRepo.ts` (`MergeStopMinutes` = số, `isMergeStopMinutes` / `parseMergeStopMinutes`), `trip/auto.tsx`, i18n `autoTrip.mergeCustom*`,
+  `backstopPlan.ts` (mặc định hàm 10), CONTEXT.md (Merge threshold), product.md. Engine / runner / sync / backstop / controller vốn nhận số bất kỳ;
+  native không nhận giá trị này. Test `src/db/__tests__/mergeStopB149.test.ts` (cài đặt, sao lưu, engine 5 phút).
+  ✅ jest 1022 · tsc · lint sạch. Giả lập Tablet_API_37 (emulator-5560): mặc định 10 chọn sẵn; Custom 61 → báo lỗi; 7 → ô ghi "7 min", còn sau khi
+  tắt mở app; 5 → 10 đổi đúng. ⏳ Phương thử thật (chuyến ca với số phút mới) cùng đợt B-143.
+  Lượt 2 (giả lập điện thoại 360 dp, chữ 1.3 + 2.0): hàng 4 ô đủ chữ. Lỗi đã sửa: `autoFocus` trong Dialog (Modal) không mở bàn phím số trên
+  Android → `Dialog` thêm `onShow`, ô nhập focus 250 ms sau khi hộp hiện (focus ngay lúc onShow có lần không lên); ✓ khi số sai giữ bàn phím
+  (`submitBehavior="submit"`). TESTCASES TC-280/282/283/392 sửa theo luật mới, thêm TC-423…427.
+  Lượt 3 (Phương giao 20/11): lỗi `autoFocus` không mở bàn phím có ở MỌI ô tự focus trong Dialog / Sheet trên Android (đã thấy ở hộp tỉ giá
+  Settings → Region). Sửa chung thay cho cách riêng của lượt 2: `src/ui/modalShown.ts` — Dialog / Sheet báo khi Modal đã hiện (onShow), `Field`
+  có `autoFocus` trong đó (Android) focus sau 250 ms; `trip/auto.tsx` về lại `autoFocus` thường, `Dialog` bỏ prop `onShow`. Giả lập 360 dp: tỉ giá
+  5/5, Custom 3/3, gõ DELETE 3/3 (chỉ mở rồi Cancel), tên danh mục mới 3/3, "Save as a regular trip" 3/3 — bàn phím tự lên, nút không bị che;
+  Odometer (ô ngoài Modal) vẫn tự lên. Sheet sửa số dặm chuyến GPS (`MilesSheet`) cùng đường code, chưa mở được trên giả lập (không có chuyến GPS).
+- [ ] **B-150** 🟡 (QA iOS run 44672153434, phiên C — iPad Pro 13" P001-ipad, ảnh `05b`; iPhone Pro Max P077 `05b`) Chi tiết khoản: menu ⋯ lệch khỏi
+  nút — iPad lên ~42 pt, sang trái ~48 pt, đè tiêu đề + số tiền; iPhone che chính nút ⋯. Nguyên nhân: `measureInWindow` trong page sheet
+  (`presentation: 'modal'`) tính từ góc sheet, còn menu vẽ trong `<Modal>` phủ cả màn (B-146). Sửa: menu vẽ ngay trong màn (View phủ màn, đặt
+  sau cùng), ngay dưới header theo `onLayout` của header, `right: GUTTER` — không đo cửa sổ, không Modal; cả 2 nền tảng. Back Android đóng menu
+  trước; mở menu thì cất bàn phím; trợ năng: `accessibilityViewIsModal` (iOS) + ẩn phần còn lại (Android). `src/app/entry/[id].tsx`.
+  Giả lập Android (Tablet_API_37 dọc 800×1280 dp, ngang, và 360×640 dp): menu ngay dưới nút ⋯; chạm ngoài / Back đóng menu (màn còn);
+  Delete → hộp thoại; Split → màn Split; đang gõ Note mở menu → bàn phím cất. ⏳ iOS: iPad page sheet + iPhone (phiên C).
+- [ ] **B-151** 🟠 (QA iOS run 44672153434 — iPhone SE P052 XXXL `23h`, P091 AX-L `23h`) Thẻ Sort → Split, gõ số tiền: "Left to assign" / "Split & sort"
+  nằm dưới bàn phím số (không có phím Return để cất). Bố cục cuộn iOS (B-147) cho thẻ cao cố định 360 × cỡ chữ (~486 pt XXXL) > phần còn thấy
+  trên bàn phím (~410 pt); màn chỉ cuộn tới đầu thẻ, trong thẻ cuộn tới dòng đang gõ. Sửa: (1) iOS, bố cục cuộn + bàn phím lên → thẻ cao bằng phần
+  cuộn còn thấy (`viewport − 18`, tối thiểu 160) và màn cuộn tới đầu thẻ → cả thẻ nằm trên bàn phím, phần trong thẻ cuộn được; (2) Split: trong thẻ
+  cuộn về phía cuối form xa nhất mà dòng đang gõ vẫn thấy (`min(dòng − 12, cuối)`), trước chỉ tới dòng đang gõ (B-133). `sort.tsx`, `SortEntryCard.tsx`.
+  Giả lập Android 360×640 dp chữ 1.3, tạm ép nhánh iOS (bố cục cuộn + co thẻ): bàn phím lên → cả thẻ nằm trên bàn phím, 2 dòng + Left to
+  assign thấy, kéo trong thẻ tới "Split & sort" đủ nút; cất bàn phím → thẻ về cao cũ. Android thật giữ nguyên (chữ 1.3 thường, Split & sort
+  kéo tới được). ⏳ iOS SE XXXL / AX-L (phiên C): bàn phím số không có Return — kéo trong thẻ phải lộ nút.
+- [ ] **B-152** 🟡 (QA iOS run 44672153434 — iPhone SE P052-xxl, XXL, `06a` / `06_after_fuel_tap`) Sort ở SE chữ XXL chưa vào bố cục cuộn
+  (667/1.235 ≈ 540 ≥ 520): thẻ chỉ còn vùng cuộn ~95 pt, chip danh mục khuất (Maestro bấm "Fuel" trúng nút Edit bên dưới), nhãn nút cắt
+  "E… Split Mer… S…". Sửa: (1) iOS ngưỡng riêng `SORT_SCROLL_BELOW_IOS = 600` (SE từ XL ≈ 597 trở lên cuộn; iPhone 16 / Pro Max XXXL ≈ 631 / 690
+  giữ bố cục thường); Android giữ B-114 v3 (640 dp chữ 1.3 → thường, 2.0 → cuộn); (2) nhãn Edit/Split/Merge/Skip xếp dọc theo bề ngang thẻ
+  (`cardActionsStack`: cần ~124 + 160 × cỡ chữ (≤ 1.3) pt), thay ngưỡng cỡ chữ ≥ 1.29 — SE XL/XXL xếp dọc, Android 360 dp chữ 1.3/2.0 vẫn dọc,
+  chữ 1.0 vẫn một hàng. `logic.ts` (+ test), `SortEntryCard.tsx`.
+  Giả lập Android 360×640 dp: chữ 1.0 một hàng đủ chữ, 1.3 xếp dọc + bố cục thường, 2.0 bố cục cuộn. ⏳ iOS SE XXL / XL (phiên C).
+- [ ] **B-153** 🟠 (Phương báo, qa-a13 xác nhận trên A13 — 1080×2408, 420 dpi, chữ 0.8, điều hướng 3 nút; ảnh `qa-runs/a13/manual/A13-18-trip-detail-*.png`)
+  Chi tiết chuyến: cuộn hết cỡ nút "Save as a regular trip" vẫn nằm dưới thanh điều hướng 3 nút (74 px); bàn phím mở (Purpose) → nút khuất hẳn,
+  ô Parking & tolls khuất nửa. Nguyên nhân: (1) `Screen` (ui/Layout) chỉ đệm cuối phần cuộn 20 dp, không cộng thanh điều hướng — `bottomInset` chỉ
+  đệm thanh `bottom`, mà Trip detail chỉ có thanh `bottom` khi đang sửa phí đỗ; (2) A13: `KeyboardAvoidingView` ('height') chỉ co ~460/991 px —
+  RN lấy mép trên bàn phím = đáy "visible display frame" của cửa sổ, máy này (Android 14, edge-to-edge) không cập nhật đúng. Sửa: (1) `Screen`
+  có `bottomInset` mà không có thanh `bottom` → cuối phần cuộn cộng `insets.bottom`; thêm `bottomInset` cho Rules, Auto-sorted; các màn tự viết
+  ScrollView đệm cố định 48 (Automatic trips, Battery tips, NFC, Work hours) → 24 + `insets.bottom`; (2) `useKeyboardGap` (ui/keyboardGap.tsx,
+  Android): mép bàn phím lấy thêm cách thứ hai = cao màn − cao bàn phím − thanh điều hướng, chọn mép cao hơn; phần view còn nằm dưới bàn phím
+  → `paddingBottom` cho view (máy đúng: 0, không đổi gì). Gắn vào `Screen` (avoidKeyboard), `Sheet`, `Dialog`, chi tiết khoản, Sort. Ghi nhanh
+  (đã chỉnh offset riêng trên A13, B-36) và Split (Android không dùng KAV) giữ nguyên. `mileage-rates`, `trip/odometer`, `TripForm`: luôn có
+  thanh `bottom` + `bottomInset` → đã đúng.
+  Rà giả lập (Tablet_API_37 đặt 1080×2400, 420 dpi; điều hướng 3 nút (thanh từ y 2274) và cử chỉ (từ y 2337)), cuộn hết cỡ, nút cuối trên
+  thanh: ✅ Settings, Backup, Export, Categories, Notifications, Recurring, Regular trips, Recently deleted, List view (sort-list), Mileage
+  rates, Automatic trips, Battery tips, NFC, Work hours, Add trip, Odometer check, Set up automatic trips, Rules, Auto-sorted, Not tax advice,
+  Trip detail GPS (3 nút: đáy nút 2222 < 2274; cử chỉ: 2285 < 2337), Edit trip (tay). Bàn phím mở ✅: Trip detail Purpose (ô thấy, cuộn tới
+  nút), Parking & tolls (thanh tính + số đang gõ trên bàn phím), Sheet "Save as a regular trip" (Save trên bàn phím), Sheet New category,
+  Dialog Merge stops Custom, Add trip (Save trip trên bàn phím), chi tiết khoản (Note). Giả lập không tái hiện lỗi bàn phím A13 (hai cách
+  tính mép trùng nhau 577,9 dp → khoảng hụt 0); cơ chế đệm thử bằng cách tạm giả hụt 150 dp: ô đang gõ vẫn thấy, cuộn tới nút. ⏳ A13 (qa-a13).
+  Sau ghép dev (B-154): 3 cấu hình thanh điều hướng — 3 nút (thanh 2274–2400) ✅, cử chỉ (2337–2400) ✅: Home (tab bar, nút Expense/Income),
+  Trip detail cuộn hết, Sort (FAB, thẻ), Sheet "Save as a regular trip" có bàn phím. Thanh ẩn: giả lập API 37 không ẩn được (`policy_control`,
+  `qemu.hw.mainkeys` bị bỏ qua) — mọi phần đệm lấy `insets.bottom` thật (0 khi thanh ẩn), không cộng cứng → ⏳ A13 (Phương đổi cài đặt).
+- [x] **B-154** 🟠 (Phương chốt 20/11, giao phiên verify) **Tiền dặm khớp số dặm in ra; % dùng xe 2 số lẻ.** Tiền dặm tính trên số dặm chưa làm
+  tròn (`mileageEstimateByDate`), file in số đã làm tròn (CSV/PDF từng chuyến 1 số lẻ, mô tả MTD tổng 0 số lẻ, PDF ≥ 1.000 dặm 0 số lẻ) → kế toán lấy
+  tổng dặm × giá lệch vài xu tới vài chục xu; theo quý = hiệu hai tổng luỹ kế làm tròn → lệch thêm 1p; `businessUse` làm tròn % về số nguyên.
+  Sửa (tiền vẫn INTEGER theo xu): `mileage.ts` mỗi chuyến chốt 1 giá trị 0,1 dặm (`toTenths` / `tripMiles`, đếm bằng số nguyên phần mười, không trôi
+  số thực); `mileageBreakdown(trips, rates, range?)` cộng dặm đã chốt theo từng dòng giá (kỳ giá × bậc: 55p / 25p, 72,5¢ / 76¢), mỗi dòng làm tròn xu
+  **1 lần** (đúng phép kế toán làm với số in ra; làm tròn 1 lần trên tổng có thể lệch 1p so với các dòng khi 2 dòng cùng dư nửa xu); khoảng (quý) chỉ
+  tính chuyến trong khoảng, chuyến trước đó chỉ đẩy bộ đếm 10.000 dặm. `mileageEstimateByDate` / `periodMileageEstimate` / `tierThresholdReached` /
+  `mileageEstimate` dùng chung. Tổng dặm (`mileageTotals`, `tripSummary`, `businessTripMiles`) = cộng giá trị đã chốt; màn hình km thì chốt từng
+  chuyến theo km. In 1 số lẻ ở Miles (tổng, tháng), Reports, PDF, CSV, mô tả MTD (0 → 1 số lẻ), FreeAgent; `formatDistanceNumber(…, 1)` làm tròn
+  như `toTenths`. `businessUse`: `share` giữ chính xác, `percent` 2 số lẻ, `percentText` in "12.25" ở app, PDF, MTD.
+  Test `src/features/reports/__tests__/mileageB154.test.ts`: 200 chuyến lẻ UK qua mốc 10.000 dặm (cả năm + 4 quý) và 160 chuyến US qua 1/7 —
+  cộng cột miles của CSV × giá = tiền dặm của app (Miles), Reports / MTD (`rangeMileageEstimate`) và dòng "Mileage allowance" MTD từng xu; % 2 số
+  lẻ khớp share và khớp số dặm in cạnh; km. Test cũ sửa theo cách in mới (841 → 841.2, 8,478 → 8,477.5, 87% → 87.00%).
+  Ghi chú: cộng 4 quý có thể lệch tổng năm vài xu (mỗi quý làm tròn riêng từng dòng) — mỗi file tự khớp với số dặm in trong chính nó.

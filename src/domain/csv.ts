@@ -1,3 +1,4 @@
+import { roundTenth } from './mileage';
 import { toDecimalString } from './money';
 import type { Currency, EntrySource, EntryType, Minor, Scope, TripScope, TripSource, TripStartedBy } from './types';
 
@@ -151,7 +152,7 @@ export function mileageCsv(trips: CsvTrip[]): string {
           isoDate(t.startedAt),
           gps ? isoTime(t.startedAt) : '',
           gps && t.endedAt ? isoTime(t.endedAt) : '',
-          t.miles.toFixed(1),
+          roundTenth(t.miles).toFixed(1),
           t.scope,
           t.purpose,
           t.fromLabel ?? '',
@@ -160,7 +161,7 @@ export function mileageCsv(trips: CsvTrip[]): string {
           tripSourceLabel(t),
           t.edited ? 'yes' : 'no',
           t.source === 'gap' ? 'yes' : 'no',
-          t.edited && t.originalMiles != null ? t.originalMiles.toFixed(1) : '',
+          t.edited && t.originalMiles != null ? roundTenth(t.originalMiles).toFixed(1) : '',
           t.odoStart,
           t.odoEnd,
         ]);

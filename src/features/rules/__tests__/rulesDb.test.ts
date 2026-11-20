@@ -30,10 +30,13 @@ import {
   markAutoReviewed,
   restoreRule,
   restoreRuleEntries,
+  restoreRuleValues,
   ruleOfferAfterSort,
   setRuleEnabled,
+  undoCreateRule,
   unreviewedAutoCount,
   unsortRuleEntries,
+  updateRule,
 } from '../repo';
 
 const NOW = new Date(2026, 10, 12, 12, 0).getTime(); // Thu 12 Nov 2026
@@ -124,6 +127,37 @@ describe('rules list', () => {
     expect(autoCounts(db, weekOf(NOW)).auto).toBe(2);
     restoreRule(db, row);
     expect(listRules(db)).toHaveLength(1);
+  });
+});
+
+// L2 (verify dev 049dff0, 2026-11-20): Undo on the "Rule saved" snackbar, as in mockup S-18.
+describe('Undo on "Rule saved"', () => {
+  it('a new rule: removed, and entries it auto-sorted meanwhile go back to the queue', () => {
+    const { db, cat } = setup();
+    const before = add(db, 'Tesco', 1200);
+    categorise(db, before.id, cat('equipment').id, 'work', NOW); // sorted by hand: must stay sorted
+    const r = createRule(db, { matchText: 'Shell', type: 'expense', minMinor: null, maxMinor: null, categoryId: cat('fuel').id, scope: 'work' }, NOW);
+    const e = add(db, 'Shell M62');
+    applyRulesOnSave(db, e.id, NOW);
+    expect(getEntry(db, e.id)!.ruleId).toBe(r.id);
+    undoCreateRule(db, r.id, NOW + 1000);
+    expect(getRule(db, r.id)).toBeUndefined();
+    expect(listRules(db)).toHaveLength(0);
+    expect(getEntry(db, e.id)).toMatchObject({ categoryId: null, ruleId: null, sortedAt: null });
+    expect(unreviewedAutoCount(db, weekOf(NOW))).toBe(0);
+    expect(getEntry(db, before.id)!.categoryId).toBe(cat('equipment').id);
+  });
+
+  it('an edited rule: its previous values come back, id and entries untouched', () => {
+    const { db, cat } = setup();
+    const r = createRule(db, { matchText: 'Shell', type: 'expense', minMinor: null, maxMinor: null, categoryId: cat('fuel').id, scope: 'work' }, NOW);
+    const e = add(db, 'Shell M62');
+    applyRulesOnSave(db, e.id, NOW);
+    const old = getRule(db, r.id)!;
+    updateRule(db, r.id, { matchText: 'Shell shop', type: 'expense', minMinor: 100, maxMinor: 900, categoryId: cat('other_expense').id, scope: 'personal' });
+    restoreRuleValues(db, old);
+    expect(getRule(db, r.id)).toEqual(old);
+    expect(getEntry(db, e.id)!.ruleId).toBe(r.id);
   });
 });
 

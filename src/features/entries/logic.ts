@@ -197,17 +197,32 @@ export function commonType(types: EntryType[]): EntryType | null {
 
 /** Below this many dp (or pt) per text-scale unit the Sort card can't fit under the header — the screen scrolls. */
 export const SORT_SCROLL_BELOW = 520;
+/**
+ * iOS counts more lines (B-152): iPhone SE at XXL (667 / 1.235 ≈ 540) left the card a ~95pt scroll area, its chips out
+ * of sight. 600 takes in the SE from XL (≈ 597) up; an iPhone 16 / Pro Max at XXXL (≈ 630 / 690) keeps the normal layout.
+ */
+export const SORT_SCROLL_BELOW_IOS = 600;
 
 /**
  * Sort screen: the scrolling layout (header scrolls away with a card of real height, no FAB) instead of the card
  * squeezed into what is left under the header. Height counted in "text lines" (window ÷ font scale).
  * - Any platform: a short window (split screen, QA-100 MOD-11), or text 1.8× and up (B-114 v3).
- * - iOS from any text size (B-147: iPhone SE at XXXL ≈ 1.35 → 667 / 1.35 ≈ 494; the card was ~200pt, its chips out of
- *   sight). Not Android: at 1.3 on 640dp the scrolling layout cut the Split form there (B-114, 2nd fix) while the
+ * - iOS from any text size, below {@link SORT_SCROLL_BELOW_IOS} (B-147: iPhone SE at XXXL ≈ 1.35 → 667 / 1.35 ≈ 494; the
+ *   card was ~200pt, its chips out of sight. B-152: the same at XXL). Not Android: at 1.3 on 640dp the scrolling layout cut the Split form there (B-114, 2nd fix) while the
  *   normal layout passed — iOS scrolls a card inside the screen's scroll natively.
  */
+/**
+ * Sort card footer "Edit · Split · Merge · Skip": side by side the four need ~124pt (icons, gaps, padding) plus ~160pt of
+ * label per text-scale unit (labels stop growing at 1.3×). Narrower than that → icon above a smaller label. B-152: the
+ * iPhone SE at XXL (≈ 1.235, 295pt inside the card) showed "E… Split Mer… S…" — a text-size cut-off (≥ 1.29) missed it.
+ */
+export function cardActionsStack(innerWidth: number, fontScale: number): boolean {
+  return innerWidth < 124 + 160 * Math.min(Math.max(fontScale, 1), 1.3);
+}
+
 export function sortScrolls(windowHeight: number, fontScale: number, os: string): boolean {
   if (windowHeight < SORT_SCROLL_BELOW) return true;
-  if (windowHeight / Math.max(1, fontScale) >= SORT_SCROLL_BELOW) return false;
-  return fontScale >= 1.8 || os === 'ios';
+  const lines = windowHeight / Math.max(1, fontScale);
+  if (os === 'ios') return lines < SORT_SCROLL_BELOW_IOS;
+  return lines < SORT_SCROLL_BELOW && fontScale >= 1.8;
 }

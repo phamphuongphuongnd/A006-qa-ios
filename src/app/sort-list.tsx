@@ -41,13 +41,22 @@ export default function SortListScreen() {
   const week = s.week;
   const byId = new Map(s.cats.map((c) => [c.id, c]));
 
+  /** Pre-filled only from a real suggestion (L1): an entry with nothing to go on shows "Choose ▾" like the free list. */
+  const suggestedCat = (e: EntryListItem): CategoryRow | undefined => {
+    if (!s.pro) return undefined;
+    const sug = s.suggestFor(e);
+    return sug.kind === 'suggested' ? sug.categories[0] : undefined;
+  };
   const best = (e: EntryListItem): CategoryRow | undefined => {
     const own = chosenCat[e.id];
     if (own) return byId.get(own);
-    return s.pro ? s.suggestFor(e).categories[0] : undefined;
+    return suggestedCat(e);
   };
   const rows = s.queue;
-  const acceptable = s.pro ? rows.filter((r): r is Extract<SortItem, { kind: 'entry' }> => r.kind === 'entry' && !!best(r.entry)) : [];
+  const entryRows = rows.filter((r): r is Extract<SortItem, { kind: 'entry' }> => r.kind === 'entry');
+  const acceptable = s.pro ? entryRows.filter((r) => !!best(r.entry)) : [];
+  // "Choose" hint whenever some entry has no category to accept yet (free, or Pro rows with no real suggestion).
+  const showChooseHint = entryRows.some((r) => !best(r.entry));
 
   const finishIfDone = (sortedNow: number) => {
     if (week && sortedNow >= s.queue.length) router.replace(`/sort-done?week=${week.start}`);
@@ -95,7 +104,7 @@ export default function SortListScreen() {
             keyExtractor={(r) => r.key}
             contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: 20 }}
             ListFooterComponent={
-              s.pro ? undefined : (
+              !showChooseHint ? undefined : (
                 <Txt v="small" c="textSecondary" center style={{ marginTop: 14 }}>
                   {t('sortV2.chooseHint')}
                 </Txt>
@@ -179,7 +188,7 @@ export default function SortListScreen() {
               );
             }}
           />
-          {s.pro ? (
+          {s.pro && acceptable.length > 0 ? (
             <View style={[styles.bottom, { backgroundColor: colors.background, borderTopColor: colors.line, paddingBottom: Math.max(insets.bottom, 12) + 4 }]}>
               <Button
                 label={t('sort.acceptAll', { count: acceptable.length })}

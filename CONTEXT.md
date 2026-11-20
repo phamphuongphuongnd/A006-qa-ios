@@ -56,6 +56,11 @@ _Avoid_: journey, drive, route
 An automatic Trip that spans a working session, absorbing Stops shorter than the merge threshold.
 _Avoid_: day trip, session
 
+**Merge threshold**:
+How long a Stop may last and still stay inside the Trip ("Merge stops shorter than" in Automatic trips): 10 min by
+default, the driver's choice — quick picks 5 · 10 · 20 min or Custom, whole minutes from 3 to 60.
+_Avoid_: timeout, idle time
+
 **Stop**:
 A period inside a Trip where the vehicle is not moving (a drop, a red light, queueing); short Stops never end a Trip.
 GPS wander while the phone stays put (indoors, parked) is part of a Stop, never distance; so is the driver walking away

@@ -1,9 +1,10 @@
 import type { LucideIcon } from '@/ui/icons';
-import React, { forwardRef, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
+import React, { forwardRef, useCallback, useEffect, useRef, type ReactNode } from 'react';
+import { Platform, Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { fonts, radius, useTheme } from '@/theme';
 
+import { MODAL_FOCUS_DELAY_MS, useModalShown } from './modalShown';
 import { Txt } from './Txt';
 
 export interface SegOption<T extends string> {
@@ -94,6 +95,23 @@ export const Field = forwardRef<
   TextInputProps & { label?: string; error?: string | null; left?: ReactNode; right?: ReactNode; focused?: boolean }
 >(function Field({ label, error, left, right, style, onFocus, onBlur, ...rest }, ref) {
   const { colors } = useTheme();
+  const inner = useRef<React.ComponentRef<typeof TextInput> | null>(null);
+  const setRef = useCallback(
+    (node: React.ComponentRef<typeof TextInput> | null) => {
+      inner.current = node;
+      if (typeof ref === 'function') ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref],
+  );
+  // B-149: autoFocus inside a Dialog / Sheet waits for its Modal window (see modalShown.ts).
+  const modalShown = useModalShown();
+  const deferFocus = Platform.OS === 'android' && !!rest.autoFocus && modalShown !== null;
+  useEffect(() => {
+    if (!deferFocus || !modalShown) return;
+    const id = setTimeout(() => inner.current?.focus(), MODAL_FOCUS_DELAY_MS);
+    return () => clearTimeout(id);
+  }, [deferFocus, modalShown]);
   return (
     <View style={{ gap: 6 }}>
       {label ? (
@@ -108,7 +126,7 @@ export const Field = forwardRef<
         ]}>
         {left}
         <TextInput
-          ref={ref}
+          ref={setRef}
           placeholderTextColor={colors.placeholder}
           maxFontSizeMultiplier={1.6}
           style={[
@@ -121,6 +139,7 @@ export const Field = forwardRef<
           onBlur={onBlur}
           {...(rest.keyboardType && NUMERIC_KEYBOARDS.has(rest.keyboardType) ? NUMERIC_INPUT : null)}
           {...rest}
+          autoFocus={deferFocus ? false : rest.autoFocus}
         />
         {right}
       </View>

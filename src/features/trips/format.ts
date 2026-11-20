@@ -1,4 +1,4 @@
-import { formatDistanceNumber, KM_PER_MILE, metersToMiles } from '@/domain/mileage';
+import { formatDistanceNumber, KM_PER_MILE, metersToMiles, sumTenths } from '@/domain/mileage';
 
 export type DistanceUnit = 'mi' | 'km';
 
@@ -8,6 +8,9 @@ const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'Ju
 
 /** Distance in the display unit (miles or km) from metres. */
 export const distanceValue = (meters: number, unit: DistanceUnit) => (unit === 'km' ? meters / 1000 : metersToMiles(meters));
+
+/** B-154: trips' distances in the display unit, each fixed to 0.1 and added up (= the rows shown, added up). */
+export const sumTripDistance = (meters: number[], unit: DistanceUnit) => sumTenths(meters.map((m) => distanceValue(m, unit)));
 
 /** 206640 m → "128.4 mi" / "206.6 km"; `decimals` 0 for whole numbers ("612 mi"). */
 export function formatDistance(meters: number, unit: DistanceUnit, decimals?: 0 | 1): string {
