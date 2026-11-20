@@ -111,6 +111,9 @@ Cập nhật: điều phối gỡ camera riêng (revert 147d3e2) → bản build
   (`manual/auto-68b2976.png`).
 - Chờ Phương chạy xe: (1) đi bộ ≥ 500 m máy trong túi; (2) xe chậm ngay sau đi bộ; (3) đỗ rồi đi bộ lên nhà; (4) giao hàng vài phút rồi
   lái tiếp; (5) restore_ok/restore_failed nếu Samsung tắt app giữa chuyến.
+- Chờ APK có B-153 (phiên Pro báo): kiểm tab bar, nút cuối màn, Sheet, bàn phím với CẢ 2 kiểu Navigation bar (3 nút / cử chỉ) —
+  không bị che, không thừa khoảng trống. Cài đặt gốc của Phương: `navigation_mode` 0 = 3 nút. Đổi kiểu: Phương tự đổi
+  (Settings → Display → Navigation bar), QA không đổi cài đặt hệ thống bằng adb; xong nhắc Phương trả về 3 nút.
 
 - **A13-18 🟠 nút "Save as a regular trip" khuất dưới thanh điều hướng** (Phương báo; kiểm 13:49, bản 68b2976). Máy 1080×2408,
   density 420 (gốc 450), font_scale 0.8, điều hướng 3 nút: thanh `navigationBars` y 2282–2408 (126 px = 48 dp). Trip detail chuyến
