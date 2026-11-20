@@ -716,4 +716,10 @@
   (thiếu gạch nối → "MTD-sorted"). Nguồn `src/i18n/v2/mtd.ts:60` `mtdRecordsSub`. Chuyển phiên "A006 gỡ giới hạn pro" sửa (phiên QA không sửa src từ 19/11 chiều).
   **Đóng — không phải lỗi:** "MTDsorted" là tên phần mềm cầu nối MTD (product.md, research.md viết liền); dòng phụ sẽ thay ở bản free launch
   ("One row per entry for bridging software", phiên "A006 gỡ giới hạn pro").
+- [ ] **B-143** 🟠 (Phương thử thật 19–20/11, phiên E — edecc6d, diag 2026-11-20-01-43) Drive check (B-88 v2): (a) sáng 20/11 đi bộ 07:10–07:21, máy trong túi →
+  probe_drive 07:17:59 {onFoot: false, stepsPerMin: 0} → chuyến tự động 659 m bật nhầm; cảm biến vẫn ở walking (enter 07:10:25, exit 07:21:28), bộ đếm
+  bước trả 0 (A13 không cập nhật khi tắt màn / FIFO chưa đẩy). (b) tối 19/11 17:50–17:57 xe rất chậm không bật: lần kiểm lúc đi bộ hết hạn 17:50:50 →
+  nghỉ 20 phút chặn lần kiểm mới, cảm biến không ra driving. **Phương chốt 20/11:** (a) Drive check chỉ bật khi trung bình ≥ 9 km/h (2,5 m/s) VÀ cảm
+  biến không còn ở walking/running (activity hiện tại); (b) nghỉ 20 phút chỉ cho cùng một lần di chuyển — có 'still enter' sau lần kiểm trước rồi lại
+  'still exit' thì kiểm lại ngay. Giao phiên "A006 gỡ giới hạn pro" sửa (`probeLogic.ts` `probeSaysDriving` / `shouldStartProbe`, `probe.ts`, `probeState.ts`).
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
