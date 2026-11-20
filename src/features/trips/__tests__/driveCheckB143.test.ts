@@ -71,6 +71,60 @@ describe('B-143 (a): walking 07:10–07:21 on 20/11, phone in a bag, never start
   });
 });
 
+describe('B-143: an enter dated 1 ms before its exit (A13: 6 of 44 pairs, 18–20/11) still counts', () => {
+  const raw = (activity: Activity, transition: 'enter' | 'exit', at: number, eventAt: number): EngineSignal => ({ kind: 'activity', activity, transition, at, eventAt });
+
+  it('20/11 07:10:25 still exit .082 / walking enter .081 → walking (probe_drive said onFoot: false)', () => {
+    const r = step(
+      { ...INITIAL_ENGINE_STATE, seenUntil: 1795133000000, activity: 'still', activityAt: 1795130000000 },
+      [raw('still', 'exit', 1795133503042, 1795133425082), raw('walking', 'enter', 1795133503232, 1795133425081)],
+      cfg,
+      null,
+      1795133503917,
+      false,
+    );
+    expect(r.state.activity).toBe('walking');
+    expect(r.actions).toEqual([]);
+  });
+
+  it('19/11 17:46:27 walking exit .213 / still enter .212 → still (the stop that ends the cool-down)', () => {
+    const r = step(
+      { ...INITIAL_ENGINE_STATE, seenUntil: 1795085000000, activity: 'walking', activityAt: 1795084604507 },
+      [raw('walking', 'exit', 1795085194257, 1795085187213), raw('still', 'enter', 1795085194266, 1795085187212)],
+      cfg,
+      null,
+      1795085194300,
+      false,
+    );
+    expect(r.state).toMatchObject({ activity: 'still', stillEnterAt: 1795085187212 });
+  });
+
+  it('19/11 07:34:00 still exit / driving enter 1 ms earlier → the Trip starts (it was missed)', () => {
+    const exitAt = Date.UTC(2026, 10, 19, 0, 34, 0, 501);
+    const r = step(
+      { ...INITIAL_ENGINE_STATE, seenUntil: exitAt - MIN, activity: 'still', activityAt: exitAt - 60 * MIN },
+      [raw('still', 'exit', exitAt + 5 * S, exitAt), raw('driving', 'enter', exitAt + 5 * S + 10, exitAt - 1)],
+      cfg,
+      null,
+      exitAt + 6 * S,
+      false,
+    );
+    expect(r.actions[0]).toMatchObject({ type: 'start', reason: 'motion' });
+  });
+
+  it('an older enter long before the latest change is still ignored', () => {
+    const r = step(
+      { ...INITIAL_ENGINE_STATE, seenUntil: 0, activity: null, activityAt: 1795133425082 },
+      [raw('walking', 'enter', 1795133503232, 1795133425082 - 5 * S)],
+      cfg,
+      null,
+      1795133503917,
+      false,
+    );
+    expect(r.state.activity).toBeNull();
+  });
+});
+
 describe('B-143 (b, d): the slow drive at 17:50 on 19/11 starts a Trip', () => {
   // Still exit 17:36:44 (walk to UBND), check from 17:38:01 to 17:50:01, still enter 17:46:27 (in the van), the van
   // crawls off ~17:49:30 — A13 said still all along and logged probe_none at 17:50:50; only Bluetooth started it 17:57.

@@ -83,6 +83,9 @@ export const DRIVING_STALE_MS = 2 * 60 * 60_000;
 /** Raw samples count as driving from this confidence (0–100). */
 export const SAMPLE_DRIVING_CONFIDENCE = 75;
 
+/** An enter dated this little before the exit it pairs with still follows it (B-143). */
+export const EXIT_ENTER_SKEW_MS = 1_000;
+
 const when = (s: EngineSignal) => ('eventAt' in s && s.eventAt ? s.eventAt : s.at);
 
 const isMotion = (a: Activity | null) => a === 'driving';
@@ -130,7 +133,10 @@ export function step(
         state.activity = null;
         state.activityAt = at;
       }
-      if (entered && at >= state.activityAt) {
+      // B-143: A13 dates an exit and the enter that goes with it from two clock reads — the enter can come out 1 ms
+      // before the exit (still exit 07:10:25.082 / walking enter .081): it still follows that exit.
+      const follows = at >= state.activityAt || (state.activity === null && state.activityAt - at <= EXIT_ENTER_SKEW_MS);
+      if (entered && follows) {
         // B-143 (c): on foot after leaving the van (on foot straight from driving = a lost exit) → walked away from it,
         // until the sensor says driving / cycling again.
         if (isOnFoot(s.activity)) {
