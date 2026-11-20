@@ -234,6 +234,8 @@ jobs:
           IPAD_IN: ${{ github.event_name == 'workflow_dispatch' && inputs.ipad_personas || 'P002-ipad,P041-ipad' }}
           BUDGET_MIN: ${{ inputs.test_budget_min || '85' }}
           PER_PERSONA_TIMEOUT: '1500'
+          # iPad: 12 steps did not fit in 1500 s (P001-ipad stopped in step 23, run 44672153434).
+          IPAD_PERSONA_TIMEOUT: '2700'
           PARALLEL: ${{ inputs.parallel || 'false' }}
           FLOWS: ${{ inputs.flows }}
           IPAD_FLOWS: ${{ inputs.ipad_flows }}
@@ -287,7 +289,7 @@ jobs:
             xcrun simctl launch "$IPAD_UDID" com.apple.DocumentsApp >/dev/null 2>&1 || true
             sleep 8
             xcrun simctl terminate "$IPAD_UDID" com.apple.DocumentsApp >/dev/null 2>&1 || true
-            FLOWS="${IPAD_FLOWS:-$FLOWS}" qa/ios/run-lane.sh ipad "$IPAD_UDID" "$IPAD_NAME" "$RUNTIME" "$APP" "$OUT" "$DEADLINE" "$IPAD_IN" > "$OUT/lane-ipad.log" 2>&1 || true
+            PER_PERSONA_TIMEOUT="$IPAD_PERSONA_TIMEOUT" FLOWS="${IPAD_FLOWS:-$FLOWS}" qa/ios/run-lane.sh ipad "$IPAD_UDID" "$IPAD_NAME" "$RUNTIME" "$APP" "$OUT" "$DEADLINE" "$IPAD_IN" > "$OUT/lane-ipad.log" 2>&1 || true
             cat "$OUT/lane-ipad.log"
           fi
 

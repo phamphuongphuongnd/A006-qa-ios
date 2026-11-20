@@ -57,12 +57,13 @@ name: 24_trip_map
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: ${PID}_24c_miles
+# Newest trip first. Not '.*GPS.*': the source tag on a hand-started GPS trip was never checked on iOS.
 - scrollUntilVisible:
     element:
-      text: '.*GPS.*Swipe right for work.*'
+      text: '.*Swipe right for work.*'
     timeout: 15000
 - tapOn:
-    text: '.*GPS.*Swipe right for work.*'
+    text: '.*Swipe right for work.*'
     index: 0
 - extendedWaitUntil:
     visible: "qa-never-shown-map-load"

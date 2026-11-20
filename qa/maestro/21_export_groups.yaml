@@ -14,7 +14,12 @@ name: 21_export_groups
     timeout: 15000
 - tapOn: "Export"
 - extendedWaitUntil:
-    visible: '(?i)raw data'
+    visible: 'Export|Period.*'
+    timeout: 15000
+# AX-L: the MTD "no category" card pushes "Raw data" below the fold (P091, run 44672153434).
+- scrollUntilVisible:
+    element:
+      text: '(?i)raw data'
     timeout: 15000
 - takeScreenshot: ${PID}_21a_export_groups
 - assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial)\b.*'
@@ -78,9 +83,14 @@ name: 21_export_groups
       - takeScreenshot: ${PID}_21e_mtd_ask
       - tapOn: "Leave them out"
 - extendedWaitUntil:
-    visible: "Copy|Save to Files|AirDrop|Messages|Mail|View More|More"
-    timeout: 60000
+    # iPad: the share popover itself is not in the tree, only its "dismiss popup" scrim (run 44672153434).
+    visible: "Copy|Save to Files|AirDrop|Messages|Mail|View More|More|dismiss popup"
+    # 5 files with the PDF on a 120-entry history took > 60 s on the runner (P077, run 44672153434).
+    timeout: 150000
 - takeScreenshot: ${PID}_21f_share_sheet
+- tapOn:
+    text: "dismiss popup"
+    optional: true
 - tapOn:
     text: "Close"
     optional: true

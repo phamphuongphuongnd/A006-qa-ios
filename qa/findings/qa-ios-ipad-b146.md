@@ -97,3 +97,33 @@ Ghi chú nhỏ (không phải bug): ở màn Split (page sheet), thanh dưới "
 | iPad | 25′/persona không đủ cho 12 bước | tăng lên 40′, hoặc chia đôi danh sách bước |
 
 Đang chờ: chạy lại iPad 23 + 24 (trip map) và P002-ipad (dark, XXXL) sau khi sửa kịch bản. Cần Phương duyệt trước khi push hoặc chạy.
+
+## Chuẩn bị chạy lại (commit trên `ios-ipad-run`, CHƯA push/chạy)
+
+Đã sửa kịch bản theo bảng trên:
+- **Bước 20:** regex `when charging`.
+- **Bước 09 và 21:** trên iPad chờ và đóng "dismiss popup"; hạn chờ 90 s (09) và 150 s (21). Bước 21 cuộn tới "Raw data" trước khi kiểm.
+- **Bước 22:** cuộn ô chọn danh mục vào giữa màn rồi mới bấm, bấm lại nếu màn không đổi.
+- **Bước 23:** không còn gõ số phải cộng cho khớp. Chỉ focus ô số (bàn phím bật) rồi bấm Done / "Split & sort". Nút bị che thì cú bấm rơi vào bàn phím, bước fail, và đó là bằng chứng của B-151. Tìm Edit/Split theo cả hai chiều cuộn.
+- **Bước 24:** chọn chuyến mới nhất, không lọc "GPS".
+- **`run-lane.sh`:**
+  - persona bị ngắt vì hết giờ (mã 142) thì khởi động lại simulator và cài lại driver;
+  - persona mà không bước nào qua, kèm lỗi `DeviceUnreachable`, thì được chạy lại một lần.
+- **Workflow:** làn iPad có hạn 2700 s/persona (`IPAD_PERSONA_TIMEOUT`).
+- **`collect_result.py`:** đã biết các bước 20–24.
+
+Khi điều phối báo `ios-fixes` đã vào dev: ghép dev vào `ios-ipad-run`, rồi push lên `qa-public` (A006-qa-ios) và chạy:
+
+```
+gh workflow run qa-ios.yml -R phamphuongphuongnd/A006-qa-ios --ref ios-ipad-run \
+  -f personas="P052,P091,P052-xxl,P077" -f ipad_personas="P001-ipad,P002-ipad" \
+  -f flows="04,05,06,07,20,21,22,23" -f ipad_flows="04,05,06,07,09,20,21,22,23,24" -f test_budget_min=150
+```
+
+Ước tính khoảng 2 giờ 15 phút: build ~15′, iPhone 4 × ~12′, iPad 2 × ~30′. Lần chạy này phủ:
+- B-150: ảnh 05b trên iPad và iPhone;
+- B-151: bước 23 trên SE XXXL và AX-L;
+- B-152: bước 06 và 23 trên SE XXL;
+- iPad: trip map (24), Sort Edit/Split (23), persona dark + chữ to (P002-ipad);
+- P077: export 5 file (21);
+- P091: các bước 21 và 22.

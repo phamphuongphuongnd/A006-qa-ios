@@ -46,9 +46,13 @@ name: 09_export_csv
       - tapOn: "Leave them out"
 - extendedWaitUntil:
     # Large text shows fewer share targets ("Health", "More", "View More": P037 AX-L, run 44500573190).
-    visible: "Copy|Save to Files|AirDrop|Messages|Mail|View More|More"
-    timeout: 30000
+    # iPad: the share popover itself is not in the tree, only its "dismiss popup" scrim (run 44672153434).
+    visible: "Copy|Save to Files|AirDrop|Messages|Mail|View More|More|dismiss popup"
+    timeout: 90000
 - takeScreenshot: ${PID}_09c_share_sheet
+- tapOn:
+    text: "dismiss popup"
+    optional: true
 - tapOn:
     text: "Close"
     optional: true

@@ -21,7 +21,16 @@ name: 22_rules_recurring
 - tapOn: 'e\.g\. Shell'
 - inputText: "QAR${PID}"
 - pressKey: Enter
-- tapOn: "Sort as, .*"
+- waitForAnimationToEnd:
+    timeout: 2000
+- scrollUntilVisible:
+    element:
+      text: "Sort as, .*"
+    timeout: 8000
+    centerElement: true
+- tapOn:
+    text: "Sort as, .*"
+    retryTapIfNoChange: true
 - waitForAnimationToEnd:
     timeout: 2000
 - scrollUntilVisible:
@@ -57,7 +66,16 @@ name: 22_rules_recurring
 - tapOn: 'e\.g\. Van lease'
 - inputText: "QA lease ${PID}"
 - pressKey: Enter
-- tapOn: "Category, .*"
+- waitForAnimationToEnd:
+    timeout: 2000
+- scrollUntilVisible:
+    element:
+      text: "Category, .*"
+    timeout: 8000
+    centerElement: true
+- tapOn:
+    text: "Category, .*"
+    retryTapIfNoChange: true
 - waitForAnimationToEnd:
     timeout: 2000
 - scrollUntilVisible:

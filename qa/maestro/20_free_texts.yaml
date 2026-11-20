@@ -33,7 +33,8 @@ name: 20_free_texts
 - scroll
 - takeScreenshot: ${PID}_20c_settings_6
 - assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial|Upgrade|Subscribe)\b.*'
-# Automatic trips (deep link as in 15): no "Start when charging" switch any more.
+# Automatic trips (deep link as in 15): no "Start when charging" switch any more. Not just "charging": the iOS status
+# bar battery reads "Not charging" (run 44672153434).
 - runFlow: common/home.yaml
 - openLink: sundaysort://trip/auto
 - extendedWaitUntil:
@@ -49,13 +50,13 @@ name: 20_free_texts
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: ${PID}_20d_auto_trips_1
-- assertNotVisible: '(?s).*[Cc]harging.*'
+- assertNotVisible: '(?i).*when charging.*'
 - assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial)\b.*'
 - scroll
 - takeScreenshot: ${PID}_20d_auto_trips_2
-- assertNotVisible: '(?s).*[Cc]harging.*'
+- assertNotVisible: '(?i).*when charging.*'
 - assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial)\b.*'
 - scroll
 - takeScreenshot: ${PID}_20d_auto_trips_3
-- assertNotVisible: '(?s).*[Cc]harging.*'
+- assertNotVisible: '(?i).*when charging.*'
 - assertNotVisible: '(?s).*\b(PRO|Pro|Trial|trial)\b.*'

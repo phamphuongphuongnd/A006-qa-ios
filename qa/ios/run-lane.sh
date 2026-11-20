@@ -123,8 +123,15 @@ for PIDX in ${PERSONAS//,/ }; do
     run_maestro "$REINSTALL"
     CODE=$?
     # XCTest driver never came up (no flow ran, runs 44241312809..44441656898): reboot this simulator, reinstall the
-    # driver and try once more.
-    if [ ! -f "$OUT/junit.xml" ] && grep -q "IOSDriverTimeoutException\|DeviceUnreachableException" "$OUT/maestro.txt" \
+    # driver and try once more. Run 44672153434: after the previous persona was killed by the timeout, every flow of
+    # the next one failed at once with DeviceUnreachableException → junit.xml existed; "no flow passed" counts too.
+    none_passed() {
+      [ ! -f "$OUT/junit.xml" ] || ! python3 -c 'import sys, xml.etree.ElementTree as E
+r = E.parse(sys.argv[1]).getroot()
+ok = [t for t in r.iter("testcase") if all(t.find(k) is None for k in ("failure", "error", "skipped"))]
+sys.exit(0 if ok else 1)' "$OUT/junit.xml"
+    }
+    if none_passed && grep -q "IOSDriverTimeoutException\|DeviceUnreachableException" "$OUT/maestro.txt" \
        && [ "$(date +%s)" -lt "$DEADLINE" ]; then
       log "$PIDX driver did not start: reboot simulator and retry once"
       echo "=== retry after simulator reboot ===" >> "$OUT/maestro.txt"
@@ -140,7 +147,17 @@ for PIDX in ${PERSONAS//,/ }; do
       CODE=$?
     fi
     # Only a driver that actually ran flows is reused by the next persona.
-    if [ -f "$OUT/junit.xml" ]; then touch "$OUT_ROOT/.driver-$LANE"; else rm -f "$OUT_ROOT/.driver-$LANE"; fi
+    if none_passed; then rm -f "$OUT_ROOT/.driver-$LANE"; else touch "$OUT_ROOT/.driver-$LANE"; fi
+    # Killed by the per-persona timeout (alarm → 142): the XCTest driver is left half-dead and took the next persona
+    # down with it (P002-ipad, run 44672153434) → fresh simulator and driver for the next one.
+    if [ "$CODE" = 142 ]; then
+      log "$PIDX hit the ${PER_PERSONA_TIMEOUT}s timeout: reboot simulator, reinstall driver for the next persona"
+      echo timeout > "$OUT/timeout.txt"
+      rm -f "$OUT_ROOT/.driver-$LANE"
+      xcrun simctl shutdown "$UDID" >/dev/null 2>&1
+      xcrun simctl boot "$UDID" >/dev/null 2>&1
+      xcrun simctl bootstatus "$UDID" -b >/dev/null 2>&1
+    fi
     DUR=$(( $(date +%s) - T0 ))
     log "$PIDX maestro exit $CODE in ${DUR}s"
 
