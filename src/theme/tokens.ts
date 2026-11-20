@@ -125,6 +125,11 @@ export const chartHues = { income: '#1E8E5A', expense: '#C8553D', work: '#2E6FD8
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, xxxl: 32 } as const;
 /** Screen side gutter: 20 on iOS, 16 on Android (mockup frames). */
 export const gutter = { ios: 20, android: 16 } as const;
+/**
+ * Widest the app's content column gets (pt / dp). A tablet, an iPad or an unfolded Fold keeps the phone layout in a
+ * column this wide in the middle instead of stretching it edge to edge (QA-100 MOD-4 / B-85, iPad B-146).
+ */
+export const CONTENT_MAX = 640;
 
 export const radius = {
   card: 16,

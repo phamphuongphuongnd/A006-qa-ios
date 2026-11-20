@@ -1,6 +1,6 @@
 import { useWindowDimensions } from "react-native";
 
-import { GUTTER, type ColorName } from "@/theme";
+import { CONTENT_MAX, GUTTER, type ColorName } from "@/theme";
 
 import { Txt } from "./Txt";
 
@@ -12,7 +12,7 @@ const STACK_BELOW = 240;
 
 export function useStackedRows(): boolean {
   const { width, fontScale } = useWindowDimensions();
-  return width / fontScale < STACK_BELOW;
+  return Math.min(width, CONTENT_MAX) / fontScale < STACK_BELOW;
 }
 
 /**
@@ -30,7 +30,9 @@ export function FitFigure({
   c?: ColorName;
   inset?: number;
 }) {
-  const { width, fontScale } = useWindowDimensions();
+  const { width: windowWidth, fontScale } = useWindowDimensions();
+  // B-146: the content column, not the window (an iPad window is 1032pt wide, the column 640).
+  const width = Math.min(windowWidth, CONTENT_MAX);
   const px = Math.round(
     Math.min(
       size * Math.min(fontScale, 2),

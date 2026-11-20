@@ -98,6 +98,16 @@ courier, HMRC, MTD, Schedule C, mileage log, bookkeeping.
 - 4–8 ảnh dọc 1080×1920 (Android) + 6.7"/6.5" (iOS): Ghi nhanh · Sort Chủ nhật · Chuyến tự động + bản đồ · Báo cáo theo ô
   thuế · Xuất file (MTD / FreeAgent / PDF) · Khoản lặp lại / luật. Chụp từ bản release (`PRO_PAUSED`) trên máy với dữ liệu
   mẫu (persona P004 UK, P041 US) — không dùng dữ liệu thật của Phương; không ảnh nào có chữ "PRO" / "Trial".
+- **iPad 13" (bắt buộc vì app hỗ trợ iPad, B-146):** 3–8 ảnh **dọc** (app chỉ dọc) **2064×2752** (iPad Pro 13" M4/M5) hoặc
+  **2048×2732** (iPad Pro 12.9"); App Store tự thu nhỏ cho iPad nhỏ hơn. Chụp trên iPad giả lập (GitHub Actions macOS, phiên QA
+  iOS) từ bản release `PRO_PAUSED`, cùng dữ liệu mẫu, đủ cả nội dung trong cột giữa 640 pt. Danh sách màn:
+  1. Home — 2 nút Expense / Income + thẻ tuần (có chuyến gần nhất).
+  2. Ghi nhanh — số tiền đã gõ + ảnh hoá đơn + chip "Receipt says" (bàn phím iPad đang mở).
+  3. Sort — thẻ khoản với chip danh mục + Work / Personal (còn vài thẻ chồng phía sau).
+  4. Miles — danh sách chuyến + bản đồ chuyến (mở 1 chuyến có đường đi).
+  5. Reports — năm thuế theo ô SA103 (UK) hoặc Schedule C (US), có biểu đồ.
+  6. Export — chọn kỳ + định dạng (CSV MTD / FreeAgent / PDF).
+  7. (tuỳ chọn) Settings → Automatic trips; Rules / khoản lặp lại.
 
 ## Chưa làm, cần Phương (theo luật xưởng)
 - Tạo khoá ký → tag `v1.0.0` → AAB + iOS (WORKFLOW §5 — Phương tự tạo khoá).

@@ -1,6 +1,6 @@
 import { router } from '@/services/router';
 import { List , Zap } from '@/ui/icons';
-import { useState } from 'react';
+import { useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,6 +8,7 @@ import { db } from '@/db/client';
 import type { Scope } from '@/domain/types';
 import { SunIcon } from '@/features/entries/art';
 import { CaptureFab } from '@/features/entries/CaptureFab';
+import { sortScrolls } from '@/features/entries/logic';
 import { MergeSheet } from '@/features/entries/MergeSheet';
 import { SortEntryCard } from '@/features/entries/SortEntryCard';
 import { SortTripCard } from '@/features/entries/SortTripCard';
@@ -47,8 +48,17 @@ export default function SortScreen() {
 
   // B-114 v2: at 1.5× text and up List view gets its own row — beside the title it broke "Sort your wee/k".
   const bigText = fontScale >= 1.5;
-  // B-114 v4: decided here (not below) so the header knows where the status-bar inset lives.
-  const short = windowHeight < 520 || (fontScale >= 1.8 && windowHeight / fontScale < 520);
+  // B-114 v4: decided here (not below) so the header knows where the status-bar inset lives. B-147: iOS from any text size.
+  const short = sortScrolls(windowHeight, fontScale, Platform.OS);
+  // B-147: typing in Edit / Split on the card in the scrolling layout (iOS) — the screen shrinks above the keyboard;
+  // bring the card's top up so the field the card scrolls to isn't left under the keyboard.
+  const bodyRef = useRef<ComponentRef<typeof ScrollView>>(null);
+  const cardY = useRef(0);
+  useEffect(() => {
+    if (!short || !keyboardUp || Platform.OS !== 'ios') return;
+    const id = setTimeout(() => bodyRef.current?.scrollTo({ y: cardY.current, animated: true }), 100);
+    return () => clearTimeout(id);
+  }, [short, keyboardUp]);
   const header = (
     <View style={[styles.top, bigText && { flexDirection: 'column', alignItems: 'flex-start' }, { paddingTop: (short ? 0 : insets.top) + 14, paddingHorizontal: GUTTER }]}>
       <Txt v="h1" accessibilityRole="header" style={bigText ? undefined : { flexGrow: 1, flexShrink: 1, flexBasis: 180 }}>
@@ -162,6 +172,9 @@ export default function SortScreen() {
   // v3 (phiên B): only from 1.8× text — at 1.3 the scrolling layout cut the split form, and 1.3–1.7 were fine in the
   // normal one (3f26b33).
   const cardHeight = Math.round(360 * Math.min(Math.max(fontScale, 1), 1.6));
+  // B-146: on an iPad / tablet the normal layout stretched the card to ~1000pt, a big empty middle. No phone reaches this
+  // (a Pro Max leaves the card ~560pt).
+  const cardMax = Math.round(640 * Math.min(Math.max(fontScale, 1), 1.6));
   const mergeEntry = mergeFor ? s.entries.find((e) => e.id === mergeFor) ?? null : null;
 
   return (
@@ -174,11 +187,14 @@ export default function SortScreen() {
           gone and the card got squeezed to its button row — give it a real height and let the screen scroll. */}
       <Body
         short={short}
+        scrollRef={bodyRef}
         style={{ flexGrow: 1, paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: keyboardUp || windowHeight < 520 ? 12 : 96, gap: 12 }}>
         {short ? <View style={{ marginHorizontal: -GUTTER, marginTop: -6 }}>{header}</View> : null}
         <WeekProgress week={week} done={s.done} total={s.total} onPick={() => setWeekSheet(true)} />
         {autoLine}
-        <View style={short ? { height: cardHeight, marginTop: 6 } : { flex: 1, marginTop: 6 }}>
+        <View
+          style={short ? { height: cardHeight, marginTop: 6 } : { flex: 1, maxHeight: cardMax, marginTop: 6 }}
+          onLayout={(e) => (cardY.current = e.nativeEvent.layout.y)}>
           {s.queue.length > 2 ? <Card style={[styles.ghost, { left: 24, right: 24, top: 0, opacity: 0.5 }]}>{null}</Card> : null}
           {s.queue.length > 1 ? <Card style={[styles.ghost, { left: 12, right: 12, top: 8, opacity: 0.8 }]}>{null}</Card> : null}
           {top.kind === 'entry' ? (
@@ -244,10 +260,20 @@ const styles = StyleSheet.create({
 });
 
 /** Plain column, or a scroll view in a short window (MOD-11). */
-function Body({ short, style, children }: { short: boolean; style: object; children: React.ReactNode }) {
+function Body({
+  short,
+  style,
+  scrollRef,
+  children,
+}: {
+  short: boolean;
+  style: object;
+  scrollRef: Ref<ComponentRef<typeof ScrollView>>;
+  children: ReactNode;
+}) {
   if (short) {
     return (
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={style} keyboardShouldPersistTaps="handled">
+      <ScrollView ref={scrollRef} style={{ flex: 1 }} contentContainerStyle={style} keyboardShouldPersistTaps="handled">
         {children}
       </ScrollView>
     );

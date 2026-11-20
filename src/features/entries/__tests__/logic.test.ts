@@ -29,6 +29,7 @@ import {
   showBackupBanner,
   sortCardScope,
   sortQueue,
+  sortScrolls,
   mixedQueue,
   tripKey,
   toggledScope,
@@ -225,5 +226,27 @@ describe('QA-100 dates in lists', () => {
   it('dayHeader adds the year for another year (MOD-5)', () => {
     expect(dayHeader(d(2025, 11, 17), now)).toBe('Mon 17 Nov 2025');
     expect(dayHeader(d(2026, 11, 9), now)).toBe('Mon 9 Nov');
+  });
+});
+
+// B-114 / B-147: which Sort layout a window gets (true = scrolling layout).
+describe('sortScrolls', () => {
+  it('a short window scrolls on every platform (MOD-11 split screen)', () => {
+    expect(sortScrolls(436, 1, 'android')).toBe(true);
+    expect(sortScrolls(436, 1, 'ios')).toBe(true);
+  });
+  it('Android keeps the B-114 v3 cases', () => {
+    expect(sortScrolls(640, 2.0, 'android')).toBe(true); // 360×640dp, text 2.0 (OLD-13)
+    expect(sortScrolls(640, 1.3, 'android')).toBe(false); // text 1.3: the scrolling layout cut the Split form
+    expect(sortScrolls(640, 1.7, 'android')).toBe(false);
+    expect(sortScrolls(800, 1.0, 'android')).toBe(false);
+  });
+  it('iOS: iPhone SE at XXXL scrolls (B-147), roomier sizes stay normal', () => {
+    expect(sortScrolls(667, 1.35, 'ios')).toBe(true); // SE, XXXL: 667 / 1.35 ≈ 494
+    expect(sortScrolls(667, 1.235, 'ios')).toBe(false); // SE, XXL: ≈ 540
+    expect(sortScrolls(667, 1.0, 'ios')).toBe(false);
+    expect(sortScrolls(932, 1.35, 'ios')).toBe(false); // Pro Max, XXXL (passed in QA)
+    expect(sortScrolls(667, 2.0, 'ios')).toBe(true); // SE, AX-Large (B-114 v3, passed in QA)
+    expect(sortScrolls(1376, 1.35, 'ios')).toBe(false); // iPad 13"
   });
 });

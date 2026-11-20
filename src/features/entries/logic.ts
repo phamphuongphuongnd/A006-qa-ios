@@ -192,3 +192,22 @@ export function commonType(types: EntryType[]): EntryType | null {
   if (types.length === 0) return null;
   return types.every((t) => t === types[0]) ? types[0] : null;
 }
+
+// ---------- Sort screen layout ----------
+
+/** Below this many dp (or pt) per text-scale unit the Sort card can't fit under the header — the screen scrolls. */
+export const SORT_SCROLL_BELOW = 520;
+
+/**
+ * Sort screen: the scrolling layout (header scrolls away with a card of real height, no FAB) instead of the card
+ * squeezed into what is left under the header. Height counted in "text lines" (window ÷ font scale).
+ * - Any platform: a short window (split screen, QA-100 MOD-11), or text 1.8× and up (B-114 v3).
+ * - iOS from any text size (B-147: iPhone SE at XXXL ≈ 1.35 → 667 / 1.35 ≈ 494; the card was ~200pt, its chips out of
+ *   sight). Not Android: at 1.3 on 640dp the scrolling layout cut the Split form there (B-114, 2nd fix) while the
+ *   normal layout passed — iOS scrolls a card inside the screen's scroll natively.
+ */
+export function sortScrolls(windowHeight: number, fontScale: number, os: string): boolean {
+  if (windowHeight < SORT_SCROLL_BELOW) return true;
+  if (windowHeight / Math.max(1, fontScale) >= SORT_SCROLL_BELOW) return false;
+  return fontScale >= 1.8 || os === 'ios';
+}
