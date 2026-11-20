@@ -96,7 +96,7 @@ export default function RulesScreen() {
   );
 
   return (
-    <Screen header={<NavHeader title={t('sortV2.rulesTitle')} right={PRO_PAUSED ? undefined : <Badge kind="pro" label="PRO" />} />}>
+    <Screen bottomInset header={<NavHeader title={t('sortV2.rulesTitle')} right={PRO_PAUSED ? undefined : <Badge kind="pro" label="PRO" />} />}>
       {!pro ? (
         <Card variant="sun" style={{ gap: 10 }}>
           <Txt v="h3">{status.kind === 'expired' ? t('sortV2.rulesPaused') : t('sortV2.rulesFree')}</Txt>

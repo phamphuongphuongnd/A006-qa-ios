@@ -27,3 +27,15 @@ test('B-151: in the scrolling layout the card fits above the keyboard (iOS)', ()
   const sort = read('app/(tabs)/sort.tsx');
   expect(sort).toMatch(/fitAboveKeyboard \? .*viewport - 18/);
 });
+
+// B-153: outside the tab bar the last button scrolled under the 3-button navigation bar, and on the Galaxy A13 the
+// keyboard-avoiding views stopped short of the keyboard. Guards the wiring.
+test('B-153: Screen clears the navigation bar and pads what the keyboard still covers', () => {
+  const layout = read('ui/Layout.tsx');
+  expect(layout).toMatch(/bottomInset && !bottom \? insets\.bottom : 0/);
+  expect(layout).toMatch(/useKeyboardGap\(avoidKeyboard\)/);
+  const overlays = read('ui/Overlays.tsx');
+  expect(overlays.match(/useKeyboardGap\(visible\)/g)?.length).toBe(2); // Sheet + Dialog
+  const gap = read('ui/keyboardGap.tsx');
+  expect(gap).toMatch(/Math\.min\(screenY, Dimensions\.get\('screen'\)\.height - height - navBar\)/);
+});

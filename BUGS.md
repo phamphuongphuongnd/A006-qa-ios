@@ -795,3 +795,21 @@
   (`cardActionsStack`: cần ~124 + 160 × cỡ chữ (≤ 1.3) pt), thay ngưỡng cỡ chữ ≥ 1.29 — SE XL/XXL xếp dọc, Android 360 dp chữ 1.3/2.0 vẫn dọc,
   chữ 1.0 vẫn một hàng. `logic.ts` (+ test), `SortEntryCard.tsx`.
   Giả lập Android 360×640 dp: chữ 1.0 một hàng đủ chữ, 1.3 xếp dọc + bố cục thường, 2.0 bố cục cuộn. ⏳ iOS SE XXL / XL (phiên C).
+- [ ] **B-153** 🟠 (Phương báo, qa-a13 xác nhận trên A13 — 1080×2408, 420 dpi, chữ 0.8, điều hướng 3 nút; ảnh `qa-runs/a13/manual/A13-18-trip-detail-*.png`)
+  Chi tiết chuyến: cuộn hết cỡ nút "Save as a regular trip" vẫn nằm dưới thanh điều hướng 3 nút (74 px); bàn phím mở (Purpose) → nút khuất hẳn,
+  ô Parking & tolls khuất nửa. Nguyên nhân: (1) `Screen` (ui/Layout) chỉ đệm cuối phần cuộn 20 dp, không cộng thanh điều hướng — `bottomInset` chỉ
+  đệm thanh `bottom`, mà Trip detail chỉ có thanh `bottom` khi đang sửa phí đỗ; (2) A13: `KeyboardAvoidingView` ('height') chỉ co ~460/991 px —
+  RN lấy mép trên bàn phím = đáy "visible display frame" của cửa sổ, máy này (Android 14, edge-to-edge) không cập nhật đúng. Sửa: (1) `Screen`
+  có `bottomInset` mà không có thanh `bottom` → cuối phần cuộn cộng `insets.bottom`; thêm `bottomInset` cho Rules, Auto-sorted; các màn tự viết
+  ScrollView đệm cố định 48 (Automatic trips, Battery tips, NFC, Work hours) → 24 + `insets.bottom`; (2) `useKeyboardGap` (ui/keyboardGap.tsx,
+  Android): mép bàn phím lấy thêm cách thứ hai = cao màn − cao bàn phím − thanh điều hướng, chọn mép cao hơn; phần view còn nằm dưới bàn phím
+  → `paddingBottom` cho view (máy đúng: 0, không đổi gì). Gắn vào `Screen` (avoidKeyboard), `Sheet`, `Dialog`, chi tiết khoản, Sort. Ghi nhanh
+  (đã chỉnh offset riêng trên A13, B-36) và Split (Android không dùng KAV) giữ nguyên. `mileage-rates`, `trip/odometer`, `TripForm`: luôn có
+  thanh `bottom` + `bottomInset` → đã đúng.
+  Rà giả lập (Tablet_API_37 đặt 1080×2400, 420 dpi; điều hướng 3 nút (thanh từ y 2274) và cử chỉ (từ y 2337)), cuộn hết cỡ, nút cuối trên
+  thanh: ✅ Settings, Backup, Export, Categories, Notifications, Recurring, Regular trips, Recently deleted, List view (sort-list), Mileage
+  rates, Automatic trips, Battery tips, NFC, Work hours, Add trip, Odometer check, Set up automatic trips, Rules, Auto-sorted, Not tax advice,
+  Trip detail GPS (3 nút: đáy nút 2222 < 2274; cử chỉ: 2285 < 2337), Edit trip (tay). Bàn phím mở ✅: Trip detail Purpose (ô thấy, cuộn tới
+  nút), Parking & tolls (thanh tính + số đang gõ trên bàn phím), Sheet "Save as a regular trip" (Save trên bàn phím), Sheet New category,
+  Dialog Merge stops Custom, Add trip (Save trip trên bàn phím), chi tiết khoản (Note). Giả lập không tái hiện lỗi bàn phím A13 (hai cách
+  tính mép trùng nhau 577,9 dp → khoảng hụt 0); cơ chế đệm thử bằng cách tạm giả hụt 150 dp: ô đang gõ vẫn thấy, cuộn tới nút. ⏳ A13 (qa-a13).

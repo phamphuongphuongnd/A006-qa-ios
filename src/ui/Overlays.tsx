@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CONTENT_MAX, fonts, radius, useTheme } from '@/theme';
 
 import { Button, type ButtonVariant } from './Button';
+import { useKeyboardGap } from './keyboardGap';
 import { ModalShownContext, useShownState } from './modalShown';
 import { Txt } from './Txt';
 
@@ -140,11 +141,14 @@ export function Sheet({
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { shown, onShow } = useShownState(visible);
+  // B-153: Android, where the keyboard-avoiding view stops short of the keyboard (Galaxy A13).
+  const keyboard = useKeyboardGap(visible);
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} onShow={onShow} statusBarTranslucent navigationBarTranslucent>
       <ModalShownContext.Provider value={shown}>
         {/* Android too: the modal window doesn't resize for the keyboard, so a field's Save would sit under it (B-32). */}
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, paddingBottom: keyboard.gap }}>
+          {keyboard.marker}
           <Pressable accessibilityLabel="Close" style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }]} onPress={onClose} />
           <View style={{ flex: 1 }} pointerEvents="box-none" />
           <View style={[styles.sheet, { backgroundColor: colors.surface, paddingBottom: Math.max(insets.bottom, 16) + 18 }]}>
@@ -196,12 +200,15 @@ export function Dialog({
 }) {
   const { colors } = useTheme();
   const { shown, onShow } = useShownState(visible);
+  // B-153: Android, where the keyboard-avoiding view stops short of the keyboard (Galaxy A13).
+  const keyboard = useKeyboardGap(visible);
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} onShow={onShow} statusBarTranslucent>
       <ModalShownContext.Provider value={shown}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={[styles.dlgWrap, { backgroundColor: colors.scrim }]}>
+          style={[styles.dlgWrap, { backgroundColor: colors.scrim, paddingBottom: keyboard.gap }]}>
+          {keyboard.marker}
           <View accessibilityViewIsModal style={[styles.dlg, { backgroundColor: colors.surface }]}>
             <Txt v="h2" accessibilityRole="header">
               {title}

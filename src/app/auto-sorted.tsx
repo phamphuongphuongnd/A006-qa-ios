@@ -93,7 +93,7 @@ export default function AutoSortedScreen() {
   };
 
   return (
-    <Screen header={<NavHeader title={t('sortV2.reviewTitle')} right={PRO_PAUSED ? undefined : <Badge kind="pro" label="PRO" />} />}>
+    <Screen bottomInset header={<NavHeader title={t('sortV2.reviewTitle')} right={PRO_PAUSED ? undefined : <Badge kind="pro" label="PRO" />} />}>
       {groups.length === 0 ? (
         <EmptyState title={t('sortV2.reviewEmpty')} body={t('sortV2.reviewEmptyBody')} />
       ) : (

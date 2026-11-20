@@ -20,7 +20,7 @@ import { RuleOfferCard } from '@/features/rules/RuleOfferCard';
 import { t } from '@/i18n';
 import { useSettings } from '@/state/settings';
 import { fonts, GUTTER, useTheme } from '@/theme';
-import { Button, Card, Txt, useKeyboardUp, useSnackbar } from '@/ui';
+import { Button, Card, Txt, useKeyboardGap, useKeyboardUp, useSnackbar } from '@/ui';
 
 /**
  * S-06 Sort — one card at a time (entries and Unsorted trips). Tapping a category chip / Work / Personal sorts it
@@ -41,6 +41,8 @@ export default function SortScreen() {
   const actions = useEntryActions();
   const snack = useSnackbar();
   const keyboardUp = useKeyboardUp();
+  // B-153: Android, where the keyboard-avoiding view stops short of the keyboard (Galaxy A13).
+  const keyboard = useKeyboardGap();
   const s = useSortWeek(chosen, skipped);
   const top = s.queue[0];
   // "Undo" on the sort that triggered the offer puts the entry back in the queue: the offer goes away with it.
@@ -186,7 +188,10 @@ export default function SortScreen() {
   return (
     // Typing in Edit / Split on the card: the screen shrinks above the keyboard and the FAB hides (B-38).
     // v4 (phiên B): in the scrolling layout the status-bar inset stays on the screen, so scrolled text never slides under it.
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, backgroundColor: colors.background, paddingTop: short ? insets.top : 0 }}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1, backgroundColor: colors.background, paddingTop: short ? insets.top : 0, paddingBottom: keyboard.gap }}>
+      {keyboard.marker}
       {/* B-114 v2: when the screen scrolls (short window / large text) the header scrolls away with the card. */}
       {short ? null : header}
       {/* Bottom padding keeps the card clear of the FAB. QA-100 MOD-11: in a short window (split screen) the FAB is

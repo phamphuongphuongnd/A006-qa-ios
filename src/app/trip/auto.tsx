@@ -274,7 +274,9 @@ export default function AutoTripsScreen() {
 }
 
 function ScrollBody({ children }: { children: React.ReactNode }) {
-  return <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 48 }}>{children}</ScrollView>;
+  // B-153: the last row scrolls clear of the system navigation bar (3-button: 48dp).
+  const bottom = useSafeAreaInsets().bottom;
+  return <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 24 + bottom }}>{children}</ScrollView>;
 }
 
 function Row({

@@ -36,7 +36,7 @@ import { usePhotoAllowance, usePro } from '@/state/pro';
 import { useSettings } from '@/state/settings';
 import { useLive } from '@/state/useLive';
 import { fonts, GUTTER, radius, useTheme } from '@/theme';
-import { Badge, Button, Dialog, EmptyState, Group, IconButton, NUMERIC_INPUT, ReceiptThumb, Segmented, Sheet, Txt, useSnackbar } from '@/ui';
+import { Badge, Button, Dialog, EmptyState, Group, IconButton, NUMERIC_INPUT, ReceiptThumb, Segmented, Sheet, Txt, useKeyboardGap, useSnackbar } from '@/ui';
 import { refocus } from '@/features/ocr/refocus';
 
 type Draft = Pick<EntryRowT, 'type' | 'amountMinor' | 'occurredAt' | 'note' | 'categoryId' | 'scope'>;
@@ -97,6 +97,8 @@ function Editor({ entry }: { entry: EntryRowT }) {
   // and ~48pt left, over the title (iPhone: over the ⋯ button itself).
   const [headerBottom, setHeaderBottom] = useState(0);
   const a11yHidden = menu ? 'no-hide-descendants' : 'auto';
+  // B-153: Android, where the keyboard-avoiding view stops short of the keyboard (Galaxy A13).
+  const keyboard = useKeyboardGap();
   // Android back closes the menu first, as the Modal did.
   useEffect(() => {
     if (!menu) return;
@@ -239,7 +241,8 @@ function Editor({ entry }: { entry: EntryRowT }) {
     // Keyboard up (amount / note): the Save bar rides above it, as on Quick capture (B-36).
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1, backgroundColor: colors.background, paddingTop: Platform.OS === 'ios' ? 8 : insets.top }}>
+      style={{ flex: 1, backgroundColor: colors.background, paddingTop: Platform.OS === 'ios' ? 8 : insets.top, paddingBottom: keyboard.gap }}>
+      {keyboard.marker}
       <View
         style={[styles.top, { paddingHorizontal: GUTTER }]}
         importantForAccessibility={a11yHidden}
