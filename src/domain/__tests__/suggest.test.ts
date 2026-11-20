@@ -156,12 +156,23 @@ describe('suggest — only a real signal is a suggestion (L1)', () => {
     expect(suggest({ type: 'expense', note: 'x', amountMinor: 1, merchant: 'Shell UK' }, cats, history).confident).toBe(true);
   });
 
-  it('a signal for a lower-ranked category does not make a frequency-only first chip confident', () => {
-    // 499 Fuel sorts (0.01 each = 4.99) outweigh one fresh amount match for Phone (0.8 × 2 = 1.6): Fuel stays first but
-    // rests on usage only, so the entry is not confident; Phone, which has the real signal, comes second.
+  it('a real signal outranks any usage count (Phương 2026-11-20)', () => {
+    // 499 Fuel sorts (usage) vs one Phone bill at the same price (amount signal): Phone is the suggestion, Fuel second.
     const heavy = [sorted('bill', 2499, 'phone'), ...Array.from({ length: 499 }, () => sorted('fill up', 5000, 'fuel'))];
     const s = suggest({ type: 'expense', note: 'Direct debit', amountMinor: 2499 }, cats, heavy);
-    expect(s.categoryIds.slice(0, 2)).toEqual(['fuel', 'phone']);
-    expect(s.confident).toBe(false);
+    expect(s.categoryIds.slice(0, 2)).toEqual(['phone', 'fuel']);
+    expect(s.confident).toBe(true);
+    const c = sortChoice({ type: 'expense', note: 'Direct debit', amountMinor: 2499 }, cats, heavy, [{ categoryId: 'fuel', count: 499 }]);
+    expect(c.kind).toBe('suggested');
+    expect(c.categoryIds[0]).toBe('phone');
+    // Same history, no signal at all: usage orders the chips and it stays "Most used".
+    expect(sortChoice({ type: 'expense', note: 'Greggs', amountMinor: 420 }, cats, heavy, [{ categoryId: 'fuel', count: 499 }]).kind).toBe('mostUsed');
+  });
+
+  it('two signalled categories: the stronger signal wins, usage only breaks a tie', () => {
+    // Keyword "Shell" → Fuel (2) vs one same-note history entry for Other expenses (3 × 1 × 2 + 2 = 8): history wins even
+    // though Fuel was used far more.
+    const h = [sorted('Shell snacks', 300, 'other_expense'), ...Array.from({ length: 200 }, () => sorted('diesel', 6000, 'fuel'))];
+    expect(suggest({ type: 'expense', note: 'Shell snacks', amountMinor: 300 }, cats, h).categoryIds.slice(0, 2)).toEqual(['other_expense', 'fuel']);
   });
 });

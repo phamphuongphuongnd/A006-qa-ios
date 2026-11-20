@@ -36,8 +36,8 @@ export interface Suggestion {
   /** Work/personal suggestion from history, or null when there is no signal. */
   scope: Scope | null;
   /**
-   * The first category rests on a real signal (note / merchant history, amount, OCR, built-in keyword), not only on how
-   * often a category is used. False → the screens show "Most used" instead of "Suggested" and keep the entry out of
+   * Some category has a real signal (note / merchant history, amount, OCR, built-in keyword) — it ranks first — not only
+   * a usage count. False → the screens show "Most used" instead of "Suggested" and keep the entry out of
    * "Accept all suggestions" (L1, 2026-11-20).
    */
   confident: boolean;
@@ -84,8 +84,9 @@ function wordsOf(note: string, merchant?: string | null): string[] {
 /**
  * Ranks categories for one entry, entirely on-device (Pro "Suggested", F-07).
  * Signals, strongest first: the user's own past sorting of notes / receipt merchants with shared words (newer counts
- * more), the amount on its own (±2% of a recent sorted entry, even with a different note), built-in keywords, then
- * overall usage frequency as tie-breaker / filler.
+ * more), the amount on its own (±2% of a recent sorted entry, even with a different note), built-in keywords.
+ * Categories with a real signal always rank above the rest (Phương 2026-11-20); overall usage frequency only breaks
+ * ties and fills the remaining chips — 499 Fuel sorts never outrank one Phone bill at the same price.
  */
 export function suggest(
   input: SuggestInput,
@@ -93,13 +94,15 @@ export function suggest(
   history: SortedEntry[],
 ): Suggestion {
   const candidates = categories.filter((c) => c.type === input.type && !c.hidden);
-  const score = new Map<string, number>(candidates.map((c) => [c.id, 0]));
-  /** Score from real signals only (everything except the usage-frequency filler). */
+  const ids = new Set(candidates.map((c) => c.id));
+  /** Real signals: note / merchant history, amount, OCR, keywords. */
   const signal = new Map<string, number>();
+  /** Usage frequency: tie-breaker / filler only, never a reason to suggest. */
+  const freq = new Map<string, number>();
   const add = (id: string, v: number, real = true) => {
-    if (!score.has(id)) return;
-    score.set(id, (score.get(id) ?? 0) + v);
-    if (real) signal.set(id, (signal.get(id) ?? 0) + v);
+    if (!ids.has(id)) return;
+    const m = real ? signal : freq;
+    m.set(id, (m.get(id) ?? 0) + v);
   };
 
   const norm = normaliseNote(input.merchant ? `${input.note} ${input.merchant}` : input.note);
@@ -135,12 +138,15 @@ export function suggest(
     }
   }
 
-  const ranked = [...candidates].sort((a, b) => (score.get(b.id) ?? 0) - (score.get(a.id) ?? 0) || a.order - b.order);
+  const sig = (id: string) => signal.get(id) ?? 0;
+  const fr = (id: string) => freq.get(id) ?? 0;
+  const ranked = [...candidates].sort((a, b) => sig(b.id) - sig(a.id) || fr(b.id) - fr(a.id) || a.order - b.order);
 
   const scope: Scope | null =
     scopeVotes.work === scopeVotes.personal ? null : scopeVotes.work > scopeVotes.personal ? 'work' : 'personal';
 
-  const confident = ranked.length > 0 && (signal.get(ranked[0].id) ?? 0) > 0;
+  // Signals rank first, so the first chip has one whenever any category does.
+  const confident = ranked.length > 0 && sig(ranked[0].id) > 0;
   return { categoryIds: ranked.slice(0, 3).map((c) => c.id), scope, confident };
 }
 
