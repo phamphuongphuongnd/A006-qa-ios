@@ -741,4 +741,9 @@
   (phiên C, 4 lượt). Làm: `supportsTablet: true`; app chỉ dọc (`orientation: portrait`) → cần `ios.requireFullScreen: true` (UIRequiresFullScreen, không thì
   App Store từ chối vì iPad đa nhiệm cần mọi hướng); kiểm bố cục mọi màn trên iPad giả lập (nội dung quá rộng → giới hạn bề ngang ~600–700 pt ở giữa,
   Sheet, FAB, bàn phím số, bản đồ, widget); App Store cần thêm ảnh màn hình iPad 13". Giao phiên "A006 gỡ giới hạn pro"; phiên C kiểm iPad sau khi có bản.
+- [ ] **B-147** 🟠 (QA QI-8, phiên C — iOS lượt 4s, run 44500573190, P052 iPhone SE, cỡ chữ XXXL) Màn Sort: thẻ chỉ cao ~200 pt, dòng ghi chú bị hàng
+  Edit/Split/Merge/Skip che, không thấy chip danh mục, không cuộn ra. Pro Max cùng cỡ và SE ở AX-L đạt. Nghi `src/app/(tabs)/sort.tsx` ~51: bố cục cuộn
+  `short` chỉ bật khi fontScale ≥ 1.8 (B-114), iOS XXXL ≈ 1.35 → 667/1.35 ≈ 493 < 520 nên cần điều kiện theo chiều cao chia fontScale cho mọi cỡ
+  (vd. h/fs < 520 dù fs < 1.8). Ảnh `qa-runs/ios/44500573190/qa-ios-18/personas/P052/shots/step-020-…jpg`. Giao phiên "A006 gỡ giới hạn pro".
+  Theo dõi (chưa kết luận): iOS 18 giả lập chuyến GPS "Finding GPS…" suốt, 0.0 mi (iOS 26 ra 2.x mi) → thử iPhone iOS 18 thật.
   Ghi nhận QI-2 (iOS): log "[expo-notifications] Error reading persisted server registration info" mỗi lần mở — thư viện, app chỉ dùng thông báo local.
